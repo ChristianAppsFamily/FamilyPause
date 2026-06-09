@@ -125,6 +125,41 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
+  // ── Members who accepted invite ────────────────────────────────────────────
+  const [members, setMembers] = useState([]);
+  const [membersLoading, setMembersLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+    const load = async () => {
+      if (!workspace?.id) { setMembersLoading(false); return; }
+      const { data } = await supabase
+        .from("workspace_members")
+        .select("user_id, role, display_name, joined_at")
+        .eq("workspace_id", workspace.id)
+        .order("joined_at", { ascending: true });
+      if (active) setMembers(data || []);
+      if (active) setMembersLoading(false);
+    };
+    load();
+    return () => { active = false; };
+  }, [workspace?.id]);
+
+  // ── Change password ────────────────────────────────────────────────────────
+  const [pwSending, setPwSending] = useState(false);
+  const [pwSent, setPwSent] = useState(false);
+
+  const sendPasswordReset = async () => {
+    if (!user?.email) return;
+    setPwSending(true);
+    await supabase.auth.resetPasswordForEmail(user.email, {
+      redirectTo: `${window.location.origin}/app`,
+    });
+    setPwSending(false);
+    setPwSent(true);
+    setTimeout(() => setPwSent(false), 5000);
+  };
+
   // ── Load subscription ──────────────────────────────────────────────────────
   useEffect(() => {
     let active = true;
@@ -258,37 +293,94 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
           <div className="eyebrow">Bring in your spouse</div>
           <h2>Invite code</h2>
           <p className="set-sub">Share this code so your spouse can join the same family workspace.</p>
-          <div style={{ display: "flex", gap: 10 }}>
+          <div style={{ display: "flex", gap: 10, marginBottom: 22 }}>
             <div className="set-codebox">{workspace?.invite_code || "Not set"}</div>
             <button className="btn btn-soft" onClick={copyInvite}>{copied ? "Copied ✓" : "Copy"}</button>
           </div>
+
+          {/* Members who have joined */}
+          <div className="set-grouplbl" style={{ marginBottom: 10 }}>Members who joined</div>
+          {membersLoading ? (
+            <div className="set-spin" style={{ width: 18, height: 18 }} />
+          ) : members.length === 0 ? (
+            <p className="set-empty">No one has joined yet. Send your invite code above.</p>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {members.map((m) => (
+                <div key={m.user_id} style={{
+                  display: "flex", alignItems: "center", justifyContent: "space-between",
+                  background: "var(--paper-2)", borderRadius: "var(--r)", padding: "10px 14px",
+                }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <div style={{
+                      width: 32, height: 32, borderRadius: "50%",
+                      background: m.role === "owner" ? "var(--terra-soft)" : "var(--olive-soft)",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      fontFamily: "var(--display)", fontWeight: 600, fontSize: 14,
+                      color: m.role === "owner" ? "var(--terra-d)" : "var(--olive-d)",
+                    }}>
+                      {(m.display_name || "?")[0].toUpperCase()}
+                    </div>
+                    <div>
+                      <div style={{ fontFamily: "var(--serif)", fontSize: 15, color: "var(--ink)" }}>
+                        {m.display_name || "Unknown"}
+                      </div>
+                      <div style={{ fontFamily: "var(--mono)", fontSize: 10.5, letterSpacing: ".05em", textTransform: "uppercase", color: "var(--ink-3)" }}>
+                        {m.role === "owner" ? "Owner" : "Member"}
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{ fontFamily: "var(--mono)", fontSize: 11, color: "var(--ink-3)" }}>
+                    {m.joined_at ? new Date(m.joined_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : ""}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </section>
 
         {/* ── CARD DECKS ─────────────────────────────────────────────── */}
         <section className="panel set-sec rise">
-          <div className="eyebrow">Conversation cards</div>
-          <h2>Card decks</h2>
+          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, marginBottom: 18 }}>
+            <div>
+              <div className="eyebrow" style={{ marginBottom: 9 }}>Conversation cards</div>
+              <h2 style={{ margin: 0 }}>Card decks</h2>
+            </div>
+            {onOpenDecks && (
+              <button className="btn btn-primary" onClick={onOpenDecks} style={{ flexShrink: 0, marginTop: 4 }}>
+                {unlockedDecks.length > 0 ? "Open library" : "Unlock now"}
+              </button>
+            )}
+          </div>
           {unlockedDecks.length > 0 ? (
-            <div className="set-chips" style={{ marginBottom: 16 }}>
+            <div className="set-chips" style={{ marginBottom: 4 }}>
               {unlockedDecks.map((yr) => <span key={yr} className="set-deckpill">{yr} Deck</span>)}
             </div>
           ) : (
-            <p className="set-sub">
+            <p className="set-sub" style={{ margin: 0 }}>
               You haven't unlocked any card decks yet. Unlock the 52-question deck to draw a
               conversation card together each week.
             </p>
-          )}
-          {onOpenDecks && (
-            <button className="btn btn-ghost" onClick={onOpenDecks}>
-              {unlockedDecks.length > 0 ? "Open deck library" : "Unlock a deck"}
-            </button>
           )}
         </section>
 
         {/* ── SUBSCRIPTION ───────────────────────────────────────────── */}
         <section className="panel set-sec rise">
-          <div className="eyebrow">Your plan</div>
-          <h2>Subscription</h2>
+          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, marginBottom: 18 }}>
+            <div>
+              <div className="eyebrow" style={{ marginBottom: 9 }}>Your plan</div>
+              <h2 style={{ margin: 0 }}>Subscription</h2>
+            </div>
+            <a
+              className="btn btn-primary"
+              href="https://buy.stripe.com/PLACEHOLDER_pro"
+              target="_blank"
+              rel="noreferrer"
+              style={{ flexShrink: 0, marginTop: 4, textDecoration: "none" }}
+            >
+              Upgrade to Pro
+            </a>
+          </div>
           {subLoading ? (
             <div className="set-spin" />
           ) : (
@@ -324,9 +416,27 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
         {/* ── DANGER ZONE ────────────────────────────────────────────── */}
         <section className="panel set-sec set-danger rise">
           <div className="eyebrow">Danger zone</div>
-          <h2>Delete workspace</h2>
+          <h2>Account actions</h2>
+
+          {/* Change password */}
+          <div style={{ borderBottom: "1px solid var(--red-soft)", paddingBottom: 22, marginBottom: 22 }}>
+            <p className="set-sub" style={{ color: "var(--ink)", marginBottom: 12 }}>
+              Change password — we'll send a reset link to {user?.email || "your email"}.
+            </p>
+            {pwSent ? (
+              <p style={{ fontFamily: "var(--mono)", fontSize: 11.5, letterSpacing: ".06em", textTransform: "uppercase", color: "var(--olive-d)" }}>
+                ✓ Reset link sent — check your inbox
+              </p>
+            ) : (
+              <button className="btn btn-ghost" onClick={sendPasswordReset} disabled={pwSending}>
+                {pwSending ? "Sending…" : "Send password reset"}
+              </button>
+            )}
+          </div>
+
+          {/* Delete workspace */}
           <p className="set-sub" style={{ color: "var(--ink)" }}>
-            This permanently deletes your family workspace, every saved session, and removes all
+            Delete workspace — permanently removes your family workspace, every saved session, and all
             members. This cannot be undone.
           </p>
           {!confirmDelete ? (
