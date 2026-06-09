@@ -153,6 +153,30 @@ do $$ begin
   alter publication supabase_realtime add table sessions;
 exception when duplicate_object then null; end $$;
 
+-- ── GRANTS (belt-and-suspenders; Supabase usually sets these) ─
+grant usage on schema public to anon, authenticated;
+grant select, insert, update, delete on all tables in schema public to anon, authenticated;
+grant usage, select on all sequences in schema public to anon, authenticated;
+
+-- ── create_owner_workspace() ──────────────────────────────────
+-- Creates a workspace + owner membership in ONE server-side call.
+-- SECURITY DEFINER so it bypasses the client-side RLS/grant timing issues
+-- that otherwise cause "permission denied for table workspace_members" at signup.
+create or replace function create_owner_workspace(p_name text default 'My Family')
+returns workspaces as $$
+declare ws workspaces;
+begin
+  if auth.uid() is null then raise exception 'Not authenticated'; end if;
+  insert into workspaces (name, owner_id)
+    values (coalesce(nullif(p_name, ''), 'My Family') || '''s Family', auth.uid())
+    returning * into ws;
+  insert into workspace_members (workspace_id, user_id, role, display_name)
+    values (ws.id, auth.uid(), 'owner', coalesce(nullif(p_name, ''), 'Member'))
+    on conflict (workspace_id, user_id) do nothing;
+  return ws;
+end;
+$$ language plpgsql security definer;
+
 -- ── join_workspace_by_code() — used by invite links ───────────
 create or replace function join_workspace_by_code(invite text, display text default 'Member')
 returns uuid as $$

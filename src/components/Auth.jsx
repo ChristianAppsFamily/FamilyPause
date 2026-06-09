@@ -425,24 +425,13 @@ function SignUp({ onSwitch, onSuccess }) {
     const userId = data.user?.id;
     if (!userId) { setError("Something went wrong. Please try again."); setLoading(false); return; }
 
-    // Create workspace
-    const { data: ws, error: wsErr } = await supabase
-      .from("workspaces")
-      .insert({ name: `${name}'s Family`, owner_id: userId })
-      .select()
-      .single();
-
+    // Create workspace + owner membership in one server-side call.
+    // (SECURITY DEFINER RPC — avoids client-side RLS/grant issues at signup.)
+    const { data: ws, error: wsErr } = await supabase.rpc("create_owner_workspace", { p_name: name });
     if (wsErr) { setError(wsErr.message); setLoading(false); return; }
+    const workspace = Array.isArray(ws) ? ws[0] : ws;
 
-    // Add owner as member
-    await supabase.from("workspace_members").insert({
-      workspace_id: ws.id,
-      user_id: userId,
-      role: "owner",
-      display_name: name,
-    });
-
-    onSuccess({ workspaceId: ws.id, inviteCode: ws.invite_code, displayName: name });
+    onSuccess({ workspaceId: workspace.id, inviteCode: workspace.invite_code, displayName: name });
   };
 
   const handleKey = (e) => { if (e.key === "Enter") handleSignUp(); };

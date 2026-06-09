@@ -16,7 +16,16 @@
       "Bash(awk '/\\\\.btn \\\\{/{f=1} f{print NR\": \"$0} /\\\\}/{if\\(f\\)c++; if\\(c>0&&f\\){f=0;c=0}}' \"project/FamilyPause Auth.html\")",
       "Bash(grep -nA10 \"^    \\\\.btn {\" \"project/FamilyPause Auth.html\")",
       "Bash(sed -n '419,445p' \"project/FamilyPause Auth.html\")",
-      "Bash(perl -0pi -e 's/184,92,56/190,90,55/g' src/components/CardSystem.jsx)"
+      "Bash(perl -0pi -e 's/184,92,56/190,90,55/g' src/components/CardSystem.jsx)",
+      "Bash(git ls-tree *)",
+      "mcp__Claude_in_Chrome__tabs_context_mcp",
+      "WebFetch(domain:www.familypause.com)",
+      "mcp__Claude_in_Chrome__navigate",
+      "mcp__Claude_in_Chrome__computer",
+      "mcp__Claude_in_Chrome__browser_batch",
+      "Bash(git add *)",
+      "Bash(git -c 'user.name=Spence Longmore' -c user.email=spence@familypause.com commit -q -m 'Fix signup: create workspace+membership via SECURITY DEFINER RPC *)",
+      "Bash(git push *)"
     ]
   }
 }
