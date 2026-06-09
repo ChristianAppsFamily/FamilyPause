@@ -119,6 +119,12 @@ const css = `
   }
   .fp-wordmark .wf { color: ${T.text}; }
   .fp-wordmark .wp { color: ${T.terra}; }
+  .fp-logo-link {
+    display: inline-flex; align-items: center; gap: 9px;
+    text-decoration: none; margin-bottom: 18px;
+    transition: opacity .15s;
+  }
+  .fp-logo-link:hover { opacity: .75; }
   .fp-btn-ghost:hover { border-color: ${T.terra}; color: ${T.terra}; }
   .fp-link {
     background: none; border: none; cursor: pointer;
@@ -355,10 +361,10 @@ function SignIn({ onSwitch, onSuccess }) {
   return (
     <AuthShell>
       <div className="fp-fade" style={{ marginBottom: 8 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 18 }}>
+        <a href="/" className="fp-logo-link">
           <LogoMark width={14} height={22} fill={T.terra} />
           <div className="fp-wordmark" style={{ marginBottom: 0 }}><span className="wf">Family</span><span className="wp">Pause</span></div>
-        </div>
+        </a>
         <div style={{ fontSize: 11, letterSpacing: "0.25em", color: T.terra, fontFamily: "'JetBrains Mono', monospace", textTransform: "uppercase", marginBottom: 12 }}>
           Welcome back
         </div>
@@ -461,10 +467,10 @@ function SignUp({ onSwitch, onSuccess }) {
   return (
     <AuthShell wide>
       <div className="fp-fade" style={{ marginBottom: 8 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 18 }}>
+        <a href="/" className="fp-logo-link">
           <LogoMark width={14} height={22} fill={T.terra} />
           <div className="fp-wordmark" style={{ marginBottom: 0 }}><span className="wf">Family</span><span className="wp">Pause</span></div>
-        </div>
+        </a>
         <div style={{ fontSize: 11, letterSpacing: "0.25em", color: T.terra, fontFamily: "'JetBrains Mono', monospace", textTransform: "uppercase", marginBottom: 12 }}>
           7-day free trial
         </div>
