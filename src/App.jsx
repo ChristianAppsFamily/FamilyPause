@@ -35,7 +35,10 @@ async function callAI(prompt, systemOverride, { faithMode = false, familyName = 
 }
 
 // ── UTILITIES ─────────────────────────────────────────────────────────────────
-function todayStr() { return new Date().toISOString().split("T")[0]; }
+function todayStr() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
 function prettyDate(d) {
   const dt = d ? new Date(d + "T00:00:00") : new Date();
   return dt.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
@@ -264,7 +267,7 @@ function CaptureView({ onBack, onProcess }) {
   return (
     <div className="view capwrap">
       <div className="lead">
-        <div className="eyebrow" style={{ marginBottom: 12 }}>Step 1 · Have your meeting</div>
+        <div className="eyebrow" style={{ marginBottom: 12 }}>Step 2 · Have your meeting</div>
         <h1>Talk like humans.<br /><em>We'll handle the structure.</em></h1>
         <p>Paste a transcript from Otter or Apple Dictation, or record live. Talk about whatever needs talking about: kids, money, work, the week ahead.</p>
       </div>
@@ -339,7 +342,7 @@ function ProcessingView({ done }) {
 }
 
 // ── REVIEW (View 4) ───────────────────────────────────────────────────────────
-function ReviewView({ cards, setCards, roleOf, onBack, onBuild }) {
+function ReviewView({ cards, setCards, roleOf, onBack, onBuild, distillError }) {
   const decide = (id, status) => setCards((arr) => arr.map((it) => (it.id === id ? { ...it, status } : it)));
   const total = cards.length;
   const decided = cards.filter((c) => c.status !== STATUS.OPEN).length;
@@ -352,7 +355,7 @@ function ReviewView({ cards, setCards, roleOf, onBack, onBuild }) {
     <div className="view">
       <div className="revhead">
         <div>
-          <div className="eyebrow" style={{ marginBottom: 9 }}>Step 2 · This week's review</div>
+          <div className="eyebrow" style={{ marginBottom: 9 }}>Step 4 · This week's review</div>
           <h1>Keep what matters.<br /><em>Discard the rest.</em></h1>
         </div>
         <div className="progresswrap">
@@ -369,8 +372,17 @@ function ReviewView({ cards, setCards, roleOf, onBack, onBuild }) {
 
       {total === 0 ? (
         <div style={{ textAlign: "center", padding: "50px 20px", color: "var(--ink-3)" }}>
-          <div style={{ fontFamily: "var(--display)", fontSize: 22, fontStyle: "italic", color: "var(--ink-2)", marginBottom: 8 }}>Nothing to review.</div>
-          <div style={{ fontSize: 15 }}>We couldn't extract items. Try a longer or clearer transcript.</div>
+          {distillError ? (
+            <>
+              <div style={{ fontFamily: "var(--display)", fontSize: 22, fontStyle: "italic", color: "var(--red)", marginBottom: 8 }}>AI unavailable.</div>
+              <div style={{ fontSize: 15, color: "var(--red)", maxWidth: 480, margin: "0 auto" }}>{distillError}</div>
+            </>
+          ) : (
+            <>
+              <div style={{ fontFamily: "var(--display)", fontSize: 22, fontStyle: "italic", color: "var(--ink-2)", marginBottom: 8 }}>Nothing to review.</div>
+              <div style={{ fontSize: 15 }}>We couldn't extract items. Try a longer or clearer transcript.</div>
+            </>
+          )}
         </div>
       ) : (
         <div>
@@ -512,6 +524,7 @@ export default function App({ user, workspace, onSignOut }) {
   const [view, setView] = useState("agenda");
   const [overlay, setOverlay] = useState(null); // "settings" | "history" | null
   const [cards, setCards] = useState([]);
+  const [distillError, setDistillError] = useState(null);
   const [distillDone, setDistillDone] = useState(false);
   const [meetingDate] = useState(todayStr());
   const [ws, setWs] = useState(workspace);
@@ -551,6 +564,7 @@ export default function App({ user, workspace, onSignOut }) {
   // ── Distill (real AI) ────────────────────────────────────────────────────
   const runDistill = async (text) => {
     setDistillDone(false);
+    setDistillError(null);
     setCards([]);
     go("processing");
     savedRef.current = false; sessionIdRef.current = null;
@@ -577,15 +591,20 @@ Each item:
 Rules: extract everything actionable, use person names when mentioned, return only the JSON array.`;
 
     let parsed = [];
+    let distillError = null;
     try {
       const faithMode = ws?.faith_mode ?? false;
       const familyName = ws?.family_name ?? null;
       const raw = await callAI(`Extract all action items from this family meeting transcript:\n\n${text}`, system, { faithMode, familyName });
       try { parsed = JSON.parse(raw.replace(/```json|```/g, "").trim()); }
       catch { const m = raw.match(/\[[\s\S]*\]/); if (m) parsed = JSON.parse(m[0]); }
-    } catch { parsed = []; }
+    } catch (err) {
+      distillError = err?.message || String(err);
+      parsed = [];
+    }
 
     setCards(parsed.map((c, i) => ({ ...c, id: c.id ?? i + 1, status: STATUS.OPEN })));
+    setDistillError(distillError);
     setDistillDone(true);
     setTimeout(() => go("review"), 650); // let the orb finish
   };
@@ -644,7 +663,7 @@ Rules: extract everything actionable, use person names when mentioned, return on
       {view === "agenda" && <AgendaView family={family} keptActions={keptActions} onDistill={() => go("capture")} onOpenLog={() => setOverlay("history")} />}
       {view === "capture" && <CaptureView onBack={() => go("agenda")} onProcess={runDistill} />}
       {view === "processing" && <ProcessingView done={distillDone} />}
-      {view === "review" && <ReviewView cards={cards} setCards={setCards} roleOf={roleOf} onBack={() => go("capture")} onBuild={buildWeek} />}
+      {view === "review" && <ReviewView cards={cards} setCards={setCards} roleOf={roleOf} onBack={() => go("capture")} onBuild={buildWeek} distillError={distillError} />}
       {view === "plan" && <PlanView keptCards={keptCards} adults={adults} roleOf={roleOf} onRestart={restart} />}
     </div>
   );
