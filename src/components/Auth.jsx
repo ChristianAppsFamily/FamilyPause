@@ -609,7 +609,7 @@ function JoinWorkspace({ onSwitch, onSuccess, initialCode = "" }) {
 
     // Join workspace via invite code
     const { data: wsId, error: joinErr } = await supabase.rpc("join_workspace_by_code", {
-      invite: inviteCode.trim().toLowerCase(),
+      invite: inviteCode.trim(),
       display: name,
     });
 

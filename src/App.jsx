@@ -25,33 +25,15 @@ const DEFAULT_CONTEXT = {
 };
 
 // ── AI CALL ──────────────────────────────────────────────────────────────────
-// TODO (production): move this to a Supabase Edge Function so VITE_ANTHROPIC_KEY
-// is never exposed in the browser. Kept client-side for this build session.
-async function callAI(prompt, system, attempt = 0) {
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": import.meta.env.VITE_ANTHROPIC_KEY,
-      "anthropic-version": "2023-06-01",
-      "anthropic-dangerous-direct-browser-access": "true",
-    },
-    body: JSON.stringify({
-      model: "claude-sonnet-4-20250514",
-      // 1000 was too low: long transcripts produce many items and the JSON gets
-      // truncated, which fails to parse and looks like "0 items extracted".
-      max_tokens: 4096,
-      system,
-      messages: [{ role: "user", content: prompt }],
-    }),
+// The Anthropic call runs in the `distill` Supabase Edge Function so the API key
+// stays server-side (never shipped in the browser bundle). supabase.functions.invoke
+// forwards the signed-in user's JWT; the function verifies it before spending tokens.
+async function callAI(prompt, system) {
+  const { data, error } = await supabase.functions.invoke("distill", {
+    body: { prompt, system },
   });
-  // Retry once on transient failures (occasional 400/429/5xx seen from the browser).
-  if (!res.ok && attempt < 1) {
-    await new Promise((r) => setTimeout(r, 800));
-    return callAI(prompt, system, attempt + 1);
-  }
-  const data = await res.json();
-  return data.content?.[0]?.text || "";
+  if (error) throw error;
+  return data?.text || "";
 }
 
 // ── UTILITIES ─────────────────────────────────────────────────────────────────

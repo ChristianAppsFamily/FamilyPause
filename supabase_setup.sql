@@ -6,11 +6,28 @@
 
 create extension if not exists "pgcrypto";
 
+-- ── Invite-code generator: FP-XXXX-XXXX (uppercase, no ambiguous chars) ───────
+create or replace function gen_invite_code()
+returns text as $$
+declare
+  alphabet text := 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; -- no I,O,0,1
+  part text;
+  i int;
+begin
+  part := '';
+  for i in 1..8 loop
+    if i = 5 then part := part || '-'; end if;
+    part := part || substr(alphabet, 1 + floor(random() * length(alphabet))::int, 1);
+  end loop;
+  return 'FP-' || part;  -- e.g. FP-A8F3-K2M9
+end;
+$$ language plpgsql volatile;
+
 -- ── WORKSPACES (one workspace = one family) ───────────────────
 create table if not exists workspaces (
   id            uuid primary key default gen_random_uuid(),
   name          text not null default 'My Family',
-  invite_code   text unique not null default substring(gen_random_uuid()::text, 1, 8),
+  invite_code   text unique not null default gen_invite_code(),
   owner_id      uuid references auth.users(id) on delete cascade,
   family_context jsonb default '{
     "people": ["Spence", "Amanda"],
@@ -178,11 +195,17 @@ end;
 $$ language plpgsql security definer;
 
 -- ── join_workspace_by_code() — used by invite links ───────────
+-- Ensure EXISTING workspaces tables adopt the new FP-XXXX-XXXX default
+-- (create-table-if-not-exists won't change an already-created column default).
+alter table workspaces alter column invite_code set default gen_invite_code();
+
 create or replace function join_workspace_by_code(invite text, display text default 'Member')
 returns uuid as $$
 declare ws_id uuid;
 begin
-  select id into ws_id from workspaces where invite_code = invite;
+  -- Case-insensitive match so FP-XXXX codes work whatever case the user typed
+  -- (and old lowercase-hex codes still resolve).
+  select id into ws_id from workspaces where upper(invite_code) = upper(trim(invite));
   if ws_id is null then raise exception 'Invalid invite code'; end if;
   insert into workspace_members (workspace_id, user_id, role, display_name)
   values (ws_id, auth.uid(), 'member', display)

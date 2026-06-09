@@ -32,7 +32,8 @@
       "mcp__Claude_in_Chrome__javascript_tool",
       "Bash(git -c 'user.name=Spence Longmore' -c user.email=spence@familypause.com commit -q -m 'AI distill reliability: raise max_tokens to 4096 + retry once on failure *)",
       "Bash(git -c 'user.name=Spence Longmore' -c user.email=spence@familypause.com commit -q -m 'Fix invite/join flow: open Join screen from link + prefill code; joiners skip family setup *)",
-      "Bash(git -c 'user.name=Spence Longmore' -c user.email=spence@familypause.com commit -q -m 'Remove all em-dashes from site copy; use commas, periods, colons \\(hyphens where needed\\) *)"
+      "Bash(git -c 'user.name=Spence Longmore' -c user.email=spence@familypause.com commit -q -m 'Remove all em-dashes from site copy; use commas, periods, colons \\(hyphens where needed\\) *)",
+      "Bash(git -c 'user.name=Spence Longmore' -c user.email=spence@familypause.com commit -q -m 'Secure AI via Edge Function + nicer FP-XXXX invite codes *)"
     ]
   }
 }
