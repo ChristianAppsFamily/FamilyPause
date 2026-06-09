@@ -214,6 +214,12 @@ begin
 end;
 $$ language plpgsql security definer;
 
+-- ── Faith Mode + Family Name columns (AI service v2) ─────────
+-- Run once. Safe to re-run — IF NOT EXISTS guards are implicit via add column if not exists.
+alter table workspaces
+  add column if not exists faith_mode  boolean default false,
+  add column if not exists family_name text;
+
 -- ── DEV: test deck-unlock code ────────────────────────────────
 insert into deck_codes (code, deck_year, batch)
 values ('FP-2026-TEST-0001', 2026, 'dev-test')

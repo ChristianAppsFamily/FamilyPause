@@ -13,6 +13,7 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { supabase } from "./lib/supabase";
+import { callFamilyPauseAI, buildSystemPrompt } from "./lib/ai";
 import Settings from "./components/Settings.jsx";
 import SessionHistory from "./components/SessionHistory.jsx";
 
@@ -25,15 +26,12 @@ const DEFAULT_CONTEXT = {
 };
 
 // ── AI CALL ──────────────────────────────────────────────────────────────────
-// The Anthropic call runs in the `distill` Supabase Edge Function so the API key
-// stays server-side (never shipped in the browser bundle). supabase.functions.invoke
-// forwards the signed-in user's JWT; the function verifies it before spending tokens.
-async function callAI(prompt, system) {
-  const { data, error } = await supabase.functions.invoke("distill", {
-    body: { prompt, system },
-  });
-  if (error) throw error;
-  return data?.text || "";
+// Thin wrapper — delegates to src/lib/ai.js which handles prompt caching,
+// faithMode, and cache-usage logging. systemOverride lets the distill flow
+// pass its own structured-extraction prompt; faithMode/familyName come from
+// the workspace profile loaded in the main App component.
+async function callAI(prompt, systemOverride, { faithMode = false, familyName = null } = {}) {
+  return callFamilyPauseAI({ prompt, systemOverride, faithMode, familyName });
 }
 
 // ── UTILITIES ─────────────────────────────────────────────────────────────────
@@ -580,7 +578,9 @@ Rules: extract everything actionable, use person names when mentioned, return on
 
     let parsed = [];
     try {
-      const raw = await callAI(`Extract all action items from this family meeting transcript:\n\n${text}`, system);
+      const faithMode = ws?.faith_mode ?? false;
+      const familyName = ws?.family_name ?? null;
+      const raw = await callAI(`Extract all action items from this family meeting transcript:\n\n${text}`, system, { faithMode, familyName });
       try { parsed = JSON.parse(raw.replace(/```json|```/g, "").trim()); }
       catch { const m = raw.match(/\[[\s\S]*\]/); if (m) parsed = JSON.parse(m[0]); }
     } catch { parsed = []; }
