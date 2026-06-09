@@ -2,7 +2,7 @@
 // App.jsx - FamilyPause main weekly-sync app
 // Ported from the design bundle (project/app: app.jsx, views.jsx, review.jsx,
 // screens.css) into a single React component, wired to real data:
-//   • Anthropic distillation (claude-sonnet-4-20250514)
+//   • Anthropic distillation (claude-haiku-4-5)
 //   • Supabase session save (on "Build my week") + realtime sync
 //   • Live speech capture (record mode)
 //   • workspace.family_context for people / categories / person routing

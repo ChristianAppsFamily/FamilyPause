@@ -9,7 +9,7 @@ familypause.com (not yet deployed — this is the build session)
 ## Tech stack
 - React 18 + Vite 5
 - Supabase (auth, database, realtime, edge functions)
-- Anthropic Claude API (claude-sonnet-4-20250514) for AI distillation
+- Anthropic Claude API (claude-haiku-4-5) for AI distillation
 - Vercel for hosting
 - Stripe for payments
 - Resend for email
@@ -321,13 +321,13 @@ Test code for development: FP-2026-TEST-0001 (insert via the SQL in Supabase set
 ## AI call
 The AI distillation call hits the Anthropic API directly from the browser during development. In production this must move to a Supabase Edge Function to protect the API key. Do not move it during this build session — flag it as a TODO comment in App.jsx for the Cursor session.
 
-Model string: claude-sonnet-4-20250514
+Model string: claude-haiku-4-5
 Max tokens: 1000
 
 ## What NOT to change
 - The design bundle (`project/`) and `src/styles/tokens.css` are the visual source of truth — match them; don't introduce off-palette colors, Lora buttons, or new radii
 - The three font choices
-- The AI model string claude-sonnet-4-20250514
+- The AI model string claude-haiku-4-5
 - Supabase table names: workspaces, workspace_members, sessions, deck_codes, subscriptions
 - The invite code format FP-YYYY-XXXX-0000
 - The provided files unless a specific step requires it
