@@ -162,6 +162,7 @@ export default function AppRouter() {
     <Auth
       onAuthenticated={handleAuthenticated}
       initialScreen={inviteCodeFromUrl ? "join" : "signin"}
+      inviteCode={inviteCodeFromUrl || ""}
     />
   );
 

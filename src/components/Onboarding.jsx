@@ -470,9 +470,12 @@ function StepReady({ displayName, onComplete }) {
 //   onComplete={() => setAppPhase("app")}
 // />
 
-export default function Onboarding({ workspaceId, displayName, inviteCode, onComplete }) {
+export default function Onboarding({ workspaceId, displayName, inviteCode, joined, onComplete }) {
   const [step, setStep] = useState(1);
   const [familyData, setFamilyData] = useState({});
+  // A spouse JOINING an existing workspace must not run family setup or the invite
+  // step — those belong to the owner and would overwrite the shared family_context.
+  // Joiners go straight from Welcome to the "ready" confirmation.
 
   return (
     <div style={{
@@ -490,7 +493,8 @@ export default function Onboarding({ workspaceId, displayName, inviteCode, onCom
         {step === 1 && (
           <StepWelcome
             displayName={displayName}
-            onNext={() => setStep(2)}
+            joined={joined}
+            onNext={() => setStep(joined ? 4 : 2)}
           />
         )}
 

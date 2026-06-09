@@ -577,11 +577,11 @@ function ForgotPassword({ onSwitch }) {
 }
 
 // ── JOIN VIA INVITE CODE ──────────────────────────────────────────────────────
-function JoinWorkspace({ onSwitch, onSuccess }) {
+function JoinWorkspace({ onSwitch, onSuccess, initialCode = "" }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [inviteCode, setInviteCode] = useState("");
+  const [inviteCode, setInviteCode] = useState(initialCode);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -684,8 +684,8 @@ function JoinWorkspace({ onSwitch, onSuccess }) {
 // Usage in App.jsx:
 // <Auth onAuthenticated={(user, workspace) => setAppState({ user, workspace })} />
 
-export default function Auth({ onAuthenticated }) {
-  const [screen, setScreen] = useState("signin");
+export default function Auth({ onAuthenticated, initialScreen = "signin", inviteCode = "" }) {
+  const [screen, setScreen] = useState(initialScreen);
 
   const handleSignInSuccess = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -709,6 +709,6 @@ export default function Auth({ onAuthenticated }) {
   if (screen === "signin")  return <SignIn  onSwitch={setScreen} onSuccess={handleSignInSuccess} />;
   if (screen === "signup")  return <SignUp  onSwitch={setScreen} onSuccess={handleSignUpSuccess} />;
   if (screen === "forgot")  return <ForgotPassword onSwitch={setScreen} />;
-  if (screen === "join")    return <JoinWorkspace  onSwitch={setScreen} onSuccess={handleJoinSuccess} />;
+  if (screen === "join")    return <JoinWorkspace  onSwitch={setScreen} onSuccess={handleJoinSuccess} initialCode={inviteCode} />;
   return null;
 }
