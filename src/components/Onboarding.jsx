@@ -414,11 +414,101 @@ function StepInvite({ workspaceId, spouseName, onNext }) {
   );
 }
 
-// ── STEP 4: READY ─────────────────────────────────────────────────────────────
+// ── STEP 4: CARD DECK ─────────────────────────────────────────────────────────
+function StepCardDeck({ workspaceId, onNext }) {
+  const [code, setCode] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [unlocked, setUnlocked] = useState(false);
+
+  const redeem = async () => {
+    const trimmed = code.trim().toUpperCase();
+    if (!trimmed) { setError("Please enter your code."); return; }
+    setLoading(true); setError("");
+
+    const { data, error: lookupErr } = await supabase
+      .from("deck_codes")
+      .select("id, deck_year, redeemed_by")
+      .eq("code", trimmed)
+      .maybeSingle();
+
+    if (lookupErr || !data) { setError("Code not found. Check the card inside your box lid."); setLoading(false); return; }
+    if (data.redeemed_by) { setError("This code has already been redeemed."); setLoading(false); return; }
+
+    const { data: { user } } = await supabase.auth.getUser();
+    const { error: redeemErr } = await supabase.from("deck_codes").update({ redeemed_by: user?.id, redeemed_at: new Date().toISOString() }).eq("id", data.id);
+    if (redeemErr) { setError("Redemption failed. Try again or skip and do it in Settings."); setLoading(false); return; }
+
+    const { data: ws } = await supabase.from("workspaces").select("unlocked_deck_years").eq("id", workspaceId).single();
+    const years = [...new Set([...(ws?.unlocked_deck_years || []), data.deck_year || 2026])];
+    await supabase.from("workspaces").update({ cards_unlocked: true, unlocked_deck_years: years }).eq("id", workspaceId);
+
+    setUnlocked(true);
+    setLoading(false);
+    setTimeout(onNext, 1600);
+  };
+
+  return (
+    <div style={{ textAlign: "center" }}>
+      <ProgressBar step={4} total={5} />
+
+      <div style={{ fontSize: 48, marginBottom: 20 }}>🃏</div>
+      <div className="ob-fade" style={{ fontSize: 11, letterSpacing: "0.25em", color: T.terra, fontFamily: "'JetBrains Mono', monospace", textTransform: "uppercase", marginBottom: 12 }}>
+        Optional
+      </div>
+      <h2 className="ob-fade-1" style={{ fontFamily: "'Playfair Display', serif", fontSize: 36, fontWeight: 600, color: T.text, marginBottom: 16 }}>
+        Have the card deck?
+      </h2>
+      <p className="ob-fade-2" style={{ fontSize: 15, color: T.mid, lineHeight: 1.65, marginBottom: 32, maxWidth: 400, margin: "0 auto 32px" }}>
+        The FamilyPause card deck has 52 conversation questions to draw each week. Enter the code from inside the box lid to unlock it in the app.
+      </p>
+
+      {unlocked ? (
+        <div className="ob-fade" style={{ background: T.oliveL, border: `1px solid ${T.olive}44`, borderRadius: 12, padding: "18px 24px", marginBottom: 24, display: "inline-block" }}>
+          <div style={{ fontSize: 24, marginBottom: 6 }}>✓</div>
+          <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, letterSpacing: ".08em", textTransform: "uppercase", color: T.olive }}>Deck unlocked</div>
+        </div>
+      ) : (
+        <div className="ob-fade-2" style={{ maxWidth: 400, margin: "0 auto 24px" }}>
+          {error && (
+            <div style={{ background: "#FBEAE5", border: "1px solid #F6DAD3", borderRadius: 8, padding: "10px 14px", marginBottom: 12, fontFamily: "'Lora', serif", fontSize: 13.5, color: "#C0402F" }}>
+              {error}
+            </div>
+          )}
+          <div style={{ display: "flex", gap: 8 }}>
+            <input
+              className="ob-input"
+              placeholder="e.g. FP-2026-AB12-0001"
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && redeem()}
+              style={{ fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.08em", flex: 1 }}
+            />
+            <button
+              onClick={redeem}
+              disabled={loading}
+              style={{ background: T.terra, color: "#fff", border: "none", borderRadius: 8, padding: "0 18px", fontFamily: "'JetBrains Mono', monospace", fontSize: 12, letterSpacing: ".06em", textTransform: "uppercase", cursor: "pointer", flexShrink: 0 }}
+            >
+              {loading ? "…" : "Unlock"}
+            </button>
+          </div>
+        </div>
+      )}
+
+      <div className="ob-fade-3" style={{ display: "flex", flexDirection: "column", gap: 10, maxWidth: 340, margin: "0 auto" }}>
+        <button className="ob-btn" onClick={onNext}>
+          {unlocked ? "Continue →" : "I don't have the deck yet →"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ── STEP 5: READY ─────────────────────────────────────────────────────────────
 function StepReady({ displayName, onComplete }) {
   return (
     <div style={{ textAlign: "center" }}>
-      <ProgressBar step={4} total={4} />
+      <ProgressBar step={5} total={5} />
 
       <div style={{
         width: 80, height: 80, borderRadius: "50%",
@@ -495,6 +585,7 @@ export default function Onboarding({ workspaceId, displayName, inviteCode, joine
             displayName={displayName}
             joined={joined}
             onNext={() => setStep(joined ? 4 : 2)}
+            // Joiners skip family setup (2) and invite (3) but still see card deck (4)
           />
         )}
 
@@ -515,6 +606,13 @@ export default function Onboarding({ workspaceId, displayName, inviteCode, joine
         )}
 
         {step === 4 && (
+          <StepCardDeck
+            workspaceId={workspaceId}
+            onNext={() => setStep(5)}
+          />
+        )}
+
+        {step === 5 && (
           <StepReady
             displayName={displayName}
             onComplete={onComplete}

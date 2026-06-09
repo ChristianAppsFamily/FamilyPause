@@ -16,6 +16,7 @@ import { supabase } from "./lib/supabase";
 import { callFamilyPauseAI, buildSystemPrompt } from "./lib/ai";
 import Settings from "./components/Settings.jsx";
 import SessionHistory from "./components/SessionHistory.jsx";
+import CardSystem from "./components/CardSystem.jsx";
 
 // ── DEFAULT CONTEXT (fallback when workspace has none) ───────────────────────
 const DEFAULT_CONTEXT = {
@@ -499,7 +500,7 @@ function PlanView({ keptCards, adults, roleOf, onRestart }) {
 // ── ROOT ──────────────────────────────────────────────────────────────────────
 export default function App({ user, workspace, onSignOut }) {
   const [view, setView] = useState("agenda");
-  const [overlay, setOverlay] = useState(null); // "settings" | "history" | null
+  const [overlay, setOverlay] = useState(null); // "settings" | "history" | "decks" | null
   const [cards, setCards] = useState([]);
   const [distillError, setDistillError] = useState(null);
   const [distillDone, setDistillDone] = useState(false);
@@ -616,10 +617,17 @@ Rules: extract everything actionable, use person names when mentioned, return on
 
   // ── Overlays ─────────────────────────────────────────────────────────────
   if (overlay === "settings") {
-    return <Settings workspace={ws} user={user} onSignOut={onSignOut} onClose={() => setOverlay(null)} onWorkspaceUpdate={setWs} />;
+    return <Settings workspace={ws} user={user} onSignOut={onSignOut} onClose={() => setOverlay(null)} onWorkspaceUpdate={setWs} onOpenDecks={() => setOverlay("decks")} />;
   }
   if (overlay === "history") {
     return <SessionHistory workspace={ws} onClose={() => setOverlay(null)} />;
+  }
+  if (overlay === "decks") {
+    return <CardSystem workspace={ws} user={user} onClose={() => setOverlay(null)} onUnlocked={(year) => {
+      const years = [...new Set([...(ws?.unlocked_deck_years || []), year])];
+      setWs({ ...ws, cards_unlocked: true, unlocked_deck_years: years });
+      setOverlay(null);
+    }} />;
   }
 
   return (
