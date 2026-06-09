@@ -1,12 +1,12 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// Landing.jsx — FamilyPause marketing site
+// Landing.jsx: FamilyPause marketing site
 // Ported from the design bundle (project/FamilyPause Landing.html + landing/landing.css).
 // All styles are scoped under `.fp-landing` so the landing's generic class names
 // (.btn, .eyebrow, .section, .word, .tag…) never collide with the app's global CSS.
 //
 // Props:
-//   onSignIn()   optional — nav "Sign in"
-//   onStart()    optional — all "Start / trial" CTAs
+//   onSignIn()   optional (nav "Sign in")
+//   onStart()    optional (all "Start / trial" CTAs)
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useEffect, useRef, useState } from "react";
@@ -338,7 +338,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
           <div className="wrap quote reveal">
             <span className="qmark">&ldquo;</span>
             <blockquote>We did a FamilyPause this weekend and it got us back on track with everything.</blockquote>
-            <div className="qby">— Spence, Founder &amp; First User</div>
+            <div className="qby">- Spence, Founder &amp; First User</div>
           </div>
         </section>
 
@@ -348,20 +348,20 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
             <div className="shead reveal">
               <span className="eyebrow">How it works</span>
               <h2>Talk like humans.<br /><em>Plan like a team.</em></h2>
-              <p>No templates to fill. No agenda to pre-build. Just have your conversation — FamilyPause handles the structure.</p>
+              <p>No templates to fill. No agenda to pre-build. Just have your conversation, and FamilyPause handles the structure.</p>
             </div>
             <div className="steps4 reveal">
               <div className="stp">
                 <svg className="sico" viewBox="0 0 24 24" {...stroke}><path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3z" /><path d="M5 11a7 7 0 0 0 14 0" /><path d="M12 18v3" /></svg>
                 <div className="snum">01</div>
                 <h3>Have your meeting</h3>
-                <p>Record live in the app or paste a transcript from Otter or Apple Dictation. Talk about whatever needs talking about — kids, money, work, the week ahead.</p>
+                <p>Record live in the app or paste a transcript from Otter or Apple Dictation. Talk about whatever needs talking about: kids, money, work, the week ahead.</p>
               </div>
               <div className="stp">
                 <svg className="sico" viewBox="0 0 24 24" {...stroke}><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3z" /></svg>
                 <div className="snum">02</div>
                 <h3>AI distills it</h3>
-                <p>Hit Distill. The AI reads your full conversation and extracts every action, appointment, and decision — organized by person and category. About 10 seconds.</p>
+                <p>Hit Distill. The AI reads your full conversation and extracts every action, appointment, and decision, organized by person and category. About 10 seconds.</p>
               </div>
               <div className="stp">
                 <svg className="sico" viewBox="0 0 24 24" {...stroke}><path d="M5 12.5 10 17.5 19.5 6.5" /></svg>
@@ -373,7 +373,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                 <svg className="sico" viewBox="0 0 24 24" {...stroke}><path d="M7 3h7l4 4v14a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z" /><path d="M14 3v4h4" /><path d="M9 13h6M9 16.5h4" /></svg>
                 <div className="snum">04</div>
                 <h3>Your week is built</h3>
-                <p>A clean weekly plan organized by person — Spence's actions, Amanda's actions, shared items, kids by name. Ready before Sunday ends.</p>
+                <p>A clean weekly plan organized by person: Spence's actions, Amanda's actions, shared items, kids by name. Ready before Sunday ends.</p>
               </div>
             </div>
           </div>
@@ -405,7 +405,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
               <div className="aud">
                 <div className="aico"><svg width="24" height="24" viewBox="0 0 24 24" {...stroke}><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H12v16H6.5A2.5 2.5 0 0 0 4 21.5z" /><path d="M20 5.5A2.5 2.5 0 0 0 17.5 3H12v16h5.5a2.5 2.5 0 0 1 2.5 2.5z" /></svg></div>
                 <h3>Homeschool families</h3>
-                <p>Curriculum, appointments, activities, finances — all managed from home. The weekly sync isn't optional when home is also school and office. FamilyPause makes it fast.</p>
+                <p>Curriculum, appointments, activities, finances, all managed from home. The weekly sync isn't optional when home is also school and office. FamilyPause makes it fast.</p>
               </div>
             </div>
           </div>
@@ -424,7 +424,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
             <div className="shead reveal">
               <span className="eyebrow">Pricing</span>
               <h2>Start free.<br /><em>Stay because it works.</em></h2>
-              <p>7 days free, full access, no card required. After that — stay free with manual use, or unlock AI for less than a coffee a month.</p>
+              <p>7 days free, full access, no card required. After that, stay free with manual use, or unlock AI for less than a coffee a month.</p>
             </div>
             <div className="pricewrap reveal">
               <div className="pricegrid">
@@ -450,7 +450,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                   <ul className="feats">
                     <li><span className="far">→</span> Unlimited AI sessions</li>
                     <li><span className="far">→</span> Full meeting history</li>
-                    <li><span className="far">→</span> Invite your spouse — real-time sync</li>
+                    <li><span className="far">→</span> Invite your spouse for real-time sync</li>
                     <li><span className="far">→</span> Kids routed by name</li>
                     <li><span className="far">→</span> Export sessions as PDF</li>
                     <li><span className="far">→</span> Custom categories</li>

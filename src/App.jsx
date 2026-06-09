@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// App.jsx — FamilyPause main weekly-sync app
+// App.jsx - FamilyPause main weekly-sync app
 // Ported from the design bundle (project/app: app.jsx, views.jsx, review.jsx,
 // screens.css) into a single React component, wired to real data:
 //   • Anthropic distillation (claude-sonnet-4-20250514)
@@ -38,7 +38,7 @@ async function callAI(prompt, system, attempt = 0) {
     },
     body: JSON.stringify({
       model: "claude-sonnet-4-20250514",
-      // 1000 was too low — long transcripts produce many items and the JSON gets
+      // 1000 was too low: long transcripts produce many items and the JSON gets
       // truncated, which fails to parse and looks like "0 items extracted".
       max_tokens: 4096,
       system,
@@ -187,7 +187,7 @@ function AgendaView({ family, keptActions, onDistill, onOpenLog }) {
               <div className="ctabar" style={{ marginTop: 26 }}>
                 <div className="copy">
                   <h3>Ready when you are.</h3>
-                  <p>Record live or paste your conversation — FamilyPause turns it into a plan in about ten seconds.</p>
+                  <p>Record live or paste your conversation, and FamilyPause turns it into a plan in about ten seconds.</p>
                 </div>
                 <button className="btn btn-primary btn-lg" onClick={onDistill}>
                   <Ico d={I.bolt} size={16} fill /> Distill this week
@@ -200,7 +200,7 @@ function AgendaView({ family, keptActions, onDistill, onOpenLog }) {
             keptActions.length === 0 ? (
               <div className="rise" style={{ textAlign: "center", padding: "70px 20px", color: "var(--ink-3)" }}>
                 <div style={{ fontFamily: "var(--display)", fontSize: 22, fontStyle: "italic", color: "var(--ink-2)", marginBottom: 8 }}>No open actions yet.</div>
-                <div style={{ fontSize: 15 }}>Distill your conversation and your actions appear here — sorted by person.</div>
+                <div style={{ fontSize: 15 }}>Distill your conversation and your actions appear here, sorted by person.</div>
               </div>
             ) : (
               <div className="rise">
@@ -233,7 +233,7 @@ function AgendaView({ family, keptActions, onDistill, onOpenLog }) {
                 <div className="as">Reads &amp; writes your agenda</div>
               </div>
             </div>
-            <div className="assbubble">Hi — I'm here while you talk. I can add notes, draft action items, and tell you what you're forgetting.</div>
+            <div className="assbubble">Hi, I'm here while you talk. I can add notes, draft action items, and tell you what you're forgetting.</div>
             <div className="suggs">
               <span className="sugg">Summarize our agenda</span>
               <span className="sugg">What are we forgetting?</span>
@@ -286,7 +286,7 @@ function CaptureView({ onBack, onProcess }) {
       <div className="lead">
         <div className="eyebrow" style={{ marginBottom: 12 }}>Step 1 · Have your meeting</div>
         <h1>Talk like humans.<br /><em>We'll handle the structure.</em></h1>
-        <p>Paste a transcript from Otter or Apple Dictation, or record live. Talk about whatever needs talking about — kids, money, work, the week ahead.</p>
+        <p>Paste a transcript from Otter or Apple Dictation, or record live. Talk about whatever needs talking about: kids, money, work, the week ahead.</p>
       </div>
 
       <div className="panel capcard">
@@ -345,7 +345,7 @@ function ProcessingView({ done }) {
     <div className="view proc">
       <div className="procorb"><span className="ring" /><span className="ring r2" /><Ico d={I.bolt} size={46} fill /></div>
       <h1>Distilling your sync…</h1>
-      <div className="psub">{done ? "Done — opening your review." : subs[Math.min(active, subs.length - 1)]}</div>
+      <div className="psub">{done ? "Done. Opening your review." : subs[Math.min(active, subs.length - 1)]}</div>
       <div className="procsteps">
         {stepLabels.map((s, i) => (
           <div key={i} className={"procstep " + (i < active ? "done" : i === active ? "active" : "")}>
@@ -390,7 +390,7 @@ function ReviewView({ cards, setCards, roleOf, onBack, onBuild }) {
       {total === 0 ? (
         <div style={{ textAlign: "center", padding: "50px 20px", color: "var(--ink-3)" }}>
           <div style={{ fontFamily: "var(--display)", fontSize: 22, fontStyle: "italic", color: "var(--ink-2)", marginBottom: 8 }}>Nothing to review.</div>
-          <div style={{ fontSize: 15 }}>We couldn't extract items — try a longer or clearer transcript.</div>
+          <div style={{ fontSize: 15 }}>We couldn't extract items. Try a longer or clearer transcript.</div>
         </div>
       ) : (
         <div>
@@ -482,7 +482,7 @@ function PlanView({ keptCards, adults, roleOf, onRestart }) {
         <div className="seal"><Ico d={I.check} size={28} /></div>
         <div className="eyebrow" style={{ marginBottom: 12 }}>Step 3 · Your week is built</div>
         <h1>Your week, <em>planned before Sunday ends.</em></h1>
-        <p>A clean plan, organized by person. {keptCards.length} items routed where they belong — appointments timed, actions owned, nothing forgotten.</p>
+        <p>A clean plan, organized by person. {keptCards.length} items routed where they belong: appointments timed, actions owned, nothing forgotten.</p>
       </div>
 
       <div className="plangrid">

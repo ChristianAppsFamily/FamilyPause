@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// Auth.jsx — FamilyPause
+// Auth.jsx - FamilyPause
 // Screens: Sign In, Sign Up, Forgot Password
 // Drop into: src/components/Auth.jsx
 // Requires: src/lib/supabase.js
@@ -9,7 +9,7 @@ import { useState } from "react";
 import { supabase } from "../lib/supabase";
 
 // ── TERRA & CREAM PALETTE ─────────────────────────────────────────────────────
-// Palette mapped to the design bundle (src/styles/tokens.css) — source of truth.
+// Palette mapped to the design bundle (src/styles/tokens.css): source of truth.
 const T = {
   bg:        "#FBF6EC",  // --paper
   surface:   "#FCF8F0",  // --paper-card
@@ -175,7 +175,7 @@ function AuthShell({ children, wide = false }) {
       }}
         className="fp-left-panel"
       >
-        {/* Decorative watermark — the logo mark itself, faint, bottom-right */}
+        {/* Decorative watermark: the logo mark itself, faint, bottom-right */}
         <div style={{ position: "absolute", bottom: -28, right: -22, opacity: 0.06, pointerEvents: "none" }} aria-hidden="true">
           <LogoMark width={141} height={180} fill="#FAF7F2" />
         </div>
@@ -201,7 +201,7 @@ function AuthShell({ children, wide = false }) {
             "We did a FamilyPause this weekend and got back on track."
           </div>
           <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: "rgba(250,247,242,0.4)", letterSpacing: "0.1em", textTransform: "uppercase" }}>
-            — Spence, Founder
+            - Spence, Founder
           </div>
         </div>
       </div>
@@ -282,7 +282,7 @@ function Spinner() {
   );
 }
 
-// ── LOGO MARK (two heads + pill bodies — the "ii" / two-people mark) ──────────
+// ── LOGO MARK (two heads + pill bodies: the "ii" / two-people mark) ──────────
 function LogoMark({ width = 17, height = 28, fill = "#FAF7F2", style }) {
   return (
     <svg viewBox="0 0 22 28" width={width} height={height} fill={fill} aria-hidden="true" style={style}>
@@ -426,7 +426,7 @@ function SignUp({ onSwitch, onSuccess }) {
     if (!userId) { setError("Something went wrong. Please try again."); setLoading(false); return; }
 
     // Create workspace + owner membership in one server-side call.
-    // (SECURITY DEFINER RPC — avoids client-side RLS/grant issues at signup.)
+    // (SECURITY DEFINER RPC: avoids client-side RLS/grant issues at signup.)
     const { data: ws, error: wsErr } = await supabase.rpc("create_owner_workspace", { p_name: name });
     if (wsErr) { setError(wsErr.message); setLoading(false); return; }
     const workspace = Array.isArray(ws) ? ws[0] : ws;
@@ -566,7 +566,7 @@ function ForgotPassword({ onSwitch }) {
           </div>
         </>
       ) : (
-        <SuccessBanner message={`Reset link sent to ${email}. Check your inbox — it may take a minute.`} />
+        <SuccessBanner message={`Reset link sent to ${email}. Check your inbox; it may take a minute.`} />
       )}
 
       <div className="fp-fade-3" style={{ textAlign: "center", marginTop: 8 }}>

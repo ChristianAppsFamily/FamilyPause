@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// Settings.jsx — FamilyPause
+// Settings.jsx - FamilyPause
 // Visual source of truth: project/app/styles.css + screens.css (design bundle).
 // Composes the shared design classes from src/styles/tokens.css.
 // Sections: Family members, Invite code, Card decks, Subscription,
@@ -9,9 +9,9 @@
 //   workspace   { id, name, invite_code, family_context, unlocked_deck_years, cards_unlocked }
 //   user        supabase auth user
 //   onSignOut() called to sign the user out (passed from AppRouter)
-//   onClose()   optional — return to the main app
-//   onOpenDecks() optional — open the CardSystem unlock flow
-//   onWorkspaceUpdate(updatedWorkspace) optional — bubble saved workspace up
+//   onClose()   optional: return to the main app
+//   onOpenDecks() optional: open the CardSystem unlock flow
+//   onWorkspaceUpdate(updatedWorkspace) optional: bubble saved workspace up
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useState, useEffect } from "react";
@@ -139,7 +139,7 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
           .limit(1)
           .maybeSingle();
         if (active) setSubscription(data || null);
-      } catch { /* offline / no subscription row — fall back to free plan */ }
+      } catch { /* offline / no subscription row: fall back to free plan */ }
       finally { if (active) setSubLoading(false); }
     };
     load();
@@ -169,7 +169,7 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
       await navigator.clipboard.writeText(workspace?.invite_code || "");
       setCopied(true);
       setTimeout(() => setCopied(false), 1800);
-    } catch { /* clipboard blocked — ignore */ }
+    } catch { /* clipboard blocked: ignore */ }
   };
 
   // ── Plan + trial ───────────────────────────────────────────────────────────
@@ -198,7 +198,7 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
     <div className="stage view">
       <style>{css}</style>
 
-      {/* Brand bar — matches design bundle (Family terra, Pause ink) */}
+      {/* Brand bar: matches design bundle (Family terra, Pause ink) */}
       <div className="brandbar">
         <div className="brand">
           <div className="mark">
@@ -257,7 +257,7 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
           <h2>Invite code</h2>
           <p className="set-sub">Share this code so your spouse can join the same family workspace.</p>
           <div style={{ display: "flex", gap: 10 }}>
-            <div className="set-codebox">{workspace?.invite_code || "—"}</div>
+            <div className="set-codebox">{workspace?.invite_code || "Not set"}</div>
             <button className="btn btn-soft" onClick={copyInvite}>{copied ? "Copied ✓" : "Copy"}</button>
           </div>
         </section>
@@ -299,11 +299,11 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
                 <p className="set-sub" style={{ margin: 0 }}>
                   {trialDaysRemaining > 0
                     ? `${trialDaysRemaining} day${trialDaysRemaining === 1 ? "" : "s"} left in your free trial.`
-                    : "Your free trial has ended — upgrade for unlimited AI sessions."}
+                    : "Your free trial has ended. Upgrade for unlimited AI sessions."}
                 </p>
               )}
               {!subscription && trialDaysRemaining === null && (
-                <p className="set-sub" style={{ margin: 0 }}>You're on the free plan — 1 AI session per month.</p>
+                <p className="set-sub" style={{ margin: 0 }}>You're on the free plan, with 1 AI session per month.</p>
               )}
             </div>
           )}

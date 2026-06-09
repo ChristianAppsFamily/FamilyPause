@@ -1,20 +1,20 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// Paywall.jsx — FamilyPause
+// Paywall.jsx: FamilyPause
 // Visual source of truth: project/app design bundle (src/styles/tokens.css).
 // Shown when the 7-day trial expires, or a free user hits the 1-AI-session/month
 // limit and tries to run AI distillation.
 //
 // Props:
-//   reason     "trial" | "limit"  — tailors the headline/subcopy (default "trial")
-//   onClose()  optional — dismiss / go back
+//   reason     "trial" | "limit"  (tailors the headline/subcopy, default "trial")
+//   onClose()  optional (dismiss / go back)
 //
-// NOTE: Stripe payment links are PLACEHOLDERS — Spence replaces STRIPE_LINKS
+// NOTE: Stripe payment links are PLACEHOLDERS. Spence replaces STRIPE_LINKS
 // with the real Checkout/Payment Link URLs before launch.
 // ─────────────────────────────────────────────────────────────────────────────
 
 const STRIPE_LINKS = {
-  family: "https://buy.stripe.com/PLACEHOLDER_family_59",   // TODO: real Stripe link — Family Plan $59/yr
-  pro:    "https://buy.stripe.com/PLACEHOLDER_pro_99",      // TODO: real Stripe link — Family Pro $99/yr
+  family: "https://buy.stripe.com/PLACEHOLDER_family_59",   // TODO: real Stripe link for Family Plan $59/yr
+  pro:    "https://buy.stripe.com/PLACEHOLDER_pro_99",      // TODO: real Stripe link for Family Pro $99/yr
 };
 
 const css = `
@@ -81,7 +81,7 @@ export default function Paywall({ reason = "trial", onClose }) {
     ? <>You've used <em>this month's</em> free session</>
     : <>Your <em>free trial</em> has ended</>;
   const sub = reason === "limit"
-    ? "The free plan includes one AI session a month. Upgrade to FamilyPause Family for unlimited weekly syncs — and keep your whole family on the same page."
+    ? "The free plan includes one AI session a month. Upgrade to FamilyPause Family for unlimited weekly syncs, and keep your whole family on the same page."
     : "We hope the last 7 days brought a little more calm to your week. Keep the rhythm going with unlimited AI sessions, spouse sync, and full session history.";
 
   const go = (url) => { window.location.href = url; };
@@ -109,7 +109,7 @@ export default function Paywall({ reason = "trial", onClose }) {
         </div>
 
         <div className="pw-grid">
-          {/* ── FAMILY PLAN — featured ─────────────────────────────────── */}
+          {/* ── FAMILY PLAN, featured ─────────────────────────────────── */}
           <div className="pw-card feat">
             <span className="pw-badge">Most families pick this</span>
             <div className="pw-name">Family Plan</div>
@@ -126,7 +126,7 @@ export default function Paywall({ reason = "trial", onClose }) {
             </ul>
             <div className="pw-cta">
               <button className="btn btn-primary btn-lg btn-block" onClick={() => go(STRIPE_LINKS.family)}>
-                Upgrade to Family — $59
+                Upgrade to Family, $59
               </button>
             </div>
           </div>
@@ -138,7 +138,7 @@ export default function Paywall({ reason = "trial", onClose }) {
               <span className="amt">$0</span>
               <span className="per">/ forever</span>
             </div>
-            <p className="pw-tagline">For the occasional reset — one AI session a month.</p>
+            <p className="pw-tagline">For the occasional reset: one AI session a month.</p>
             <ul className="pw-feats">
               <li><Check /> 1 AI session per month</li>
               <li><Check /> Manual card review anytime</li>
@@ -155,7 +155,7 @@ export default function Paywall({ reason = "trial", onClose }) {
         <div className="pw-foot">
           <div className="note">No credit card required for your trial.</div>
           <a className="pro" href={STRIPE_LINKS.pro} onClick={(e) => { e.preventDefault(); go(STRIPE_LINKS.pro); }}>
-            Need recurring-item memory + kids profiles? See Family Pro — $99/yr
+            Need recurring-item memory + kids profiles? See Family Pro, $99/yr
           </a>
         </div>
       </div>

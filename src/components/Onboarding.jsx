@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// Onboarding.jsx — FamilyPause
+// Onboarding.jsx - FamilyPause
 // Screens: Welcome, Family Setup, Invite Spouse, Ready
 // Drop into: src/components/Onboarding.jsx
 // Requires: src/lib/supabase.js
@@ -8,7 +8,7 @@
 import { useState } from "react";
 import { supabase } from "../lib/supabase";
 
-// Palette mapped to the design bundle (src/styles/tokens.css) — source of truth.
+// Palette mapped to the design bundle (src/styles/tokens.css): source of truth.
 const T = {
   bg:      "#FBF6EC",  // --paper
   surface: "#FCF8F0",  // --paper-card
@@ -408,7 +408,7 @@ function StepInvite({ workspaceId, spouseName, onNext }) {
         Continue →
       </button>
       <button className="ob-btn-ghost" onClick={onNext}>
-        Skip for now — invite later from Settings
+        Skip for now, invite later from Settings
       </button>
     </div>
   );
@@ -442,7 +442,7 @@ function StepReady({ displayName, onComplete }) {
         {[
           ["🎙", "Record your conversation live"],
           ["📋", "Or paste a transcript from Otter"],
-          ["✓", "Review cards together — Keep or Discard"],
+          ["✓", "Review cards together: Keep or Discard"],
           ["📅", "Send appointments to Google Calendar"],
         ].map(([icon, text]) => (
           <div key={text} style={{ display: "flex", alignItems: "center", gap: 14, padding: "12px 16px", background: T.surface, borderRadius: 10, textAlign: "left" }}>
@@ -474,7 +474,7 @@ export default function Onboarding({ workspaceId, displayName, inviteCode, joine
   const [step, setStep] = useState(1);
   const [familyData, setFamilyData] = useState({});
   // A spouse JOINING an existing workspace must not run family setup or the invite
-  // step — those belong to the owner and would overwrite the shared family_context.
+  // step, since those belong to the owner and would overwrite the shared family_context.
   // Joiners go straight from Welcome to the "ready" confirmation.
 
   return (

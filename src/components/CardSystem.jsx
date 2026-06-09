@@ -1,26 +1,26 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// CardSystem.jsx — FamilyPause
+// CardSystem.jsx - FamilyPause
 //
 // Contains four components:
-//   1. CardDraw        — Pre-session card reveal (locked / unlocked)
-//   2. UnlockDeck      — Code entry + Stripe digital purchase
-//   3. DeckLibrary     — All owned decks + new year awareness card
-//   4. CardSystemRoot  — Router between the above
+//   1. CardDraw        : Pre-session card reveal (locked / unlocked)
+//   2. UnlockDeck      : Code entry + Stripe digital purchase
+//   3. DeckLibrary     : All owned decks + new year awareness card
+//   4. CardSystemRoot  : Router between the above
 //
 // Drop into: src/components/CardSystem.jsx
 // Requires:  src/lib/supabase.js
 //
 // Props for CardSystemRoot:
-//   workspace       — Supabase workspace object
-//   onStartSession  — callback when user taps "Start Recording" after card draw
-//   onClose         — callback to dismiss/navigate away
+//   workspace       : Supabase workspace object
+//   onStartSession  : callback when user taps "Start Recording" after card draw
+//   onClose         : callback to dismiss/navigate away
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "../lib/supabase";
 
 // ── PALETTE ───────────────────────────────────────────────────────────────────
-// Palette mapped to the design bundle (src/styles/tokens.css) — source of truth.
+// Palette mapped to the design bundle (src/styles/tokens.css): source of truth.
 const T = {
   bg:       "#FBF6EC",  // --paper
   surface:  "#FCF8F0",  // --paper-card
@@ -54,7 +54,7 @@ const DECKS = {
     digitalPrice: 12,
     cards: [
       // FINANCES
-      { id: 1,  category: "Finances",  question: "If our income doubled tomorrow, what's the first thing we'd change — and what would we keep exactly the same?" },
+      { id: 1,  category: "Finances",  question: "If our income doubled tomorrow, what's the first thing we'd change, and what would we keep exactly the same?" },
       { id: 2,  category: "Finances",  question: "What does financial security actually feel like to you? How close are we to that feeling right now?" },
       { id: 3,  category: "Finances",  question: "Is there a purchase one of us has been wanting that we haven't talked about? What's stopped us from bringing it up?" },
       { id: 4,  category: "Finances",  question: "Where do you think we waste the most money without realizing it? What would you cut first?" },
@@ -63,7 +63,7 @@ const DECKS = {
       { id: 7,  category: "Finances",  question: "Are we giving at the level we want to be? If not, what's in the way?" },
       { id: 8,  category: "Finances",  question: "What's one financial goal you want us to hit before the end of this year that we haven't talked enough about?" },
       { id: 9,  category: "Finances",  question: "Do you feel like financial decisions in our home are made equally between us? What would more balance look like?" },
-      { id: 10, category: "Finances",  question: "What does generosity mean to you practically — not in theory, but in how we actually spend?" },
+      { id: 10, category: "Finances",  question: "What does generosity mean to you practically, not in theory, but in how we actually spend?" },
       // KIDS
       { id: 11, category: "Kids",      question: "What's one thing about how we're raising our kids that you're really proud of right now?" },
       { id: 12, category: "Kids",      question: "Is there something you wish we handled differently as parents that you haven't said out loud yet?" },
@@ -72,7 +72,7 @@ const DECKS = {
       { id: 15, category: "Kids",      question: "How do you think our kids would describe our home if someone asked them? Is that the answer you want?" },
       { id: 16, category: "Kids",      question: "Are we spending individual time with each kid, or always together as a group? Does that need to change?" },
       { id: 17, category: "Kids",      question: "What's a memory from your own childhood you want to recreate for our kids? What's stopping us?" },
-      { id: 18, category: "Kids",      question: "How do you feel about the amount of screen time in our home right now — for the kids and for us?" },
+      { id: 18, category: "Kids",      question: "How do you feel about the amount of screen time in our home right now, for the kids and for us?" },
       { id: 19, category: "Kids",      question: "Are there any friendships in our kids' lives that concern you? Any you're really grateful for?" },
       { id: 20, category: "Kids",      question: "What's one conversation we need to have with one of our kids that we've been putting off?" },
       // MARRIAGE
@@ -87,7 +87,7 @@ const DECKS = {
       { id: 29, category: "Marriage",  question: "What's one specific thing I could do this week that would make you feel deeply valued?" },
       { id: 30, category: "Marriage",  question: "If you had to describe our marriage to a friend in three words, what would they be? What words do you wish they'd be?" },
       // FAITH
-      { id: 31, category: "Faith",     question: "How is your faith actually doing right now — not the Sunday version, the real version?" },
+      { id: 31, category: "Faith",     question: "How is your faith actually doing right now, not the Sunday version, the real version?" },
       { id: 32, category: "Faith",     question: "Is there something God has been putting on your heart that you haven't shared with me yet?" },
       { id: 33, category: "Faith",     question: "Do you feel like we're building a spiritual life as a family or just attending things? What's the difference?" },
       { id: 34, category: "Faith",     question: "What does prayer look like for us right now? Is it what you want it to be?" },
@@ -98,10 +98,10 @@ const DECKS = {
       // DREAMS
       { id: 39, category: "Dreams",    question: "What's a dream you had before we got together that you've quietly let go of? Does it still matter?" },
       { id: 40, category: "Dreams",    question: "If you could design the next five years of our life from scratch, what would they look like?" },
-      { id: 41, category: "Dreams",    question: "Is there something you've always wanted to try — a business, a creative project, a place to live — that we've never seriously discussed?" },
+      { id: 41, category: "Dreams",    question: "Is there something you've always wanted to try, a business, a creative project, a place to live, that we've never seriously discussed?" },
       { id: 42, category: "Dreams",    question: "What does retirement actually look like to you? Are we building toward that picture?" },
       { id: 43, category: "Dreams",    question: "If money and logistics were completely off the table, where would we live and how would we spend our days?" },
-      { id: 44, category: "Dreams",    question: "What legacy do you want us to leave — not as individuals, but as a family?" },
+      { id: 44, category: "Dreams",    question: "What legacy do you want us to leave, not as individuals, but as a family?" },
       { id: 45, category: "Dreams",    question: "Is there a version of our life that feels like we're playing it too safe? What would bold look like?" },
       { id: 46, category: "Dreams",    question: "What's one thing you want to accomplish in the next 12 months that is just for you?" },
       // HOME
@@ -387,7 +387,7 @@ function CardBack({ style = {} }) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 1. CARD DRAW — pre-session screen
+// 1. CARD DRAW: pre-session screen
 // ─────────────────────────────────────────────────────────────────────────────
 function CardDraw({ workspace, onStartSession, onSkip, onUnlock }) {
   const [phase, setPhase] = useState("intro"); // intro | drawing | revealed | locked
@@ -460,7 +460,7 @@ function CardDraw({ workspace, onStartSession, onSkip, onUnlock }) {
 
             <div className="cs-fade-3" style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               <button className="cs-btn-primary" onClick={onUnlock}>
-                I have the deck — enter my code
+                I have the deck: enter my code
               </button>
               <a href="https://familypause.com/cards" target="_blank" rel="noreferrer" style={{
                 display: "block", textAlign: "center",
@@ -470,10 +470,10 @@ function CardDraw({ workspace, onStartSession, onSkip, onUnlock }) {
                 fontSize: 12, letterSpacing: "0.06em", textDecoration: "none",
                 transition: "all 0.2s",
               }}>
-                Get the card deck — $24 →
+                Get the card deck: $24 →
               </a>
               <button className="cs-btn-ghost" onClick={onSkip}>
-                Skip — start session without a card
+                Skip and start session without a card
               </button>
             </div>
           </div>
@@ -482,7 +482,7 @@ function CardDraw({ workspace, onStartSession, onSkip, onUnlock }) {
     }
   }
 
-  // INTRO — has deck, show draw prompt
+  // INTRO: has deck, show draw prompt
   if (phase === "intro") {
     return (
       <div style={{ minHeight: "100vh", background: T.bg, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "48px 24px", fontFamily: "'Lora', serif" }}>
@@ -507,7 +507,7 @@ function CardDraw({ workspace, onStartSession, onSkip, onUnlock }) {
               Draw This Week's Card
             </button>
             <button className="cs-btn-ghost" onClick={onSkip}>
-              Skip — start session without a card
+              Skip and start session without a card
             </button>
           </div>
         </div>
@@ -515,7 +515,7 @@ function CardDraw({ workspace, onStartSession, onSkip, onUnlock }) {
     );
   }
 
-  // DRAWING — brief loading moment
+  // DRAWING: brief loading moment
   if (phase === "drawing") {
     return (
       <div style={{ minHeight: "100vh", background: T.bg, display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -580,7 +580,7 @@ function CardDraw({ workspace, onStartSession, onSkip, onUnlock }) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 2. UNLOCK DECK — code entry + digital purchase
+// 2. UNLOCK DECK: code entry + digital purchase
 // ─────────────────────────────────────────────────────────────────────────────
 function UnlockDeck({ workspace, onSuccess, onClose }) {
   const [tab, setTab] = useState("code"); // code | digital
@@ -637,7 +637,7 @@ function UnlockDeck({ workspace, onSuccess, onClose }) {
   };
 
   const handleDigitalPurchase = () => {
-    // Stripe Checkout URL — replace with your actual Stripe payment link
+    // Stripe Checkout URL: replace with your actual Stripe payment link
     window.open("https://buy.stripe.com/familypause-card-deck-digital", "_blank");
   };
 
@@ -760,7 +760,7 @@ function UnlockDeck({ workspace, onSuccess, onClose }) {
             </div>
 
             <button className="cs-btn-primary" onClick={handleDigitalPurchase}>
-              Purchase Digital Access — $12
+              Purchase Digital Access: $12
             </button>
             <div style={{ textAlign: "center", marginTop: 10, fontSize: 11, color: T.muted, fontFamily: "'JetBrains Mono', monospace" }}>
               Secure payment via Stripe · Instant access
@@ -779,7 +779,7 @@ function UnlockDeck({ workspace, onSuccess, onClose }) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 3. DECK LIBRARY — owned decks + new year awareness
+// 3. DECK LIBRARY: owned decks + new year awareness
 // ─────────────────────────────────────────────────────────────────────────────
 function DeckLibrary({ workspace, onClose, onUnlock }) {
   const unlockedYears = workspace?.unlocked_deck_years || [];
@@ -899,7 +899,7 @@ function DeckLibrary({ workspace, onClose, onUnlock }) {
                 </div>
 
                 <div style={{ fontSize: 13, color: T.mid, lineHeight: 1.6, marginBottom: 20 }}>
-                  Your {unlockedYears[0] || "existing"} cards never expire — keep using them as long as you like. The {year} deck is here whenever you're ready for fresh questions.
+                  Your {unlockedYears[0] || "existing"} cards never expire. Keep using them as long as you like. The {year} deck is here whenever you're ready for fresh questions.
                 </div>
 
                 <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
@@ -950,7 +950,7 @@ function DeckLibrary({ workspace, onClose, onUnlock }) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 4. CARD SYSTEM ROOT — main export
+// 4. CARD SYSTEM ROOT: main export
 // ─────────────────────────────────────────────────────────────────────────────
 export default function CardSystemRoot({ workspace, onStartSession, onClose }) {
   const [view, setView] = useState("draw"); // draw | unlock | library
@@ -998,7 +998,7 @@ export default function CardSystemRoot({ workspace, onStartSession, onClose }) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// INTEGRATION — how to use CardSystemRoot in App.jsx
+// INTEGRATION: how to use CardSystemRoot in App.jsx
 // ─────────────────────────────────────────────────────────────────────────────
 //
 // In your main App.jsx, when the user taps "Begin This Week's Sync":
@@ -1030,7 +1030,7 @@ export default function CardSystemRoot({ workspace, onStartSession, onClose }) {
 //   )}
 //
 // ─────────────────────────────────────────────────────────────────────────────
-// SUPABASE — add these columns to your workspaces table
+// SUPABASE: add these columns to your workspaces table
 // ─────────────────────────────────────────────────────────────────────────────
 //
 //   alter table workspaces

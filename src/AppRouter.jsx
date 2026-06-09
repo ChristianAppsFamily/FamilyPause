@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// AppRouter.jsx — FamilyPause
+// AppRouter.jsx - FamilyPause
 // The top-level router. Handles:
 //   - Auth session detection on load
 //   - Routing between Auth → Onboarding → App
@@ -12,7 +12,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "./lib/supabase";
 import Auth from "./components/Auth";
 import Onboarding from "./components/Onboarding";
-import App from "./App"; // main FamilyPause app — src/App.jsx
+import App from "./App"; // main FamilyPause app, src/App.jsx
 
 const T = {
   bg:    "#FAF7F2",
@@ -76,7 +76,7 @@ export default function AppRouter() {
         return;
       }
 
-      // Session exists — fetch workspace
+      // Session exists, fetch workspace
       const { data: membership } = await supabase
         .from("workspace_members")
         .select("workspace_id, role, display_name, workspaces(*)")
@@ -88,7 +88,7 @@ export default function AppRouter() {
         setWorkspace(membership.workspaces);
         setPhase("app");
       } else {
-        // Authenticated but no workspace — something went wrong, re-auth
+        // Authenticated but no workspace, something went wrong, re-auth
         setUser(session.user);
         setPhase("auth");
       }
@@ -116,7 +116,7 @@ export default function AppRouter() {
 
   // ── Handle auth completion ──────────────────────────────────────────────────
   const handleAuthenticated = (userData) => {
-    // New user — go to onboarding
+    // New user, go to onboarding
     if (userData.newUser) {
       setOnboardingData({
         workspaceId: userData.workspaceId,
@@ -128,7 +128,7 @@ export default function AppRouter() {
       return;
     }
 
-    // Existing user — go straight to app
+    // Existing user, go straight to app
     setUser(userData);
     setPhase("app");
   };

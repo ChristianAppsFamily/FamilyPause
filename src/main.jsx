@@ -6,7 +6,7 @@ import './styles/screens.css'
 import Landing from './components/Landing.jsx'
 import AppRouter from './AppRouter.jsx'
 
-// Marketing landing at "/" — its CTAs route into the auth + app flow at /app.
+// Marketing landing at "/". Its CTAs route into the auth + app flow at /app.
 function LandingRoute() {
   const navigate = useNavigate()
   return <Landing onSignIn={() => navigate('/app')} onStart={() => navigate('/app')} />
@@ -18,7 +18,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
       <Routes>
         <Route path="/" element={<LandingRoute />} />
         <Route path="/app/*" element={<AppRouter />} />
-        {/* Invite links: familypause.com/join/<code> — AppRouter reads the code from the URL */}
+        {/* Invite links: familypause.com/join/<code>, AppRouter reads the code from the URL */}
         <Route path="/join/*" element={<AppRouter />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

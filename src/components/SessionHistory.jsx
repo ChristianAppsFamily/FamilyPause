@@ -1,11 +1,11 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// SessionHistory.jsx — FamilyPause
+// SessionHistory.jsx - FamilyPause
 // Visual source of truth: project/app design bundle (src/styles/tokens.css).
 // Lists past weekly sessions newest-first; a row expands to its full card list.
 //
 // Props:
 //   workspace  { id, name }
-//   onClose()  optional — return to the main app
+//   onClose()  optional, returns to the main app
 //
 // Reads from the `sessions` table: { meeting_date, cards[], input_mode, status }.
 // Each saved card: { category, person, task, source, date, time, type, status }
@@ -154,7 +154,7 @@ export default function SessionHistory({ workspace, onClose, initialSessions }) 
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (initialSessions) return; // caller pre-provided data — skip the fetch
+    if (initialSessions) return; // caller pre-provided data, skip the fetch
     let active = true;
     const load = async () => {
       if (!workspace?.id) { setLoading(false); return; }
@@ -204,7 +204,7 @@ export default function SessionHistory({ workspace, onClose, initialSessions }) 
           <div className="panel sh-empty">
             <h2>Your history starts this Sunday</h2>
             <p>
-              Once you run your first FamilyPause, every weekly sync lands here —
+              Once you run your first FamilyPause, every weekly sync lands here,
               organized by date, so you can look back on what your family decided together.
             </p>
           </div>
