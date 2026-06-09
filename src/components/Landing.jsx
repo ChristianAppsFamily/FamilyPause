@@ -522,7 +522,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                 <img src="/uploads/Logo_4.png" alt="" style={{ width: 32, height: 32, borderRadius: 8, display: "block" }} />
                 <div className="word"><b>Family</b>Pause</div>
               </div>
-              <div className="tag" style={{ paddingLeft: 42 }}>The weekly reset every family needs.</div>
+              <div className="tag">The weekly reset every family needs.</div>
             </div>
             <div className="fcols">
               <div className="fcol">
