@@ -91,6 +91,31 @@ git push -u origin main
 
 ---
 
+## Securing the AI key — deploy the `distill` Edge Function (REQUIRED now)
+
+The AI call was moved to a Supabase Edge Function so the key is no longer in the
+browser. After the latest push, the app calls this function — **AI distillation will
+not work until you deploy it.** Run these from the project folder (the Supabase CLI is
+already installed):
+
+```bash
+cd ~/Desktop/familypause
+supabase login                                   # opens your browser to authorize
+supabase link --project-ref cftzaeoqkepvvnfavphw # your project ref (from your Supabase URL)
+supabase functions deploy distill                # deploys supabase/functions/distill
+supabase secrets set ANTHROPIC_API_KEY=sk-ant-...# paste your Anthropic key (same one or a fresh one)
+```
+
+Then:
+1. **Re-run `supabase_setup.sql`** in the SQL Editor (adds the FP-XXXX invite-code
+   generator + case-insensitive code matching). Idempotent, safe to re-run.
+2. Once you confirm AI distillation works on the live site, **remove `VITE_ANTHROPIC_KEY`
+   from Vercel** (Project ▸ Settings ▸ Environment Variables) and **rotate that old key**
+   in the Anthropic console — it was exposed in earlier builds.
+
+> The function requires a signed-in user (it verifies the Supabase JWT), so only your
+> logged-in users can spend tokens.
+
 ## Known caveats for this test build
 - **AI key is public** in the bundle (see §2) — rotate before launch.
 - **Google sign-in** needs provider setup in Supabase — use email/password for now.
