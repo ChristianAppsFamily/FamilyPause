@@ -115,7 +115,6 @@ function StepRail({ view }) {
 // ── AGENDA (View 1) ───────────────────────────────────────────────────────────
 function AgendaView({ family, keptActions, onDistill, onOpenLog }) {
   const [tab, setTab] = useState("agenda");
-  const [assist, setAssist] = useState(true);
   const [rows, setRows] = useState([]);
   const [draft, setDraft] = useState("");
 
@@ -132,9 +131,6 @@ function AgendaView({ family, keptActions, onDistill, onOpenLog }) {
             <span className="faded">A good pause, every week.</span>
           </div>
         </div>
-        <button className={"btn " + (assist ? "btn-soft" : "btn-ghost")} onClick={() => setAssist((a) => !a)}>
-          <Ico d={I.spark} size={15} /> {assist ? "Hide Assistant" : "AI Assistant"}
-        </button>
       </div>
 
       <div className="tabs">
@@ -145,7 +141,7 @@ function AgendaView({ family, keptActions, onDistill, onOpenLog }) {
         <button className={"tab " + (tab === "log" ? "on" : "")} onClick={() => setTab("log")}>Log</button>
       </div>
 
-      <div className={"worksplit " + (assist ? "with-rail" : "")}>
+      <div className="worksplit">
         <div>
           {tab === "agenda" && (
             <div className="rise">
@@ -206,33 +202,14 @@ function AgendaView({ family, keptActions, onDistill, onOpenLog }) {
             </div>
           )}
         </div>
-
-        {assist && (
-          <aside className="assist rise">
-            <div className="ahead">
-              <div className="aico"><Ico d={I.spark} size={17} /></div>
-              <div>
-                <div className="at">Meeting Assistant</div>
-                <div className="as">Reads &amp; writes your agenda</div>
-              </div>
-            </div>
-            <div className="assbubble">Hi, I'm here while you talk. I can add notes, draft action items, and tell you what you're forgetting.</div>
-            <div className="suggs">
-              <span className="sugg">Summarize our agenda</span>
-              <span className="sugg">What are we forgetting?</span>
-              <span className="sugg">Add a note to Finance</span>
-            </div>
-          </aside>
-        )}
       </div>
     </div>
   );
 }
 
 // ── CAPTURE (View 2) ──────────────────────────────────────────────────────────
-function CaptureView({ onBack, onProcess }) {
+function CaptureView({ text, setText, onBack, onProcess }) {
   const [mode, setMode] = useState("paste");
-  const [text, setText] = useState("");
   const [recording, setRecording] = useState(false);
   const [secs, setSecs] = useState(0);
   const recRef = useRef(null);
@@ -526,6 +503,7 @@ export default function App({ user, workspace, onSignOut }) {
   const [cards, setCards] = useState([]);
   const [distillError, setDistillError] = useState(null);
   const [distillDone, setDistillDone] = useState(false);
+  const [captureText, setCaptureText] = useState("");
   const [meetingDate] = useState(todayStr());
   const [ws, setWs] = useState(workspace);
 
@@ -661,7 +639,7 @@ Rules: extract everything actionable, use person names when mentioned, return on
       </div>
 
       {view === "agenda" && <AgendaView family={family} keptActions={keptActions} onDistill={() => go("capture")} onOpenLog={() => setOverlay("history")} />}
-      {view === "capture" && <CaptureView onBack={() => go("agenda")} onProcess={runDistill} />}
+      {view === "capture" && <CaptureView text={captureText} setText={setCaptureText} onBack={() => go("agenda")} onProcess={runDistill} />}
       {view === "processing" && <ProcessingView done={distillDone} />}
       {view === "review" && <ReviewView cards={cards} setCards={setCards} roleOf={roleOf} onBack={() => go("capture")} onBuild={buildWeek} distillError={distillError} />}
       {view === "plan" && <PlanView keptCards={keptCards} adults={adults} roleOf={roleOf} onRestart={restart} />}
