@@ -371,7 +371,7 @@ function StepInvite({ workspaceId, spouseName, onNext }) {
           </div>
 
           {/* Share options */}
-          <div className="ob-fade-4" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 32 }}>
+          <div className="ob-fade-4" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 10, marginBottom: 32 }}>
             <a href={smsLink} style={{
               display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
               background: T.oliveL, border: `1px solid ${T.olive}44`,

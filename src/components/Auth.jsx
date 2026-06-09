@@ -210,13 +210,14 @@ function AuthShell({ children, wide = false }) {
       </div>
 
       {/* Right form panel */}
-      <div style={{
+      <div className="fp-right-panel" style={{
         flex: 1,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
         padding: "60px 48px",
         overflowY: "auto",
+        minWidth: 0,
       }}>
         <div style={{ width: "100%", maxWidth: wide ? 480 : 400 }}>
           {children}
@@ -225,7 +226,16 @@ function AuthShell({ children, wide = false }) {
 
       <style>{`
         @media (max-width: 768px) {
-          .fp-left-panel { display: none; }
+          .fp-left-panel { display: none !important; }
+          .fp-right-panel {
+            padding: 36px 20px 48px !important;
+            align-items: flex-start !important;
+          }
+        }
+        @media (max-width: 480px) {
+          .fp-right-panel {
+            padding: 28px 16px 48px !important;
+          }
         }
       `}</style>
     </div>

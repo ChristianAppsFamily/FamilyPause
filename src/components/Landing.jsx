@@ -80,6 +80,8 @@ const css = `
 .fp-landing .navcta { display: flex; align-items: center; gap: 18px; }
 .fp-landing .navcta .signin { font-family: var(--mono); font-size: 12.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-2); cursor: pointer; background: none; border: none; padding: 0; }
 .fp-landing .navcta .signin:hover { color: var(--terra); }
+.fp-landing .navcta .btn .short-label { display: none; }
+.fp-landing .navcta .btn .long-label { display: inline; }
 
 /* hero */
 .fp-landing .hero { position: relative; overflow: hidden; }
@@ -234,6 +236,24 @@ const css = `
   .fp-landing .steps4 { grid-template-columns: 1fr; }
   .fp-landing .foot .fcols { gap: 36px; flex-wrap: wrap; }
 }
+@media (max-width: 480px) {
+  /* Nav: give Sign in its own breathing room, shrink CTA label */
+  .fp-landing .nav .row { height: 64px; }
+  .fp-landing .navcta { gap: 10px; }
+  .fp-landing .navcta .signin {
+    white-space: nowrap;
+    padding: 8px 10px;
+    flex-shrink: 0;
+  }
+  .fp-landing .navcta .btn {
+    padding: 10px 14px;
+    font-size: 11px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .fp-landing .navcta .btn .long-label { display: none; }
+  .fp-landing .navcta .btn .short-label { display: inline; }
+}
 `;
 
 const stroke = { fill: "none", stroke: "currentColor", strokeWidth: 1.7, strokeLinecap: "round", strokeLinejoin: "round" };
@@ -274,7 +294,10 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
           </nav>
           <div className="navcta">
             <button className="signin" onClick={onSignIn}>Sign in</button>
-            <button className="btn btn-primary" onClick={onStart}>Start Free Week</button>
+            <button className="btn btn-primary" onClick={onStart}>
+              <span className="long-label">Start Free Week</span>
+              <span className="short-label">Start Free</span>
+            </button>
           </div>
         </div>
       </header>
@@ -495,8 +518,11 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
         <div className="wrap">
           <div className="row">
             <div>
-              <div className="word"><b>Family</b>Pause</div>
-              <div className="tag">The weekly reset every family needs.</div>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
+                <img src="/uploads/Logo_4.png" alt="" style={{ width: 32, height: 32, borderRadius: 8, display: "block" }} />
+                <div className="word"><b>Family</b>Pause</div>
+              </div>
+              <div className="tag" style={{ paddingLeft: 42 }}>The weekly reset every family needs.</div>
             </div>
             <div className="fcols">
               <div className="fcol">
@@ -518,7 +544,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
               </div>
             </div>
           </div>
-          <div className="legal fineprint">© 2026 FamilyPause · Built with intention · Ad-free forever</div>
+          <div className="legal fineprint">© 2026 FamilyPause · Built with intention · <a href="https://www.biblegateway.com/passage/?search=Ecclesiastes%204%3A9-12&version=NASB" target="_blank" rel="noopener noreferrer" style={{ color: "inherit", textDecoration: "underline", textUnderlineOffset: 3 }}>Ecclesiastes 4:9</a></div>
         </div>
       </footer>
     </div>

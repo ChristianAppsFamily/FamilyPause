@@ -64,6 +64,13 @@ const css = `
   }
   .set-danger { background: var(--red-tint); border-color: var(--red-soft); }
   .set-danger .eyebrow, .set-danger > h2 { color: var(--red); }
+  @media (max-width: 600px) {
+    .set-sec { padding: 18px 16px; }
+    .set-sec > h2 { font-size: 20px; }
+    .set-plan .name { font-size: 22px; }
+    .set-addrow { flex-direction: column; }
+    .set-addrow .btn { width: 100%; justify-content: center; }
+  }
 `;
 
 // ── EDITABLE NAME LIST ────────────────────────────────────────────────────────

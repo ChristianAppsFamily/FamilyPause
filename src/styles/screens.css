@@ -321,3 +321,32 @@
   .synchead { flex-direction: column; align-items: flex-start; gap: 14px; }
   .synchead .who h1 { font-size: 32px; }
 }
+
+@media (max-width: 600px) {
+  /* Step rail — show only dots + active label, hide inactive labels */
+  .steps { overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; gap: 0; }
+  .steps::-webkit-scrollbar { display: none; }
+  .steps .step { padding: 0 8px; }
+  .steps .step:not(.active) span { display: none; }
+  .steps .sep { width: 12px; }
+
+  /* CTA bar stacks on mobile */
+  .ctabar { flex-direction: column; align-items: flex-start; gap: 16px; padding: 18px 16px; }
+  .ctabar .copy h3 { font-size: 18px; }
+
+  /* Capture row wraps */
+  .caprow { flex-wrap: wrap; gap: 10px; }
+
+  /* Review done row stacks */
+  .revdone { flex-direction: column; align-items: flex-start; gap: 14px; }
+
+  /* Plan hero shrinks headline */
+  .planhero h1 { font-size: 30px; }
+  .planhero p { font-size: 15px; }
+
+  /* Sync header already handled at 880px, but further reduce for phones */
+  .synchead .who h1 { font-size: 26px; }
+
+  /* Capture lead */
+  .capwrap .lead h1 { font-size: 28px; }
+}
