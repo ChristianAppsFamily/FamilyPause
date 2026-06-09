@@ -56,7 +56,25 @@ export async function callFamilyPauseAI({
     body: { prompt, system, cacheSystem: true },
   });
 
-  if (error) throw error;
+  if (error) {
+    // Extract the real error from the edge function response for better debugging.
+    // supabase.functions.invoke wraps non-2xx bodies in error.context.
+    let detail = error?.message || String(error);
+    try {
+      const ctx = error?.context;
+      if (ctx) {
+        let body = null;
+        if (typeof ctx.json === 'function') body = await ctx.json().catch(() => null);
+        if (!body && ctx.body && typeof ctx.body === 'string') {
+          try { body = JSON.parse(ctx.body); } catch (_) { body = ctx.body; }
+        }
+        if (body?.error) detail = body.error;
+        else if (typeof body === 'string' && body) detail = body;
+      }
+    } catch (_) { /* ignore */ }
+    console.error('[FamilyPause AI] Edge function error:', error?.context?.status, detail, error);
+    throw new Error(`AI unavailable: ${detail}`);
+  }
 
   // Log cache stats forwarded from the edge function
   const usage = data?.usage;
