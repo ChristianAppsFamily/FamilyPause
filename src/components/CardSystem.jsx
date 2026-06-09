@@ -394,9 +394,11 @@ function CardDraw({ workspace, onStartSession, onSkip, onUnlock }) {
   const [drawnCard, setDrawnCard] = useState(null);
   const [deckYear, setDeckYear] = useState(2026);
 
+  // DEV/TESTING: default to 2026 deck unlocked for all workspaces.
+  // To re-lock behind purchase, change the fallback `[2026]` back to `[]`.
   const unlockedDecks = workspace?.cards_unlocked
-    ? (workspace?.unlocked_deck_years || [2026])
-    : [];
+    ? (workspace?.unlocked_deck_years?.length > 0 ? workspace.unlocked_deck_years : [2026])
+    : [2026];
 
   const hasUnlockedDeck = unlockedDecks.length > 0;
   const activeDeck = hasUnlockedDeck
