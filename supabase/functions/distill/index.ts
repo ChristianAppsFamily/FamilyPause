@@ -45,7 +45,10 @@ Deno.serve(async (req) => {
     if (!apiKey) return json({ error: "ANTHROPIC_API_KEY not configured" }, 500);
 
     // Build system block — wrap in cache_control when caller requests it.
-    // Prompt caching saves ~90% on repeated calls (cache TTL: 5 min).
+    // Prompt caching: cache_control on the system block tells Anthropic to cache
+    // the prefix up to and including that block. Prompt caching is now GA —
+    // no beta header required. Note: Haiku 4.5 requires ≥4096 tokens to cache;
+    // shorter prompts are processed normally with no error and no cache hit.
     const systemBlock = cacheSystem && system
       ? [{ type: "text", text: system, cache_control: { type: "ephemeral" } }]
       : system;
@@ -59,8 +62,6 @@ Deno.serve(async (req) => {
           "content-type": "application/json",
           "x-api-key": apiKey,
           "anthropic-version": "2023-06-01",
-          // Required header to enable prompt caching
-          "anthropic-beta": "prompt-caching-2024-07-31",
         },
         body: JSON.stringify({
           // claude-haiku-4-5-20251001: latest Haiku 4.5, ~3x cheaper than Sonnet
