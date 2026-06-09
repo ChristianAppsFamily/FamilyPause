@@ -157,11 +157,12 @@ function AuthShell({ children, wide = false }) {
       minHeight: "100vh",
       background: T.bg,
       display: "flex",
+      alignItems: "flex-start",
       fontFamily: "'Lora', serif",
     }}>
       <style>{css}</style>
 
-      {/* Left decorative panel */}
+      {/* Left decorative panel — sticky so it stays in view when right panel scrolls */}
       <div style={{
         width: 380,
         background: `linear-gradient(160deg, ${T.terra} 0%, ${T.terraD} 100%)`,
@@ -170,7 +171,9 @@ function AuthShell({ children, wide = false }) {
         flexDirection: "column",
         justifyContent: "space-between",
         flexShrink: 0,
-        position: "relative",
+        position: "sticky",
+        top: 0,
+        height: "100vh",
         overflow: "hidden",
       }}
         className="fp-left-panel"
@@ -349,7 +352,7 @@ function SignIn({ onSwitch, onSuccess }) {
         <div style={{ fontSize: 11, letterSpacing: "0.25em", color: T.terra, fontFamily: "'JetBrains Mono', monospace", textTransform: "uppercase", marginBottom: 12 }}>
           Welcome back
         </div>
-        <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: 36, fontWeight: 400, color: T.text, marginBottom: 8 }}>
+        <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: 36, fontWeight: 600, color: T.text, marginBottom: 8 }}>
           Sign in
         </h1>
         <p style={{ fontSize: 15, color: T.mid, marginBottom: 28 }}>
@@ -455,7 +458,7 @@ function SignUp({ onSwitch, onSuccess }) {
         <div style={{ fontSize: 11, letterSpacing: "0.25em", color: T.terra, fontFamily: "'JetBrains Mono', monospace", textTransform: "uppercase", marginBottom: 12 }}>
           7-day free trial
         </div>
-        <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: 36, fontWeight: 400, color: T.text, marginBottom: 8 }}>
+        <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: 36, fontWeight: 600, color: T.text, marginBottom: 8 }}>
           Create your account
         </h1>
         <p style={{ fontSize: 15, color: T.mid, marginBottom: 28 }}>
@@ -540,7 +543,7 @@ function ForgotPassword({ onSwitch }) {
         <div style={{ fontSize: 11, letterSpacing: "0.25em", color: T.terra, fontFamily: "'JetBrains Mono', monospace", textTransform: "uppercase", marginBottom: 12 }}>
           Reset password
         </div>
-        <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: 36, fontWeight: 400, color: T.text, marginBottom: 8 }}>
+        <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: 36, fontWeight: 600, color: T.text, marginBottom: 8 }}>
           Forgot your<br />password?
         </h1>
         <p style={{ fontSize: 15, color: T.mid, marginBottom: 36 }}>
@@ -627,7 +630,7 @@ function JoinWorkspace({ onSwitch, onSuccess, initialCode = "" }) {
         <div style={{ fontSize: 11, letterSpacing: "0.25em", color: T.terra, fontFamily: "'JetBrains Mono', monospace", textTransform: "uppercase", marginBottom: 12 }}>
           You're invited
         </div>
-        <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: 36, fontWeight: 400, color: T.text, marginBottom: 8 }}>
+        <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: 36, fontWeight: 600, color: T.text, marginBottom: 8 }}>
           Join your<br />family workspace
         </h1>
         <p style={{ fontSize: 15, color: T.mid, marginBottom: 36 }}>
@@ -657,7 +660,7 @@ function JoinWorkspace({ onSwitch, onSuccess, initialCode = "" }) {
 
       <div className="fp-fade-4 fp-field">
         <label className="fp-label">Invite code</label>
-        <input className="fp-input" type="text" placeholder="e.g. xK9m2p"
+        <input className="fp-input" type="text" placeholder="e.g. FP-2026-AB12-0001"
           value={inviteCode} onChange={e => setInviteCode(e.target.value)}
           style={{ fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.1em" }} />
         <div style={{ fontSize: 11, color: T.muted, fontFamily: "'JetBrains Mono', monospace", marginTop: 6 }}>

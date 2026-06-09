@@ -78,7 +78,7 @@ const css = `
 .fp-landing .navlinks a { font-family: var(--mono); font-size: 12.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-2); transition: color .18s; }
 .fp-landing .navlinks a:hover { color: var(--terra); }
 .fp-landing .navcta { display: flex; align-items: center; gap: 18px; }
-.fp-landing .navcta .signin { font-family: var(--mono); font-size: 12.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-2); cursor: pointer; }
+.fp-landing .navcta .signin { font-family: var(--mono); font-size: 12.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-2); cursor: pointer; background: none; border: none; padding: 0; }
 .fp-landing .navcta .signin:hover { color: var(--terra); }
 
 /* hero */
@@ -205,6 +205,8 @@ const css = `
 .fp-landing .foot .fcol h4 { font-family: var(--mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 14px; font-weight: 500; }
 .fp-landing .foot .fcol a { display: block; font-size: 14.5px; color: var(--ink-2); margin-bottom: 9px; transition: color .15s; }
 .fp-landing .foot .fcol a:hover { color: var(--terra); }
+.fp-landing .fp-footer-link { display: block; font-size: 14.5px; color: var(--ink-2); margin-bottom: 9px; transition: color .15s; background: none; border: none; padding: 0; cursor: pointer; font-family: inherit; text-align: left; }
+.fp-landing .fp-footer-link:hover { color: var(--terra); }
 .fp-landing .foot .legal { margin-top: 44px; padding-top: 24px; border-top: 1px solid var(--line); }
 
 .fp-landing .reveal { opacity: 0; transform: translateY(22px); transition: opacity .7s cubic-bezier(.2,.7,.2,1), transform .7s cubic-bezier(.2,.7,.2,1); }
@@ -271,8 +273,8 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
             <a href="#pricing">Pricing</a>
           </nav>
           <div className="navcta">
-            <span className="signin" onClick={onSignIn}>Sign in</span>
-            <a className="btn btn-primary" href="#pricing" onClick={onStart}>Start Free Week</a>
+            <button className="signin" onClick={onSignIn}>Sign in</button>
+            <button className="btn btn-primary" onClick={onStart}>Start Free Week</button>
           </div>
         </div>
       </header>
@@ -287,7 +289,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                 <h1>We did a FamilyPause<br />and <em>got back on track.</em></h1>
                 <p className="sub">Record your weekly family meeting. AI extracts every action, appointment, and decision. Review in minutes. <b>Your week, planned before Sunday ends.</b></p>
                 <div className="ctas">
-                  <a className="btn btn-primary btn-lg" href="#pricing" onClick={onStart}>Start Your Free Week</a>
+                  <button className="btn btn-primary btn-lg" onClick={onStart}>Start Your Free Week</button>
                   <a className="linktext" href="#how">See how it works
                     <svg width="15" height="15" viewBox="0 0 24 24" {...stroke} strokeWidth={2}><path d="M5 12h14M13 6l6 6-6 6" /></svg>
                   </a>
@@ -439,7 +441,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                     <li><span className="far">→</span> Keep / Discard / Calendar flow</li>
                     <li><span className="far">→</span> 1 free AI session per month</li>
                   </ul>
-                  <a className="btn btn-ghost btn-block" href="#" onClick={onStart}>Get Started Free</a>
+                  <button className="btn btn-ghost btn-block" onClick={onStart}>Get Started Free</button>
                 </div>
 
                 <div className="tier pop">
@@ -455,7 +457,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                     <li><span className="far">→</span> Export sessions as PDF</li>
                     <li><span className="far">→</span> Custom categories</li>
                   </ul>
-                  <a className="btn btn-cream btn-block" href="#" onClick={onStart}>Start 7-Day Trial</a>
+                  <button className="btn btn-cream btn-block" onClick={onStart}>Start 7-Day Trial</button>
                 </div>
 
                 <div className="tier">
@@ -482,7 +484,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
           <div className="wrap">
             <h2>Your family deserves<em>one good pause.</em></h2>
             <p>Start this Sunday. 7 days free. No credit card. Works on iPhone, iPad, Mac, or any browser.</p>
-            <a className="btn btn-primary btn-lg" href="#" onClick={onStart}>Start Your FamilyPause</a>
+            <button className="btn btn-primary btn-lg" onClick={onStart}>Start Your FamilyPause</button>
             <p className="fineprint">7-day free trial · No card required · Cancel anytime</p>
           </div>
         </section>
@@ -511,8 +513,8 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
               </div>
               <div className="fcol">
                 <h4>Get started</h4>
-                <a href="#" onClick={onSignIn}>Sign in</a>
-                <a href="#pricing" onClick={onStart}>Start free week</a>
+                <button className="fp-footer-link" onClick={onSignIn}>Sign in</button>
+                <button className="fp-footer-link" onClick={onStart}>Start free week</button>
               </div>
             </div>
           </div>
