@@ -149,21 +149,23 @@ create policy "sessions_update" on sessions for update using (
   workspace_id in (select workspace_id from workspace_members where user_id = auth.uid())
 );
 
--- Subscriptions (members of the workspace)
+-- Subscriptions: members can read; only workspace owner can write
 drop policy if exists "subs_select" on subscriptions;
 create policy "subs_select" on subscriptions for select using (
   workspace_id in (select workspace_id from workspace_members where user_id = auth.uid())
 );
 drop policy if exists "subs_write" on subscriptions;
 create policy "subs_write" on subscriptions for all using (
-  workspace_id in (select workspace_id from workspace_members where user_id = auth.uid())
+  workspace_id in (select id from workspaces where owner_id = auth.uid())
 );
 
--- Deck codes: any signed-in user may look up a code and redeem it
+-- Deck codes: any authenticated user may look up a code; only the redeemer may update (must be unredeemed)
 drop policy if exists "deck_select" on deck_codes;
 create policy "deck_select" on deck_codes for select using (auth.role() = 'authenticated');
 drop policy if exists "deck_update" on deck_codes;
-create policy "deck_update" on deck_codes for update using (auth.role() = 'authenticated');
+create policy "deck_update" on deck_codes for update
+  using (auth.role() = 'authenticated')
+  with check (redeemed_by is null or redeemed_by = auth.uid());
 
 -- ── REALTIME on sessions (live spouse sync) ───────────────────
 do $$ begin
@@ -219,6 +221,16 @@ $$ language plpgsql security definer;
 alter table workspaces
   add column if not exists faith_mode  boolean default false,
   add column if not exists family_name text;
+
+-- ── Performance indexes ───────────────────────────────────────
+create index if not exists workspace_members_user_id_idx on workspace_members(user_id);
+create index if not exists sessions_workspace_id_idx on sessions(workspace_id);
+
+-- ── updated_at trigger on subscriptions ──────────────────────
+drop trigger if exists subscriptions_updated_at on subscriptions;
+create trigger subscriptions_updated_at
+  before update on subscriptions
+  for each row execute function update_updated_at();
 
 -- ── DEV: test deck-unlock code ────────────────────────────────
 insert into deck_codes (code, deck_year, batch)

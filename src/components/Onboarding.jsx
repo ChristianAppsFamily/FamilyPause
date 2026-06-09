@@ -5,7 +5,7 @@
 // Requires: src/lib/supabase.js
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 
 // Palette mapped to the design bundle (src/styles/tokens.css): source of truth.
@@ -304,7 +304,7 @@ function StepInvite({ workspaceId, spouseName, onNext }) {
   const [loading, setLoading] = useState(true);
 
   // Fetch the invite code
-  useState(() => {
+  useEffect(() => {
     supabase.from("workspaces")
       .select("invite_code")
       .eq("id", workspaceId)
@@ -313,7 +313,7 @@ function StepInvite({ workspaceId, spouseName, onNext }) {
         if (data) setInviteCode(data.invite_code);
         setLoading(false);
       });
-  });
+  }, [workspaceId]);
 
   const inviteLink = inviteCode
     ? `${window.location.origin}/join/${inviteCode}`

@@ -115,9 +115,11 @@ export default function AppRouter() {
   }, []);
 
   // ── Handle auth completion ──────────────────────────────────────────────────
-  const handleAuthenticated = (userData) => {
+  // Auth.jsx calls onAuthenticated(user, workspace) for returning users (two args)
+  // or onAuthenticated({ newUser: true, ... }) for new users (one arg object).
+  const handleAuthenticated = (userData, workspaceData) => {
     // New user, go to onboarding
-    if (userData.newUser) {
+    if (userData?.newUser) {
       setOnboardingData({
         workspaceId: userData.workspaceId,
         displayName: userData.displayName,
@@ -128,8 +130,9 @@ export default function AppRouter() {
       return;
     }
 
-    // Existing user, go straight to app
+    // Existing user — userData is the real Supabase user object, workspaceData is the workspace row
     setUser(userData);
+    setWorkspace(workspaceData || null);
     setPhase("app");
   };
 

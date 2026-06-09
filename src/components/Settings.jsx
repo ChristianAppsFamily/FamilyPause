@@ -148,6 +148,7 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
 
   // ── Save family members ────────────────────────────────────────────────────
   const saveFamily = async () => {
+    if (!workspace?.id) { setError("No workspace loaded."); return; }
     setSaving(true); setSaved(false); setError("");
     const context = { ...fc, people: [...adults, ...kids], kids, businesses };
     const { data, error: err } = await supabase
@@ -188,6 +189,7 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
 
   // ── Delete workspace ───────────────────────────────────────────────────────
   const deleteWorkspace = async () => {
+    if (!workspace?.id) { setError("No workspace loaded."); return; }
     setDeleting(true); setError("");
     const { error: err } = await supabase.from("workspaces").delete().eq("id", workspace.id);
     if (err) { setDeleting(false); setError(err.message); return; }

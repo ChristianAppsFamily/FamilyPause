@@ -5,7 +5,7 @@
 // Requires: src/lib/supabase.js
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 
 // ── TERRA & CREAM PALETTE ─────────────────────────────────────────────────────
@@ -585,13 +585,12 @@ function JoinWorkspace({ onSwitch, onSuccess, initialCode = "" }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // Pre-fill invite code from URL if present
-  // e.g. familypause.com/join/xK9m2p
-  useState(() => {
+  // Pre-fill invite code from URL if present (e.g. familypause.com/join/xK9m2p)
+  useEffect(() => {
     const path = window.location.pathname;
     const match = path.match(/\/join\/([a-zA-Z0-9-]+)/);
     if (match) setInviteCode(match[1]);
-  });
+  }, []);
 
   const handleJoin = async () => {
     if (!name || !email || !password || !inviteCode) { setError("Please fill in all fields."); return; }
@@ -688,7 +687,8 @@ export default function Auth({ onAuthenticated, initialScreen = "signin", invite
   const [screen, setScreen] = useState(initialScreen);
 
   const handleSignInSuccess = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { user }, error: authErr } = await supabase.auth.getUser();
+    if (authErr || !user) { console.error("Session error after sign-in", authErr); return; }
     const { data: membership } = await supabase
       .from("workspace_members")
       .select("workspace_id, role, display_name, workspaces(*)")

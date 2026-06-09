@@ -449,7 +449,7 @@ function PlanView({ keptCards, adults, roleOf, onRestart }) {
       {confetti && <Confetti />}
       <div className="planhero">
         <div className="seal"><Ico d={I.check} size={28} /></div>
-        <div className="eyebrow" style={{ marginBottom: 12 }}>Step 3 · Your week is built</div>
+        <div className="eyebrow" style={{ marginBottom: 12 }}>Step 5 · Your week is built</div>
         <h1>Your week, <em>planned before Sunday ends.</em></h1>
         <p>A clean plan, organized by person. {keptCards.length} items routed where they belong: appointments timed, actions owned, nothing forgotten.</p>
       </div>
@@ -569,7 +569,7 @@ Each item:
 Rules: extract everything actionable, use person names when mentioned, return only the JSON array.`;
 
     let parsed = [];
-    let distillError = null;
+    let errorMsg = null;
     try {
       const faithMode = ws?.faith_mode ?? false;
       const familyName = ws?.family_name ?? null;
@@ -577,12 +577,12 @@ Rules: extract everything actionable, use person names when mentioned, return on
       try { parsed = JSON.parse(raw.replace(/```json|```/g, "").trim()); }
       catch { const m = raw.match(/\[[\s\S]*\]/); if (m) parsed = JSON.parse(m[0]); }
     } catch (err) {
-      distillError = err?.message || String(err);
+      errorMsg = err?.message || String(err);
       parsed = [];
     }
 
     setCards(parsed.map((c, i) => ({ ...c, id: c.id ?? i + 1, status: STATUS.OPEN })));
-    setDistillError(distillError);
+    setDistillError(errorMsg);
     setDistillDone(true);
     setTimeout(() => go("review"), 650); // let the orb finish
   };

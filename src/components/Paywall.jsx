@@ -145,7 +145,7 @@ export default function Paywall({ reason = "trial", onClose }) {
               <li><Check /> Your week organized by person</li>
             </ul>
             <div className="pw-cta">
-              <button className="btn btn-ghost btn-block" onClick={onClose}>
+              <button className="btn btn-ghost btn-block" onClick={() => onClose?.()}>
                 {reason === "limit" ? "Wait until next month" : "Stay on Free"}
               </button>
             </div>

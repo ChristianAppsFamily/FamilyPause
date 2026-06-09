@@ -616,20 +616,23 @@ function UnlockDeck({ workspace, onSuccess, onClose }) {
     }
 
     // Mark code as redeemed
-    await supabase.from("deck_codes").update({
-      redeemed_by: (await supabase.auth.getUser()).data.user.id,
+    const { data: { user: redeemer } } = await supabase.auth.getUser();
+    const { error: redeemErr } = await supabase.from("deck_codes").update({
+      redeemed_by: redeemer?.id,
       redeemed_at: new Date().toISOString(),
     }).eq("id", data.id);
+    if (redeemErr) { setError("Failed to redeem code. Please try again."); setLoading(false); return; }
 
     // Unlock on workspace
     const currentYears = workspace?.unlocked_deck_years || [];
     const deckYear = data.deck_year || 2026;
     const updatedYears = [...new Set([...currentYears, deckYear])];
 
-    await supabase.from("workspaces").update({
+    const { error: unlockErr } = await supabase.from("workspaces").update({
       cards_unlocked: true,
       unlocked_deck_years: updatedYears,
     }).eq("id", workspace.id);
+    if (unlockErr) { setError("Code accepted but workspace update failed. Contact support."); setLoading(false); return; }
 
     setSuccess(true);
     setLoading(false);
@@ -638,7 +641,7 @@ function UnlockDeck({ workspace, onSuccess, onClose }) {
 
   const handleDigitalPurchase = () => {
     // Stripe Checkout URL: replace with your actual Stripe payment link
-    window.open("https://buy.stripe.com/familypause-card-deck-digital", "_blank");
+    window.open("https://buy.stripe.com/PLACEHOLDER_card_digital", "_blank");
   };
 
   if (success) {
