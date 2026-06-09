@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FamilyPause — Card System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400;1,500&family=Lora:wght@400;500&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --cr:  #FAF7F2;
+      --sf:  #F0EAE0;
+      --sf2: #E8E0D0;
+      --bd:  #D8CFC0;
+      --ink: #2E2820;
+      --mid: #6A5A40;
+      --mut: #A09070;
+      --tr:  #B85C38;
+      --trL: #F5D8CC;
+      --trD: #7A2E14;
+      --ol:  #4A6741;
+      --olL: #D8E8D4;
+      --olD: #1E3A18;
+      --go:  #C49A3C;
+      --goL: #FAF0D4;
+      --goD: #6A4A10;
+      --br:  #8B7355;
+    }
+
+    html, body { height: 100%; background: var(--cr); }
+    body { font-family: 'Lora', serif; color: var(--ink); -webkit-font-smoothing: antialiased; }
+
+    /* ─── Nav bar ────────────────────────────── */
+    .nav-bar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 300;
+      height: 40px;
+      background: rgba(46,40,32,0.97);
+      backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      padding: 0 16px;
+    }
+
+    .nav-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      font-weight: 300;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(250,247,242,0.28);
+      margin-right: 10px;
+    }
+
+    .nav-btn {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      font-weight: 400;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: rgba(250,247,242,0.42);
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 4px;
+      padding: 4px 11px;
+      cursor: pointer;
+      transition: color 0.12s, background 0.12s, border-color 0.12s;
+    }
+
+    .nav-btn:hover { color: rgba(250,247,242,0.78); }
+
+    .nav-btn.active {
+      color: #FAF7F2;
+      border-color: rgba(250,247,242,0.18);
+      background: rgba(250,247,242,0.09);
+    }
+
+    /* ─── Screens ────────────────────────────── */
+    .screen { display: none; min-height: calc(100vh - 40px); padding-top: 40px; }
+    .screen.active { display: block; }
+
+    .col { max-width: 420px; margin: 0 auto; padding: 0 24px; }
+    .col-md { max-width: 600px; margin: 0 auto; padding: 0 24px; }
+
+    /* ─── Type ───────────────────────────────── */
+    .eyebrow {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px; font-weight: 400;
+      letter-spacing: 0.25em; text-transform: uppercase;
+      color: var(--tr);
+    }
+
+    .eyebrow-mut {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px; font-weight: 400;
+      letter-spacing: 0.2em; text-transform: uppercase;
+      color: var(--mut);
+    }
+
+    .hl {
+      font-family: 'Playfair Display', serif;
+      font-weight: 400; font-size: 30px; line-height: 1.14;
+      color: var(--ink); text-wrap: pretty;
+    }
+    .hl em { font-style: italic; color: var(--tr); }
+
+    .sub {
+      font-family: 'Lora', serif;
+      font-size: 15px; line-height: 1.6; color: var(--mid);
+    }
+
+    /* ─── Buttons ────────────────────────────── */
+    .btn-stack { display: flex; flex-direction: column; gap: 10px; }
+
+    .btn-t, .btn-gold, .btn-ghost {
+      display: block; width: 100%; text-align: center;
+      font-family: 'Lora', serif; font-weight: 500; font-size: 16px;
+      border-radius: 10px; padding: 14px; cursor: pointer;
+      transition: transform 0.12s, box-shadow 0.12s;
+    }
+
+    .btn-t { color: var(--cr); background: var(--tr); border: none; box-shadow: 0 4px 16px rgba(184,92,56,0.26); }
+    .btn-t:hover { transform: translateY(-1px); box-shadow: 0 6px 22px rgba(184,92,56,0.34); }
+
+    .btn-gold { color: var(--goD); background: var(--goL); border: 1px solid rgba(196,154,60,0.3); }
+    .btn-gold:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(196,154,60,0.2); }
+
+    .btn-ghost { font-weight: 400; font-size: 15px; color: var(--mid); background: transparent; border: 1px solid var(--bd); }
+    .btn-ghost:hover { color: var(--tr); border-color: var(--tr); }
+
+    .btn-ol {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      width: 100%; font-family: 'Lora', serif; font-weight: 500; font-size: 16px;
+      color: var(--cr); background: var(--ol); border: none; border-radius: 10px;
+      padding: 14px; box-shadow: 0 4px 16px rgba(74,103,65,0.26); cursor: pointer;
+      transition: transform 0.12s, box-shadow 0.12s;
+    }
+    .btn-ol:hover { transform: translateY(-1px); box-shadow: 0 6px 22px rgba(74,103,65,0.34); }
+
+    .btn-t-sm {
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      font-family: 'Lora', serif; font-weight: 500; font-size: 14px;
+      color: var(--cr); background: var(--tr); border: none; border-radius: 10px;
+      padding: 12px 16px; box-shadow: 0 4px 14px rgba(184,92,56,0.24); cursor: pointer;
+      transition: transform 0.12s;
+    }
+    .btn-t-sm:hover { transform: translateY(-1px); }
+
+    .btn-ghost-t {
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Lora', serif; font-size: 14px; color: var(--tr);
+      background: transparent; border: 1px solid var(--tr); border-radius: 10px;
+      padding: 12px 16px; cursor: pointer; transition: background 0.12s;
+    }
+    .btn-ghost-t:hover { background: var(--trL); }
+
+    .lnk-t {
+      font-family: 'Lora', serif; font-size: 14px; color: var(--tr);
+      text-decoration: underline; text-underline-offset: 2px;
+      cursor: pointer; background: none; border: none; padding: 0;
+    }
+
+    /* ─── Locked card (S1) ───────────────────── */
+    @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+
+    .locked-wrap { position: relative; width: 240px; height: 330px; margin: 0 auto 44px; }
+
+    .card-back {
+      width: 100%; height: 100%; border-radius: 20px;
+      background: linear-gradient(155deg, #C97050 0%, var(--trD) 100%);
+      filter: blur(1.5px); opacity: 0.7;
+      animation: float 5s ease-in-out infinite;
+    }
+
+    .card-overlay {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
+    }
+
+    .lock-circle {
+      width: 56px; height: 56px; background: #fff; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; box-shadow: 0 4px 20px rgba(46,40,32,0.18);
+    }
+
+    .lock-pill {
+      font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 400;
+      letter-spacing: 0.15em; text-transform: uppercase; color: var(--ink);
+      background: rgba(255,255,255,0.92); padding: 5px 12px; border-radius: 20px;
+      box-shadow: 0 2px 8px rgba(46,40,32,0.08);
+    }
+
+    /* ─── Card face (S2) ─────────────────────── */
+    #card-viewport { perspective: 1200px; width: 100%; }
+
+    #card-face {
+      background: var(--cr); border-radius: 20px;
+      box-shadow: 0 8px 40px rgba(46,40,32,0.12), 0 2px 8px rgba(46,40,32,0.05);
+      padding: 24px 24px 20px; position: relative; overflow: hidden;
+      transform-origin: center; will-change: transform;
+    }
+
+    .card-corner { position: absolute; top: 0; right: 0; width: 92px; height: 92px; pointer-events: none; }
+
+    .card-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; position: relative; }
+    .card-meta span {
+      font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 300;
+      letter-spacing: 0.12em; text-transform: uppercase; color: var(--mut);
+    }
+
+    .cat-pill-lg {
+      display: inline-block; font-family: 'JetBrains Mono', monospace;
+      font-size: 10px; font-weight: 400; letter-spacing: 0.1em; text-transform: uppercase;
+      padding: 4px 11px; border-radius: 20px; margin-bottom: 16px; position: relative;
+    }
+
+    .card-q {
+      font-family: 'Playfair Display', serif; font-weight: 400;
+      font-size: 22px; line-height: 1.45; color: var(--ink); text-wrap: pretty;
+    }
+
+    .card-orn { display: flex; align-items: center; gap: 10px; margin-top: 22px; }
+    .orn-l { flex: 1; height: 1px; background: var(--bd); }
+    .orn-pause { display: flex; gap: 3px; align-items: center; }
+    .orn-pause span { display: block; width: 2.5px; height: 13px; background: var(--tr); border-radius: 1.5px; }
+
+    /* ─── Tab switcher (S3) ──────────────────── */
+    .tab-sw { display: flex; background: var(--sf2); padding: 3px; border-radius: 10px; gap: 3px; margin-bottom: 24px; }
+    .tab-sw button {
+      flex: 1; font-family: 'Lora', serif; font-size: 14px; font-weight: 400;
+      color: var(--mut); background: transparent; border: none; border-radius: 8px;
+      padding: 10px 8px; cursor: pointer; transition: all 0.15s; line-height: 1;
+    }
+    .tab-sw button.active { background: var(--cr); color: var(--ink); box-shadow: 0 1px 4px rgba(46,40,32,0.1); }
+
+    .tab-pane { display: none; }
+    .tab-pane.active { display: block; }
+
+    .code-input {
+      font-family: 'JetBrains Mono', monospace; font-size: 20px; font-weight: 400;
+      letter-spacing: 0.12em; text-transform: uppercase; text-align: center;
+      color: var(--ink); background: var(--cr); border: 1px solid var(--bd);
+      border-radius: 8px; padding: 16px 20px; width: 100%; outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s; -webkit-appearance: none;
+    }
+    .code-input::placeholder { color: var(--mut); }
+    .code-input:focus { border-color: var(--tr); box-shadow: 0 0 0 3px var(--trL); }
+
+    .info-gold { background: var(--goL); border: 1px solid rgba(196,154,60,0.22); border-radius: 10px; padding: 16px; }
+    .info-terra { background: var(--trL); border: 1px solid rgba(184,92,56,0.18); border-radius: 10px; padding: 14px 16px; }
+
+    .dig-card { background: var(--sf); border-radius: 12px; padding: 18px 20px; margin-bottom: 20px; }
+    .dig-card-hdr { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+
+    .feat-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+    .feat-item { display: flex; align-items: flex-start; gap: 10px; font-family: 'Lora', serif; font-size: 14px; color: var(--mid); }
+    .feat-arrow { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ol); margin-top: 2px; flex: none; }
+
+    /* ─── Library (S4) ───────────────────────── */
+    .lib-header { display: flex; align-items: center; gap: 16px; padding: 20px 0 4px; }
+
+    .back-btn {
+      font-family: 'Lora', serif; font-size: 15px; color: var(--mut);
+      background: none; border: none; cursor: pointer; padding: 0; transition: color 0.12s;
+    }
+    .back-btn:hover { color: var(--tr); }
+
+    .deck-card {
+      border-left: 4px solid var(--tr); background: var(--sf); border-radius: 14px;
+      padding: 20px 24px; cursor: pointer; margin-bottom: 8px;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .deck-card:hover { transform: translateY(-3px); box-shadow: 0 12px 40px rgba(46,40,32,0.11); }
+
+    .deck-card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+    .deck-num { font-family: 'Playfair Display', serif; font-size: 48px; font-weight: 400; color: var(--trL); line-height: 1; flex: none; }
+
+    .deck-divider { height: 1px; background: var(--bd); margin: 16px 0 14px; }
+
+    .cat-pills-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+    .cat-p {
+      font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 400;
+      letter-spacing: 0.08em; text-transform: uppercase; padding: 3px 9px; border-radius: 20px;
+    }
+    .cat-p.finances { background: #FAF0D4; color: #6A4A10; }
+    .cat-p.kids     { background: #D8E8D4; color: #1E3A18; }
+    .cat-p.marriage { background: #F5D8CC; color: #7A2E14; }
+    .cat-p.faith    { background: #EDE8D4; color: #5A4A10; }
+    .cat-p.dreams   { background: #E8E0F0; color: #3A1A60; }
+    .cat-p.home     { background: #F0EAE0; color: #6A5A40; }
+
+    .status-pill {
+      font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 400;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      background: var(--olL); color: var(--olD); padding: 3px 9px; border-radius: 20px;
+    }
+
+    .deck-2027 { background: linear-gradient(135deg, var(--trL) 0%, var(--goL) 100%); border-radius: 16px; padding: 28px; position: relative; overflow: hidden; }
+    .deco-circle { position: absolute; top: -50px; right: -50px; width: 180px; height: 180px; border-radius: 50%; background: rgba(255,255,255,0.18); pointer-events: none; }
+
+    .btn-row { display: flex; gap: 10px; }
+    .btn-row .btn-t-sm, .btn-row .btn-ghost-t { flex: 1; }
+  </style>
+</head>
+<body>
+
+<!-- Nav bar -->
+<div class="nav-bar">
+  <span class="nav-label">Screen</span>
+  <button class="nav-btn active" data-s="s1" onclick="goTo('s1')">01 — Locked</button>
+  <button class="nav-btn" data-s="s2" onclick="goTo('s2')">02 — Revealed</button>
+  <button class="nav-btn" data-s="s3" onclick="goTo('s3')">03 — Unlock Deck</button>
+  <button class="nav-btn" data-s="s4" onclick="goTo('s4')">04 — Library</button>
+</div>
+
+<!-- ════ SCREEN 1 — LOCKED ════ -->
+<div id="s1" class="screen active" data-screen-label="01 — Card Locked">
+  <div class="col" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:calc(100vh - 40px);text-align:center;padding-top:48px;padding-bottom:56px;">
+    <div class="locked-wrap">
+      <div class="card-back"></div>
+      <div class="card-overlay">
+        <div class="lock-circle">🔒</div>
+        <div class="lock-pill">Unlock with Card Deck</div>
+      </div>
+    </div>
+
+    <div style="margin-bottom:32px;">
+      <div class="eyebrow" style="margin-bottom:12px;">Before You Begin</div>
+      <h1 class="hl" style="margin-bottom:14px;">Start your session <em>with a question</em></h1>
+      <p class="sub" style="max-width:340px;margin:0 auto;">The card deck gives you a question to sit with before you record. 52 cards, one per week — it goes deeper than the to-do list.</p>
+    </div>
+
+    <div class="btn-stack" style="width:100%;max-width:360px;">
+      <button class="btn-t" onclick="goTo('s3')">I have the deck — enter my code</button>
+      <button class="btn-gold" onclick="goTo('s3')">Get the card deck — $24 →</button>
+      <button class="btn-ghost" onclick="goTo('s2')">Skip — start session without a card</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ SCREEN 2 — REVEALED ════ -->
+<div id="s2" class="screen" data-screen-label="02 — Card Revealed">
+  <div class="col" style="padding-top:52px;padding-bottom:60px;">
+    <div style="text-align:center;margin-bottom:24px;">
+      <div class="eyebrow" style="margin-bottom:8px;">This Week's Card</div>
+      <div style="font-family:'Playfair Display',serif;font-style:italic;font-size:16px;color:var(--mut);">2026 Foundations · Year One</div>
+    </div>
+
+    <div id="card-viewport">
+      <div id="card-face">
+        <div class="card-corner" id="card-corner"></div>
+        <div class="card-meta">
+          <span>FamilyPause · 2026</span>
+          <span id="card-number">33 / 52</span>
+        </div>
+        <div id="card-category" class="cat-pill-lg" style="background:#F5D8CC;color:#7A2E14;">Marriage</div>
+        <p class="card-q" id="card-question">When did you feel most loved by me this past week — was it something I did, or something I said?</p>
+        <div class="card-orn">
+          <div class="orn-l"></div>
+          <div class="orn-pause"><span></span><span></span></div>
+          <div class="orn-l"></div>
+        </div>
+      </div>
+    </div>
+
+    <div style="text-align:center;margin-top:20px;margin-bottom:24px;">
+      <div class="eyebrow-mut">Read it together. Sit with it for a moment.</div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;align-items:center;gap:14px;">
+      <button class="btn-ol" style="max-width:300px;">
+        <svg width="14" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 2a3 3 0 0 1 3 3v7a3 3 0 0 1-6 0V5a3 3 0 0 1 3-3z"></path>
+          <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+          <line x1="12" y1="19" x2="12" y2="22"></line>
+        </svg>
+        Start Recording
+      </button>
+      <button class="lnk-t" onclick="drawCard()">Draw a different card</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ SCREEN 3 — UNLOCK DECK ════ -->
+<div id="s3" class="screen" data-screen-label="03 — Unlock Deck">
+  <div class="col" style="padding-top:44px;padding-bottom:60px;">
+    <button class="back-btn" onclick="goTo('s1')" style="margin-bottom:24px;">← Back</button>
+
+    <div class="eyebrow" style="margin-bottom:10px;">Unlock Cards</div>
+    <h1 class="hl" style="margin-bottom:12px;">Add your <em>card deck</em></h1>
+    <p class="sub" style="margin-bottom:28px;">Unlock the weekly card draw with a physical deck code, or purchase digital access.</p>
+
+    <div class="tab-sw">
+      <button class="active" id="tab-code-btn" onclick="switchTab('code')">I have the deck</button>
+      <button id="tab-dig-btn" onclick="switchTab('dig')">Buy digital $12</button>
+    </div>
+
+    <!-- Code tab -->
+    <div class="tab-pane active" id="tab-code">
+      <div class="eyebrow-mut" style="margin-bottom:8px;">Deck Code</div>
+      <input class="code-input" type="text" placeholder="FP-2026-XXXX-0000" maxlength="18" oninput="this.value=this.value.toUpperCase()" />
+      <div style="font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:300;color:var(--mut);letter-spacing:0.08em;text-transform:uppercase;margin-top:10px;margin-bottom:20px;">Found inside the lid of your FamilyPause Card Deck box</div>
+      <button class="btn-t" style="margin-bottom:16px;">Unlock My Cards</button>
+      <div class="info-gold">
+        <div class="eyebrow-mut" style="margin-bottom:6px;color:var(--goD);">Don't Have the Deck Yet?</div>
+        <p style="font-family:'Lora',serif;font-size:14px;color:var(--mid);line-height:1.55;">Get the physical card deck at <strong>familypause.com/cards</strong> for $24 — includes all 52 cards and unlocks this digital feature.</p>
+      </div>
+    </div>
+
+    <!-- Digital tab -->
+    <div class="tab-pane" id="tab-dig">
+      <div class="dig-card">
+        <div class="dig-card-hdr">
+          <div>
+            <div style="font-family:'Playfair Display',serif;font-size:20px;font-weight:400;color:var(--ink);margin-bottom:5px;">2026 Digital Card Set</div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:300;letter-spacing:0.12em;text-transform:uppercase;color:var(--mut);">52 cards · Permanent access · No expiration</div>
+          </div>
+          <div style="font-family:'Playfair Display',serif;font-size:28px;font-weight:400;color:var(--tr);flex:none;">$12</div>
+        </div>
+      </div>
+
+      <div class="feat-list">
+        <div class="feat-item"><span class="feat-arrow">→</span><span>52 weekly conversation prompts</span></div>
+        <div class="feat-item"><span class="feat-arrow">→</span><span>Organized across 6 categories</span></div>
+        <div class="feat-item"><span class="feat-arrow">→</span><span>Card draw feature unlocked permanently</span></div>
+        <div class="feat-item"><span class="feat-arrow">→</span><span>Both spouses get access instantly</span></div>
+      </div>
+
+      <button class="btn-t" style="margin-bottom:12px;">Purchase Digital Access — $12</button>
+      <div style="text-align:center;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:300;letter-spacing:0.1em;text-transform:uppercase;color:var(--mut);margin-bottom:16px;">Secure payment via Stripe · Instant access</div>
+
+      <div class="info-terra">
+        <p style="font-family:'Lora',serif;font-size:13px;color:var(--trD);line-height:1.55;">The physical deck at $24 includes this digital unlock — plus 52 beautifully printed cards for your table.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ SCREEN 4 — LIBRARY ════ -->
+<div id="s4" class="screen" data-screen-label="04 — Deck Library">
+  <div class="col-md" style="padding-bottom:60px;">
+    <div class="lib-header">
+      <button class="back-btn" onclick="goTo('s2')">← Back</button>
+      <div>
+        <div class="eyebrow-mut">My Cards</div>
+        <div style="font-family:'Playfair Display',serif;font-size:20px;font-weight:400;color:var(--ink);">Card Deck Library</div>
+      </div>
+    </div>
+
+    <div style="margin-top:32px;">
+      <div class="eyebrow-mut" style="margin-bottom:14px;">Your Decks</div>
+
+      <div class="deck-card">
+        <div class="deck-card-top">
+          <div style="flex:1;">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:7px;">
+              <span style="font-family:'Playfair Display',serif;font-size:22px;font-weight:400;color:var(--ink);">2026 Deck</span>
+              <span class="status-pill">✓ Unlocked</span>
+            </div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:400;letter-spacing:0.12em;text-transform:uppercase;color:var(--mut);margin-bottom:5px;">Foundations</div>
+            <div style="font-family:'Lora',serif;font-style:italic;font-size:14px;color:var(--mid);">52 questions that go deeper than the to-do list</div>
+          </div>
+          <div class="deck-num">52</div>
+        </div>
+        <div class="deck-divider"></div>
+        <div class="cat-pills-row">
+          <span class="cat-p finances">Finances · 10</span>
+          <span class="cat-p kids">Kids · 10</span>
+          <span class="cat-p marriage">Marriage · 10</span>
+          <span class="cat-p faith">Faith · 8</span>
+          <span class="cat-p dreams">Dreams · 8</span>
+          <span class="cat-p home">Home · 6</span>
+        </div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:300;letter-spacing:0.1em;text-transform:uppercase;color:var(--mut);">These cards are yours permanently. No expiration.</div>
+      </div>
+
+      <div class="eyebrow-mut" style="margin-top:36px;margin-bottom:14px;">New This Year</div>
+
+      <div class="deck-2027">
+        <div class="deco-circle"></div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:400;letter-spacing:0.15em;text-transform:uppercase;color:var(--tr);margin-bottom:10px;position:relative;">2027 Deck Available</div>
+        <div style="font-family:'Playfair Display',serif;font-size:26px;font-weight:400;color:var(--ink);margin-bottom:8px;position:relative;">2027: Legacy and Vision</div>
+        <div style="font-family:'Lora',serif;font-style:italic;font-size:15px;color:var(--mid);margin-bottom:12px;position:relative;">52 questions about where you're going and who you're becoming.</div>
+        <p style="font-family:'Lora',serif;font-size:13px;color:var(--mid);line-height:1.6;margin-bottom:20px;position:relative;">Your 2026 cards never expire — keep using them as long as you like. The 2027 deck is here whenever you're ready.</p>
+        <div class="btn-row" style="position:relative;">
+          <button class="btn-t-sm">Get the 2027 Deck →</button>
+          <button class="btn-ghost-t">See the physical deck</button>
+        </div>
+      </div>
+
+      <div style="text-align:center;margin-top:24px;">
+        <button class="lnk-t">+ Enter another deck code</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  var questions = [
+    { text: "If our income doubled tomorrow, what's the first thing we'd change — and what would we keep exactly the same?", cat: "Finances", bg: "#FAF0D4", tx: "#6A4A10", corner: "#C49A3C", num: "14 / 52" },
+    { text: "What does financial security actually feel like to you? How close are we to that feeling right now?", cat: "Finances", bg: "#FAF0D4", tx: "#6A4A10", corner: "#C49A3C", num: "7 / 52" },
+    { text: "What's one thing about how we're raising our kids that you're really proud of right now?", cat: "Kids", bg: "#D8E8D4", tx: "#1E3A18", corner: "#4A6741", num: "21 / 52" },
+    { text: "When did you feel most loved by me this past week — was it something I did, or something I said?", cat: "Marriage", bg: "#F5D8CC", tx: "#7A2E14", corner: "#B85C38", num: "33 / 52" },
+    { text: "How is your faith actually doing right now? Not the Sunday version — the real version.", cat: "Faith", bg: "#EDE8D4", tx: "#5A4A10", corner: "#9A8230", num: "42 / 52" },
+    { text: "What's a dream you had before we got together that you've quietly let go of? Does it still matter?", cat: "Dreams", bg: "#E8E0F0", tx: "#3A1A60", corner: "#7A50C0", num: "28 / 52" },
+    { text: "Is there something about our home or daily routine that drains you that we haven't fixed?", cat: "Home", bg: "#F0EAE0", tx: "#6A5A40", corner: "#8B7355", num: "48 / 52" },
+    { text: "What does a great marriage look like to you five years from now? Are we building toward that?", cat: "Marriage", bg: "#F5D8CC", tx: "#7A2E14", corner: "#B85C38", num: "37 / 52" }
+  ];
+
+  var currentIdx = 3;
+
+  function updateCardContent(q) {
+    document.getElementById('card-question').textContent = q.text;
+    document.getElementById('card-number').textContent = q.num;
+    var pill = document.getElementById('card-category');
+    pill.textContent = q.cat;
+    pill.style.background = q.bg;
+    pill.style.color = q.tx;
+    document.getElementById('card-corner').style.background =
+      'linear-gradient(225deg, ' + q.corner + '55 0%, transparent 62%)';
+  }
+
+  function drawCard() {
+    var card = document.getElementById('card-face');
+    var newIdx;
+    do { newIdx = Math.floor(Math.random() * questions.length); } while (newIdx === currentIdx);
+    currentIdx = newIdx;
+
+    card.style.transition = 'transform 200ms ease-in';
+    card.style.transform = 'rotateY(90deg)';
+
+    setTimeout(function() {
+      updateCardContent(questions[currentIdx]);
+      card.style.transition = 'transform 600ms cubic-bezier(0.34, 1.56, 0.64, 1)';
+      card.style.transform = 'rotateY(0deg)';
+    }, 200);
+  }
+
+  function goTo(id) {
+    document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); });
+    document.querySelectorAll('.nav-btn').forEach(function(b) { b.classList.remove('active'); });
+    document.getElementById(id).classList.add('active');
+    var btn = document.querySelector('[data-s="' + id + '"]');
+    if (btn) btn.classList.add('active');
+    window.scrollTo({ top: 0 });
+  }
+
+  function switchTab(t) {
+    document.getElementById('tab-code').classList.toggle('active', t === 'code');
+    document.getElementById('tab-dig').classList.toggle('active', t === 'dig');
+    document.getElementById('tab-code-btn').classList.toggle('active', t === 'code');
+    document.getElementById('tab-dig-btn').classList.toggle('active', t === 'dig');
+  }
+
+  updateCardContent(questions[currentIdx]);
+</script>
+
+</body>
+</html>

@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm --version)",
+      "Bash(npm install *)",
+      "Bash(npm run *)",
+      "Read(//tmp/**)",
+      "Bash(pkill -f \"vite\")",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(pkill -f vite)",
+      "Bash(sed -n '11,30p;66,140p' src/components/Onboarding.jsx)",
+      "Bash(sed -n '1,84p' src/App.jsx)",
+      "Bash(grep -nA8 \"\\\\.rp-submit\\\\|submit\\\\|btn-primary\\\\|\\\\.cta-primary\" \"FamilyPause Auth.html\")",
+      "Bash(grep -nA2 \"\\\\.wf\\\\b\\\\|\\\\.wp\\\\b\\\\|\\\\.wf {\\\\|\\\\.wp {\" \"FamilyPause Auth.html\")",
+      "Bash(grep -nB1 -A9 \"\\\\.cta\\\\b\\\\|\\\\.rp-cta\\\\|\\\\.submit\\\\|\\\\.rp-btn\\\\|\\\\.btn-submit\" \"project/FamilyPause Auth.html\")",
+      "Bash(awk '/\\\\.btn \\\\{/{f=1} f{print NR\": \"$0} /\\\\}/{if\\(f\\)c++; if\\(c>0&&f\\){f=0;c=0}}' \"project/FamilyPause Auth.html\")",
+      "Bash(grep -nA10 \"^    \\\\.btn {\" \"project/FamilyPause Auth.html\")",
+      "Bash(sed -n '419,445p' \"project/FamilyPause Auth.html\")",
+      "Bash(perl -0pi -e 's/184,92,56/190,90,55/g' src/components/CardSystem.jsx)"
+    ]
+  }
+}
