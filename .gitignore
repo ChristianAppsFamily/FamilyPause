@@ -14,6 +14,12 @@ dist-ssr
 .env.local
 .env.*.local
 
+# Supabase local temp state
+supabase/.temp/
+
+# App screenshots (local working files)
+Screenshots-App/
+
 # Editor / OS
 .vscode/*
 !.vscode/extensions.json

@@ -34,7 +34,21 @@
       "Bash(git -c 'user.name=Spence Longmore' -c user.email=spence@familypause.com commit -q -m 'Fix invite/join flow: open Join screen from link + prefill code; joiners skip family setup *)",
       "Bash(git -c 'user.name=Spence Longmore' -c user.email=spence@familypause.com commit -q -m 'Remove all em-dashes from site copy; use commas, periods, colons \\(hyphens where needed\\) *)",
       "Bash(git -c 'user.name=Spence Longmore' -c user.email=spence@familypause.com commit -q -m 'Secure AI via Edge Function + nicer FP-XXXX invite codes *)",
-      "Bash(supabase --version)"
+      "Bash(supabase --version)",
+      "mcp__Claude_in_Chrome__find",
+      "mcp__Claude_in_Chrome__form_input",
+      "mcp__Claude_Preview__preview_screenshot",
+      "mcp__Claude_Preview__preview_console_logs",
+      "mcp__Claude_Preview__preview_click",
+      "mcp__Claude_Preview__preview_fill",
+      "mcp__Claude_Preview__preview_snapshot",
+      "mcp__Claude_Preview__preview_network",
+      "mcp__Claude_Preview__preview_inspect",
+      "mcp__Claude_Preview__preview_eval",
+      "mcp__Claude_Preview__preview_logs",
+      "mcp__Claude_Preview__preview_resize",
+      "mcp__Claude_Preview__preview_list",
+      "mcp__Claude_Preview__preview_stop"
     ]
   }
 }
