@@ -8,6 +8,20 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 
+// Map raw Supabase / browser errors to human copy.
+// Network failures surface as "Failed to fetch" / "NetworkError" — never show
+// that developer string to a user; tell them what to do instead.
+function friendlyAuthError(err) {
+  const msg = (err && err.message) || String(err || "");
+  if (/failed to fetch|networkerror|load failed|fetch|err_/i.test(msg))
+    return "Can't reach the server right now. Check your connection and try again.";
+  if (/invalid login credentials/i.test(msg))
+    return "Email or password is incorrect. Try again.";
+  if (/already registered|already exists|user already/i.test(msg))
+    return "An account with that email already exists. Try signing in instead.";
+  return msg || "Something went wrong. Please try again.";
+}
+
 // ── TERRA & CREAM PALETTE ─────────────────────────────────────────────────────
 // Palette mapped to the design bundle (src/styles/tokens.css): source of truth.
 const T = {
@@ -338,9 +352,7 @@ function SignIn({ onSwitch, onSuccess }) {
     setError("");
     const { error: err } = await supabase.auth.signInWithPassword({ email, password });
     if (err) {
-      setError(err.message === "Invalid login credentials"
-        ? "Email or password is incorrect. Try again."
-        : err.message);
+      setError(friendlyAuthError(err));
       setLoading(false);
     } else {
       onSuccess();
@@ -355,7 +367,7 @@ function SignIn({ onSwitch, onSuccess }) {
       provider: "google",
       options: { redirectTo: window.location.origin },
     });
-    if (err) setError(err.message);
+    if (err) setError(friendlyAuthError(err));
   };
 
   return (
@@ -439,7 +451,7 @@ function SignUp({ onSwitch, onSuccess }) {
 
     // Create auth user
     const { data, error: authErr } = await supabase.auth.signUp({ email, password });
-    if (authErr) { setError(authErr.message); setLoading(false); return; }
+    if (authErr) { setError(friendlyAuthError(authErr)); setLoading(false); return; }
 
     const userId = data.user?.id;
     if (!userId) { setError("Something went wrong. Please try again."); setLoading(false); return; }
@@ -447,7 +459,7 @@ function SignUp({ onSwitch, onSuccess }) {
     // Create workspace + owner membership in one server-side call.
     // (SECURITY DEFINER RPC: avoids client-side RLS/grant issues at signup.)
     const { data: ws, error: wsErr } = await supabase.rpc("create_owner_workspace", { p_name: name });
-    if (wsErr) { setError(wsErr.message); setLoading(false); return; }
+    if (wsErr) { setError(friendlyAuthError(wsErr)); setLoading(false); return; }
     const workspace = Array.isArray(ws) ? ws[0] : ws;
 
     onSuccess({ workspaceId: workspace.id, inviteCode: workspace.invite_code, displayName: name });
@@ -461,7 +473,7 @@ function SignUp({ onSwitch, onSuccess }) {
       provider: "google",
       options: { redirectTo: window.location.origin },
     });
-    if (err) setError(err.message);
+    if (err) setError(friendlyAuthError(err));
   };
 
   return (
@@ -549,7 +561,7 @@ function ForgotPassword({ onSwitch }) {
     const { error: err } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/reset-password`,
     });
-    if (err) { setError(err.message); setLoading(false); }
+    if (err) { setError(friendlyAuthError(err)); setLoading(false); }
     else { setSent(true); setLoading(false); }
   };
 
@@ -620,7 +632,7 @@ function JoinWorkspace({ onSwitch, onSuccess, initialCode = "" }) {
 
     // Create auth user
     const { data, error: authErr } = await supabase.auth.signUp({ email, password });
-    if (authErr) { setError(authErr.message); setLoading(false); return; }
+    if (authErr) { setError(friendlyAuthError(authErr)); setLoading(false); return; }
 
     const userId = data.user?.id;
     if (!userId) { setError("Something went wrong. Please try again."); setLoading(false); return; }
