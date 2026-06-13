@@ -9,6 +9,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { ensureTrialSubscription } from "../lib/subscription";
+import { authPathForScreen, resolveAuthScreen } from "../lib/routes";
 
 // Map raw Supabase / browser errors to human copy.
 // Network failures surface as "Failed to fetch" / "NetworkError" — never show
@@ -736,23 +737,6 @@ function JoinWorkspace({ onSwitch, onSuccess, initialCode = "" }) {
 // <Auth onAuthenticated={(user, workspace) => setAppState({ user, workspace })} />
 
 export { AuthShell };
-
-function resolveAuthScreen(searchParams, inviteCode) {
-  if (inviteCode || searchParams.get("join") === "1") return "join";
-  if (searchParams.get("signup") === "1") return "signup";
-  if (searchParams.get("forgot") === "1") return "forgot";
-  return "signin";
-}
-
-function authPathForScreen(screen, inviteCode) {
-  switch (screen) {
-    case "signup": return "/app?signup=1";
-    case "forgot": return "/app?forgot=1";
-    case "join": return inviteCode ? `/join/${inviteCode}` : "/app?join=1";
-    case "signin":
-    default: return "/app";
-  }
-}
 
 export default function Auth({ onAuthenticated, inviteCode = "" }) {
   const navigate = useNavigate();

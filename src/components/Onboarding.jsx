@@ -1,8 +1,11 @@
 import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "../lib/supabase";
+import { onboardingPath } from "../lib/routes";
 import "../styles/onboarding.css";
 
 const STRIPE_DIGITAL = "https://buy.stripe.com/PLACEHOLDER_digital_12";
+const PHYSICAL_DECK_URL = "https://familypause.com/cards";
 const TOTAL = 5;
 
 function ProgressBar({ step }) {
@@ -93,7 +96,7 @@ function StepFamilySetup({ workspaceId, displayName, onNext }) {
 
       <div className="ob-anim ob-field-block" style={{ "--d": "210ms", marginTop: 28 }}>
         <label className="ob-field-label" htmlFor="ob-spouse">Your spouse or partner's name</label>
-        <input id="ob-spouse" className="ob-text-input" type="text" placeholder="Amanda" value={spouseName} onChange={(e) => setSpouseName(e.target.value)} />
+        <input id="ob-spouse" className="ob-text-input" type="text" placeholder="First Name" value={spouseName} onChange={(e) => setSpouseName(e.target.value)} />
       </div>
 
       <div className="ob-anim ob-field-block" style={{ "--d": "280ms" }}>
@@ -153,15 +156,19 @@ function IconText() {
   );
 }
 
-function StepInvite({ workspaceId, spouseName, onNext }) {
-  const [inviteCode, setInviteCode] = useState(null);
+function StepInvite({ workspaceId, spouseName, inviteCode: initialInviteCode, onNext }) {
+  const [inviteCode, setInviteCode] = useState(initialInviteCode || null);
   const [copied, setCopied] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!initialInviteCode);
 
   useEffect(() => {
+    if (initialInviteCode) setInviteCode(initialInviteCode);
     supabase.from("workspaces").select("invite_code").eq("id", workspaceId).single()
-      .then(({ data }) => { if (data) setInviteCode(data.invite_code); setLoading(false); });
-  }, [workspaceId]);
+      .then(({ data }) => {
+        if (data?.invite_code) setInviteCode(data.invite_code);
+      })
+      .finally(() => setLoading(false));
+  }, [workspaceId, initialInviteCode]);
 
   const inviteLink = inviteCode ? `${window.location.origin}/join/${inviteCode}` : "";
   const copyLink = () => {
@@ -252,8 +259,18 @@ function StepCardDeck({ workspaceId, onComplete }) {
   const [tab, setTab] = useState("code");
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
+  const [skipping, setSkipping] = useState(false);
   const [error, setError] = useState("");
   const [unlocked, setUnlocked] = useState(false);
+
+  const finish = async () => {
+    setSkipping(true);
+    try {
+      await onComplete();
+    } finally {
+      setSkipping(false);
+    }
+  };
 
   const redeem = async () => {
     const trimmed = code.trim().toUpperCase();
@@ -311,11 +328,20 @@ function StepCardDeck({ workspaceId, onComplete }) {
                 {loading ? "Unlocking…" : "Unlock My Cards"}
               </button>
               <div className="ob-info-gold">
-                <div className="ob-eyebrow-mut" style={{ marginBottom: 6, color: "var(--gold)" }}>Don't Have the Deck Yet?</div>
+                <div className="ob-deck-callout">Don't Have the Deck Yet?</div>
                 <p className="ob-body" style={{ fontSize: 14 }}>
                   Get the physical card deck at <strong>familypause.com/cards</strong> for $24 — includes all 52 cards and unlocks this digital feature.
                 </p>
               </div>
+              <a
+                href={PHYSICAL_DECK_URL}
+                target="_blank"
+                rel="noreferrer"
+                className="ob-btn-primary"
+                style={{ marginTop: 16, textDecoration: "none" }}
+              >
+                Purchase Physical Deck — $24
+              </a>
             </div>
           ) : (
             <div className="ob-anim" style={{ "--d": "280ms" }}>
@@ -351,33 +377,51 @@ function StepCardDeck({ workspaceId, onComplete }) {
       )}
 
       <div className="ob-anim" style={{ "--d": "420ms", marginTop: 24 }}>
-        <button type="button" className="ob-btn-ghost" onClick={onComplete}>
-          {unlocked ? "Start My First FamilyPause →" : "Skip for now — unlock later in Settings"}
+        <button type="button" className="ob-btn-ghost" onClick={finish} disabled={skipping || loading}>
+          {skipping
+            ? "Opening FamilyPause…"
+            : unlocked
+              ? "Start My First FamilyPause →"
+              : "Skip for now — unlock later in Settings"}
         </button>
       </div>
     </div>
   );
 }
 
-export default function Onboarding({ workspaceId, displayName, joined, onComplete }) {
-  const [step, setStep] = useState(1);
+export default function Onboarding({ workspaceId, displayName, inviteCode, joined, onComplete }) {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [familyData, setFamilyData] = useState({});
+
+  const stepFromUrl = () => {
+    const m = location.pathname.match(/\/app\/onboarding\/(\d+)/);
+    const n = m ? parseInt(m[1], 10) : 1;
+    return Math.min(5, Math.max(1, n || 1));
+  };
+
+  const step = stepFromUrl();
+
+  const goToStep = (next, { replace = false } = {}) => {
+    const s = Math.min(5, Math.max(1, next));
+    navigate(onboardingPath(s), { replace });
+  };
 
   return (
     <div className="ob-page">
       <div className="ob-column">
         {step === 1 && (
-          <StepWelcome displayName={displayName} onNext={() => setStep(joined ? 4 : 2)} />
+          <StepWelcome displayName={displayName} onNext={() => goToStep(joined ? 4 : 2)} />
         )}
         {step === 2 && (
           <StepFamilySetup workspaceId={workspaceId} displayName={displayName}
-            onNext={(data) => { setFamilyData(data); setStep(3); }} />
+            onNext={(data) => { setFamilyData(data); goToStep(3); }} />
         )}
         {step === 3 && (
-          <StepInvite workspaceId={workspaceId} spouseName={familyData.spouseName} onNext={() => setStep(4)} />
+          <StepInvite workspaceId={workspaceId} spouseName={familyData.spouseName} inviteCode={inviteCode} onNext={() => goToStep(4)} />
         )}
         {step === 4 && (
-          <StepReady onNext={() => setStep(5)} />
+          <StepReady onNext={() => goToStep(5)} />
         )}
         {step === 5 && (
           <StepCardDeck workspaceId={workspaceId} onComplete={onComplete} />

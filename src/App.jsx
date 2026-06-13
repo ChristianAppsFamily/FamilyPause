@@ -12,6 +12,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useState, useRef, useEffect, useCallback } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "./lib/supabase";
 import { callFamilyPauseAI, buildSystemPrompt } from "./lib/ai";
 import Settings from "./components/Settings.jsx";
@@ -19,6 +20,7 @@ import SessionHistory from "./components/SessionHistory.jsx";
 import CardSystem from "./components/CardSystem.jsx";
 import Paywall from "./components/Paywall.jsx";
 import { paywallReason } from "./lib/subscription";
+import { parseAppLocation, syncPath, SYNC_VIEWS } from "./lib/routes";
 
 // ── DEFAULT CONTEXT (fallback when workspace has none) ───────────────────────
 const DEFAULT_CONTEXT = {
@@ -587,8 +589,22 @@ function PlanView({ keptCards, adults, roleOf, onRestart }) {
 
 // ── ROOT ──────────────────────────────────────────────────────────────────────
 export default function App({ user, workspace, onSignOut }) {
-  const [view, setView] = useState("agenda");
-  const [overlay, setOverlay] = useState(null); // "settings" | "history" | "decks" | "paywall" | null
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const viewFromLocation = () => {
+    const parsed = parseAppLocation(location.pathname, location.search);
+    if (parsed.area === "sync" && SYNC_VIEWS.includes(parsed.view)) return parsed.view;
+    return "agenda";
+  };
+
+  const overlayFromLocation = () => {
+    const parsed = parseAppLocation(location.pathname, location.search);
+    return parsed.area === "overlay" ? parsed.overlay : null;
+  };
+
+  const [view, setView] = useState(viewFromLocation);
+  const [overlay, setOverlay] = useState(overlayFromLocation);
   const [paywallBlock, setPaywallBlock] = useState(null);
   const [subscription, setSubscription] = useState(null);
   const [sessionsThisMonth, setSessionsThisMonth] = useState(0);
@@ -604,6 +620,36 @@ export default function App({ user, workspace, onSignOut }) {
   const savedRef = useRef(false);
 
   useEffect(() => { setWs(workspace); }, [workspace]);
+
+  useEffect(() => {
+    const parsed = parseAppLocation(location.pathname, location.search);
+    if (parsed.area === "sync" && SYNC_VIEWS.includes(parsed.view)) {
+      setView(parsed.view);
+      setOverlay(null);
+    } else if (parsed.area === "overlay") {
+      setOverlay(parsed.overlay);
+    }
+  }, [location.pathname, location.search]);
+
+  const go = (v, { replace = false } = {}) => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    navigate(syncPath(v), { replace });
+  };
+
+  const openOverlay = (name) => {
+    const paths = {
+      settings: "/app/settings",
+      history: "/app/history",
+      decks: "/app/cards",
+      paywall: "/app/paywall",
+    };
+    navigate(paths[name] || syncPath(view));
+  };
+
+  const closeOverlay = () => {
+    if (window.history.length > 1) navigate(-1);
+    else navigate(syncPath(view));
+  };
 
   useEffect(() => {
     if (!ws?.id) return;
@@ -655,14 +701,12 @@ export default function App({ user, workspace, onSignOut }) {
     return () => { supabase.removeChannel(channel); };
   }, [ws?.id]);
 
-  const go = (v) => { window.scrollTo({ top: 0, behavior: "smooth" }); setView(v); };
-
   // ── Distill (real AI) ────────────────────────────────────────────────────
   const runDistill = async (text, mode = "paste") => {
     const block = paywallReason(subscription, sessionsThisMonth);
     if (block) {
       setPaywallBlock(block);
-      setOverlay("paywall");
+      openOverlay("paywall");
       return;
     }
 
@@ -731,7 +775,7 @@ Rules: extract everything actionable, use person names when mentioned, return on
       } catch { /* session insert is best-effort */ }
     }
 
-    setTimeout(() => go("review"), 650); // let the orb finish
+    setTimeout(() => go("review", { replace: true }), 650); // let the orb finish
   };
 
   // Persist review decisions for spouse realtime sync
@@ -790,7 +834,7 @@ Rules: extract everything actionable, use person names when mentioned, return on
   if (overlay === "paywall") {
     return (
       <div className="stage" style={{ padding: "48px 24px 80px" }}>
-        <Paywall reason={paywallBlock || "trial"} onClose={() => { setOverlay(null); setPaywallBlock(null); }} />
+        <Paywall reason={paywallBlock || "trial"} onClose={() => { closeOverlay(); setPaywallBlock(null); }} />
       </div>
     );
   }
@@ -800,21 +844,21 @@ Rules: extract everything actionable, use person names when mentioned, return on
         workspace={ws}
         user={user}
         onSignOut={onSignOut}
-        onClose={() => setOverlay(null)}
-        onOpenDecks={() => setOverlay("decks")}
-        onOpenHistory={() => setOverlay("history")}
+        onClose={closeOverlay}
+        onOpenDecks={() => navigate("/app/cards")}
+        onOpenHistory={() => navigate("/app/history")}
         onWorkspaceUpdate={setWs}
       />
     );
   }
   if (overlay === "history") {
-    return <SessionHistory workspace={ws} onClose={() => setOverlay(null)} />;
+    return <SessionHistory workspace={ws} onClose={closeOverlay} />;
   }
   if (overlay === "decks") {
-    return <CardSystem workspace={ws} user={user} onClose={() => setOverlay(null)} onUnlocked={(year) => {
+    return <CardSystem workspace={ws} user={user} onClose={closeOverlay} onUnlocked={(year) => {
       const years = [...new Set([...(ws?.unlocked_deck_years || []), year])];
       setWs({ ...ws, cards_unlocked: true, unlocked_deck_years: years });
-      setOverlay(null);
+      closeOverlay();
     }} />;
   }
 
@@ -828,8 +872,8 @@ Rules: extract everything actionable, use person names when mentioned, return on
         <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
           <StepRail view={view} />
           <div style={{ display: "flex", gap: 4 }}>
-            <button className="linkish" title="Session history" onClick={() => setOverlay("history")} style={{ display: "inline-flex", padding: 8 }}><Ico d={I.clock} size={16} /></button>
-            <button className="linkish" title="Settings" onClick={() => setOverlay("settings")} style={{ display: "inline-flex", padding: 8 }}><Ico d={I.gear} size={16} /></button>
+            <button className="linkish" title="Session history" onClick={() => openOverlay("history")} style={{ display: "inline-flex", padding: 8 }}><Ico d={I.clock} size={16} /></button>
+            <button className="linkish" title="Settings" onClick={() => openOverlay("settings")} style={{ display: "inline-flex", padding: 8 }}><Ico d={I.gear} size={16} /></button>
             <button className="linkish" title="Sign out" onClick={onSignOut} style={{ display: "inline-flex", padding: 8 }}><Ico d={I.out} size={16} /></button>
           </div>
         </div>

@@ -12,8 +12,8 @@ function LandingRoute() {
   const navigate = useNavigate()
   return (
     <Landing
-      onSignIn={() => navigate('/app')}
-      onStart={() => navigate('/app?signup=1')}
+      onSignIn={() => navigate('/app', { replace: true })}
+      onStart={() => navigate('/app?signup=1', { replace: true })}
     />
   )
 }
