@@ -709,7 +709,7 @@ export default function App({ user, workspace, onSignOut }) {
 
   const cardDeckInitialView = () => {
     const wantsSetup = new URLSearchParams(location.search).get("setup") === "1";
-    return wantsSetup || !ws?.cards_unlocked ? "unlock" : "draw";
+    return wantsSetup ? "unlock" : "draw";
   };
 
   useEffect(() => {

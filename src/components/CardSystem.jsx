@@ -338,13 +338,73 @@ function CardFace({ card, deckYear, flipped = true, style = {} }) {
   );
 }
 
-// ── CARD BACK (locked) ────────────────────────────────────────────────────────
-function LockIcon() {
+// ── CARD PREVIEW (locked screen — design bundle v2) ───────────────────────────
+function PauseLogo({ width = 250, height = 362, fill = "#FAF3EC" }) {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-      <rect x="3" y="11" width="18" height="11" rx="2" />
-      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+    <svg viewBox="0 0 18 26" width={width} height={height} fill={fill} aria-hidden="true">
+      <circle cx="4" cy="3.8" r="3.4" />
+      <rect x="0.6" y="8.8" width="6.8" height="16.6" rx="3.4" />
+      <circle cx="14" cy="3.8" r="3.4" />
+      <rect x="10.6" y="8.8" width="6.8" height="16.6" rx="3.4" />
     </svg>
+  );
+}
+
+function CardBackV2({ year = 2026 }) {
+  return (
+    <div className="cs-cardback-v2 cs-grain">
+      <span className="cs-cb-corner tl" aria-hidden="true" />
+      <span className="cs-cb-corner tr" aria-hidden="true" />
+      <span className="cs-cb-corner bl" aria-hidden="true" />
+      <span className="cs-cb-corner br" aria-hidden="true" />
+      <div className="cs-cb-ghost">
+        <PauseLogo />
+      </div>
+      <div className="cs-cb-center">
+        <div className="cs-cb-wordmark">FamilyPause</div>
+        <div className="cs-cb-rule" />
+        <div className="cs-cb-meta">Card Deck · {year}</div>
+      </div>
+    </div>
+  );
+}
+
+function CardFrontV2({ card, year = 2026 }) {
+  return (
+    <div className="cs-cardfront-v2 cs-grain">
+      <div className="cs-cf-stripe" />
+      <div className="cs-cf-inner">
+        <div className="cs-cf-rule-d" />
+        <div className="cs-cf-head">
+          <span className="cs-cf-wordmark">FamilyPause</span>
+          <span className="cs-cf-num">{String(card?.id).padStart(2, "0")} / 52</span>
+        </div>
+        <div className="cs-cf-pill">{card?.category}</div>
+        <div className="cs-cf-question">{card?.question}</div>
+        <div className="cs-cf-foot">
+          <div className="cs-cf-foot-rule" />
+          <div className="cs-cf-ii">
+            <PauseLogo width={21} height={30} fill="#BE5A37" />
+          </div>
+          <div className="cs-cf-tag">One Card · One Week · One Conversation</div>
+          <div className="cs-cf-year">{year}</div>
+          <div className="cs-cf-rule-d" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DeckPreviewPair({ year = 2026, sampleCard }) {
+  return (
+    <div className="cs-preview-pair">
+      <div className="cs-pv-card cs-pv-a">
+        <CardBackV2 year={year} />
+      </div>
+      <div className="cs-pv-card cs-pv-b">
+        <CardFrontV2 card={sampleCard} year={year} />
+      </div>
+    </div>
   );
 }
 
@@ -393,48 +453,44 @@ function CardDraw({ workspace, onStartSession, onSkip, onUnlock }) {
   // LOCKED STATE
   if (!hasUnlockedDeck || phase === "intro") {
     if (!hasUnlockedDeck) {
+      const previewYear = 2026;
+      const previewCard = DECKS[previewYear].cards.find((c) => c.id === 21) || DECKS[previewYear].cards[0];
+
       return (
-        <div style={{ minHeight: "100vh", background: T.bg, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "48px 24px", fontFamily: "'Lora', serif" }}>
+        <div style={{ background: T.bg, fontFamily: "'Lora', serif" }}>
           <style>{css}</style>
 
-          <div style={{ width: "100%", maxWidth: 420, textAlign: "center" }}>
-            {/* Locked card visual */}
-            <div style={{ position: "relative", marginBottom: 40 }}>
-              <div style={{ filter: "blur(2px)", opacity: 0.7 }}>
-                <CardBack />
-              </div>
-              <div className="cs-lock-overlay">
-                <div className="cs-lock-circle"><LockIcon /></div>
-                <div className="cs-lock-pill">Unlock with card deck</div>
-              </div>
+          <div className="cs-locked-screen">
+            <div className="cs-fade">
+              <DeckPreviewPair year={previewYear} sampleCard={previewCard} />
             </div>
 
-            <div className="cs-fade" style={{ fontSize: 11, letterSpacing: "0.25em", color: T.terra, fontFamily: "'JetBrains Mono', monospace", textTransform: "uppercase", marginBottom: 12 }}>
-              Before you begin
-            </div>
-            <h2 className="cs-fade-1" style={{ fontFamily: "'Playfair Display', serif", fontSize: 32, fontWeight: 400, color: T.text, marginBottom: 12, lineHeight: 1.3 }}>
-              Start your session<br /><em style={{ color: T.terra }}>with a question.</em>
-            </h2>
-            <p className="cs-fade-2" style={{ fontSize: 15, color: T.mid, lineHeight: 1.65, marginBottom: 32 }}>
-              The FamilyPause Card Deck gives you a question to sit with before you hit record. 52 cards. One per week. Goes deeper than the to-do list.
-            </p>
+            <div className="cs-pv-cap cs-fade-1">Front &amp; back · 52 cards in the deck</div>
 
-            <div className="cs-fade-3" style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              <button className="cs-btn-primary" onClick={onUnlock}>
-                I have the deck: enter my code
+            <div className="cs-fade-2" style={{ marginBottom: 30, width: "100%", maxWidth: 420 }}>
+              <div className="cs-eyebrow" style={{ marginBottom: 12 }}>The {previewYear} Deck</div>
+              <h1 className="cs-hl">
+                A question to sit with <em>before you record</em>
+              </h1>
+              <p className="cs-sub">
+                Each card opens one honest conversation. 52 of them — one per week — that go deeper than the to-do list.
+              </p>
+            </div>
+
+            <div className="cs-btn-stack cs-fade-3">
+              <button type="button" className="cs-btn-primary" onClick={onUnlock}>
+                I have the deck — enter my code
               </button>
-              <a href="https://familypause.com/cards" target="_blank" rel="noreferrer" style={{
-                display: "block", textAlign: "center",
-                background: T.goldL, border: `1px solid ${T.gold}44`,
-                borderRadius: 10, padding: "13px",
-                color: T.goldD, fontFamily: "'JetBrains Mono', monospace",
-                fontSize: 12, letterSpacing: "0.06em", textDecoration: "none",
-                transition: "all 0.2s",
-              }}>
-                Get the card deck: $24 →
+              <a
+                href="https://familypause.com/cards"
+                target="_blank"
+                rel="noreferrer"
+                className="cs-btn-gold"
+              >
+                Get the card deck — $24 →
               </a>
-              <button className="cs-btn-ghost" onClick={onSkip}>
-                Skip and start session without a card
+              <button type="button" className="cs-btn-ghost-lora" onClick={onSkip}>
+                Skip — start session without a card
               </button>
             </div>
           </div>
@@ -629,109 +685,101 @@ function UnlockDeck({ workspace, onSuccess, onClose }) {
   }
 
   return (
-    <div style={{ minHeight: "100vh", background: T.bg, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "48px 24px", fontFamily: "'Lora', serif" }}>
+    <div className="cs-unlock-screen">
       <style>{css}</style>
-      <div style={{ width: "100%", maxWidth: 420 }}>
+      <div className="cs-unlock-inner">
 
-        <button onClick={onClose} style={{ background: "none", border: "none", color: T.muted, cursor: "pointer", fontSize: 20, marginBottom: 32, display: "block" }}>←</button>
+        <button type="button" className="cs-unlock-back cs-fade" onClick={onClose}>← Back</button>
 
-        <div className="cs-fade" style={{ fontSize: 11, letterSpacing: "0.25em", color: T.terra, fontFamily: "'JetBrains Mono', monospace", textTransform: "uppercase", marginBottom: 12 }}>
-          Unlock cards
-        </div>
-        <h2 className="cs-fade-1" style={{ fontFamily: "'Playfair Display', serif", fontSize: 34, fontWeight: 400, color: T.text, marginBottom: 8 }}>
-          Add your<br /><em style={{ color: T.terra }}>card deck.</em>
-        </h2>
-        <p className="cs-fade-2" style={{ fontSize: 15, color: T.mid, marginBottom: 32, lineHeight: 1.6 }}>
+        <div className="cs-unlock-eyebrow cs-fade">Unlock cards</div>
+        <h1 className="cs-unlock-hl cs-fade-1">Add your <em>card deck</em></h1>
+        <p className="cs-unlock-sub cs-fade-2">
           Unlock the weekly card draw feature with a physical deck code, or purchase digital access directly.
         </p>
 
-        {/* Tab switcher */}
-        <div className="cs-fade-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2, background: T.surface2, borderRadius: 10, padding: 3, marginBottom: 28 }}>
+        <div className="cs-tab-sw cs-fade-2">
           {[
             { id: "code", label: "I have the deck" },
             { id: "digital", label: "Buy digital ($12)" },
-          ].map(t => (
-            <button key={t.id} onClick={() => { setTab(t.id); setError(""); }} style={{
-              background: tab === t.id ? T.bg : "transparent",
-              border: "none", borderRadius: 8,
-              color: tab === t.id ? T.text : T.muted,
-              padding: "10px", cursor: "pointer",
-              fontFamily: "'JetBrains Mono', monospace",
-              fontSize: 11, letterSpacing: "0.05em",
-              transition: "all 0.15s",
-              boxShadow: tab === t.id ? "0 2px 8px rgba(46,40,32,0.08)" : "none",
-            }}>{t.label}</button>
+          ].map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              className={tab === t.id ? "active" : ""}
+              onClick={() => { setTab(t.id); setError(""); }}
+            >
+              {t.label}
+            </button>
           ))}
         </div>
 
         {tab === "code" && (
           <div className="cs-fade">
             <div style={{ marginBottom: 8 }}>
-              <label style={{ display: "block", fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", color: T.mid, marginBottom: 8 }}>
-                Deck code
-              </label>
+              <label className="cs-unlock-label" htmlFor="deck-code">Deck code</label>
               <input
+                id="deck-code"
                 ref={inputRef}
-                className="cs-input"
+                className="cs-code-input"
                 type="text"
                 placeholder="FP-2026-XXXX-0000"
                 value={code}
-                onChange={e => { setCode(e.target.value.toUpperCase()); setError(""); }}
-                onKeyDown={e => e.key === "Enter" && handleRedeem()}
+                onChange={(e) => { setCode(e.target.value.toUpperCase()); setError(""); }}
+                onKeyDown={(e) => e.key === "Enter" && handleRedeem()}
               />
-              <div style={{ fontSize: 12, color: T.muted, fontFamily: "'JetBrains Mono', monospace", marginTop: 6 }}>
+              <div className="cs-unlock-hint">
                 Found inside the lid of your FamilyPause Card Deck box.
               </div>
             </div>
 
             {error && (
-              <div style={{ background: T.redL, border: `1px solid ${T.red}33`, borderRadius: 8, padding: "10px 14px", marginBottom: 16, fontSize: 13, color: T.red, fontFamily: "'JetBrains Mono', monospace" }}>
+              <div style={{ background: T.redL, border: `1px solid ${T.red}33`, borderRadius: 8, padding: "12px 16px", marginBottom: 16, fontSize: 14, color: T.red, fontFamily: "'JetBrains Mono', monospace" }}>
                 {error}
               </div>
             )}
 
-            <div style={{ marginTop: 20, display: "flex", flexDirection: "column", gap: 10 }}>
-              <button className="cs-btn-primary" onClick={handleRedeem} disabled={loading || !code.trim()}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              <button type="button" className="cs-btn-primary" style={{ padding: "16px", fontSize: 17 }} onClick={handleRedeem} disabled={loading || !code.trim()}>
                 {loading ? <><Spinner /> Verifying...</> : "Unlock My Cards"}
               </button>
             </div>
 
-            <div style={{ marginTop: 20, padding: "14px 16px", background: T.goldL, border: `1px solid ${T.gold}33`, borderRadius: 10 }}>
-              <div style={{ fontSize: 12, color: T.goldD, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.05em", marginBottom: 6 }}>DON'T HAVE THE DECK YET?</div>
-              <div style={{ fontSize: 14, color: T.mid, lineHeight: 1.5 }}>
+            <div className="cs-info-gold">
+              <div className="cs-info-gold-title">Don&apos;t have the deck yet?</div>
+              <p>
                 Get the physical deck at <a href="https://familypause.com/cards" target="_blank" rel="noreferrer" style={{ color: T.terra }}>familypause.com/cards</a> for $24. Includes 52 cards, a beautiful tuck box, and your digital unlock code.
-              </div>
+              </p>
             </div>
           </div>
         )}
 
         {tab === "digital" && (
           <div className="cs-fade">
-            <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 14, padding: "24px", marginBottom: 20 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
+            <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 14, padding: "26px", marginBottom: 22 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 18 }}>
                 <div>
-                  <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 20, color: T.text, marginBottom: 4 }}>2026 Digital Card Set</div>
-                  <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: T.muted, letterSpacing: "0.05em" }}>52 cards · Permanent access · No expiration</div>
+                  <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 22, color: T.text, marginBottom: 6 }}>2026 Digital Card Set</div>
+                  <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, color: T.muted, letterSpacing: "0.05em" }}>52 cards · Permanent access · No expiration</div>
                 </div>
-                <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 28, color: T.terra }}>$12</div>
+                <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 32, color: T.terra }}>$12</div>
               </div>
-              {["52 weekly conversation prompts", "Organized across 6 categories", "Card draw feature unlocked permanently", "Both spouses get access instantly"].map(f => (
-                <div key={f} style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 6 }}>
-                  <span style={{ color: T.olive, fontSize: 13 }}>→</span>
-                  <span style={{ fontSize: 13, color: T.mid }}>{f}</span>
+              {["52 weekly conversation prompts", "Organized across 6 categories", "Card draw feature unlocked permanently", "Both spouses get access instantly"].map((f) => (
+                <div key={f} style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 8 }}>
+                  <span style={{ color: T.olive, fontSize: 14 }}>→</span>
+                  <span style={{ fontSize: 15, color: T.mid }}>{f}</span>
                 </div>
               ))}
             </div>
 
-            <button className="cs-btn-primary" onClick={handleDigitalPurchase}>
-              Purchase Digital Access: $12
+            <button type="button" className="cs-btn-primary" style={{ padding: "16px", fontSize: 17 }} onClick={handleDigitalPurchase}>
+              Purchase Digital Access — $12
             </button>
-            <div style={{ textAlign: "center", marginTop: 10, fontSize: 11, color: T.muted, fontFamily: "'JetBrains Mono', monospace" }}>
+            <div style={{ textAlign: "center", marginTop: 12, fontSize: 12, color: T.muted, fontFamily: "'JetBrains Mono', monospace" }}>
               Secure payment via Stripe · Instant access
             </div>
 
-            <div style={{ marginTop: 16, padding: "12px 16px", background: T.terraL, border: `1px solid ${T.terra}22`, borderRadius: 10 }}>
-              <div style={{ fontSize: 13, color: T.terraD, lineHeight: 1.5 }}>
+            <div style={{ marginTop: 18, padding: "14px 18px", background: T.terraL, border: `1px solid ${T.terra}22`, borderRadius: 10 }}>
+              <div style={{ fontSize: 15, color: T.terraD, lineHeight: 1.55 }}>
                 Want the physical experience too? The printed deck is $24 and includes this digital unlock. <a href="https://familypause.com/cards" target="_blank" rel="noreferrer" style={{ color: T.terra }}>Get the full deck →</a>
               </div>
             </div>
@@ -918,12 +966,25 @@ function DeckLibrary({ workspace, onClose, onUnlock }) {
 // ─────────────────────────────────────────────────────────────────────────────
 export default function CardSystemRoot({ workspace, onStartSession, onClose, initialView = "draw", onWorkspaceUpdate }) {
   const [view, setView] = useState(initialView); // draw | unlock | library
+  const enteredUnlockFromDraw = useRef(false);
 
   // Sync workspace state after unlock
   const [localWorkspace, setLocalWorkspace] = useState(workspace);
 
   useEffect(() => { setLocalWorkspace(workspace); }, [workspace]);
-  useEffect(() => { setView(initialView); }, [initialView]);
+  useEffect(() => {
+    setView(initialView);
+    enteredUnlockFromDraw.current = false;
+  }, [initialView]);
+
+  const handleUnlockBack = () => {
+    if (enteredUnlockFromDraw.current) {
+      setView("draw");
+      enteredUnlockFromDraw.current = false;
+    } else {
+      onClose();
+    }
+  };
 
   const handleUnlockSuccess = async (deckYear) => {
     // Refetch workspace to get updated unlocked status
@@ -946,14 +1007,17 @@ export default function CardSystemRoot({ workspace, onStartSession, onClose, ini
           workspace={localWorkspace}
           onStartSession={onStartSession}
           onSkip={onClose}
-          onUnlock={() => setView("unlock")}
+          onUnlock={() => {
+            enteredUnlockFromDraw.current = true;
+            setView("unlock");
+          }}
         />
       )}
       {view === "unlock" && (
         <UnlockDeck
           workspace={localWorkspace}
           onSuccess={handleUnlockSuccess}
-          onClose={() => setView("draw")}
+          onClose={handleUnlockBack}
         />
       )}
       {view === "library" && (

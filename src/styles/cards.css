@@ -1,4 +1,560 @@
 /* CardSystem — ported from project/FamilyPause Cards v2.html */
+
+/* ─── Paper grain ───────────────────────────── */
+.cs-grain::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  opacity: 0.05;
+  mix-blend-mode: overlay;
+}
+
+/* ─── Locked preview screen typography ──────── */
+.cs-locked-screen {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 48px 24px 56px;
+}
+
+.cs-eyebrow {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--terra);
+}
+
+.cs-hl {
+  font-family: var(--display);
+  font-weight: 400;
+  font-size: 30px;
+  line-height: 1.14;
+  color: var(--ink);
+  text-wrap: pretty;
+  margin-bottom: 14px;
+}
+
+.cs-hl em {
+  font-style: italic;
+  color: var(--terra);
+}
+
+.cs-sub {
+  font-family: var(--serif);
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--ink-2);
+  max-width: 380px;
+  margin: 0 auto;
+}
+
+.cs-btn-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  max-width: 360px;
+}
+
+.cs-btn-gold {
+  display: block;
+  width: 100%;
+  text-align: center;
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: 16px;
+  border-radius: 10px;
+  padding: 14px;
+  cursor: pointer;
+  transition: transform 0.12s, box-shadow 0.12s;
+  color: #6a4a10;
+  background: var(--gold-soft);
+  border: 1px solid rgba(192, 151, 64, 0.3);
+  text-decoration: none;
+}
+
+.cs-btn-gold:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(192, 151, 64, 0.2);
+}
+
+.cs-btn-ghost-lora {
+  display: block;
+  width: 100%;
+  text-align: center;
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: 15px;
+  border-radius: 10px;
+  padding: 14px;
+  cursor: pointer;
+  transition: color 0.12s, border-color 0.12s;
+  color: var(--ink-2);
+  background: transparent;
+  border: 1px solid var(--line);
+}
+
+.cs-btn-ghost-lora:hover {
+  color: var(--terra);
+  border-color: var(--terra);
+}
+
+/* ─── Preview card pair ─────────────────────── */
+@keyframes cs-floatA {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-3deg);
+  }
+  50% {
+    transform: translateY(-13px) rotate(-3deg);
+  }
+}
+
+@keyframes cs-floatB {
+  0%,
+  100% {
+    transform: translateY(-5px) rotate(3deg);
+  }
+  50% {
+    transform: translateY(-18px) rotate(3deg);
+  }
+}
+
+.cs-preview-pair {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.cs-pv-card {
+  zoom: 0.62;
+}
+
+.cs-pv-a .cs-cardback-v2 {
+  animation: cs-floatA 5s ease-in-out infinite;
+}
+
+.cs-pv-b .cs-cardfront-v2 {
+  animation: cs-floatB 5.7s ease-in-out infinite;
+  height: 476px;
+}
+
+.cs-pv-cap {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-bottom: 28px;
+}
+
+@media (max-width: 540px) {
+  .cs-pv-card {
+    zoom: 0.46;
+  }
+  .cs-preview-pair {
+    gap: 10px;
+  }
+}
+
+/* ─── Card back (v2) ────────────────────────── */
+.cs-cardback-v2 {
+  position: relative;
+  width: 344px;
+  height: 476px;
+  border-radius: 20px;
+  background: linear-gradient(158deg, var(--terra) 0%, var(--terra-d) 100%);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 16px 50px rgba(46, 40, 32, 0.16), 0 3px 10px rgba(46, 40, 32, 0.06);
+}
+
+.cs-cb-ghost {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  opacity: 0.1;
+}
+
+.cs-cb-center {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.cs-cb-wordmark {
+  font-family: var(--display);
+  font-style: italic;
+  font-weight: 500;
+  font-size: 30px;
+  color: #faf3ec;
+}
+
+.cs-cb-rule {
+  width: 62px;
+  height: 1px;
+  background: rgba(250, 243, 236, 0.55);
+  margin: 15px 0 14px;
+}
+
+.cs-cb-meta {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(250, 243, 236, 0.82);
+}
+
+.cs-cb-corner {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  z-index: 2;
+}
+
+.cs-cb-corner.tl {
+  top: 20px;
+  left: 20px;
+  border-top: 1px solid rgba(250, 243, 236, 0.5);
+  border-left: 1px solid rgba(250, 243, 236, 0.5);
+}
+
+.cs-cb-corner.tr {
+  top: 20px;
+  right: 20px;
+  border-top: 1px solid rgba(250, 243, 236, 0.5);
+  border-right: 1px solid rgba(250, 243, 236, 0.5);
+}
+
+.cs-cb-corner.bl {
+  bottom: 20px;
+  left: 20px;
+  border-bottom: 1px solid rgba(250, 243, 236, 0.5);
+  border-left: 1px solid rgba(250, 243, 236, 0.5);
+}
+
+.cs-cb-corner.br {
+  bottom: 20px;
+  right: 20px;
+  border-bottom: 1px solid rgba(250, 243, 236, 0.5);
+  border-right: 1px solid rgba(250, 243, 236, 0.5);
+}
+
+/* ─── Card front (v2) ───────────────────────── */
+.cs-cardfront-v2 {
+  position: relative;
+  width: 344px;
+  min-height: 476px;
+  border-radius: 20px;
+  background: var(--paper-card);
+  box-shadow: 0 16px 50px rgba(46, 40, 32, 0.16), 0 3px 10px rgba(46, 40, 32, 0.06);
+  overflow: hidden;
+  display: flex;
+  transform-origin: center;
+}
+
+.cs-cf-stripe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 7px;
+  background: var(--terra);
+  z-index: 3;
+}
+
+.cs-cf-inner {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 26px 28px 22px 34px;
+}
+
+.cs-cf-rule-d {
+  height: 3px;
+  border-top: 1px solid #cba877;
+  border-bottom: 1px solid #cba877;
+  box-sizing: content-box;
+}
+
+.cs-cf-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-top: 22px;
+}
+
+.cs-cf-wordmark {
+  font-family: var(--display);
+  font-style: italic;
+  font-weight: 500;
+  font-size: 21px;
+  color: #9e5b38;
+}
+
+.cs-cf-num {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0.1em;
+  color: var(--ink-2);
+}
+
+.cs-cf-pill {
+  align-self: flex-start;
+  margin-top: 15px;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  padding: 6px 13px;
+  border-radius: 6px;
+  background: var(--terra-soft);
+  color: var(--terra-d);
+}
+
+.cs-cf-question {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-family: var(--display);
+  font-style: italic;
+  font-weight: 400;
+  font-size: 25px;
+  line-height: 1.4;
+  color: var(--ink);
+  padding: 26px 2px;
+  text-wrap: balance;
+}
+
+.cs-cf-foot {
+  text-align: center;
+}
+
+.cs-cf-foot-rule {
+  height: 1px;
+  background: #cba877;
+  margin-bottom: 16px;
+}
+
+.cs-cf-ii {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+
+.cs-cf-tag {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  margin-bottom: 8px;
+}
+
+.cs-cf-year {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.14em;
+  color: var(--ink-3);
+  margin-bottom: 16px;
+}
+
+/* ─── Unlock deck screen ────────────────────── */
+.cs-unlock-screen {
+  min-height: 100vh;
+  background: var(--paper);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 36px 24px 56px;
+  font-family: var(--serif);
+}
+
+.cs-unlock-inner {
+  width: 100%;
+  max-width: 440px;
+}
+
+.cs-unlock-back {
+  background: none;
+  border: none;
+  color: var(--ink-3);
+  cursor: pointer;
+  font-family: var(--serif);
+  font-size: 15px;
+  padding: 0;
+  margin-bottom: 28px;
+  display: block;
+  transition: color 0.12s;
+}
+
+.cs-unlock-back:hover {
+  color: var(--terra);
+}
+
+.cs-unlock-eyebrow {
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--terra);
+  margin-bottom: 10px;
+}
+
+.cs-unlock-hl {
+  font-family: var(--display);
+  font-weight: 400;
+  font-size: 34px;
+  line-height: 1.12;
+  color: var(--ink);
+  margin-bottom: 12px;
+  white-space: nowrap;
+}
+
+.cs-unlock-hl em {
+  font-style: italic;
+  color: var(--terra);
+}
+
+.cs-unlock-sub {
+  font-family: var(--serif);
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--ink-2);
+  margin-bottom: 28px;
+}
+
+.cs-tab-sw {
+  display: flex;
+  background: var(--paper-2);
+  padding: 3px;
+  border-radius: 10px;
+  gap: 3px;
+  margin-bottom: 28px;
+}
+
+.cs-tab-sw button {
+  flex: 1;
+  font-family: var(--serif);
+  font-size: 15px;
+  font-weight: 400;
+  color: var(--ink-3);
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 10px;
+  cursor: pointer;
+  transition: all 0.15s;
+  line-height: 1;
+}
+
+.cs-tab-sw button.active {
+  background: var(--paper);
+  color: var(--ink);
+  box-shadow: 0 1px 4px rgba(46, 40, 32, 0.1);
+}
+
+.cs-unlock-label {
+  display: block;
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  margin-bottom: 10px;
+}
+
+.cs-code-input {
+  font-family: var(--mono);
+  font-size: 20px;
+  font-weight: 400;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-align: center;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 16px 20px;
+  width: 100%;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.cs-code-input::placeholder {
+  color: var(--ink-3);
+}
+
+.cs-code-input:focus {
+  border-color: var(--terra);
+  box-shadow: 0 0 0 3px var(--terra-tint);
+}
+
+.cs-unlock-hint {
+  font-size: 13px;
+  color: var(--ink-3);
+  font-family: var(--mono);
+  margin-top: 10px;
+  margin-bottom: 20px;
+  letter-spacing: 0.04em;
+}
+
+.cs-info-gold {
+  margin-top: 20px;
+  padding: 16px 18px;
+  background: var(--gold-soft);
+  border: 1px solid rgba(192, 151, 64, 0.22);
+  border-radius: 10px;
+}
+
+.cs-info-gold-title {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #6a4a10;
+  margin-bottom: 8px;
+}
+
+.cs-info-gold p {
+  font-family: var(--serif);
+  font-size: 15px;
+  color: var(--ink-2);
+  line-height: 1.55;
+  margin: 0;
+}
+
+@media (max-width: 420px) {
+  .cs-unlock-hl {
+    font-size: 30px;
+  }
+}
+
+/* ─── Legacy card back (draw / loading states) ─ */
 .cs-cardback {
   background: linear-gradient(135deg, var(--terra) 0%, var(--terra-d) 100%);
   border: 1px solid var(--terra);
@@ -30,10 +586,34 @@
   height: 22px;
   z-index: 2;
 }
-.cs-corner.tl { top: 20px; left: 20px; border-top: 1px solid rgba(250, 243, 236, 0.5); border-left: 1px solid rgba(250, 243, 236, 0.5); }
-.cs-corner.tr { top: 20px; right: 20px; border-top: 1px solid rgba(250, 243, 236, 0.5); border-right: 1px solid rgba(250, 243, 236, 0.5); }
-.cs-corner.bl { bottom: 20px; left: 20px; border-bottom: 1px solid rgba(250, 243, 236, 0.5); border-left: 1px solid rgba(250, 243, 236, 0.5); }
-.cs-corner.br { bottom: 20px; right: 20px; border-bottom: 1px solid rgba(250, 243, 236, 0.5); border-right: 1px solid rgba(250, 243, 236, 0.5); }
+
+.cs-corner.tl {
+  top: 20px;
+  left: 20px;
+  border-top: 1px solid rgba(250, 243, 236, 0.5);
+  border-left: 1px solid rgba(250, 243, 236, 0.5);
+}
+
+.cs-corner.tr {
+  top: 20px;
+  right: 20px;
+  border-top: 1px solid rgba(250, 243, 236, 0.5);
+  border-right: 1px solid rgba(250, 243, 236, 0.5);
+}
+
+.cs-corner.bl {
+  bottom: 20px;
+  left: 20px;
+  border-bottom: 1px solid rgba(250, 243, 236, 0.5);
+  border-left: 1px solid rgba(250, 243, 236, 0.5);
+}
+
+.cs-corner.br {
+  bottom: 20px;
+  right: 20px;
+  border-bottom: 1px solid rgba(250, 243, 236, 0.5);
+  border-right: 1px solid rgba(250, 243, 236, 0.5);
+}
 
 .cs-cardback-mark {
   font-family: var(--display);
@@ -45,6 +625,7 @@
   line-height: 1;
   z-index: 1;
 }
+
 .cs-cardback-quote {
   font-size: 36px;
   margin-bottom: 16px;
@@ -52,6 +633,7 @@
   z-index: 1;
   color: var(--paper);
 }
+
 .cs-cardback-title {
   font-family: var(--display);
   font-size: 22px;
@@ -60,6 +642,7 @@
   position: relative;
   z-index: 1;
 }
+
 .cs-cardback-meta {
   font-family: var(--mono);
   font-size: 10px;
@@ -69,37 +652,4 @@
   text-transform: uppercase;
   position: relative;
   z-index: 1;
-}
-
-.cs-lock-overlay {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  z-index: 3;
-}
-.cs-lock-circle {
-  width: 56px;
-  height: 56px;
-  background: #fff;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4px 20px rgba(46, 40, 32, 0.2);
-  color: var(--ink-2);
-}
-.cs-lock-pill {
-  font-family: var(--mono);
-  font-size: 9px;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  color: var(--ink);
-  background: rgba(255, 255, 255, 0.92);
-  padding: 5px 12px;
-  border-radius: 20px;
-  box-shadow: 0 2px 8px rgba(46, 40, 32, 0.08);
 }
