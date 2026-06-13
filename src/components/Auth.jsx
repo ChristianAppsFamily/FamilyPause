@@ -7,6 +7,7 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
+import { ensureTrialSubscription } from "../lib/subscription";
 
 // Map raw Supabase / browser errors to human copy.
 // Network failures surface as "Failed to fetch" / "NetworkError" — never show
@@ -365,7 +366,7 @@ function SignIn({ onSwitch, onSuccess }) {
     setError("");
     const { error: err } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: window.location.origin },
+      options: { redirectTo: `${window.location.origin}/app` },
     });
     if (err) setError(friendlyAuthError(err));
   };
@@ -449,18 +450,18 @@ function SignUp({ onSwitch, onSuccess }) {
     setLoading(true);
     setError("");
 
-    // Create auth user
+    // Create auth user (Supabase email confirmation is off in production for low-friction signup)
     const { data, error: authErr } = await supabase.auth.signUp({ email, password });
     if (authErr) { setError(friendlyAuthError(authErr)); setLoading(false); return; }
 
     const userId = data.user?.id;
     if (!userId) { setError("Something went wrong. Please try again."); setLoading(false); return; }
 
-    // Create workspace + owner membership in one server-side call.
-    // (SECURITY DEFINER RPC: avoids client-side RLS/grant issues at signup.)
     const { data: ws, error: wsErr } = await supabase.rpc("create_owner_workspace", { p_name: name });
     if (wsErr) { setError(friendlyAuthError(wsErr)); setLoading(false); return; }
     const workspace = Array.isArray(ws) ? ws[0] : ws;
+
+    await ensureTrialSubscription(workspace.id);
 
     onSuccess({ workspaceId: workspace.id, inviteCode: workspace.invite_code, displayName: name });
   };
@@ -471,7 +472,7 @@ function SignUp({ onSwitch, onSuccess }) {
     setError("");
     const { error: err } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: window.location.origin },
+      options: { redirectTo: `${window.location.origin}/app` },
     });
     if (err) setError(friendlyAuthError(err));
   };

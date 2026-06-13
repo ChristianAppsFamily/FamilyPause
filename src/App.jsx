@@ -17,6 +17,8 @@ import { callFamilyPauseAI, buildSystemPrompt } from "./lib/ai";
 import Settings from "./components/Settings.jsx";
 import SessionHistory from "./components/SessionHistory.jsx";
 import CardSystem from "./components/CardSystem.jsx";
+import Paywall from "./components/Paywall.jsx";
+import { paywallReason } from "./lib/subscription";
 
 // ── DEFAULT CONTEXT (fallback when workspace has none) ───────────────────────
 const DEFAULT_CONTEXT = {
@@ -440,7 +442,7 @@ function CaptureView({ text, setText, onBack, onProcess }) {
 
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 22 }}>
         <button className="linkish" onClick={onBack}>← Back to agenda</button>
-        <button className="btn btn-primary btn-lg" disabled={!ready} onClick={() => { stopRec(); onProcess(text); }}>
+        <button className="btn btn-primary btn-lg" disabled={!ready} onClick={() => { stopRec(); onProcess(text, mode); }}>
           <Ico d={I.bolt} size={16} fill /> Distill it
         </button>
       </div>
@@ -661,7 +663,11 @@ function PlanView({ keptCards, adults, roleOf, onRestart }) {
 // ── ROOT ──────────────────────────────────────────────────────────────────────
 export default function App({ user, workspace, onSignOut }) {
   const [view, setView] = useState("agenda");
-  const [overlay, setOverlay] = useState(null); // "settings" | "history" | "decks" | null
+  const [overlay, setOverlay] = useState(null); // "settings" | "history" | "decks" | "paywall" | null
+  const [paywallBlock, setPaywallBlock] = useState(null);
+  const [subscription, setSubscription] = useState(null);
+  const [sessionsThisMonth, setSessionsThisMonth] = useState(0);
+  const [inputMode, setInputMode] = useState("paste");
   const [cards, setCards] = useState([]);
   const [distillError, setDistillError] = useState(null);
   const [distillDone, setDistillDone] = useState(false);
@@ -673,6 +679,30 @@ export default function App({ user, workspace, onSignOut }) {
   const savedRef = useRef(false);
 
   useEffect(() => { setWs(workspace); }, [workspace]);
+
+  useEffect(() => {
+    if (!ws?.id) return;
+    let active = true;
+    (async () => {
+      const { data: sub } = await supabase
+        .from("subscriptions")
+        .select("*")
+        .eq("workspace_id", ws.id)
+        .maybeSingle();
+      if (active) setSubscription(sub);
+
+      const startOfMonth = new Date();
+      startOfMonth.setDate(1);
+      startOfMonth.setHours(0, 0, 0, 0);
+      const { count } = await supabase
+        .from("sessions")
+        .select("*", { count: "exact", head: true })
+        .eq("workspace_id", ws.id)
+        .gte("created_at", startOfMonth.toISOString());
+      if (active) setSessionsThisMonth(count || 0);
+    })();
+    return () => { active = false; };
+  }, [ws?.id]);
 
   const context = ws?.family_context || DEFAULT_CONTEXT;
   const kids = Array.isArray(context.kids) ? context.kids : [];
@@ -702,12 +732,21 @@ export default function App({ user, workspace, onSignOut }) {
   const go = (v) => { window.scrollTo({ top: 0, behavior: "smooth" }); setView(v); };
 
   // ── Distill (real AI) ────────────────────────────────────────────────────
-  const runDistill = async (text) => {
+  const runDistill = async (text, mode = "paste") => {
+    const block = paywallReason(subscription, sessionsThisMonth);
+    if (block) {
+      setPaywallBlock(block);
+      setOverlay("paywall");
+      return;
+    }
+
+    setInputMode(mode);
     setDistillDone(false);
     setDistillError(null);
     setCards([]);
     go("processing");
-    savedRef.current = false; sessionIdRef.current = null;
+    savedRef.current = false;
+    sessionIdRef.current = null;
 
     const system = `You are FamilyPause, a family meeting intelligence assistant.
 Known people: ${(context.people || []).join(", ")}
@@ -743,11 +782,40 @@ Rules: extract everything actionable, use person names when mentioned, return on
       parsed = [];
     }
 
-    setCards(parsed.map((c, i) => ({ ...c, id: c.id ?? i + 1, status: STATUS.OPEN })));
+    const newCards = parsed.map((c, i) => ({ ...c, id: c.id ?? i + 1, status: STATUS.OPEN }));
+    setCards(newCards);
     setDistillError(errorMsg);
     setDistillDone(true);
+
+    if (!errorMsg && ws?.id && newCards.length > 0) {
+      try {
+        const { data, error } = await supabase.from("sessions").insert({
+          workspace_id: ws.id,
+          meeting_date: meetingDate,
+          transcript: text,
+          input_mode: mode,
+          cards: newCards,
+          status: "review",
+          created_by: user?.id,
+        }).select().single();
+        if (!error && data) {
+          sessionIdRef.current = data.id;
+          setSessionsThisMonth((n) => n + 1);
+        }
+      } catch { /* session insert is best-effort */ }
+    }
+
     setTimeout(() => go("review"), 650); // let the orb finish
   };
+
+  // Persist review decisions for spouse realtime sync
+  useEffect(() => {
+    if (!sessionIdRef.current || view !== "review") return;
+    const t = setTimeout(() => {
+      supabase.from("sessions").update({ cards }).eq("id", sessionIdRef.current);
+    }, 400);
+    return () => clearTimeout(t);
+  }, [cards, view]);
 
   // ── Build my week → save session (Step 11) ───────────────────────────────
   const buildWeek = () => {
@@ -756,11 +824,21 @@ Rules: extract everything actionable, use person names when mentioned, return on
     savedRef.current = true;
     (async () => {
       try {
+        if (sessionIdRef.current) {
+          const { error } = await supabase.from("sessions").update({
+            cards,
+            status: "complete",
+            transcript: captureText,
+            input_mode: inputMode,
+          }).eq("id", sessionIdRef.current);
+          if (error) savedRef.current = false;
+          return;
+        }
         const { data, error } = await supabase.from("sessions").insert({
           workspace_id: ws.id,
           meeting_date: meetingDate,
-          transcript: null,
-          input_mode: "paste",
+          transcript: captureText,
+          input_mode: inputMode,
           cards,
           status: "complete",
           created_by: user?.id,
@@ -771,14 +849,37 @@ Rules: extract everything actionable, use person names when mentioned, return on
     })();
   };
 
-  const restart = () => { setCards([]); setDistillDone(false); savedRef.current = false; go("agenda"); };
+  const restart = () => {
+    setCards([]);
+    setDistillDone(false);
+    savedRef.current = false;
+    sessionIdRef.current = null;
+    go("agenda");
+  };
 
   const keptCards = cards.filter((c) => c.status === STATUS.KEPT || c.status === STATUS.CALENDARED);
   const keptActions = keptCards.filter((c) => c.type === "action");
 
   // ── Overlays ─────────────────────────────────────────────────────────────
+  if (overlay === "paywall") {
+    return (
+      <div className="stage" style={{ padding: "48px 24px 80px" }}>
+        <Paywall reason={paywallBlock || "trial"} onClose={() => { setOverlay(null); setPaywallBlock(null); }} />
+      </div>
+    );
+  }
   if (overlay === "settings") {
-    return <Settings workspace={ws} user={user} onSignOut={onSignOut} onClose={() => setOverlay(null)} onWorkspaceUpdate={setWs} onOpenDecks={() => setOverlay("decks")} />;
+    return (
+      <Settings
+        workspace={ws}
+        user={user}
+        onSignOut={onSignOut}
+        onClose={() => setOverlay(null)}
+        onOpenDecks={() => setOverlay("decks")}
+        onOpenHistory={() => setOverlay("history")}
+        onWorkspaceUpdate={setWs}
+      />
+    );
   }
   if (overlay === "history") {
     return <SessionHistory workspace={ws} onClose={() => setOverlay(null)} />;
@@ -801,6 +902,7 @@ Rules: extract everything actionable, use person names when mentioned, return on
         <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
           <StepRail view={view} />
           <div style={{ display: "flex", gap: 4 }}>
+            <button className="linkish" title="Session history" onClick={() => setOverlay("history")} style={{ display: "inline-flex", padding: 8 }}><Ico d={I.clock} size={16} /></button>
             <button className="linkish" title="Settings" onClick={() => setOverlay("settings")} style={{ display: "inline-flex", padding: 8 }}><Ico d={I.gear} size={16} /></button>
             <button className="linkish" title="Sign out" onClick={onSignOut} style={{ display: "inline-flex", padding: 8 }}><Ico d={I.out} size={16} /></button>
           </div>

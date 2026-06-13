@@ -1,177 +1,53 @@
-// ─────────────────────────────────────────────────────────────────────────────
-// Onboarding.jsx - FamilyPause
-// Screens: Welcome, Family Setup, Invite Spouse, Ready
-// Drop into: src/components/Onboarding.jsx
-// Requires: src/lib/supabase.js
-// ─────────────────────────────────────────────────────────────────────────────
-
 import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
+import "../styles/onboarding.css";
 
-// Palette mapped to the design bundle (src/styles/tokens.css): source of truth.
-const T = {
-  bg:      "#FBF6EC",  // --paper
-  surface: "#FCF8F0",  // --paper-card
-  surface2:"#F4EAD8",  // --paper-2
-  border:  "#E6D9C4",  // --line
-  text:    "#2A251D",  // --ink
-  mid:     "#5B5245",  // --ink-2
-  muted:   "#8C8070",  // --ink-3
-  terra:   "#BE5A37",  // --terra
-  terraL:  "#FAEAE0",  // --terra-tint
-  terraD:  "#A2481F",  // --terra-d
-  olive:   "#5E6B37",  // --olive
-  oliveL:  "#EDF0E1",  // --olive-tint
-  gold:    "#C09740",  // --gold
-  goldL:   "#F0E3C0",  // --gold-soft
-};
+const STRIPE_DIGITAL = "https://buy.stripe.com/PLACEHOLDER_digital_12";
+const TOTAL = 5;
 
-const css = `
-  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Lora:ital,wght@0,400;0,500;0,600;1,400;1,500&family=JetBrains+Mono:wght@400;500;600&display=swap');
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(16px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-  @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-  @keyframes checkPop {
-    0%   { transform: scale(0); opacity: 0; }
-    60%  { transform: scale(1.2); }
-    100% { transform: scale(1); opacity: 1; }
-  }
-  .ob-fade   { animation: fadeUp 0.5s ease both; }
-  .ob-fade-1 { animation: fadeUp 0.5s 0.08s ease both; }
-  .ob-fade-2 { animation: fadeUp 0.5s 0.16s ease both; }
-  .ob-fade-3 { animation: fadeUp 0.5s 0.24s ease both; }
-  .ob-fade-4 { animation: fadeUp 0.5s 0.32s ease both; }
-  .ob-input {
-    width: 100%;
-    background: ${T.bg};
-    border: 1px solid ${T.border};
-    border-radius: 8px;
-    color: ${T.text};
-    padding: 12px 16px;
-    font-size: 15px;
-    font-family: 'Lora', serif;
-    transition: border-color 0.2s, box-shadow 0.2s;
-    outline: none;
-  }
-  .ob-input:focus {
-    border-color: ${T.terra};
-    box-shadow: 0 0 0 3px ${T.terraL};
-  }
-  .ob-input::placeholder { color: ${T.muted}; }
-  /* Onboarding prototype uses Lora sentence-case primary buttons (not the app's mono). */
-  .ob-btn {
-    width: 100%;
-    background: ${T.terra};
-    color: #fff;
-    border: none; border-radius: 8px;
-    padding: 14px; font-size: 16px;
-    font-family: 'Lora', serif; font-weight: 500;
-    cursor: pointer; transition: all 0.2s;
-    box-shadow: 0 4px 16px rgba(190,90,55,0.25);
-    display: flex; align-items: center; justify-content: center; gap: 8px;
-  }
-  .ob-btn:hover:not(:disabled) {
-    background: ${T.terraD};
-    transform: translateY(-1px);
-  }
-  .ob-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-  .ob-btn-ghost {
-    width: 100%; background: none;
-    border: 1px solid ${T.border};
-    border-radius: 8px; color: ${T.mid};
-    padding: 12px; font-size: 14px;
-    font-family: 'JetBrains Mono', monospace;
-    letter-spacing: 0.05em; cursor: pointer;
-    transition: all 0.2s;
-  }
-  .ob-btn-ghost:hover { border-color: ${T.terra}; color: ${T.terra}; }
-  .ob-label {
-    display: block;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px; letter-spacing: 0.12em;
-    text-transform: uppercase; color: ${T.mid};
-    margin-bottom: 7px;
-  }
-  .ob-tag {
-    display: inline-flex; align-items: center; gap: 6px;
-    background: ${T.terraL}; color: ${T.terraD};
-    padding: 4px 10px 4px 12px;
-    border-radius: 20px; font-size: 13px;
-    font-family: 'Lora', serif;
-  }
-  .ob-tag button {
-    background: none; border: none; cursor: pointer;
-    color: ${T.terra}; font-size: 16px; line-height: 1;
-    padding: 0; transition: color 0.15s;
-  }
-  .ob-tag button:hover { color: ${T.terraD}; }
-  .copy-btn {
-    background: ${T.surface}; border: 1px solid ${T.border};
-    border-radius: 6px; color: ${T.mid};
-    padding: 8px 14px; font-size: 12px;
-    font-family: 'JetBrains Mono', monospace;
-    letter-spacing: 0.05em; cursor: pointer;
-    transition: all 0.2s; white-space: nowrap;
-    flex-shrink: 0;
-  }
-  .copy-btn:hover { background: ${T.terraL}; border-color: ${T.terra}; color: ${T.terraD}; }
-  .copy-btn.copied { background: ${T.oliveL}; border-color: ${T.olive}; color: ${T.olive}; }
-`;
-
-// ── PROGRESS BAR ──────────────────────────────────────────────────────────────
-function ProgressBar({ step, total }) {
+function ProgressBar({ step }) {
   return (
-    <div style={{ display: "flex", gap: 6, marginBottom: 48 }}>
-      {Array.from({ length: total }).map((_, i) => (
-        <div key={i} style={{
-          flex: 1, height: 3, borderRadius: 2,
-          background: i < step ? T.terra : T.border,
-          transition: "background 0.3s",
-        }} />
+    <div className="ob-progress">
+      {Array.from({ length: TOTAL }).map((_, i) => (
+        <div key={i} className={`ob-seg${i < step ? " filled" : ""}`} />
       ))}
     </div>
   );
 }
 
-// ── STEP 1: WELCOME ───────────────────────────────────────────────────────────
 function StepWelcome({ displayName, onNext }) {
   return (
     <div>
-      <ProgressBar step={1} total={4} />
-
-      <div style={{ fontSize: 52, marginBottom: 20 }}>👋</div>
-
-      <div className="ob-fade" style={{ fontSize: 11, letterSpacing: "0.25em", color: T.terra, fontFamily: "'JetBrains Mono', monospace", textTransform: "uppercase", marginBottom: 12 }}>
-        You're in
-      </div>
-      <h2 className="ob-fade-1" style={{ fontFamily: "'Playfair Display', serif", fontSize: 40, fontWeight: 400, color: T.text, marginBottom: 16, lineHeight: 1.2 }}>
-        Welcome to FamilyPause,<br /><em style={{ color: T.terra }}>{displayName}.</em>
-      </h2>
-      <p className="ob-fade-2" style={{ fontSize: 16, color: T.mid, lineHeight: 1.65, marginBottom: 40, maxWidth: 420 }}>
-        You have 7 days of full access, free. Let's take 2 minutes to set up your family workspace so the AI knows who you're talking about.
+      <ProgressBar step={1} />
+      <div className="ob-anim ob-center" style={{ "--d": "0ms" }}><div className="ob-big-emoji">👋</div></div>
+      <div className="ob-anim ob-center" style={{ "--d": "70ms" }}><div className="ob-eyebrow">You're In</div></div>
+      <h1 className="ob-anim ob-hl ob-center" style={{ "--d": "140ms" }}>
+        Welcome to FamilyPause,<br /><em>{displayName}</em>
+      </h1>
+      <p className="ob-anim ob-body ob-center" style={{ "--d": "210ms" }}>
+        You have 7 days of full access, starting now. Spend two minutes setting up your workspace so your first session is ready to go.
       </p>
-
-      <div className="ob-fade-3" style={{ background: T.goldL, border: `1px solid ${T.gold}44`, borderRadius: 12, padding: "20px 24px", marginBottom: 40 }}>
-        <div style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", color: T.gold, letterSpacing: "0.1em", marginBottom: 8 }}>YOUR 7-DAY TRIAL INCLUDES</div>
-        {["Unlimited AI meeting sessions", "Full session history", "Invite your spouse to your workspace", "Keep / Discard / Calendar review flow", "Google Calendar integration"].map(f => (
-          <div key={f} style={{ display: "flex", gap: 10, alignItems: "flex-start", marginBottom: 6 }}>
-            <span style={{ color: T.terra, marginTop: 2 }}>→</span>
-            <span style={{ fontSize: 14, color: T.mid }}>{f}</span>
-          </div>
-        ))}
+      <div className="ob-anim ob-gold-box" style={{ "--d": "280ms" }}>
+        <div className="ob-eyebrow-mut">Your 7-Day Trial Includes</div>
+        <div className="ob-feat-list">
+          {[
+            "Unlimited AI meeting sessions",
+            "Full session history",
+            "Invite your spouse to your workspace",
+            "Keep / Discard calendar review flow",
+            "Google Calendar integration",
+          ].map((f) => (
+            <div key={f} className="ob-feat"><span className="ob-arr">→</span><span>{f}</span></div>
+          ))}
+        </div>
       </div>
-
-      <button className="ob-btn ob-fade-4" onClick={onNext}>
-        Set Up My Family Workspace →
-      </button>
+      <div className="ob-anim" style={{ "--d": "350ms" }}>
+        <button type="button" className="ob-btn-primary" onClick={onNext}>Set Up My Family Workspace →</button>
+      </div>
     </div>
   );
 }
 
-// ── STEP 2: FAMILY SETUP ──────────────────────────────────────────────────────
 function StepFamilySetup({ workspaceId, displayName, onNext }) {
   const [spouseName, setSpouseName] = useState("");
   const [kidInput, setKidInput] = useState("");
@@ -185,237 +61,195 @@ function StepFamilySetup({ workspaceId, displayName, onNext }) {
     if (name && !kids.includes(name)) setKids([...kids, name]);
     setKidInput("");
   };
-
   const addBiz = () => {
     const name = bizInput.trim();
     if (name && !businesses.includes(name)) setBusinesses([...businesses, name]);
     setBizInput("");
   };
 
-  const handleKey = (setter, adder) => (e) => {
-    if (e.key === "Enter") { e.preventDefault(); adder(); }
-  };
-
   const handleSave = async () => {
     setLoading(true);
     const people = [displayName, spouseName].filter(Boolean);
-    const context = {
-      people: [...people, ...kids],
-      kids,
-      businesses,
-      categories: ["Family", "Kids", "Business", "Finance", "Home", "Faith", "Health", "Dates"],
-    };
-
-    await supabase.from("workspaces")
-      .update({ family_context: context })
-      .eq("id", workspaceId);
-
+    await supabase.from("workspaces").update({
+      family_context: {
+        people: [...people, ...kids],
+        kids,
+        businesses,
+        categories: ["Family", "Kids", "Business", "Finance", "Home", "Faith", "Health", "Dates"],
+      },
+    }).eq("id", workspaceId);
     setLoading(false);
     onNext({ spouseName, kids, businesses });
   };
 
   return (
     <div>
-      <ProgressBar step={2} total={4} />
-
-      <div className="ob-fade" style={{ fontSize: 11, letterSpacing: "0.25em", color: T.terra, fontFamily: "'JetBrains Mono', monospace", textTransform: "uppercase", marginBottom: 12 }}>
-        Step 2 of 4
-      </div>
-      <h2 className="ob-fade-1" style={{ fontFamily: "'Playfair Display', serif", fontSize: 36, fontWeight: 400, color: T.text, marginBottom: 8 }}>
-        Tell us about<br /><em style={{ color: T.terra }}>your family.</em>
-      </h2>
-      <p className="ob-fade-2" style={{ fontSize: 15, color: T.mid, marginBottom: 36, lineHeight: 1.6 }}>
-        The AI uses these names to route action items to the right person automatically. You can always update these later in Settings.
+      <ProgressBar step={2} />
+      <div className="ob-anim" style={{ "--d": "0ms" }}><div className="ob-eyebrow">Step 2 of 5</div></div>
+      <h1 className="ob-anim ob-hl" style={{ "--d": "70ms" }}>Tell us about <em>your family</em></h1>
+      <p className="ob-anim ob-body" style={{ "--d": "140ms" }}>
+        FamilyPause uses these names to route action items and appointments to the right person — automatically.
       </p>
 
-      {/* Spouse name */}
-      <div className="ob-fade-2" style={{ marginBottom: 24 }}>
-        <label className="ob-label">Your spouse or partner's name</label>
-        <input className="ob-input" type="text" placeholder="Amanda"
-          value={spouseName} onChange={e => setSpouseName(e.target.value)} />
+      <div className="ob-anim ob-field-block" style={{ "--d": "210ms", marginTop: 28 }}>
+        <label className="ob-field-label" htmlFor="ob-spouse">Your spouse or partner's name</label>
+        <input id="ob-spouse" className="ob-text-input" type="text" placeholder="Amanda" value={spouseName} onChange={(e) => setSpouseName(e.target.value)} />
       </div>
 
-      {/* Kids */}
-      <div className="ob-fade-3" style={{ marginBottom: 24 }}>
-        <label className="ob-label">Kids' names (optional)</label>
-        <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
-          <input className="ob-input" type="text" placeholder="Add a child's name, press Enter"
-            value={kidInput} onChange={e => setKidInput(e.target.value)}
-            onKeyDown={handleKey(setKidInput, addKid)} />
-          <button onClick={addKid} style={{
-            background: T.terraL, border: `1px solid ${T.terra}44`,
-            borderRadius: 8, color: T.terraD, padding: "0 16px",
-            cursor: "pointer", fontFamily: "'JetBrains Mono', monospace",
-            fontSize: 13, flexShrink: 0, transition: "all 0.15s",
-          }}>Add</button>
+      <div className="ob-anim ob-field-block" style={{ "--d": "280ms" }}>
+        <label className="ob-field-label" htmlFor="ob-kid">Kids' names <span className="opt">Optional</span></label>
+        <div className="ob-input-row">
+          <input id="ob-kid" className="ob-text-input" type="text" placeholder="Add a child's name" value={kidInput}
+            onChange={(e) => setKidInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addKid())} />
+          <button type="button" className="ob-add-btn" onClick={addKid}>Add</button>
         </div>
         {kids.length > 0 && (
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            {kids.map(k => (
-              <div key={k} className="ob-tag">
-                {k}
-                <button onClick={() => setKids(kids.filter(x => x !== k))}>×</button>
-              </div>
+          <div className="ob-chips">
+            {kids.map((k) => (
+              <div key={k} className="ob-chip">{k}<button type="button" className="ob-chip-x" onClick={() => setKids(kids.filter((x) => x !== k))}>×</button></div>
             ))}
           </div>
         )}
       </div>
 
-      {/* Businesses */}
-      <div className="ob-fade-4" style={{ marginBottom: 36 }}>
-        <label className="ob-label">Business or project names (optional)</label>
-        <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
-          <input className="ob-input" type="text" placeholder="e.g. Christian App Empire"
-            value={bizInput} onChange={e => setBizInput(e.target.value)}
-            onKeyDown={handleKey(setBizInput, addBiz)} />
-          <button onClick={addBiz} style={{
-            background: T.terraL, border: `1px solid ${T.terra}44`,
-            borderRadius: 8, color: T.terraD, padding: "0 16px",
-            cursor: "pointer", fontFamily: "'JetBrains Mono', monospace",
-            fontSize: 13, flexShrink: 0, transition: "all 0.15s",
-          }}>Add</button>
+      <div className="ob-anim ob-field-block" style={{ "--d": "350ms" }}>
+        <label className="ob-field-label" htmlFor="ob-biz">Business or project names <span className="opt">Optional</span></label>
+        <div className="ob-input-row">
+          <input id="ob-biz" className="ob-text-input" type="text" placeholder="Add a business or project" value={bizInput}
+            onChange={(e) => setBizInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addBiz())} />
+          <button type="button" className="ob-add-btn" onClick={addBiz}>Add</button>
         </div>
         {businesses.length > 0 && (
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            {businesses.map(b => (
-              <div key={b} className="ob-tag">
-                {b}
-                <button onClick={() => setBusinesses(businesses.filter(x => x !== b))}>×</button>
-              </div>
+          <div className="ob-chips">
+            {businesses.map((b) => (
+              <div key={b} className="ob-chip">{b}<button type="button" className="ob-chip-x" onClick={() => setBusinesses(businesses.filter((x) => x !== b))}>×</button></div>
             ))}
           </div>
         )}
-        <div style={{ fontSize: 11, color: T.muted, fontFamily: "'JetBrains Mono', monospace", marginTop: 8 }}>
-          If you mention these in your meeting the AI will recognize them and categorize correctly.
-        </div>
+        <p className="ob-field-note">Names you mention in sessions will be recognized and tagged by the AI.</p>
       </div>
 
-      <button className="ob-btn" onClick={handleSave} disabled={loading}>
-        {loading ? "Saving..." : "Save & Continue →"}
-      </button>
+      <div className="ob-anim" style={{ "--d": "420ms" }}>
+        <button type="button" className="ob-btn-primary" onClick={handleSave} disabled={loading}>{loading ? "Saving…" : "Save and Continue"}</button>
+      </div>
     </div>
   );
 }
 
-// ── STEP 3: INVITE SPOUSE ─────────────────────────────────────────────────────
+function IconLink() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+      <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+    </svg>
+  );
+}
+
+function IconText() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+    </svg>
+  );
+}
+
 function StepInvite({ workspaceId, spouseName, onNext }) {
   const [inviteCode, setInviteCode] = useState(null);
   const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // Fetch the invite code
   useEffect(() => {
-    supabase.from("workspaces")
-      .select("invite_code")
-      .eq("id", workspaceId)
-      .single()
-      .then(({ data }) => {
-        if (data) setInviteCode(data.invite_code);
-        setLoading(false);
-      });
+    supabase.from("workspaces").select("invite_code").eq("id", workspaceId).single()
+      .then(({ data }) => { if (data) setInviteCode(data.invite_code); setLoading(false); });
   }, [workspaceId]);
 
-  const inviteLink = inviteCode
-    ? `${window.location.origin}/join/${inviteCode}`
-    : "";
-
+  const inviteLink = inviteCode ? `${window.location.origin}/join/${inviteCode}` : "";
   const copyLink = () => {
     navigator.clipboard.writeText(inviteLink);
     setCopied(true);
     setTimeout(() => setCopied(false), 2500);
   };
-
-  const shareText = spouseName
-    ? `Hey ${spouseName}, join my FamilyPause workspace so we can plan our week together! ${inviteLink}`
-    : `Join my FamilyPause workspace! ${inviteLink}`;
-
-  const smsLink = `sms:?body=${encodeURIComponent(shareText)}`;
+  const smsLink = `sms:?body=${encodeURIComponent(
+    spouseName
+      ? `Hey ${spouseName}, join my FamilyPause workspace so we can plan our week together! ${inviteLink}`
+      : `Join my FamilyPause workspace! ${inviteLink}`
+  )}`;
 
   return (
     <div>
-      <ProgressBar step={3} total={4} />
-
-      <div className="ob-fade" style={{ fontSize: 11, letterSpacing: "0.25em", color: T.terra, fontFamily: "'JetBrains Mono', monospace", textTransform: "uppercase", marginBottom: 12 }}>
-        Step 3 of 4
-      </div>
-      <h2 className="ob-fade-1" style={{ fontFamily: "'Playfair Display', serif", fontSize: 36, fontWeight: 400, color: T.text, marginBottom: 8 }}>
-        Invite{spouseName ? ` ${spouseName}` : " your spouse"}<br /><em style={{ color: T.terra }}>to your workspace.</em>
-      </h2>
-      <p className="ob-fade-2" style={{ fontSize: 15, color: T.mid, marginBottom: 36, lineHeight: 1.6 }}>
-        Share this link and they'll join your family workspace instantly. You'll both see the same sessions, plans, and history in real time.
+      <ProgressBar step={3} />
+      <div className="ob-anim" style={{ "--d": "0ms" }}><div className="ob-eyebrow">Step 3 of 5</div></div>
+      <h1 className="ob-anim ob-hl" style={{ "--d": "70ms" }}>
+        Invite {spouseName || "your spouse"} <em>to your workspace</em>
+      </h1>
+      <p className="ob-anim ob-body" style={{ "--d": "140ms" }}>
+        You'll share the same sessions, plans, and history — updated in real time, on both your phones.
       </p>
 
       {loading ? (
-        <div style={{ display: "flex", justifyContent: "center", padding: 40 }}>
-          <div style={{ width: 32, height: 32, border: `2px solid ${T.border}`, borderTopColor: T.terra, borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
-        </div>
+        <div className="ob-spin" />
       ) : (
         <>
-          {/* Invite link box */}
-          <div className="ob-fade-3" style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 12, padding: "20px 20px", marginBottom: 20 }}>
-            <div style={{ fontSize: 11, fontFamily: "'JetBrains Mono', monospace", color: T.muted, letterSpacing: "0.1em", marginBottom: 10 }}>YOUR INVITE LINK</div>
-            <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-              <div style={{
-                flex: 1, background: T.bg, border: `1px solid ${T.border}`,
-                borderRadius: 6, padding: "10px 14px",
-                fontFamily: "'JetBrains Mono', monospace", fontSize: 13,
-                color: T.mid, overflow: "hidden", textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-              }}>
-                {inviteLink}
-              </div>
-              <button className={`copy-btn ${copied ? "copied" : ""}`} onClick={copyLink}>
-                {copied ? "✓ Copied" : "Copy"}
-              </button>
+          <div className="ob-anim ob-invite-card" style={{ "--d": "210ms" }}>
+            <div className="ob-eyebrow-mut">Your Invite Link</div>
+            <div className="ob-invite-row">
+              <input className="ob-invite-field" readOnly value={inviteLink.replace(/^https?:\/\//, "")} />
+              <button type="button" className={`ob-copy-btn${copied ? " copied" : ""}`} onClick={copyLink}>{copied ? "Copied" : "Copy"}</button>
             </div>
           </div>
-
-          {/* Share options */}
-          <div className="ob-fade-4" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 10, marginBottom: 32 }}>
-            <a href={smsLink} style={{
-              display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-              background: T.oliveL, border: `1px solid ${T.olive}44`,
-              borderRadius: 10, padding: "14px", textDecoration: "none",
-              color: T.olive, fontFamily: "'JetBrains Mono', monospace",
-              fontSize: 12, letterSpacing: "0.05em", transition: "all 0.2s",
-            }}>
-              💬 Send via Text
-            </a>
-            <button onClick={copyLink} style={{
-              display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-              background: T.surface, border: `1px solid ${T.border}`,
-              borderRadius: 10, padding: "14px",
-              color: T.mid, fontFamily: "'JetBrains Mono', monospace",
-              fontSize: 12, letterSpacing: "0.05em", cursor: "pointer",
-              transition: "all 0.2s",
-            }}>
-              🔗 Copy Link
-            </button>
+          <div className="ob-anim ob-share-grid" style={{ "--d": "280ms" }}>
+            <a className="ob-share-btn olive" href={smsLink}><IconText /> Send via Text</a>
+            <button type="button" className="ob-share-btn surface" onClick={copyLink}><IconLink /> Copy Link</button>
           </div>
-
-          <div className="ob-fade-4" style={{ background: T.goldL, border: `1px solid ${T.gold}33`, borderRadius: 10, padding: "14px 18px", marginBottom: 28 }}>
-            <div style={{ fontSize: 13, color: T.mid, lineHeight: 1.5 }}>
-              <strong style={{ color: T.text }}>Invite code:</strong>{" "}
-              <span style={{ fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.1em", color: T.terra, fontSize: 14 }}>{inviteCode}</span>
-              <br />
-              <span style={{ fontSize: 12, color: T.muted }}>They can also enter this code manually when signing up.</span>
-            </div>
+          <div className="ob-anim ob-code-hint" style={{ "--d": "350ms" }}>
+            <div className="ob-eyebrow-mut">Or Share This Code</div>
+            <div className="ob-code-big">{inviteCode}</div>
+            <p className="ob-field-note" style={{ marginTop: 0 }}>{spouseName || "They"} can enter this code manually when signing up.</p>
           </div>
         </>
       )}
 
-      <button className="ob-btn" onClick={onNext} style={{ marginBottom: 12 }}>
-        Continue →
-      </button>
-      <button className="ob-btn-ghost" onClick={onNext}>
-        Skip for now, invite later from Settings
-      </button>
+      <div className="ob-anim" style={{ "--d": "420ms" }}>
+        <button type="button" className="ob-btn-primary" onClick={onNext}>Continue</button>
+        <button type="button" className="ob-btn-ghost" onClick={onNext}>Skip for now — invite later from Settings</button>
+      </div>
     </div>
   );
 }
 
-// ── STEP 4: CARD DECK ─────────────────────────────────────────────────────────
-function StepCardDeck({ workspaceId, onNext }) {
+function StepReady({ onNext }) {
+  return (
+    <div className="ob-center">
+      <ProgressBar step={4} />
+      <div className="ob-anim" style={{ "--d": "0ms" }}>
+        <div className="ob-success-circle">
+          <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="#FBF6EC" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M5 12.5l4.5 4.5L19 7" />
+          </svg>
+        </div>
+      </div>
+      <div className="ob-anim" style={{ "--d": "160ms" }}><div className="ob-eyebrow">You're All Set</div></div>
+      <h1 className="ob-anim ob-hl" style={{ "--d": "230ms" }}>Ready for your <em>first FamilyPause</em></h1>
+      <p className="ob-anim ob-body" style={{ "--d": "300ms" }}>Here's how a session works. Sit down together, and let the app handle the rest.</p>
+      <div className="ob-anim ob-how-card" style={{ "--d": "370ms" }}>
+        {[
+          ["🎙️", "Record your conversation live"],
+          ["📋", "Or paste a transcript from Otter"],
+          ["✅", "Review cards together — Keep or Discard"],
+          ["📅", "Send appointments to Google Calendar"],
+        ].map(([emoji, text]) => (
+          <div key={text} className="ob-how-row"><span className="ob-how-emoji">{emoji}</span><span>{text}</span></div>
+        ))}
+      </div>
+      <div className="ob-anim" style={{ "--d": "440ms" }}>
+        <button type="button" className="ob-btn-primary" onClick={onNext}>Continue →</button>
+      </div>
+    </div>
+  );
+}
+
+function StepCardDeck({ workspaceId, onComplete }) {
+  const [tab, setTab] = useState("code");
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -425,200 +259,129 @@ function StepCardDeck({ workspaceId, onNext }) {
     const trimmed = code.trim().toUpperCase();
     if (!trimmed) { setError("Please enter your code."); return; }
     setLoading(true); setError("");
-
-    const { data, error: lookupErr } = await supabase
-      .from("deck_codes")
-      .select("id, deck_year, redeemed_by")
-      .eq("code", trimmed)
-      .maybeSingle();
-
+    const { data, error: lookupErr } = await supabase.from("deck_codes").select("id, deck_year, redeemed_by").eq("code", trimmed).maybeSingle();
     if (lookupErr || !data) { setError("Code not found. Check the card inside your box lid."); setLoading(false); return; }
     if (data.redeemed_by) { setError("This code has already been redeemed."); setLoading(false); return; }
-
     const { data: { user } } = await supabase.auth.getUser();
     const { error: redeemErr } = await supabase.from("deck_codes").update({ redeemed_by: user?.id, redeemed_at: new Date().toISOString() }).eq("id", data.id);
     if (redeemErr) { setError("Redemption failed. Try again or skip and do it in Settings."); setLoading(false); return; }
-
     const { data: ws } = await supabase.from("workspaces").select("unlocked_deck_years").eq("id", workspaceId).single();
     const years = [...new Set([...(ws?.unlocked_deck_years || []), data.deck_year || 2026])];
     await supabase.from("workspaces").update({ cards_unlocked: true, unlocked_deck_years: years }).eq("id", workspaceId);
-
     setUnlocked(true);
     setLoading(false);
-    setTimeout(onNext, 1600);
+    setTimeout(onComplete, 1600);
   };
 
   return (
-    <div style={{ textAlign: "center" }}>
-      <ProgressBar step={4} total={5} />
-
-      <div style={{ fontSize: 48, marginBottom: 20 }}>🃏</div>
-      <div className="ob-fade" style={{ fontSize: 11, letterSpacing: "0.25em", color: T.terra, fontFamily: "'JetBrains Mono', monospace", textTransform: "uppercase", marginBottom: 12 }}>
-        Optional
-      </div>
-      <h2 className="ob-fade-1" style={{ fontFamily: "'Playfair Display', serif", fontSize: 36, fontWeight: 600, color: T.text, marginBottom: 16 }}>
-        Have the card deck?
-      </h2>
-      <p className="ob-fade-2" style={{ fontSize: 15, color: T.mid, lineHeight: 1.65, marginBottom: 32, maxWidth: 400, margin: "0 auto 32px" }}>
-        The FamilyPause card deck has 52 conversation questions to draw each week. Enter the code from inside the box lid to unlock it in the app.
+    <div>
+      <ProgressBar step={5} />
+      <div className="ob-anim" style={{ "--d": "0ms" }}><div className="ob-eyebrow">Step 5 of 5 · Conversation Starter</div></div>
+      <h1 className="ob-anim ob-hl" style={{ "--d": "70ms" }}>Add your <em>card deck</em></h1>
+      <p className="ob-anim ob-body" style={{ "--d": "140ms", marginBottom: 28 }}>
+        52 weekly questions that go deeper than the to-do list — a conversation starter for couples before every sync.
       </p>
 
       {unlocked ? (
-        <div className="ob-fade" style={{ background: T.oliveL, border: `1px solid ${T.olive}44`, borderRadius: 12, padding: "18px 24px", marginBottom: 24, display: "inline-block" }}>
+        <div className="ob-unlocked">
           <div style={{ fontSize: 24, marginBottom: 6 }}>✓</div>
-          <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, letterSpacing: ".08em", textTransform: "uppercase", color: T.olive }}>Deck unlocked</div>
+          <div className="ob-eyebrow-mut" style={{ color: "var(--olive-d)" }}>Deck unlocked</div>
         </div>
       ) : (
-        <div className="ob-fade-2" style={{ maxWidth: 400, margin: "0 auto 24px" }}>
-          {error && (
-            <div style={{ background: "#FBEAE5", border: "1px solid #F6DAD3", borderRadius: 8, padding: "10px 14px", marginBottom: 12, fontFamily: "'Lora', serif", fontSize: 13.5, color: "#C0402F" }}>
-              {error}
+        <>
+          <div className="ob-anim ob-tab-sw" style={{ "--d": "210ms" }}>
+            <button type="button" className={tab === "code" ? "active" : ""} onClick={() => setTab("code")}>I have the deck</button>
+            <button type="button" className={tab === "dig" ? "active" : ""} onClick={() => setTab("dig")}>Buy digital $12</button>
+          </div>
+
+          {tab === "code" ? (
+            <div className="ob-anim" style={{ "--d": "280ms" }}>
+              <div className="ob-eyebrow-mut" style={{ marginBottom: 8 }}>Deck Code</div>
+              {error && <div className="ob-error">{error}</div>}
+              <input
+                className="ob-code-input"
+                placeholder="FP-2026-XXXX-0000"
+                maxLength={18}
+                value={code}
+                onChange={(e) => setCode(e.target.value.toUpperCase())}
+                onKeyDown={(e) => e.key === "Enter" && redeem()}
+              />
+              <p className="ob-field-note" style={{ marginTop: 10, marginBottom: 20 }}>Found inside the lid of your FamilyPause Card Deck box</p>
+              <button type="button" className="ob-btn-primary" onClick={redeem} disabled={loading} style={{ marginBottom: 16 }}>
+                {loading ? "Unlocking…" : "Unlock My Cards"}
+              </button>
+              <div className="ob-info-gold">
+                <div className="ob-eyebrow-mut" style={{ marginBottom: 6, color: "var(--gold)" }}>Don't Have the Deck Yet?</div>
+                <p className="ob-body" style={{ fontSize: 14 }}>
+                  Get the physical card deck at <strong>familypause.com/cards</strong> for $24 — includes all 52 cards and unlocks this digital feature.
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="ob-anim" style={{ "--d": "280ms" }}>
+              <div className="ob-dig-card">
+                <div className="ob-dig-hdr">
+                  <div>
+                    <div style={{ fontFamily: "var(--display)", fontSize: 20, marginBottom: 5 }}>2026 Digital Card Set</div>
+                    <div className="ob-eyebrow-mut">52 cards · Permanent access · No expiration</div>
+                  </div>
+                  <div style={{ fontFamily: "var(--display)", fontSize: 28, color: "var(--terra)", flex: "none" }}>$12</div>
+                </div>
+              </div>
+              <div className="ob-feat-list" style={{ marginBottom: 20 }}>
+                {[
+                  "52 weekly conversation prompts",
+                  "Organized across 6 categories",
+                  "Card draw feature unlocked permanently",
+                  "Both spouses get access instantly",
+                ].map((f) => (
+                  <div key={f} className="ob-feat"><span className="ob-arr">→</span><span>{f}</span></div>
+                ))}
+              </div>
+              <a href={STRIPE_DIGITAL} className="ob-btn-primary" style={{ marginBottom: 12, textDecoration: "none" }}>Purchase Digital Access — $12</a>
+              <p className="ob-field-note ob-center" style={{ marginBottom: 16 }}>Secure payment via Stripe · Instant access</p>
+              <div className="ob-info-terra">
+                <p className="ob-body" style={{ fontSize: 13, color: "var(--terra-d)" }}>
+                  The physical deck at $24 includes this digital unlock — plus 52 beautifully printed cards for your table.
+                </p>
+              </div>
             </div>
           )}
-          <div style={{ display: "flex", gap: 8 }}>
-            <input
-              className="ob-input"
-              placeholder="e.g. FP-2026-AB12-0001"
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && redeem()}
-              style={{ fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.08em", flex: 1 }}
-            />
-            <button
-              onClick={redeem}
-              disabled={loading}
-              style={{ background: T.terra, color: "#fff", border: "none", borderRadius: 8, padding: "0 18px", fontFamily: "'JetBrains Mono', monospace", fontSize: 12, letterSpacing: ".06em", textTransform: "uppercase", cursor: "pointer", flexShrink: 0 }}
-            >
-              {loading ? "…" : "Unlock"}
-            </button>
-          </div>
-        </div>
+        </>
       )}
 
-      <div className="ob-fade-3" style={{ display: "flex", flexDirection: "column", gap: 10, maxWidth: 340, margin: "0 auto" }}>
-        <button className="ob-btn" onClick={onNext}>
-          {unlocked ? "Continue →" : "I don't have the deck yet →"}
+      <div className="ob-anim" style={{ "--d": "420ms", marginTop: 24 }}>
+        <button type="button" className="ob-btn-ghost" onClick={onComplete}>
+          {unlocked ? "Start My First FamilyPause →" : "Skip for now — unlock later in Settings"}
         </button>
       </div>
     </div>
   );
 }
 
-// ── STEP 5: READY ─────────────────────────────────────────────────────────────
-function StepReady({ displayName, onComplete }) {
-  return (
-    <div style={{ textAlign: "center" }}>
-      <ProgressBar step={5} total={5} />
-
-      <div style={{
-        width: 80, height: 80, borderRadius: "50%",
-        background: T.oliveL, border: `2px solid ${T.olive}`,
-        display: "flex", alignItems: "center", justifyContent: "center",
-        fontSize: 36, margin: "0 auto 28px",
-        animation: "checkPop 0.5s ease both",
-      }}>✓</div>
-
-      <div className="ob-fade" style={{ fontSize: 11, letterSpacing: "0.25em", color: T.terra, fontFamily: "'JetBrains Mono', monospace", textTransform: "uppercase", marginBottom: 12 }}>
-        You're all set
-      </div>
-      <h2 className="ob-fade-1" style={{ fontFamily: "'Playfair Display', serif", fontSize: 40, fontWeight: 400, color: T.text, marginBottom: 16 }}>
-        Ready for your<br /><em style={{ color: T.terra }}>first FamilyPause.</em>
-      </h2>
-      <p className="ob-fade-2" style={{ fontSize: 16, color: T.mid, lineHeight: 1.65, marginBottom: 40, maxWidth: 400, margin: "0 auto 40px" }}>
-        Sit down together, hit Record or paste your transcript, and let the AI do the rest. Your week will be organized in minutes.
-      </p>
-
-      <div className="ob-fade-3" style={{ display: "flex", flexDirection: "column", gap: 10, maxWidth: 340, margin: "0 auto" }}>
-        {[
-          ["🎙", "Record your conversation live"],
-          ["📋", "Or paste a transcript from Otter"],
-          ["✓", "Review cards together: Keep or Discard"],
-          ["📅", "Send appointments to Google Calendar"],
-        ].map(([icon, text]) => (
-          <div key={text} style={{ display: "flex", alignItems: "center", gap: 14, padding: "12px 16px", background: T.surface, borderRadius: 10, textAlign: "left" }}>
-            <span style={{ fontSize: 20 }}>{icon}</span>
-            <span style={{ fontSize: 14, color: T.mid }}>{text}</span>
-          </div>
-        ))}
-      </div>
-
-      <div style={{ marginTop: 40 }} className="ob-fade-4">
-        <button className="ob-btn" onClick={onComplete} style={{ maxWidth: 340, margin: "0 auto" }}>
-          Start My First FamilyPause →
-        </button>
-      </div>
-    </div>
-  );
-}
-
-// ── MAIN ONBOARDING EXPORT ────────────────────────────────────────────────────
-// Usage in App.jsx:
-// <Onboarding
-//   workspaceId={workspaceId}
-//   displayName={displayName}
-//   inviteCode={inviteCode}
-//   onComplete={() => setAppPhase("app")}
-// />
-
-export default function Onboarding({ workspaceId, displayName, inviteCode, joined, onComplete }) {
+export default function Onboarding({ workspaceId, displayName, joined, onComplete }) {
   const [step, setStep] = useState(1);
   const [familyData, setFamilyData] = useState({});
-  // A spouse JOINING an existing workspace must not run family setup or the invite
-  // step, since those belong to the owner and would overwrite the shared family_context.
-  // Joiners go straight from Welcome to the "ready" confirmation.
 
   return (
-    <div style={{
-      minHeight: "100vh",
-      background: T.bg,
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      padding: "40px 24px",
-      fontFamily: "'Lora', serif",
-    }}>
-      <style>{css}</style>
-      <div style={{ width: "100%", maxWidth: 560 }}>
-
+    <div className="ob-page">
+      <div className="ob-column">
         {step === 1 && (
-          <StepWelcome
-            displayName={displayName}
-            joined={joined}
-            onNext={() => setStep(joined ? 4 : 2)}
-            // Joiners skip family setup (2) and invite (3) but still see card deck (4)
-          />
+          <StepWelcome displayName={displayName} onNext={() => setStep(joined ? 4 : 2)} />
         )}
-
         {step === 2 && (
-          <StepFamilySetup
-            workspaceId={workspaceId}
-            displayName={displayName}
-            onNext={(data) => { setFamilyData(data); setStep(3); }}
-          />
+          <StepFamilySetup workspaceId={workspaceId} displayName={displayName}
+            onNext={(data) => { setFamilyData(data); setStep(3); }} />
         )}
-
         {step === 3 && (
-          <StepInvite
-            workspaceId={workspaceId}
-            spouseName={familyData.spouseName}
-            onNext={() => setStep(4)}
-          />
+          <StepInvite workspaceId={workspaceId} spouseName={familyData.spouseName} onNext={() => setStep(4)} />
         )}
-
         {step === 4 && (
-          <StepCardDeck
-            workspaceId={workspaceId}
-            onNext={() => setStep(5)}
-          />
+          <StepReady onNext={() => setStep(5)} />
         )}
-
         {step === 5 && (
-          <StepReady
-            displayName={displayName}
-            onComplete={onComplete}
-          />
+          <StepCardDeck workspaceId={workspaceId} onComplete={onComplete} />
         )}
-
       </div>
     </div>
   );

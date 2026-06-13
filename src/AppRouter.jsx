@@ -10,6 +10,7 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "./lib/supabase";
+import { ensureTrialSubscription } from "./lib/subscription";
 import Auth from "./components/Auth";
 import Onboarding from "./components/Onboarding";
 import App from "./App"; // main FamilyPause app, src/App.jsx
@@ -88,9 +89,27 @@ export default function AppRouter() {
         setWorkspace(membership.workspaces);
         setPhase("app");
       } else {
-        // Authenticated but no workspace, something went wrong, re-auth
+        // OAuth or interrupted signup — create workspace and send to onboarding
+        const name =
+          session.user.user_metadata?.full_name?.split(" ")[0] ||
+          session.user.email?.split("@")[0] ||
+          "Friend";
+        const { data: ws, error: wsErr } = await supabase.rpc("create_owner_workspace", { p_name: name });
+        if (wsErr) {
+          setUser(session.user);
+          setPhase("auth");
+          return;
+        }
+        const workspace = Array.isArray(ws) ? ws[0] : ws;
+        await ensureTrialSubscription(workspace.id);
         setUser(session.user);
-        setPhase("auth");
+        setOnboardingData({
+          workspaceId: workspace.id,
+          displayName: name,
+          inviteCode: workspace.invite_code,
+          joined: false,
+        });
+        setPhase("onboarding");
       }
     };
 
@@ -106,7 +125,7 @@ export default function AppRouter() {
           setPhase("auth");
         }
         if (event === "PASSWORD_RECOVERY") {
-          // Handle password reset flow if needed
+          window.location.href = "/reset-password";
         }
       }
     );

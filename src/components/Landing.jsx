@@ -494,7 +494,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                     <li><span className="far">→</span> Ministry billing &amp; invoicing</li>
                     <li><span className="far">→</span> Priority support</li>
                   </ul>
-                  <a className="btn btn-ghost btn-block" href="#">Contact Us</a>
+                  <a className="btn btn-ghost btn-block" href="mailto:hello@familypause.com">Contact Us</a>
                 </div>
               </div>
               <div className="pricefoot fineprint">All plans include a 7-day free trial · Cancel anytime · No contracts</div>
@@ -533,9 +533,9 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
               </div>
               <div className="fcol">
                 <h4>Company</h4>
-                <a href="#">About</a>
-                <a href="#">Privacy</a>
-                <a href="#">Contact</a>
+                <a href="/privacy.html">Privacy</a>
+                <a href="/terms.html">Terms</a>
+                <a href="mailto:hello@familypause.com">Contact</a>
               </div>
               <div className="fcol">
                 <h4>Get started</h4>

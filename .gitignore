@@ -30,3 +30,4 @@ Screenshots-App/
 *.njsproj
 *.sln
 *.sw?
+.gstack/

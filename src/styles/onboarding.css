@@ -1,0 +1,387 @@
+/* Onboarding — ported from project/FamilyPause Onboarding.html + Cards v2 unlock */
+.ob-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 56px 24px 80px;
+  background: var(--paper);
+  font-family: var(--body);
+  color: var(--ink);
+}
+
+.ob-column { width: 100%; max-width: 560px; }
+
+.ob-progress { display: flex; gap: 6px; margin-bottom: 48px; }
+.ob-seg {
+  flex: 1; height: 3px; border-radius: 2px;
+  background: var(--line);
+  transition: background 0.45s ease;
+}
+.ob-seg.filled { background: var(--terra); }
+
+@keyframes obFadeSlideUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.ob-anim {
+  animation: obFadeSlideUp 450ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: var(--d, 0ms);
+}
+
+.ob-eyebrow {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--terra);
+}
+
+.ob-eyebrow-mut {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.ob-hl {
+  font-family: var(--display);
+  font-weight: 400;
+  font-size: 38px;
+  line-height: 1.13;
+  color: var(--ink);
+  margin: 12px 0 14px;
+  text-wrap: pretty;
+}
+.ob-hl em { font-style: italic; color: var(--terra); }
+
+.ob-body {
+  font-family: var(--body);
+  font-size: 16px;
+  line-height: 1.62;
+  color: var(--ink-2);
+}
+
+.ob-center { text-align: center; }
+.ob-big-emoji { font-size: 52px; line-height: 1; margin-bottom: 10px; }
+
+.ob-btn-primary {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  width: 100%;
+  font-family: var(--body); font-weight: 500; font-size: 16px;
+  color: var(--paper);
+  background: var(--terra);
+  border: none; border-radius: 8px;
+  padding: 15px;
+  box-shadow: 0 4px 16px rgba(190, 90, 55, 0.25);
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s;
+}
+.ob-btn-primary:hover:not(:disabled) {
+  background: var(--terra-d);
+  transform: translateY(-1px);
+  box-shadow: 0 7px 22px rgba(190, 90, 55, 0.33);
+}
+.ob-btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.ob-btn-ghost {
+  width: 100%;
+  font-family: var(--body);
+  font-size: 14px;
+  color: var(--ink-2);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 13px;
+  cursor: pointer;
+  margin-top: 10px;
+  transition: color 0.12s, border-color 0.12s;
+}
+.ob-btn-ghost:hover { color: var(--terra); border-color: var(--terra); }
+
+.ob-gold-box {
+  background: var(--gold-soft);
+  border: 1px solid rgba(192, 151, 64, 0.25);
+  border-radius: 12px;
+  padding: 22px 24px;
+  margin: 28px 0 32px;
+}
+.ob-feat-list { display: flex; flex-direction: column; gap: 11px; margin-top: 14px; }
+.ob-feat {
+  display: flex; align-items: flex-start; gap: 11px;
+  font-size: 15px; color: var(--ink-2); line-height: 1.4;
+}
+.ob-arr { font-family: var(--mono); font-size: 13px; color: var(--terra); margin-top: 2px; flex: none; }
+
+.ob-field-block { margin-bottom: 24px; }
+.ob-field-label {
+  display: block;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  margin-bottom: 9px;
+}
+.ob-field-label .opt { color: var(--ink-3); margin-left: 4px; }
+
+.ob-text-input {
+  width: 100%;
+  font-family: var(--body);
+  font-size: 15px;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 13px 16px;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.ob-text-input::placeholder { color: var(--ink-3); }
+.ob-text-input:focus {
+  border-color: var(--terra);
+  box-shadow: 0 0 0 3px var(--terra-tint);
+}
+
+.ob-input-row { display: flex; gap: 8px; }
+.ob-input-row .ob-text-input { flex: 1; }
+
+.ob-add-btn {
+  font-family: var(--body);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--terra);
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0 20px;
+  cursor: pointer;
+  flex: none;
+  transition: background 0.12s, border-color 0.12s;
+}
+.ob-add-btn:hover { background: var(--terra-tint); border-color: var(--terra); }
+
+.ob-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.ob-chip {
+  display: flex; align-items: center; gap: 7px;
+  background: var(--terra-tint);
+  color: var(--terra-d);
+  border-radius: 20px;
+  padding: 5px 8px 5px 14px;
+  font-size: 14px;
+}
+.ob-chip-x {
+  display: flex; align-items: center; justify-content: center;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: rgba(162, 72, 31, 0.12);
+  color: var(--terra-d);
+  border: none; cursor: pointer;
+  font-size: 15px; line-height: 1; padding: 0;
+}
+
+.ob-field-note {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-top: 12px;
+  line-height: 1.7;
+}
+
+.ob-invite-card {
+  background: var(--paper-2);
+  border-radius: 14px;
+  padding: 20px 22px;
+  margin: 26px 0 16px;
+}
+.ob-invite-row { display: flex; gap: 8px; margin-top: 11px; }
+.ob-invite-field {
+  flex: 1;
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px 14px;
+  outline: none;
+}
+
+.ob-copy-btn {
+  font-family: var(--body);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--paper);
+  background: var(--terra);
+  border: none;
+  border-radius: 8px;
+  padding: 0 22px;
+  cursor: pointer;
+  flex: none;
+  min-width: 92px;
+  transition: background 0.2s ease;
+}
+.ob-copy-btn.copied { background: var(--olive); }
+
+.ob-share-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+.ob-share-btn {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  font-family: var(--body);
+  font-size: 14px; font-weight: 500;
+  border-radius: 8px;
+  padding: 13px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  text-decoration: none;
+  transition: transform 0.12s ease;
+}
+.ob-share-btn:hover { transform: translateY(-1px); }
+.ob-share-btn.olive { background: var(--olive-tint); color: var(--olive-d); }
+.ob-share-btn.surface { background: var(--paper-2); color: var(--ink-2); border-color: var(--line); }
+
+.ob-code-hint {
+  background: var(--gold-soft);
+  border: 1px solid rgba(192, 151, 64, 0.25);
+  border-radius: 12px;
+  padding: 18px 22px 20px;
+  margin-bottom: 28px;
+  text-align: center;
+}
+.ob-code-big {
+  font-family: var(--mono);
+  font-size: 20px;
+  letter-spacing: 0.2em;
+  color: var(--terra);
+  margin: 10px 0 8px;
+}
+
+@keyframes obPopIn {
+  0%   { transform: scale(0); }
+  60%  { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+.ob-success-circle {
+  width: 78px; height: 78px;
+  border-radius: 50%;
+  background: var(--olive);
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 24px;
+  box-shadow: 0 8px 26px rgba(94, 107, 55, 0.3);
+  animation: obPopIn 520ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  animation-delay: 120ms;
+}
+
+.ob-how-card {
+  background: var(--paper-2);
+  border-radius: 14px;
+  padding: 6px 22px;
+  margin: 28px 0 32px;
+  text-align: left;
+}
+.ob-how-row {
+  display: flex; align-items: center; gap: 14px;
+  padding: 15px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 15px;
+  color: var(--ink);
+}
+.ob-how-row:last-child { border-bottom: none; }
+.ob-how-emoji { font-size: 20px; flex: none; width: 24px; text-align: center; }
+
+/* Step 5 — card deck unlock (Cards v2) */
+.ob-tab-sw {
+  display: flex;
+  background: var(--paper-3);
+  padding: 3px;
+  border-radius: 10px;
+  gap: 3px;
+  margin-bottom: 24px;
+}
+.ob-tab-sw button {
+  flex: 1;
+  font-family: var(--body);
+  font-size: 14px;
+  color: var(--ink-3);
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 8px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.ob-tab-sw button.active {
+  background: var(--paper);
+  color: var(--ink);
+  box-shadow: 0 1px 4px rgba(42, 37, 29, 0.1);
+}
+
+.ob-code-input {
+  font-family: var(--mono);
+  font-size: 20px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-align: center;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 16px 20px;
+  width: 100%;
+  outline: none;
+}
+.ob-code-input:focus {
+  border-color: var(--terra);
+  box-shadow: 0 0 0 3px var(--terra-tint);
+}
+
+.ob-info-gold {
+  background: var(--gold-soft);
+  border: 1px solid rgba(192, 151, 64, 0.22);
+  border-radius: 10px;
+  padding: 16px;
+  margin-top: 16px;
+}
+.ob-info-terra {
+  background: var(--terra-tint);
+  border: 1px solid rgba(190, 90, 55, 0.18);
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-top: 16px;
+}
+.ob-dig-card {
+  background: var(--paper-2);
+  border-radius: 12px;
+  padding: 18px 20px;
+  margin-bottom: 20px;
+}
+.ob-dig-hdr { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+.ob-error {
+  background: var(--red-tint);
+  border: 1px solid var(--red-soft);
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-bottom: 12px;
+  font-size: 13.5px;
+  color: var(--red);
+}
+.ob-unlocked {
+  background: var(--olive-tint);
+  border: 1px solid var(--olive-soft);
+  border-radius: 12px;
+  padding: 18px 24px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.ob-spin {
+  width: 32px; height: 32px;
+  border: 2px solid var(--line);
+  border-top-color: var(--terra);
+  border-radius: 50%;
+  animation: obSpin 0.8s linear infinite;
+  margin: 40px auto;
+}
+@keyframes obSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
