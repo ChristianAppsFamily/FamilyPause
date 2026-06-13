@@ -106,6 +106,7 @@ const I = {
   clock: ["M12 7v5l3 2", "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z"],
   gear: ["M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6z", "M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1V21a2 2 0 1 1-4 0v-.1A1.6 1.6 0 0 0 7 19.4a1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0-1.1-2.7H1a2 2 0 1 1 0-4h.1A1.6 1.6 0 0 0 2.6 7a1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H7a1.6 1.6 0 0 0 1-1.5V1a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V7a1.6 1.6 0 0 0 1.5 1H23a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z"],
   out: ["M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4", "M16 17l5-5-5-5", "M21 12H9"],
+  cards: ["M4 5h16a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z", "M8 5V3h8v2", "M8 10h8M8 14h5"],
 };
 
 // ── STEP RAIL ─────────────────────────────────────────────────────────────────
@@ -150,23 +151,49 @@ function SyncHeader({ family, right }) {
   );
 }
 
-function SyncView({ family, categories, onDistill }) {
+function SyncView({ family, categories, workspaceId, onDistill }) {
   const [tab, setTab] = useState("agenda");
-  const [assist, setAssist] = useState(true);
+  const [showPrevious, setShowPrevious] = useState(true);
+  const [lastSession, setLastSession] = useState(null);
+  const [prevLoading, setPrevLoading] = useState(!!workspaceId);
   const [rows, setRows] = useState([
     { id: "t1", cat: categories[0] || "Family", topic: "" },
   ]);
 
+  useEffect(() => {
+    if (!workspaceId) { setPrevLoading(false); return; }
+    let active = true;
+    (async () => {
+      const { data } = await supabase
+        .from("sessions")
+        .select("id, meeting_date, cards, status")
+        .eq("workspace_id", workspaceId)
+        .eq("status", "complete")
+        .order("meeting_date", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (active) {
+        setLastSession(data);
+        setPrevLoading(false);
+      }
+    })();
+    return () => { active = false; };
+  }, [workspaceId]);
+
   const addTopic = () =>
     setRows((r) => [...r, { id: "t" + (r.length + 1), cat: categories[0] || "Family", topic: "" }]);
+
+  const prevCards = (Array.isArray(lastSession?.cards) ? lastSession.cards : [])
+    .filter((c) => c.status === "kept" || c.status === "calendared");
+  const prevDate = lastSession?.meeting_date ? prettyDate(lastSession.meeting_date) : null;
 
   return (
     <div className="view">
       <SyncHeader
         family={family}
         right={
-          <button type="button" className={"btn " + (assist ? "btn-soft" : "btn-ghost")} onClick={() => setAssist((a) => !a)}>
-            <Ico d={I.spark} size={15} /> {assist ? "Hide Assistant" : "AI Assistant"}
+          <button type="button" className={"btn " + (showPrevious ? "btn-soft" : "btn-ghost")} onClick={() => setShowPrevious((v) => !v)}>
+            <Ico d={I.clock} size={15} /> {showPrevious ? "Hide Previous FamilyPause" : "Previous FamilyPause"}
           </button>
         }
       />
@@ -179,7 +206,7 @@ function SyncView({ family, categories, onDistill }) {
         <button type="button" className={"tab " + (tab === "log" ? "on" : "")} onClick={() => setTab("log")}>Log</button>
       </div>
 
-      <div className={"worksplit " + (assist ? "with-rail" : "")}>
+      <div className={"worksplit " + (showPrevious ? "with-rail" : "")}>
         <div>
           {tab === "agenda" && (
             <div className="rise">
@@ -234,23 +261,47 @@ function SyncView({ family, categories, onDistill }) {
           )}
         </div>
 
-        {assist && (
-          <aside className="assist rise">
+        {showPrevious && (
+          <aside className="assist prev-rail rise">
             <div className="ahead">
-              <div className="aico"><Ico d={I.spark} size={17} /></div>
+              <div className="aico prev-ico"><Ico d={I.cal} size={17} /></div>
               <div>
-                <div className="at">Meeting Assistant</div>
-                <div className="as">Reads &amp; writes your agenda</div>
+                <div className="at">Previous FamilyPause</div>
+                <div className="as">{prevDate ? prevDate : "Your last weekly sync"}</div>
               </div>
             </div>
-            <div className="assbubble">
-              Hi — I'm here while you talk. I can add notes, draft action items, and tell you what you're forgetting.
-            </div>
-            <div className="suggs">
-              <span className="sugg">Summarize our agenda</span>
-              <span className="sugg">What are we forgetting?</span>
-              <span className="sugg">Add a note to Finance</span>
-            </div>
+            {prevLoading ? (
+              <div className="prev-empty">Loading your last sync…</div>
+            ) : !lastSession ? (
+              <div className="prev-empty">
+                <strong>Nothing yet from last week.</strong>
+                <span>After your first complete sync, the items you kept will show up here as a quick reference.</span>
+              </div>
+            ) : prevCards.length === 0 ? (
+              <div className="prev-empty">
+                <strong>No kept items from that sync.</strong>
+                <span>Your last meeting on {prevDate} didn't save any kept actions or events.</span>
+              </div>
+            ) : (
+              <div className="prev-items">
+                {prevCards.map((c, i) => {
+                  const when = formatWhen(c.date, c.time);
+                  return (
+                    <div key={c.id ?? i} className="prev-item">
+                      <div className="prev-item-top">
+                        {c.category && <span className="tag tag-cat">{c.category}</span>}
+                        <span className="prev-type">{c.type || "item"}</span>
+                      </div>
+                      <div className="prev-task">{c.task}</div>
+                      <div className="prev-meta">
+                        <span>{c.person || "Family"}</span>
+                        {when && <span>· {when}</span>}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </aside>
         )}
       </div>
@@ -651,6 +702,16 @@ export default function App({ user, workspace, onSignOut }) {
     else navigate(syncPath(view));
   };
 
+  const openCardDeck = () => {
+    if (!ws?.cards_unlocked) navigate("/app/cards?setup=1");
+    else navigate("/app/cards");
+  };
+
+  const cardDeckInitialView = () => {
+    const wantsSetup = new URLSearchParams(location.search).get("setup") === "1";
+    return wantsSetup || !ws?.cards_unlocked ? "unlock" : "draw";
+  };
+
   useEffect(() => {
     if (!ws?.id) return;
     let active = true;
@@ -855,11 +916,15 @@ Rules: extract everything actionable, use person names when mentioned, return on
     return <SessionHistory workspace={ws} onClose={closeOverlay} />;
   }
   if (overlay === "decks") {
-    return <CardSystem workspace={ws} user={user} onClose={closeOverlay} onUnlocked={(year) => {
-      const years = [...new Set([...(ws?.unlocked_deck_years || []), year])];
-      setWs({ ...ws, cards_unlocked: true, unlocked_deck_years: years });
-      closeOverlay();
-    }} />;
+    return (
+      <CardSystem
+        workspace={ws}
+        initialView={cardDeckInitialView()}
+        onClose={closeOverlay}
+        onStartSession={closeOverlay}
+        onWorkspaceUpdate={setWs}
+      />
+    );
   }
 
   return (
@@ -872,6 +937,7 @@ Rules: extract everything actionable, use person names when mentioned, return on
         <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
           <StepRail view={view} />
           <div style={{ display: "flex", gap: 4 }}>
+            <button className="linkish" title="Card deck" onClick={openCardDeck} style={{ display: "inline-flex", padding: 8 }}><Ico d={I.cards} size={16} /></button>
             <button className="linkish" title="Session history" onClick={() => openOverlay("history")} style={{ display: "inline-flex", padding: 8 }}><Ico d={I.clock} size={16} /></button>
             <button className="linkish" title="Settings" onClick={() => openOverlay("settings")} style={{ display: "inline-flex", padding: 8 }}><Ico d={I.gear} size={16} /></button>
             <button className="linkish" title="Sign out" onClick={onSignOut} style={{ display: "inline-flex", padding: 8 }}><Ico d={I.out} size={16} /></button>
@@ -883,6 +949,7 @@ Rules: extract everything actionable, use person names when mentioned, return on
         <SyncView
           family={family}
           categories={context.categories || DEFAULT_CONTEXT.categories}
+          workspaceId={ws?.id}
           onDistill={() => go("capture")}
         />
       )}

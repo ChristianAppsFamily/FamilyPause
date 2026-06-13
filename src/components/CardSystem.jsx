@@ -916,11 +916,14 @@ function DeckLibrary({ workspace, onClose, onUnlock }) {
 // ─────────────────────────────────────────────────────────────────────────────
 // 4. CARD SYSTEM ROOT: main export
 // ─────────────────────────────────────────────────────────────────────────────
-export default function CardSystemRoot({ workspace, onStartSession, onClose }) {
-  const [view, setView] = useState("draw"); // draw | unlock | library
+export default function CardSystemRoot({ workspace, onStartSession, onClose, initialView = "draw", onWorkspaceUpdate }) {
+  const [view, setView] = useState(initialView); // draw | unlock | library
 
   // Sync workspace state after unlock
   const [localWorkspace, setLocalWorkspace] = useState(workspace);
+
+  useEffect(() => { setLocalWorkspace(workspace); }, [workspace]);
+  useEffect(() => { setView(initialView); }, [initialView]);
 
   const handleUnlockSuccess = async (deckYear) => {
     // Refetch workspace to get updated unlocked status
@@ -929,7 +932,10 @@ export default function CardSystemRoot({ workspace, onStartSession, onClose }) {
       .select("*")
       .eq("id", workspace.id)
       .single();
-    if (data) setLocalWorkspace(data);
+    if (data) {
+      setLocalWorkspace(data);
+      onWorkspaceUpdate?.(data);
+    }
     setView("draw");
   };
 
