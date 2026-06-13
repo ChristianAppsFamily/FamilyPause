@@ -115,226 +115,127 @@ function StepRail({ view }) {
   );
 }
 
-// ── AGENDA (View 1) — Two-card choice screen ─────────────────────────────────
-const PRESET_TOPICS = [
-  "Kids & Parenting", "Finances", "Marriage & Connection",
-  "Home & Chores", "Work & Career", "Faith & Spirituality",
-  "Health & Wellness", "Extended Family", "Upcoming Events", "Goals & Dreams",
-];
-
-function AgendaView({ onDistill }) {
-  const [mode, setMode] = useState(null); // null | "topics" | "record"
-  const [selected, setSelected] = useState([]);
-  const [custom, setCustom] = useState("");
-
-  const toggleTopic = (t) =>
-    setSelected((s) => s.includes(t) ? s.filter((x) => x !== t) : [...s, t]);
-
-  const addCustom = () => {
-    const v = custom.trim();
-    if (v && !selected.includes(v)) setSelected((s) => [...s, v]);
-    setCustom("");
-  };
-
-  const cardBase = {
-    flex: "1 1 0",
-    background: "#F0EAE0",
-    border: "1px solid #D8CFC0",
-    borderRadius: 16,
-    padding: 32,
-    cursor: "pointer",
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    textAlign: "center",
-    transition: "transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease",
-  };
-
-  const [hovL, setHovL] = useState(false);
-  const [hovR, setHovR] = useState(false);
-
-  const hoverStyle = {
-    transform: "translateY(-3px)",
-    boxShadow: "0 8px 28px rgba(190,90,55,0.13)",
-    borderColor: "var(--terra)",
-  };
-
-  // SVG icons for the pill buttons at top of each card
-  const GridIcon = () => (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="3" y="3" width="7" height="7" rx="1.5"/>
-      <rect x="14" y="3" width="7" height="7" rx="1.5"/>
-      <rect x="3" y="14" width="7" height="7" rx="1.5"/>
-      <rect x="14" y="14" width="7" height="7" rx="1.5"/>
-    </svg>
+// ── AGENDA (View 1) — Weekly Sync from project/app/views.jsx ─────────────────
+function SyncHeader({ family, right }) {
+  return (
+    <div className="synchead">
+      <div className="who">
+        <div className="eyebrow">Weekly Sync</div>
+        <h1>{family.title}</h1>
+        <div className="when">
+          <span className="datepill"><Ico d={I.cal} size={14} /> {family.date}</span>
+          <span className="faded">A good pause, every week.</span>
+        </div>
+      </div>
+      {right}
+    </div>
   );
-  const MicIcon = () => (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3z"/>
-      <path d="M5 11a7 7 0 0 0 14 0"/>
-      <path d="M12 18v3"/>
-    </svg>
-  );
+}
+
+function SyncView({ family, categories, onDistill }) {
+  const [tab, setTab] = useState("agenda");
+  const [assist, setAssist] = useState(true);
+  const [rows, setRows] = useState([
+    { id: "t1", cat: categories[0] || "Family", topic: "" },
+  ]);
+
+  const addTopic = () =>
+    setRows((r) => [...r, { id: "t" + (r.length + 1), cat: categories[0] || "Family", topic: "" }]);
 
   return (
-    <div className="view" style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "calc(100vh - 80px)", padding: "40px 24px" }}>
-
-      {/* Intro copy */}
-      <div style={{ textAlign: "center", marginBottom: 32 }}>
-        <div style={{ fontFamily: "var(--mono)", fontSize: 11, fontWeight: 600, color: "var(--terra)", letterSpacing: "0.22em", textTransform: "uppercase", marginBottom: 10 }}>
-          HOW WOULD YOU LIKE TO BEGIN
-        </div>
-        <h2 style={{ fontFamily: "var(--display)", fontWeight: 600, fontSize: 28, fontStyle: "italic", color: "var(--ink)", margin: 0 }}>
-          Choose your approach.
-        </h2>
-      </div>
-
-      {/* Card row */}
-      <div style={{ display: "flex", gap: 20, width: "100%", maxWidth: 680, alignItems: "flex-start" }}>
-
-        {/* ── LEFT: Topics card ── */}
-        <div
-          style={{ ...cardBase, ...(hovL ? hoverStyle : {}) }}
-          onMouseEnter={() => setHovL(true)}
-          onMouseLeave={() => setHovL(false)}
-          onClick={() => setMode(mode === "topics" ? null : "topics")}
-        >
-          {/* Icon pill */}
-          <div style={{ width: 52, height: 52, borderRadius: "50%", background: "var(--terra-tint)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--terra)", marginBottom: 18 }}>
-            <GridIcon />
-          </div>
-
-          <h3 style={{ fontFamily: "var(--display)", fontWeight: 600, fontSize: 20, fontStyle: "italic", color: "var(--ink)", margin: "0 0 12px" }}>
-            Guide your conversation.
-          </h3>
-          <p style={{ fontFamily: "var(--body)", fontSize: 14, color: "var(--ink-2)", lineHeight: 1.6, margin: "0 0 20px" }}>
-            Choose topics before you record. Helps the AI organize your week more accurately and gives you a structure to follow together.
-          </p>
-
-          {/* Sample topic pills */}
-          <div style={{ display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "center", marginBottom: 24 }}>
-            {["Kids", "Finances", "Marriage"].map((t) => (
-              <span key={t} style={{ fontFamily: "var(--mono)", fontSize: 11, fontWeight: 500, color: "var(--ink-2)", background: "var(--paper-2)", border: "1px solid var(--line)", borderRadius: 20, padding: "4px 12px", letterSpacing: "0.04em" }}>{t}</span>
-            ))}
-          </div>
-
-          {/* CTA */}
-          <button
-            className="btn"
-            style={{ width: "100%", background: "transparent", color: "var(--terra)", border: "1.5px solid var(--terra)", fontFamily: "var(--mono)", fontSize: 12, fontWeight: 600, letterSpacing: "0.08em", borderRadius: 7, padding: "11px 0", cursor: "pointer", marginTop: "auto" }}
-            onClick={(e) => { e.stopPropagation(); setMode(mode === "topics" ? null : "topics"); }}
-          >
-            CHOOSE TOPICS →
+    <div className="view">
+      <SyncHeader
+        family={family}
+        right={
+          <button type="button" className={"btn " + (assist ? "btn-soft" : "btn-ghost")} onClick={() => setAssist((a) => !a)}>
+            <Ico d={I.spark} size={15} /> {assist ? "Hide Assistant" : "AI Assistant"}
           </button>
-        </div>
+        }
+      />
 
-        {/* ── RIGHT: Record card ── */}
-        <div style={{ flex: "1 1 0", display: "flex", flexDirection: "column", gap: 8 }}>
-          {/* MOST POPULAR badge */}
-          <div style={{ alignSelf: "center", fontFamily: "var(--mono)", fontSize: 10, fontWeight: 600, color: "var(--olive-d)", background: "var(--olive-soft)", borderRadius: 20, padding: "4px 14px", letterSpacing: "0.14em", textTransform: "uppercase" }}>
-            MOST POPULAR
-          </div>
-
-          <div
-            style={{ ...cardBase, background: "#FDF8F4", border: "1.5px solid #D4B9A8", ...(hovR ? hoverStyle : {}) }}
-            onMouseEnter={() => setHovR(true)}
-            onMouseLeave={() => setHovR(false)}
-            onClick={() => onDistill()}
-          >
-            {/* Icon pill */}
-            <div style={{ width: 52, height: 52, borderRadius: "50%", background: "var(--terra-tint)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--terra)", marginBottom: 18 }}>
-              <MicIcon />
-            </div>
-
-            <h3 style={{ fontFamily: "var(--display)", fontWeight: 600, fontSize: 20, fontStyle: "italic", color: "var(--ink)", margin: "0 0 12px" }}>
-              Jump straight in.
-            </h3>
-            <p style={{ fontFamily: "var(--body)", fontSize: 14, color: "var(--ink-2)", lineHeight: 1.6, margin: "0 0 28px" }}>
-              Hit record and talk freely. FamilyPause listens to everything and organizes your week automatically when you're done.
-            </p>
-
-            {/* CTA */}
-            <button
-              className="btn btn-primary"
-              style={{ width: "100%", marginTop: "auto" }}
-              onClick={(e) => { e.stopPropagation(); onDistill(); }}
-            >
-              START RECORDING →
-            </button>
-          </div>
-        </div>
+      <div className="tabs">
+        <button type="button" className={"tab " + (tab === "agenda" ? "on" : "")} onClick={() => setTab("agenda")}>Agenda</button>
+        <button type="button" className={"tab " + (tab === "actions" ? "on" : "")} onClick={() => setTab("actions")}>
+          Actions <span className="count">(0)</span>
+        </button>
+        <button type="button" className={"tab " + (tab === "log" ? "on" : "")} onClick={() => setTab("log")}>Log</button>
       </div>
 
-      {/* ── Topic picker — expands below cards when Topics is chosen ── */}
-      {mode === "topics" && (
-        <div style={{ width: "100%", maxWidth: 680, marginTop: 28, background: "var(--paper-card)", border: "1px solid var(--line)", borderRadius: 16, padding: "28px 32px" }}>
-          <div style={{ fontFamily: "var(--mono)", fontSize: 11, fontWeight: 600, color: "var(--ink-3)", letterSpacing: "0.16em", textTransform: "uppercase", marginBottom: 16 }}>
-            SELECT TOPICS
-          </div>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 20 }}>
-            {PRESET_TOPICS.map((t) => {
-              const on = selected.includes(t);
-              return (
-                <button key={t} onClick={() => toggleTopic(t)} style={{
-                  fontFamily: "var(--body)", fontSize: 14, fontWeight: on ? 600 : 400,
-                  color: on ? "#fff" : "var(--ink-2)",
-                  background: on ? "var(--terra)" : "var(--paper-2)",
-                  border: `1.5px solid ${on ? "var(--terra)" : "var(--line)"}`,
-                  borderRadius: 20, padding: "8px 18px", cursor: "pointer",
-                  transition: "all 140ms ease",
-                }}>
-                  {t}
+      <div className={"worksplit " + (assist ? "with-rail" : "")}>
+        <div>
+          {tab === "agenda" && (
+            <div className="rise">
+              <div className="rowhead">
+                <span className="ct">{rows.length} Topics</span>
+                <button type="button" className="btn btn-soft" onClick={addTopic} style={{ padding: "9px 15px" }}>
+                  <Ico d={I.plus} size={14} /> Add Topic
                 </button>
-              );
-            })}
-          </div>
-
-          {/* Custom topic input */}
-          <div style={{ display: "flex", gap: 8 }}>
-            <input
-              className="field"
-              style={{ flex: 1 }}
-              placeholder="Add your own topic…"
-              value={custom}
-              onChange={(e) => setCustom(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addCustom(); } }}
-            />
-            <button className="btn btn-soft" onClick={addCustom} style={{ whiteSpace: "nowrap" }}>
-              <Ico d={I.plus} size={14} /> Add
-            </button>
-          </div>
-
-          {/* Custom topics added */}
-          {selected.filter((t) => !PRESET_TOPICS.includes(t)).length > 0 && (
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 12 }}>
-              {selected.filter((t) => !PRESET_TOPICS.includes(t)).map((t) => (
-                <span key={t} style={{
-                  fontFamily: "var(--body)", fontSize: 13,
-                  color: "#fff", background: "var(--terra)",
-                  borderRadius: 20, padding: "6px 14px",
-                  display: "flex", alignItems: "center", gap: 6,
-                }}>
-                  {t}
-                  <span onClick={() => toggleTopic(t)} style={{ cursor: "pointer", opacity: 0.7, lineHeight: 1 }}>×</span>
-                </span>
+              </div>
+              {rows.map((r, i) => (
+                <div className="agrow" key={r.id}>
+                  <span className="idx">{String(i + 1).padStart(2, "0")}</span>
+                  <span className="catsel">{r.cat} ▾</span>
+                  <span className={"tp " + (r.topic ? "" : "ph")}>{r.topic || "Topic…"}</span>
+                  <span className="chev"><Ico d={I.chevD} size={14} /></span>
+                </div>
               ))}
+              <button type="button" className="addtopic" onClick={addTopic}>
+                <Ico d={I.plus} size={14} /> Add another topic
+              </button>
             </div>
           )}
 
-          {/* Continue button — appears when at least one topic selected */}
-          {selected.length > 0 && (
-            <button
-              className="btn btn-primary btn-lg"
-              style={{ marginTop: 24, width: "100%" }}
-              onClick={() => onDistill()}
-            >
-              CONTINUE TO RECORD — {selected.length} {selected.length === 1 ? "TOPIC" : "TOPICS"} SELECTED →
-            </button>
+          {tab === "actions" && (
+            <div className="rise" style={{ textAlign: "center", padding: "70px 20px", color: "var(--ink-3)" }}>
+              <div style={{ fontFamily: "var(--display)", fontSize: 22, fontStyle: "italic", color: "var(--ink-2)", marginBottom: 8 }}>
+                No open actions yet.
+              </div>
+              <div style={{ fontSize: 15 }}>Distill your conversation and your actions appear here — sorted by person.</div>
+            </div>
+          )}
+
+          {tab === "log" && (
+            <div className="rise" style={{ textAlign: "center", padding: "70px 20px", color: "var(--ink-3)" }}>
+              <div style={{ fontFamily: "var(--display)", fontSize: 22, fontStyle: "italic", color: "var(--ink-2)", marginBottom: 8 }}>
+                Your past syncs live here.
+              </div>
+              <div style={{ fontSize: 15 }}>Every meeting, summarized and searchable.</div>
+            </div>
+          )}
+
+          {tab === "agenda" && (
+            <div className="ctabar">
+              <div className="copy">
+                <h3>Ready when you are.</h3>
+                <p>Record live or paste your conversation — FamilyPause turns it into a plan in about ten seconds.</p>
+              </div>
+              <button type="button" className="btn btn-primary btn-lg" onClick={onDistill}>
+                <Ico d={I.bolt} size={16} fill /> Distill this week
+              </button>
+            </div>
           )}
         </div>
-      )}
+
+        {assist && (
+          <aside className="assist rise">
+            <div className="ahead">
+              <div className="aico"><Ico d={I.spark} size={17} /></div>
+              <div>
+                <div className="at">Meeting Assistant</div>
+                <div className="as">Reads &amp; writes your agenda</div>
+              </div>
+            </div>
+            <div className="assbubble">
+              Hi — I'm here while you talk. I can add notes, draft action items, and tell you what you're forgetting.
+            </div>
+            <div className="suggs">
+              <span className="sugg">Summarize our agenda</span>
+              <span className="sugg">What are we forgetting?</span>
+              <span className="sugg">Add a note to Finance</span>
+            </div>
+          </aside>
+        )}
+      </div>
     </div>
   );
 }
@@ -909,7 +810,13 @@ Rules: extract everything actionable, use person names when mentioned, return on
         </div>
       </div>
 
-      {view === "agenda" && <AgendaView onDistill={() => go("capture")} />}
+      {view === "agenda" && (
+        <SyncView
+          family={family}
+          categories={context.categories || DEFAULT_CONTEXT.categories}
+          onDistill={() => go("capture")}
+        />
+      )}
       {view === "capture" && <CaptureView text={captureText} setText={setCaptureText} onBack={() => go("agenda")} onProcess={runDistill} />}
       {view === "processing" && <ProcessingView done={distillDone} />}
       {view === "review" && <ReviewView cards={cards} setCards={setCards} roleOf={roleOf} onBack={() => go("capture")} onBuild={buildWeek} distillError={distillError} />}
