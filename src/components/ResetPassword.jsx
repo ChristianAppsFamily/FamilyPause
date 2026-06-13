@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
+import { AuthShell } from "./Auth.jsx";
 
 export default function ResetPassword() {
   const navigate = useNavigate();
@@ -38,48 +39,56 @@ export default function ResetPassword() {
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: "var(--paper)", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
-      <div style={{ width: "100%", maxWidth: 420, background: "var(--paper-card)", border: "1px solid var(--line)", borderRadius: "var(--r-lg)", padding: "36px 32px", boxShadow: "var(--shadow)" }}>
-        <div className="eyebrow" style={{ marginBottom: 10 }}>Account</div>
-        <h1 style={{ fontFamily: "var(--display)", fontSize: 32, fontWeight: 600, marginBottom: 8 }}>Set a new password</h1>
-        <p style={{ fontFamily: "var(--body)", color: "var(--ink-2)", fontSize: 15, marginBottom: 28 }}>
+    <AuthShell>
+      <div className="fp-fade">
+        <div style={{ fontSize: 11, letterSpacing: "0.25em", color: "var(--terra)", fontFamily: "'JetBrains Mono', monospace", textTransform: "uppercase", marginBottom: 12 }}>
+          Account
+        </div>
+        <h1 className="form-hl">Set a new password</h1>
+        <p className="form-sub">
           {done ? "Password updated. Taking you to the app…" : ready ? "Choose a new password for your FamilyPause account." : "Confirming your reset link…"}
         </p>
+      </div>
 
-        {!done && ready && (
-          <>
-            {error && (
-              <div style={{ background: "var(--red-tint)", border: "1px solid var(--red-soft)", borderRadius: 8, padding: "10px 14px", marginBottom: 16, fontSize: 14, color: "var(--red)" }}>
-                {error}
-              </div>
-            )}
-            <label className="eyebrow" style={{ display: "block", marginBottom: 8, color: "var(--ink-2)" }}>New password</label>
+      {!done && ready && (
+        <>
+          {error && (
+            <div style={{ background: "#FBEAE5", border: "1px solid #F6DAD3", borderRadius: 8, padding: "10px 14px", marginBottom: 16, fontSize: 14, color: "#C0402F" }}>
+              {error}
+            </div>
+          )}
+          <div className="fp-fade-1 fp-field" style={{ marginBottom: 16 }}>
+            <label className="fp-label">New password</label>
             <input
+              className="fp-input"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              style={{ width: "100%", fontFamily: "var(--body)", fontSize: 15, padding: "12px 14px", border: "1px solid var(--line)", borderRadius: 8, marginBottom: 16, outline: "none" }}
+              placeholder="At least 8 characters"
               onKeyDown={(e) => e.key === "Enter" && submit()}
             />
-            <label className="eyebrow" style={{ display: "block", marginBottom: 8, color: "var(--ink-2)" }}>Confirm password</label>
+          </div>
+          <div className="fp-fade-2 fp-field" style={{ marginBottom: 24 }}>
+            <label className="fp-label">Confirm password</label>
             <input
+              className="fp-input"
               type="password"
               value={confirm}
               onChange={(e) => setConfirm(e.target.value)}
-              style={{ width: "100%", fontFamily: "var(--body)", fontSize: 15, padding: "12px 14px", border: "1px solid var(--line)", borderRadius: 8, marginBottom: 24, outline: "none" }}
+              placeholder="Repeat password"
               onKeyDown={(e) => e.key === "Enter" && submit()}
             />
-            <button type="button" className="btn btn-primary btn-block" onClick={submit} disabled={loading}>
-              {loading ? "Saving…" : "Update password"}
-            </button>
-          </>
-        )}
+          </div>
+          <button type="button" className="fp-btn-primary fp-fade-3" onClick={submit} disabled={loading}>
+            {loading ? "Saving…" : "Update password"}
+          </button>
+        </>
+      )}
 
-        {!ready && !done && (
-          <div style={{ width: 32, height: 32, border: "2px solid var(--line)", borderTopColor: "var(--terra)", borderRadius: "50%", animation: "spin 0.8s linear infinite", margin: "0 auto" }} />
-        )}
-      </div>
+      {!ready && !done && (
+        <div style={{ width: 32, height: 32, border: "2px solid #E6D9C4", borderTopColor: "#BE5A37", borderRadius: "50%", animation: "spin 0.8s linear infinite", margin: "24px auto 0" }} />
+      )}
       <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
-    </div>
+    </AuthShell>
   );
 }

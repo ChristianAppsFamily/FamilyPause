@@ -169,9 +169,24 @@ const css = `
     font-family: 'JetBrains Mono', monospace;
     font-size: 10px; color: ${T.muted}; letter-spacing: 0.1em;
   }
+  .form-hl {
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    font-weight: 400;
+    font-size: 36px;
+    line-height: 1.08;
+    color: ${T.text};
+    margin-bottom: 10px;
+  }
+  .form-sub {
+    font-family: 'Lora', serif;
+    font-size: 15px;
+    line-height: 1.55;
+    color: ${T.mid};
+    margin-bottom: 32px;
+  }
 `;
 
-// ── SHARED LAYOUT WRAPPER ─────────────────────────────────────────────────────
 function AuthShell({ children, wide = false }) {
   return (
     <div style={{
@@ -381,10 +396,8 @@ function SignIn({ onSwitch, onSuccess }) {
         <div style={{ fontSize: 11, letterSpacing: "0.25em", color: T.terra, fontFamily: "'JetBrains Mono', monospace", textTransform: "uppercase", marginBottom: 12 }}>
           Welcome back
         </div>
-        <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: 36, fontWeight: 600, color: T.text, marginBottom: 8 }}>
-          Sign in
-        </h1>
-        <p style={{ fontSize: 15, color: T.mid, marginBottom: 28 }}>
+        <h1 className="form-hl">Sign in</h1>
+        <p className="form-sub">
           Continue your family's weekly rhythm.
         </p>
       </div>
@@ -487,10 +500,8 @@ function SignUp({ onSwitch, onSuccess }) {
         <div style={{ fontSize: 11, letterSpacing: "0.25em", color: T.terra, fontFamily: "'JetBrains Mono', monospace", textTransform: "uppercase", marginBottom: 12 }}>
           7-day free trial
         </div>
-        <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: 36, fontWeight: 600, color: T.text, marginBottom: 8 }}>
-          Create your account
-        </h1>
-        <p style={{ fontSize: 15, color: T.mid, marginBottom: 28 }}>
+        <h1 className="form-hl">Create your account</h1>
+        <p className="form-sub">
           No credit card required. Cancel anytime.
         </p>
       </div>
@@ -535,7 +546,7 @@ function SignUp({ onSwitch, onSuccess }) {
       </div>
 
       <p style={{ fontSize: 12, color: T.muted, fontFamily: "'JetBrains Mono', monospace", textAlign: "center", marginBottom: 24, lineHeight: 1.5 }} className="fp-fade-5">
-        By signing up you agree to our Terms of Service.<br />Ad-free forever. Your conversations are private.
+        By signing up you agree to our <a href="/terms.html" style={{ color: T.terra }}>Terms of Service</a>.<br />Ad-free forever. Your conversations are private.
       </p>
 
       <div className="fp-divider fp-fade-5"><span>OR</span></div>
@@ -572,10 +583,8 @@ function ForgotPassword({ onSwitch }) {
         <div style={{ fontSize: 11, letterSpacing: "0.25em", color: T.terra, fontFamily: "'JetBrains Mono', monospace", textTransform: "uppercase", marginBottom: 12 }}>
           Reset password
         </div>
-        <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: 36, fontWeight: 600, color: T.text, marginBottom: 8 }}>
-          Forgot your<br />password?
-        </h1>
-        <p style={{ fontSize: 15, color: T.mid, marginBottom: 36 }}>
+        <h1 className="form-hl">Forgot your<br />password?</h1>
+        <p className="form-sub" style={{ marginBottom: 36 }}>
           No problem. Enter your email and we'll send a reset link.
         </p>
       </div>
@@ -659,10 +668,8 @@ function JoinWorkspace({ onSwitch, onSuccess, initialCode = "" }) {
         <div style={{ fontSize: 11, letterSpacing: "0.25em", color: T.terra, fontFamily: "'JetBrains Mono', monospace", textTransform: "uppercase", marginBottom: 12 }}>
           You're invited
         </div>
-        <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: 36, fontWeight: 600, color: T.text, marginBottom: 8 }}>
-          Join your<br />family workspace
-        </h1>
-        <p style={{ fontSize: 15, color: T.mid, marginBottom: 36 }}>
+        <h1 className="form-hl">Join your<br />family workspace</h1>
+        <p className="form-sub" style={{ marginBottom: 36 }}>
           Create your account to join. You'll share the same sessions, plans, and history.
         </p>
       </div>
@@ -714,6 +721,8 @@ function JoinWorkspace({ onSwitch, onSuccess, initialCode = "" }) {
 // ── MAIN AUTH EXPORT ──────────────────────────────────────────────────────────
 // Usage in App.jsx:
 // <Auth onAuthenticated={(user, workspace) => setAppState({ user, workspace })} />
+
+export { AuthShell };
 
 export default function Auth({ onAuthenticated, initialScreen = "signin", inviteCode = "" }) {
   const [screen, setScreen] = useState(initialScreen);

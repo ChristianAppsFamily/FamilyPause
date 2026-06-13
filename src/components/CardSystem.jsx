@@ -18,6 +18,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "../lib/supabase";
+import "../styles/cards.css";
 
 // ── PALETTE ───────────────────────────────────────────────────────────────────
 // Palette mapped to the design bundle (src/styles/tokens.css): source of truth.
@@ -338,50 +339,26 @@ function CardFace({ card, deckYear, flipped = true, style = {} }) {
 }
 
 // ── CARD BACK (locked) ────────────────────────────────────────────────────────
-function CardBack({ style = {} }) {
+function LockIcon() {
   return (
-    <div style={{
-      background: `linear-gradient(135deg, ${T.terra} 0%, ${T.terraD} 100%)`,
-      border: `1px solid ${T.terra}`,
-      borderRadius: 20,
-      padding: "36px 32px",
-      boxShadow: "0 20px 60px rgba(190,90,55,0.2)",
-      display: "flex",
-      flexDirection: "column",
-      alignItems: "center",
-      justifyContent: "center",
-      minHeight: 320,
-      position: "relative",
-      overflow: "hidden",
-      animation: "cardFloat 5s ease-in-out infinite",
-      ...style,
-    }}>
-      {/* Pattern */}
-      <div style={{
-        position: "absolute", inset: 0,
-        backgroundImage: `radial-gradient(circle at 30% 70%, rgba(250,247,242,0.06) 0%, transparent 50%),
-                          radial-gradient(circle at 70% 30%, rgba(250,247,242,0.04) 0%, transparent 40%)`,
-        pointerEvents: "none",
-      }} />
-      <div style={{
-        fontFamily: "'Playfair Display', serif",
-        fontSize: 48, color: "rgba(250,247,242,0.15)",
-        position: "absolute", top: 16, left: 24,
-        lineHeight: 1,
-      }}>"</div>
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+      <rect x="3" y="11" width="18" height="11" rx="2" />
+      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+    </svg>
+  );
+}
 
-      <div style={{ fontSize: 36, marginBottom: 16, position: "relative" }}>⁋</div>
-      <div style={{
-        fontFamily: "'Playfair Display', serif",
-        fontSize: 22, color: T.bg,
-        letterSpacing: "0.02em", position: "relative",
-      }}>FamilyPause</div>
-      <div style={{
-        fontFamily: "'JetBrains Mono', monospace",
-        fontSize: 10, color: "rgba(250,247,242,0.5)",
-        letterSpacing: "0.2em", marginTop: 8,
-        textTransform: "uppercase", position: "relative",
-      }}>Card Deck · 2026</div>
+function CardBack({ style = {}, year = 2026 }) {
+  return (
+    <div className="cs-cardback grain" style={style}>
+      <span className="cs-corner tl" aria-hidden="true" />
+      <span className="cs-corner tr" aria-hidden="true" />
+      <span className="cs-corner bl" aria-hidden="true" />
+      <span className="cs-corner br" aria-hidden="true" />
+      <div className="cs-cardback-mark" aria-hidden="true">&ldquo;</div>
+      <div className="cs-cardback-quote" aria-hidden="true">⁋</div>
+      <div className="cs-cardback-title">FamilyPause</div>
+      <div className="cs-cardback-meta">Card Deck · {year}</div>
     </div>
   );
 }
@@ -426,26 +403,9 @@ function CardDraw({ workspace, onStartSession, onSkip, onUnlock }) {
               <div style={{ filter: "blur(2px)", opacity: 0.7 }}>
                 <CardBack />
               </div>
-              <div style={{
-                position: "absolute", inset: 0,
-                display: "flex", flexDirection: "column",
-                alignItems: "center", justifyContent: "center",
-                gap: 12,
-              }}>
-                <div style={{
-                  width: 56, height: 56, borderRadius: "50%",
-                  background: "rgba(250,247,242,0.95)",
-                  border: `2px solid ${T.border}`,
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: 24, boxShadow: "0 4px 20px rgba(46,40,32,0.15)",
-                }}>🔒</div>
-                <div style={{
-                  background: "rgba(250,247,242,0.95)",
-                  border: `1px solid ${T.border}`,
-                  borderRadius: 8, padding: "6px 16px",
-                  fontFamily: "'JetBrains Mono', monospace",
-                  fontSize: 11, color: T.mid, letterSpacing: "0.08em",
-                }}>UNLOCK WITH CARD DECK</div>
+              <div className="cs-lock-overlay">
+                <div className="cs-lock-circle"><LockIcon /></div>
+                <div className="cs-lock-pill">Unlock with card deck</div>
               </div>
             </div>
 

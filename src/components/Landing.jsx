@@ -363,7 +363,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
           <div className="wrap quote reveal">
             <span className="qmark">&ldquo;</span>
             <blockquote>We did a FamilyPause this weekend and it got us back on track with everything.</blockquote>
-            <div className="qby">- Spence, Founder &amp; First User</div>
+            <div className="qby">— Spence, Founder &amp; First User</div>
           </div>
         </section>
 

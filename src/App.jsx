@@ -28,6 +28,22 @@ const DEFAULT_CONTEXT = {
   categories: ["Family", "Kids", "Business", "Finance", "Home", "Faith", "Health"],
 };
 
+const SAMPLE_TRANSCRIPT = `Amanda: Okay, before the week runs away from us again — let's actually do this.
+Spence: Agreed. Start with money? The accountant emailed about Q2.
+Amanda: Yeah, we need to call the accountant before month end, it's getting tight.
+Spence: I'll own that. And we still haven't looked at the Q2 household budget together — can we block 30 minutes Tuesday night?
+Amanda: Tuesday works. Put it on the shared calendar.
+Spence: Done. Kids — Jordan has the dentist, right?
+Amanda: Take Jordan to the dentist, Thursday at 3pm. I can do the pickup.
+Spence: And Maya's swim lessons start back up. First one is Saturday morning, 9am at the rec center.
+Amanda: Got it. I'll handle Maya's swim.
+Spence: On the business — launch week. I think we're blocked on the new payment links.
+Amanda: Right, you need to replace the placeholder Stripe links in the app before Friday.
+Spence: Yep, that's on me. Friday at the latest.
+Amanda: One more — let's protect a real Sabbath this week. No screens after dinner Saturday, just us and the kids.
+Spence: Love that. Let's make it the default, not the exception.
+Amanda: Good sync. That felt like ten minutes.`;
+
 // ── AI CALL ──────────────────────────────────────────────────────────────────
 // Thin wrapper — delegates to src/lib/ai.js which handles prompt caching,
 // faithMode, and cache-usage logging. systemOverride lets the distill flow
@@ -311,7 +327,7 @@ function CaptureView({ text, setText, onBack, onProcess }) {
       <div className="lead">
         <div className="eyebrow" style={{ marginBottom: 12 }}>Step 2 · Have your meeting</div>
         <h1>Talk like humans.<br /><em>We'll handle the structure.</em></h1>
-        <p>Paste a transcript from Otter or Apple Dictation, or record live. Talk about whatever needs talking about: kids, money, work, the week ahead.</p>
+        <p>Paste a transcript from Otter or Apple Dictation, or record live. Talk about whatever needs talking about — kids, money, work, the week ahead.</p>
       </div>
 
       <div className="panel capcard">
@@ -325,6 +341,9 @@ function CaptureView({ text, setText, onBack, onProcess }) {
             <textarea className="capta" placeholder="Paste your conversation here…" value={text} onChange={(e) => setText(e.target.value)} />
             <div className="caprow">
               <span className="caphint">{text.trim() ? `${text.trim().split(/\s+/).length} words` : "Nothing pasted yet"}</span>
+              <button type="button" className="usesample" onClick={() => setText(SAMPLE_TRANSCRIPT)}>
+                ✦ Use sample conversation
+              </button>
             </div>
           </div>
         ) : (
@@ -352,9 +371,14 @@ function CaptureView({ text, setText, onBack, onProcess }) {
 }
 
 // ── PROCESSING (View 3) ───────────────────────────────────────────────────────
-function ProcessingView({ done }) {
+function ProcessingView({ done, familyNames = "Everyone" }) {
   const stepLabels = ["Reading your conversation", "Finding actions & appointments", "Sorting by person and category", "Building this week's review"];
-  const subs = ["Listening to every voice in the room…", "Nobody gets dropped.", "Finance, Kids, Business, Family.", "Almost there."];
+  const subs = [
+    "Listening to every voice in the room…",
+    `${familyNames} — nobody gets dropped.`,
+    "Finance, Kids, Business, Family.",
+    "Almost there.",
+  ];
   const [active, setActive] = useState(0);
   const [pct, setPct] = useState(6);
 
@@ -618,6 +642,7 @@ export default function App({ user, workspace, onSignOut }) {
   }, [adults]);
 
   const family = { title: adults.length ? adults.join(" & ") : (ws?.name || "Your Family"), date: prettyDate(meetingDate) };
+  const processingFamilyLabel = [...adults, ...(kids.length ? ["the kids"] : [])].join(", ") || "Everyone";
 
   // ── Realtime sync (Step 12) ──────────────────────────────────────────────
   useEffect(() => {
@@ -818,7 +843,7 @@ Rules: extract everything actionable, use person names when mentioned, return on
         />
       )}
       {view === "capture" && <CaptureView text={captureText} setText={setCaptureText} onBack={() => go("agenda")} onProcess={runDistill} />}
-      {view === "processing" && <ProcessingView done={distillDone} />}
+      {view === "processing" && <ProcessingView done={distillDone} familyNames={processingFamilyLabel} />}
       {view === "review" && <ReviewView cards={cards} setCards={setCards} roleOf={roleOf} onBack={() => go("capture")} onBuild={buildWeek} distillError={distillError} />}
       {view === "plan" && <PlanView keptCards={keptCards} adults={adults} roleOf={roleOf} onRestart={restart} />}
     </div>

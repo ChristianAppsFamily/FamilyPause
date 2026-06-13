@@ -1,0 +1,105 @@
+/* CardSystem — ported from project/FamilyPause Cards v2.html */
+.cs-cardback {
+  background: linear-gradient(135deg, var(--terra) 0%, var(--terra-d) 100%);
+  border: 1px solid var(--terra);
+  border-radius: 20px;
+  padding: 36px 32px;
+  box-shadow: 0 20px 60px rgba(190, 90, 55, 0.2);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 320px;
+  position: relative;
+  overflow: hidden;
+  animation: cardFloat 5s ease-in-out infinite;
+}
+
+.cs-cardback.grain::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0.35;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+}
+
+.cs-corner {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  z-index: 2;
+}
+.cs-corner.tl { top: 20px; left: 20px; border-top: 1px solid rgba(250, 243, 236, 0.5); border-left: 1px solid rgba(250, 243, 236, 0.5); }
+.cs-corner.tr { top: 20px; right: 20px; border-top: 1px solid rgba(250, 243, 236, 0.5); border-right: 1px solid rgba(250, 243, 236, 0.5); }
+.cs-corner.bl { bottom: 20px; left: 20px; border-bottom: 1px solid rgba(250, 243, 236, 0.5); border-left: 1px solid rgba(250, 243, 236, 0.5); }
+.cs-corner.br { bottom: 20px; right: 20px; border-bottom: 1px solid rgba(250, 243, 236, 0.5); border-right: 1px solid rgba(250, 243, 236, 0.5); }
+
+.cs-cardback-mark {
+  font-family: var(--display);
+  font-size: 48px;
+  color: rgba(250, 247, 242, 0.15);
+  position: absolute;
+  top: 16px;
+  left: 24px;
+  line-height: 1;
+  z-index: 1;
+}
+.cs-cardback-quote {
+  font-size: 36px;
+  margin-bottom: 16px;
+  position: relative;
+  z-index: 1;
+  color: var(--paper);
+}
+.cs-cardback-title {
+  font-family: var(--display);
+  font-size: 22px;
+  color: var(--paper);
+  letter-spacing: 0.02em;
+  position: relative;
+  z-index: 1;
+}
+.cs-cardback-meta {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: rgba(250, 247, 242, 0.5);
+  letter-spacing: 0.2em;
+  margin-top: 8px;
+  text-transform: uppercase;
+  position: relative;
+  z-index: 1;
+}
+
+.cs-lock-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  z-index: 3;
+}
+.cs-lock-circle {
+  width: 56px;
+  height: 56px;
+  background: #fff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 20px rgba(46, 40, 32, 0.2);
+  color: var(--ink-2);
+}
+.cs-lock-pill {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.92);
+  padding: 5px 12px;
+  border-radius: 20px;
+  box-shadow: 0 2px 8px rgba(46, 40, 32, 0.08);
+}

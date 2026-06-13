@@ -1,0 +1,50 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Lora', Georgia, serif;
+  background: radial-gradient(ellipse 120% 80% at 50% 0%, #FCF8F0 0%, #FBF6EC 55%, #F4EAD8 100%);
+  color: #2A251D;
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 48px 24px 80px;
+  line-height: 1.65;
+  min-height: 100vh;
+}
+
+.back {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 28px;
+}
+.back a { color: #BE5A37; text-decoration: none; }
+.back a:hover { text-decoration: underline; }
+
+h1 {
+  font-family: 'Playfair Display', serif;
+  font-weight: 600;
+  font-size: 2.25rem;
+  margin-bottom: 8px;
+  line-height: 1.1;
+}
+
+.meta {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #8C8070;
+  margin-bottom: 28px;
+}
+
+h2 {
+  font-family: 'Playfair Display', serif;
+  font-weight: 600;
+  font-size: 1.2rem;
+  margin-top: 32px;
+  margin-bottom: 10px;
+}
+
+p { color: #5B5245; margin-bottom: 14px; font-size: 16px; }
+a { color: #BE5A37; }
