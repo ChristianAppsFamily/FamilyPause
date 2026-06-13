@@ -6,6 +6,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { ensureTrialSubscription } from "../lib/subscription";
 
@@ -736,8 +737,31 @@ function JoinWorkspace({ onSwitch, onSuccess, initialCode = "" }) {
 
 export { AuthShell };
 
-export default function Auth({ onAuthenticated, initialScreen = "signin", inviteCode = "" }) {
-  const [screen, setScreen] = useState(initialScreen);
+function resolveAuthScreen(searchParams, inviteCode) {
+  if (inviteCode || searchParams.get("join") === "1") return "join";
+  if (searchParams.get("signup") === "1") return "signup";
+  if (searchParams.get("forgot") === "1") return "forgot";
+  return "signin";
+}
+
+function authPathForScreen(screen, inviteCode) {
+  switch (screen) {
+    case "signup": return "/app?signup=1";
+    case "forgot": return "/app?forgot=1";
+    case "join": return inviteCode ? `/join/${inviteCode}` : "/app?join=1";
+    case "signin":
+    default: return "/app";
+  }
+}
+
+export default function Auth({ onAuthenticated, inviteCode = "" }) {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const screen = resolveAuthScreen(searchParams, inviteCode);
+
+  const onSwitch = (target) => {
+    navigate(authPathForScreen(target, inviteCode));
+  };
 
   const handleSignInSuccess = async () => {
     const { data: { user }, error: authErr } = await supabase.auth.getUser();
@@ -759,9 +783,9 @@ export default function Auth({ onAuthenticated, initialScreen = "signin", invite
     onAuthenticated({ newUser: true, joined: true, displayName, workspaceId });
   };
 
-  if (screen === "signin")  return <SignIn  onSwitch={setScreen} onSuccess={handleSignInSuccess} />;
-  if (screen === "signup")  return <SignUp  onSwitch={setScreen} onSuccess={handleSignUpSuccess} />;
-  if (screen === "forgot")  return <ForgotPassword onSwitch={setScreen} />;
-  if (screen === "join")    return <JoinWorkspace  onSwitch={setScreen} onSuccess={handleJoinSuccess} initialCode={inviteCode} />;
+  if (screen === "signin")  return <SignIn  onSwitch={onSwitch} onSuccess={handleSignInSuccess} />;
+  if (screen === "signup")  return <SignUp  onSwitch={onSwitch} onSuccess={handleSignUpSuccess} />;
+  if (screen === "forgot")  return <ForgotPassword onSwitch={onSwitch} />;
+  if (screen === "join")    return <JoinWorkspace  onSwitch={onSwitch} onSuccess={handleJoinSuccess} initialCode={inviteCode} />;
   return null;
 }

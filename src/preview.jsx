@@ -36,7 +36,7 @@ const mockSessions = [
 const PAGES = [
   { key: 'landing', label: 'Landing', render: () => <Landing onSignIn={() => {}} onStart={() => {}} /> },
   { key: 'app', label: 'App (5-step flow)', render: () => <App user={mockUser} workspace={mockWorkspace} onSignOut={() => {}} /> },
-  { key: 'auth', label: 'Auth', render: () => <Auth onAuthenticated={() => {}} initialScreen="signin" /> },
+  { key: 'auth', label: 'Auth', render: () => <Auth onAuthenticated={() => {}} /> },
   { key: 'onboarding', label: 'Onboarding', render: () => <Onboarding workspaceId="ws1" displayName="Sarah" inviteCode="FP-2026-AB12-0001" joined={false} onComplete={() => {}} /> },
   { key: 'cards', label: 'Card System', render: () => <CardSystemRoot workspace={mockWorkspace} onStartSession={() => {}} onClose={() => {}} /> },
   { key: 'settings', label: 'Settings', render: () => <Settings workspace={mockWorkspace} user={mockUser} onSignOut={() => {}} onClose={() => {}} onOpenDecks={() => {}} /> },

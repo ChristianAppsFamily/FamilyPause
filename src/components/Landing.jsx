@@ -494,7 +494,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                     <li><span className="far">→</span> Ministry billing &amp; invoicing</li>
                     <li><span className="far">→</span> Priority support</li>
                   </ul>
-                  <a className="btn btn-ghost btn-block" href="mailto:hello@familypause.com">Contact Us</a>
+                  <button className="btn btn-primary btn-block" onClick={onStart}>Start 7-Day Trial</button>
                 </div>
               </div>
               <div className="pricefoot fineprint">All plans include a 7-day free trial · Cancel anytime · No contracts</div>

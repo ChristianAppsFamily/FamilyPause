@@ -9,7 +9,6 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useState, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
 import { supabase } from "./lib/supabase";
 import { ensureTrialSubscription } from "./lib/subscription";
 import Auth from "./components/Auth";
@@ -56,7 +55,6 @@ function Loader() {
 
 // ── MAIN ROUTER ───────────────────────────────────────────────────────────────
 export default function AppRouter() {
-  const [searchParams] = useSearchParams();
   const [phase, setPhase] = useState("loading"); // loading | auth | onboarding | app
   const [user, setUser] = useState(null);
   const [workspace, setWorkspace] = useState(null);
@@ -67,9 +65,6 @@ export default function AppRouter() {
     const match = window.location.pathname.match(/\/join\/([a-zA-Z0-9-]+)/);
     return match ? match[1] : null;
   })();
-
-  const signupFromUrl = searchParams.get("signup") === "1";
-  const authInitialScreen = inviteCodeFromUrl ? "join" : signupFromUrl ? "signup" : "signin";
 
   // ── Check existing session on mount ────────────────────────────────────────
   useEffect(() => {
@@ -188,7 +183,6 @@ export default function AppRouter() {
   if (phase === "auth") return (
     <Auth
       onAuthenticated={handleAuthenticated}
-      initialScreen={authInitialScreen}
       inviteCode={inviteCodeFromUrl || ""}
     />
   );
