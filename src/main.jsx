@@ -10,7 +10,12 @@ import ResetPassword from './components/ResetPassword.jsx'
 // Marketing landing at "/". Its CTAs route into the auth + app flow at /app.
 function LandingRoute() {
   const navigate = useNavigate()
-  return <Landing onSignIn={() => navigate('/app')} onStart={() => navigate('/app')} />
+  return (
+    <Landing
+      onSignIn={() => navigate('/app')}
+      onStart={() => navigate('/app?signup=1')}
+    />
+  )
 }
 
 ReactDOM.createRoot(document.getElementById('root')).render(

@@ -68,7 +68,7 @@ const css = `
     border-radius: 8px;
     color: ${T.text};
     padding: 13px 16px;
-    font-size: 15px;
+    font-size: 16px;
     font-family: 'Lora', serif;
     transition: border-color 0.2s, box-shadow 0.2s;
     outline: none;
@@ -188,9 +188,16 @@ const css = `
 `;
 
 function AuthShell({ children, wide = false }) {
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   return (
-    <div style={{
+    <div className="fp-auth-root" style={{
       minHeight: "100vh",
+      width: "100%",
+      maxWidth: "100vw",
+      overflowX: "hidden",
       background: T.bg,
       display: "flex",
       alignItems: "flex-start",
@@ -263,15 +270,20 @@ function AuthShell({ children, wide = false }) {
       <style>{`
         @media (max-width: 768px) {
           .fp-left-panel { display: none !important; }
+          .fp-auth-root { flex-direction: column; }
           .fp-right-panel {
+            width: 100% !important;
+            max-width: 100% !important;
             padding: 36px 20px 48px !important;
             align-items: flex-start !important;
           }
+          .form-hl { font-size: 30px; }
         }
         @media (max-width: 480px) {
           .fp-right-panel {
             padding: 28px 16px 48px !important;
           }
+          .form-hl { font-size: 28px; }
         }
       `}</style>
     </div>
@@ -518,7 +530,7 @@ function SignUp({ onSwitch, onSuccess }) {
       <div className="fp-fade-1 fp-field">
         <label className="fp-label">Your first name</label>
         <input className="fp-input" type="text" placeholder="Spence"
-          value={name} onChange={e => setName(e.target.value)} onKeyDown={handleKey} autoFocus />
+          value={name} onChange={e => setName(e.target.value)} onKeyDown={handleKey} />
       </div>
 
       <div className="fp-fade-2 fp-field">
