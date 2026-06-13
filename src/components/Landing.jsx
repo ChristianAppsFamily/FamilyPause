@@ -211,7 +211,7 @@ const css = `
 .fp-landing .fp-footer-link:hover { color: var(--terra); }
 .fp-landing .foot .legal { margin-top: 44px; padding-top: 24px; border-top: 1px solid var(--line); }
 
-.fp-landing .reveal { opacity: 0; transform: translateY(22px); transition: opacity .7s cubic-bezier(.2,.7,.2,1), transform .7s cubic-bezier(.2,.7,.2,1); }
+.fp-landing .reveal { opacity: 1; transform: translateY(22px); transition: opacity .7s cubic-bezier(.2,.7,.2,1), transform .7s cubic-bezier(.2,.7,.2,1); }
 .fp-landing .reveal.in { opacity: 1; transform: none; }
 @media (prefers-reduced-motion: reduce) { .fp-landing .reveal { opacity: 1; transform: none; transition: none; } }
 
@@ -268,12 +268,34 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
     window.addEventListener("scroll", onScroll, { passive: true });
     onScroll();
 
-    const io = new IntersectionObserver(
-      (entries) => entries.forEach((e) => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } }),
-      { threshold: 0.14, rootMargin: "0px 0px -8% 0px" }
-    );
-    root?.querySelectorAll(".reveal").forEach((el) => io.observe(el));
-    return () => { window.removeEventListener("scroll", onScroll); io.disconnect(); };
+    const els = root ? [...root.querySelectorAll(".reveal")] : [];
+    let io;
+    let fallback;
+
+    if (els.length) {
+      const reveal = (el) => el.classList.add("in");
+      if ("IntersectionObserver" in window) {
+        io = new IntersectionObserver(
+          (entries) => entries.forEach((e) => {
+            if (e.isIntersecting) {
+              reveal(e.target);
+              io.unobserve(e.target);
+            }
+          }),
+          { threshold: 0.08, rootMargin: "0px 0px -4% 0px" }
+        );
+        els.forEach((el) => io.observe(el));
+      } else {
+        els.forEach(reveal);
+      }
+      fallback = window.setTimeout(() => els.forEach(reveal), 1500);
+    }
+
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      io?.disconnect();
+      if (fallback) window.clearTimeout(fallback);
+    };
   }, []);
 
   return (
