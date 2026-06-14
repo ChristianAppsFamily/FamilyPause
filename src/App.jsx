@@ -474,6 +474,7 @@ function CaptureView({ text, setText, onBack, onProcess }) {
 
   const confirmDictation = async () => {
     if (transcribing) return text;
+    const previewFallback = livePreview.trim();
     stopPreview();
     stopMeter();
     setTranscribing(true);
@@ -486,7 +487,10 @@ function CaptureView({ text, setText, onBack, onProcess }) {
         setDictNotice("Recording too short. Speak a little longer, then tap the check mark.");
         return baseRef.current;
       }
-      const spoken = await transcribeAudioBlob(blob, mimeRef.current);
+      const spoken = await transcribeAudioBlob(blob, mimeRef.current, {
+        previewFallback,
+        onStatus: setDictStatus,
+      });
       if (!spoken) {
         setDictNotice("Couldn't pick up any speech. Try again.");
         return baseRef.current;
@@ -498,11 +502,7 @@ function CaptureView({ text, setText, onBack, onProcess }) {
       setDictNotice("");
       return merged;
     } catch (err) {
-      const msg = err.message || "Transcription failed. Try again or use Write or paste.";
-      const hint = /OPENAI_API_KEY/i.test(msg)
-        ? " Add OPENAI_API_KEY in Vercel (or run supabase secrets set OPENAI_API_KEY=sk-...)."
-        : "";
-      setDictNotice(msg + hint);
+      setDictNotice(err.message || "Transcription failed. Try again or use Write or paste.");
       return baseRef.current;
     } finally {
       setTranscribing(false);

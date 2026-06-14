@@ -1,4 +1,5 @@
 import { supabase } from "./supabase";
+import { transcribeLocally } from "./transcribeLocal";
 
 /** Best supported browser recording format (ChatGPT-style MediaRecorder path). */
 export function pickRecordingMimeType() {
@@ -73,30 +74,49 @@ async function invokeVercelTranscribe(body) {
   return (payload?.text || "").trim();
 }
 
+function modelProgressLabel(progress) {
+  if (!progress || progress.status !== "progress") return null;
+  const pct = progress.progress != null ? Math.round(progress.progress) : null;
+  return pct != null ? `Loading speech model… ${pct}%` : "Loading speech model…";
+}
+
 /**
- * Send recorded audio to Whisper via Supabase edge function, with Vercel API fallback.
- * Works in Brave — unlike webkitSpeechRecognition.
+ * Whisper via Supabase → Vercel → on-device fallback (Brave-friendly).
  */
-export async function transcribeAudioBlob(blob, mimeType) {
+export async function transcribeAudioBlob(blob, mimeType, { onStatus, onProgress, previewFallback = "" } = {}) {
   const body = {
     audio: await blobToBase64(blob),
     mimeType: mimeType || blob.type || "audio/webm",
   };
 
-  const { data, error } = await supabase.functions.invoke("transcribe", { body });
+  let serverErr = "";
 
-  if (!error) {
-    if (data?.error) throw new Error(data.error);
+  const { data, error } = await supabase.functions.invoke("transcribe", { body });
+  if (!error && !data?.error) {
     return (data?.text || "").trim();
   }
-
-  const edgeDetail = await parseInvokeError(error);
-  const edgeMissing = /edge function|function not found|404|failed to send a request/i.test(edgeDetail);
+  serverErr = error ? await parseInvokeError(error) : (data?.error || "");
 
   try {
     return await invokeVercelTranscribe(body);
   } catch (vercelErr) {
-    if (edgeMissing) throw vercelErr;
-    throw new Error(edgeDetail || vercelErr.message);
+    serverErr = serverErr || vercelErr.message;
+  }
+
+  const preview = (previewFallback || "").trim();
+  if (preview) return preview;
+
+  onStatus?.("Transcribing on your device…");
+  try {
+    return await transcribeLocally(blob, {
+      onProgress: (p) => {
+        const label = modelProgressLabel(p);
+        if (label) onStatus?.(label);
+        onProgress?.(p);
+      },
+    });
+  } catch (localErr) {
+    const base = serverErr || localErr.message;
+    throw new Error(base.includes("OPENAI") ? `${base} On-device fallback failed — try Write or paste.` : base);
   }
 }
