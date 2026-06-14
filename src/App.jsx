@@ -546,6 +546,7 @@ function SyncView({ family, workspaceId, onDistill }) {
 // ── CAPTURE (View 2) ──────────────────────────────────────────────────────────
 function CaptureView({ text, setText, initialMode = "paste", onBack, onProcess }) {
   const [mode, setMode] = useState(initialMode);
+  const [modeSwitchAsk, setModeSwitchAsk] = useState(null);
 
   useEffect(() => {
     setMode(initialMode);
@@ -616,15 +617,36 @@ function CaptureView({ text, setText, initialMode = "paste", onBack, onProcess }
     try { rec.stop(); } catch { resolve(null); }
   });
 
-  const pickMode = (next) => {
+  const modeLabel = (m) => (m === "paste" ? "Write or paste" : "Speech to text");
+
+  const applyModeSwitch = (next) => {
     if (dictating) cancelDictation();
-    if (next !== mode) {
-      setText("");
-      setDictNotice("");
-      setDictStatus("");
-      baseRef.current = "";
-    }
+    setDictNotice("");
+    setDictStatus("");
     setMode(next);
+    setModeSwitchAsk(null);
+  };
+
+  const requestModeSwitch = (next) => {
+    if (next === mode || transcribing) return;
+    if (dictating || text.trim().length > 0) {
+      setModeSwitchAsk(next);
+      return;
+    }
+    applyModeSwitch(next);
+  };
+
+  const modeSwitchMessage = () => {
+    if (!modeSwitchAsk) return "";
+    const target = modeLabel(modeSwitchAsk);
+    const hasText = text.trim().length > 0;
+    if (dictating && hasText) {
+      return `Your saved transcript stays in the box. Switching to ${target} will cancel your in-progress recording unless you tap ✓ to save first.`;
+    }
+    if (dictating) {
+      return `You're still recording. Switching to ${target} will discard this recording unless you tap ✓ to save first.`;
+    }
+    return `Switch to ${target}? Your transcript will come with you — nothing will be lost.`;
   };
 
   const cancelDictation = () => {
@@ -770,6 +792,29 @@ function CaptureView({ text, setText, initialMode = "paste", onBack, onProcess }
 
   return (
     <div className="view capwrap">
+      {modeSwitchAsk && (
+        <div className="capmodal-backdrop" role="presentation" onClick={() => setModeSwitchAsk(null)}>
+          <div
+            className="capmodal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="capmodal-title"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 id="capmodal-title">Switch to {modeLabel(modeSwitchAsk)}?</h3>
+            <p>{modeSwitchMessage()}</p>
+            <div className="capmodal-actions">
+              <button type="button" className="btn btn-soft" onClick={() => setModeSwitchAsk(null)}>
+                Continue with {modeLabel(mode)}
+              </button>
+              <button type="button" className="btn btn-primary" onClick={() => applyModeSwitch(modeSwitchAsk)}>
+                Switch modes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="lead">
         <div className="eyebrow" style={{ marginBottom: 12 }}>Step 2 · Have your meeting</div>
         <h1>Talk like humans.<br /><em>We&apos;ll handle the structure.</em></h1>
@@ -778,10 +823,10 @@ function CaptureView({ text, setText, initialMode = "paste", onBack, onProcess }
 
       <div className="panel capcard">
         <div className="captoggle">
-          <button type="button" className={"seg " + (mode === "paste" ? "on" : "")} onClick={() => pickMode("paste")}>
+          <button type="button" className={"seg " + (mode === "paste" ? "on" : "")} onClick={() => requestModeSwitch("paste")} disabled={transcribing}>
             <Ico d={I.doc} size={15} /> Write or paste
           </button>
-          <button type="button" className={"seg " + (mode === "dictate" ? "on" : "")} onClick={() => pickMode("dictate")}>
+          <button type="button" className={"seg " + (mode === "dictate" ? "on" : "")} onClick={() => requestModeSwitch("dictate")} disabled={transcribing}>
             <Ico d={I.wave} size={15} /> Speech to text
           </button>
         </div>

@@ -387,6 +387,7 @@
   color: var(--ink-3); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
 }
 .captoggle .seg.on { background: var(--paper-2); color: var(--ink); border-color: var(--line); }
+.captoggle .seg:disabled { opacity: 0.45; cursor: not-allowed; }
 
 .capta {
   width: 100%; min-height: 230px; resize: vertical;
@@ -449,6 +450,32 @@
   font-family: var(--serif); font-size: 14px; line-height: 1.5; color: var(--ink-2);
 }
 .dictnotice-warn { background: var(--red-tint); border-color: var(--red-soft); color: var(--red); }
+
+.capmodal-backdrop {
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(42, 37, 29, .42);
+  display: grid; place-items: center; padding: 20px;
+}
+.capmodal {
+  width: min(420px, 100%); padding: 26px 24px 22px;
+  border-radius: var(--r-lg); border: 1px solid var(--line-2);
+  background: var(--paper-card); box-shadow: var(--shadow-lg);
+}
+.capmodal h3 {
+  margin: 0 0 10px; font-family: var(--display); font-size: 22px; font-weight: 600; color: var(--ink);
+}
+.capmodal p {
+  margin: 0 0 22px; font-family: var(--serif); font-size: 15px; line-height: 1.55; color: var(--ink-2);
+}
+.capmodal-actions { display: flex; flex-direction: column-reverse; gap: 10px; }
+@media (min-width: 480px) {
+  .capmodal-actions { flex-direction: row; justify-content: flex-end; }
+}
+.capmodal-actions .btn { min-width: 0; }
+.capmodal-actions .btn-soft { flex: 1; }
+@media (min-width: 480px) {
+  .capmodal-actions .btn-soft { flex: 0 1 auto; }
+}
 
 /* record mode */
 .recbox { padding: 38px 20px 30px; text-align: center; }
