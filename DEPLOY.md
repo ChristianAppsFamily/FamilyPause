@@ -116,6 +116,23 @@ Then:
 > The function requires a signed-in user (it verifies the Supabase JWT), so only your
 > logged-in users can spend tokens.
 
+## Speech-to-text (Whisper) — deploy `transcribe` + OpenAI key ~3 min
+
+Dictation records audio in the browser (works in **Brave**) and sends it to OpenAI Whisper
+on save. This requires the `transcribe` edge function **and** an OpenAI API key on the server.
+
+```bash
+cd ~/Desktop/familypause
+supabase functions deploy transcribe
+supabase secrets set OPENAI_API_KEY=sk-...   # from https://platform.openai.com/api-keys
+```
+
+Also add **`OPENAI_API_KEY`** to Vercel (Project ▸ Settings ▸ Environment Variables) as a
+fallback via `/api/transcribe`, then **Redeploy**.
+
+On Brave desktop, live words while speaking are not available (browser blocks speech APIs).
+You will see a recording timer and reactive waveform; text appears in the box after you tap **✓**.
+
 ## Known caveats for this test build
 - **AI key is public** in the bundle (see §2) — rotate before launch.
 - **Google sign-in** needs provider setup in Supabase — use email/password for now.

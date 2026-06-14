@@ -191,12 +191,17 @@
   font-family: var(--serif); font-size: 16px; line-height: 1.55; color: var(--ink);
 }
 .dictlive:empty::before { content: "Listening… start speaking"; color: var(--ink-3); }
+.dictlive-hint { color: var(--ink-3); font-style: italic; }
+.dictstatus {
+  margin: 0 0 4px; text-align: center;
+  font-family: var(--mono); font-size: 10.5px; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--ink-3);
+}
 .dictwave { display: flex; gap: 4px; justify-content: center; align-items: flex-end; height: 28px; margin: 14px 0 4px; }
 .dictwave i {
-  display: block; width: 4px; border-radius: 99px; background: var(--terra);
-  animation: dictwave 0.9s ease-in-out infinite alternate;
+  display: block; width: 4px; min-height: 6px; border-radius: 99px; background: var(--terra);
+  transition: height .08s ease;
 }
-@keyframes dictwave { from { height: 6px; opacity: .45; } to { height: 22px; opacity: 1; } }
 .dictactions { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 8px; }
 .dictbtn {
   width: 52px; height: 52px; border-radius: 50%; border: 1px solid var(--line-2);

@@ -28,28 +28,75 @@ async function blobToBase64(blob) {
   return btoa(binary);
 }
 
+async function parseInvokeError(error) {
+  let detail = error?.message || "Transcription failed";
+  try {
+    const ctx = error?.context;
+    if (ctx?.json) {
+      const body = await ctx.json();
+      if (body?.error) detail = body.error;
+    } else if (ctx?.body && typeof ctx.body === "string") {
+      const body = JSON.parse(ctx.body);
+      if (body?.error) detail = body.error;
+    }
+  } catch {
+    /* ignore */
+  }
+  return detail;
+}
+
+async function invokeVercelTranscribe(body) {
+  const { data: { session } } = await supabase.auth.getSession();
+  const token = session?.access_token;
+  if (!token) throw new Error("Sign in required for speech-to-text");
+
+  const res = await fetch("/api/transcribe", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(body),
+  });
+
+  let payload = null;
+  try {
+    payload = await res.json();
+  } catch {
+    payload = null;
+  }
+
+  if (!res.ok) {
+    throw new Error(payload?.error || `Transcription failed (${res.status})`);
+  }
+  if (payload?.error) throw new Error(payload.error);
+  return (payload?.text || "").trim();
+}
+
 /**
- * Send recorded audio to the transcribe edge function (Whisper).
+ * Send recorded audio to Whisper via Supabase edge function, with Vercel API fallback.
  * Works in Brave — unlike webkitSpeechRecognition.
  */
 export async function transcribeAudioBlob(blob, mimeType) {
-  const audio = await blobToBase64(blob);
-  const { data, error } = await supabase.functions.invoke("transcribe", {
-    body: { audio, mimeType: mimeType || blob.type || "audio/webm" },
-  });
+  const body = {
+    audio: await blobToBase64(blob),
+    mimeType: mimeType || blob.type || "audio/webm",
+  };
 
-  if (error) {
-    let detail = error.message || "Transcription failed";
-    try {
-      const ctx = error?.context;
-      if (ctx?.json) {
-        const body = await ctx.json();
-        if (body?.error) detail = body.error;
-      }
-    } catch (_) { /* ignore */ }
-    throw new Error(detail);
+  const { data, error } = await supabase.functions.invoke("transcribe", { body });
+
+  if (!error) {
+    if (data?.error) throw new Error(data.error);
+    return (data?.text || "").trim();
   }
 
-  if (data?.error) throw new Error(data.error);
-  return (data?.text || "").trim();
+  const edgeDetail = await parseInvokeError(error);
+  const edgeMissing = /edge function|function not found|404|failed to send a request/i.test(edgeDetail);
+
+  try {
+    return await invokeVercelTranscribe(body);
+  } catch (vercelErr) {
+    if (edgeMissing) throw vercelErr;
+    throw new Error(edgeDetail || vercelErr.message);
+  }
 }

@@ -22,6 +22,7 @@ import Paywall from "./components/Paywall.jsx";
 import { paywallReason } from "./lib/subscription";
 import { parseAppLocation, syncPath, SYNC_VIEWS } from "./lib/routes";
 import { canRecordAudio, pickRecordingMimeType, transcribeAudioBlob } from "./lib/transcribe";
+import { speechPreviewSupported, startSpeechPreview } from "./lib/speechPreview";
 
 // ── DEFAULT CONTEXT (fallback when workspace has none) ───────────────────────
 const DEFAULT_CONTEXT = {
@@ -380,11 +381,36 @@ function CaptureView({ text, setText, onBack, onProcess }) {
   const [transcribing, setTranscribing] = useState(false);
   const [dictStatus, setDictStatus] = useState("");
   const [dictNotice, setDictNotice] = useState("");
+  const [livePreview, setLivePreview] = useState("");
+  const [recordSecs, setRecordSecs] = useState(0);
+  const [waveLevels, setWaveLevels] = useState(() => Array.from({ length: 9 }, () => 0.35));
   const streamRef = useRef(null);
   const recorderRef = useRef(null);
   const chunksRef = useRef([]);
   const mimeRef = useRef("");
   const baseRef = useRef("");
+  const previewRef = useRef(null);
+  const audioCtxRef = useRef(null);
+  const analyserRef = useRef(null);
+  const meterRafRef = useRef(null);
+  const timerRef = useRef(null);
+
+  const stopMeter = () => {
+    if (meterRafRef.current) cancelAnimationFrame(meterRafRef.current);
+    meterRafRef.current = null;
+    if (timerRef.current) clearInterval(timerRef.current);
+    timerRef.current = null;
+    if (audioCtxRef.current) {
+      audioCtxRef.current.close().catch(() => {});
+      audioCtxRef.current = null;
+    }
+    analyserRef.current = null;
+  };
+
+  const stopPreview = () => {
+    previewRef.current?.stop();
+    previewRef.current = null;
+  };
 
   const releaseStream = () => {
     streamRef.current?.getTracks().forEach((t) => t.stop());
@@ -424,6 +450,10 @@ function CaptureView({ text, setText, onBack, onProcess }) {
 
   const cancelDictation = () => {
     if (transcribing) return;
+    stopPreview();
+    stopMeter();
+    setLivePreview("");
+    setRecordSecs(0);
     const rec = recorderRef.current;
     if (rec && rec.state !== "inactive") {
       rec.onstop = () => {
@@ -444,8 +474,11 @@ function CaptureView({ text, setText, onBack, onProcess }) {
 
   const confirmDictation = async () => {
     if (transcribing) return text;
+    stopPreview();
+    stopMeter();
     setTranscribing(true);
     setDictStatus("Transcribing…");
+    setLivePreview("");
     try {
       const blob = await stopRecorder();
       setDictating(false);
@@ -465,16 +498,23 @@ function CaptureView({ text, setText, onBack, onProcess }) {
       setDictNotice("");
       return merged;
     } catch (err) {
-      setDictNotice(err.message || "Transcription failed. Try again or use Write or paste.");
+      const msg = err.message || "Transcription failed. Try again or use Write or paste.";
+      const hint = /OPENAI_API_KEY/i.test(msg)
+        ? " Add OPENAI_API_KEY in Vercel (or run supabase secrets set OPENAI_API_KEY=sk-...)."
+        : "";
+      setDictNotice(msg + hint);
       return baseRef.current;
     } finally {
       setTranscribing(false);
       setDictStatus("");
+      setRecordSecs(0);
     }
   };
 
   const startDictation = async () => {
     setDictNotice("");
+    setLivePreview("");
+    setRecordSecs(0);
     if (!canRecordAudio()) {
       setDictNotice("Recording isn't supported in this browser. Use Write or paste instead.");
       return;
@@ -490,19 +530,53 @@ function CaptureView({ text, setText, onBack, onProcess }) {
       chunksRef.current = [];
       baseRef.current = text.trim();
 
+      const audioCtx = new AudioContext();
+      const analyser = audioCtx.createAnalyser();
+      analyser.fftSize = 256;
+      audioCtx.createMediaStreamSource(stream).connect(analyser);
+      audioCtxRef.current = audioCtx;
+      analyserRef.current = analyser;
+
+      const tickMeter = () => {
+        const a = analyserRef.current;
+        if (!a) return;
+        const buf = new Uint8Array(a.frequencyBinCount);
+        a.getByteFrequencyData(buf);
+        setWaveLevels(Array.from({ length: 9 }, (_, i) => {
+          const idx = Math.min(buf.length - 1, Math.floor((i / 9) * buf.length));
+          return 0.18 + (buf[idx] / 255) * 0.82;
+        }));
+        meterRafRef.current = requestAnimationFrame(tickMeter);
+      };
+      meterRafRef.current = requestAnimationFrame(tickMeter);
+      timerRef.current = setInterval(() => setRecordSecs((s) => s + 1), 1000);
+
+      if (speechPreviewSupported()) {
+        previewRef.current = startSpeechPreview({
+          onInterim: (spoken) => setLivePreview(spoken),
+          onError: () => { /* optional preview — Whisper on save */ },
+        });
+      }
+
       const rec = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined);
       rec.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data); };
       recorderRef.current = rec;
       rec.start(250);
       setDictating(true);
-      setDictStatus("Listening… speak naturally");
+      setDictStatus(speechPreviewSupported()
+        ? "Listening… words appear below as you speak"
+        : "Recording… tap ✓ when done — words appear after save");
     } catch {
+      stopPreview();
+      stopMeter();
       releaseStream();
       setDictNotice("Microphone access denied. Allow the mic in your browser settings and try again.");
     }
   };
 
   useEffect(() => () => {
+    stopPreview();
+    stopMeter();
     const rec = recorderRef.current;
     if (rec && rec.state !== "inactive") {
       try { rec.stop(); } catch { /* ignore */ }
@@ -560,13 +634,22 @@ function CaptureView({ text, setText, onBack, onProcess }) {
             {dictBusy ? (
               <div className="dictpanel">
                 <div className="dictlive" aria-live="polite">
-                  {dictStatus || "Listening…"}
+                  {transcribing
+                    ? dictStatus
+                    : livePreview || (
+                      <span className="dictlive-hint">
+                        {speechPreviewSupported()
+                          ? "Start speaking…"
+                          : `Recording ${Math.floor(recordSecs / 60)}:${String(recordSecs % 60).padStart(2, "0")} — tap ✓ when done`}
+                      </span>
+                    )}
                 </div>
-                <div className="dictwave">
-                  {Array.from({ length: 9 }).map((_, i) => (
-                    <i key={i} style={{ animationDelay: `${(i % 5) * 0.1}s` }} />
+                <div className="dictwave" aria-hidden="true">
+                  {waveLevels.map((level, i) => (
+                    <i key={i} style={{ height: `${Math.round(level * 22)}px`, animation: "none" }} />
                   ))}
                 </div>
+                <p className="dictstatus">{dictStatus}</p>
                 <div className="dictactions">
                   <button type="button" className="dictbtn dictbtn-cancel" onClick={cancelDictation} disabled={transcribing} aria-label="Cancel dictation">
                     <Ico d={I.x} size={20} />
