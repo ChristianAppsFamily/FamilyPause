@@ -629,7 +629,7 @@ function CaptureView({ text, setText, initialMode = "paste", onBack, onProcess }
 
   const requestModeSwitch = (next) => {
     if (next === mode || transcribing) return;
-    if (dictating || text.trim().length > 0) {
+    if (dictating) {
       setModeSwitchAsk(next);
       return;
     }
@@ -640,13 +640,10 @@ function CaptureView({ text, setText, initialMode = "paste", onBack, onProcess }
     if (!modeSwitchAsk) return "";
     const target = modeLabel(modeSwitchAsk);
     const hasText = text.trim().length > 0;
-    if (dictating && hasText) {
+    if (hasText) {
       return `Your saved transcript stays in the box. Switching to ${target} will cancel your in-progress recording unless you tap ✓ to save first.`;
     }
-    if (dictating) {
-      return `You're still recording. Switching to ${target} will discard this recording unless you tap ✓ to save first.`;
-    }
-    return `Switch to ${target}? Your transcript will come with you — nothing will be lost.`;
+    return `You're still recording. Switching to ${target} will discard this recording unless you tap ✓ to save first.`;
   };
 
   const cancelDictation = () => {
@@ -804,11 +801,11 @@ function CaptureView({ text, setText, initialMode = "paste", onBack, onProcess }
             <h3 id="capmodal-title">Switch to {modeLabel(modeSwitchAsk)}?</h3>
             <p>{modeSwitchMessage()}</p>
             <div className="capmodal-actions">
-              <button type="button" className="btn btn-soft" onClick={() => setModeSwitchAsk(null)}>
-                Continue with {modeLabel(mode)}
+              <button type="button" className="btn btn-soft capmodal-btn" onClick={() => setModeSwitchAsk(null)}>
+                Keep recording
               </button>
-              <button type="button" className="btn btn-primary" onClick={() => applyModeSwitch(modeSwitchAsk)}>
-                Switch modes
+              <button type="button" className="btn btn-primary capmodal-btn" onClick={() => applyModeSwitch(modeSwitchAsk)}>
+                Switch anyway
               </button>
             </div>
           </div>

@@ -467,14 +467,14 @@
 .capmodal p {
   margin: 0 0 22px; font-family: var(--serif); font-size: 15px; line-height: 1.55; color: var(--ink-2);
 }
-.capmodal-actions { display: flex; flex-direction: column-reverse; gap: 10px; }
-@media (min-width: 480px) {
-  .capmodal-actions { flex-direction: row; justify-content: flex-end; }
+.capmodal-actions {
+  display: flex; flex-direction: column; gap: 10px;
 }
-.capmodal-actions .btn { min-width: 0; }
-.capmodal-actions .btn-soft { flex: 1; }
-@media (min-width: 480px) {
-  .capmodal-actions .btn-soft { flex: 0 1 auto; }
+.capmodal-actions .capmodal-btn {
+  width: 100%; justify-content: center;
+  font-family: var(--serif); font-size: 15px; font-weight: 500;
+  text-transform: none; letter-spacing: 0; line-height: 1.35;
+  padding: 13px 18px; white-space: normal;
 }
 
 /* record mode */
