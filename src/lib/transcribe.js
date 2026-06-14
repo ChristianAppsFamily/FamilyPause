@@ -85,6 +85,20 @@ function modelProgressLabel(progress) {
   return pct != null ? `Loading speech model… ${pct}%` : "Loading speech model…";
 }
 
+async function withTimeout(promise, ms) {
+  let timer;
+  try {
+    return await Promise.race([
+      promise,
+      new Promise((_, reject) => {
+        timer = setTimeout(() => reject(new Error("timeout")), ms);
+      }),
+    ]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 /**
  * Whisper via Supabase → Vercel → on-device fallback (Brave-friendly).
  */
@@ -96,24 +110,32 @@ export async function transcribeAudioBlob(blob, mimeType, { onStatus, onProgress
 
   let serverErr = "";
 
-  const { data, error } = await supabase.functions.invoke("transcribe", { body });
-  const edgeText = !error && !data?.error ? pickText(data?.text) : null;
-  if (edgeText) return edgeText;
-  serverErr = error ? await parseInvokeError(error) : (data?.error || "");
+  try {
+    const { data, error } = await withTimeout(
+      supabase.functions.invoke("transcribe", { body }),
+      12000
+    );
+    const edgeText = !error && !data?.error ? pickText(data?.text) : null;
+    if (edgeText) return edgeText;
+    serverErr = error ? await parseInvokeError(error) : (data?.error || "");
+  } catch {
+    serverErr = serverErr || "Server transcription unavailable";
+  }
 
   try {
-    const vercelText = await invokeVercelTranscribe(body);
+    const vercelText = await withTimeout(invokeVercelTranscribe(body), 12000);
     if (vercelText) return vercelText;
   } catch (vercelErr) {
-    serverErr = serverErr || vercelErr.message;
+    if (vercelErr.message !== "timeout") serverErr = serverErr || vercelErr.message;
   }
 
   const preview = (previewFallback || "").trim();
   if (preview) return preview;
 
-  onStatus?.("Transcribing on your device…");
+  onStatus?.("Loading speech model…");
   try {
     return await transcribeLocally(blob, {
+      onStatus,
       onProgress: (p) => {
         const label = modelProgressLabel(p);
         if (label) onStatus?.(label);
