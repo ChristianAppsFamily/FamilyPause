@@ -1,10 +1,11 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // Supabase Edge Function: transcribe
-// MediaRecorder audio → OpenAI Whisper (same pattern as ChatGPT dictation).
+// MediaRecorder audio → Groq Whisper (free tier, OpenAI-compatible API).
 //
 // Deploy:
 //   supabase functions deploy transcribe
-//   supabase secrets set OPENAI_API_KEY=sk-...
+//   supabase secrets set GROQ_API_KEY=gsk_...
+//   # Free key: https://console.groq.com/keys
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -14,6 +15,9 @@ const cors = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
+
+const GROQ_WHISPER_URL = "https://api.groq.com/openai/v1/audio/transcriptions";
+const GROQ_WHISPER_MODEL = "whisper-large-v3-turbo";
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { ...cors, "Content-Type": "application/json" } });
@@ -43,8 +47,10 @@ Deno.serve(async (req) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return json({ error: "Unauthorized" }, 401);
 
-    const apiKey = Deno.env.get("OPENAI_API_KEY");
-    if (!apiKey) return json({ error: "OPENAI_API_KEY not configured on server" }, 500);
+    const apiKey = Deno.env.get("GROQ_API_KEY");
+    if (!apiKey) {
+      return json({ error: "GROQ_API_KEY not configured on server" }, 500);
+    }
 
     const { audio, mimeType = "audio/webm" } = await req.json();
     if (!audio || typeof audio !== "string") return json({ error: "Missing audio" }, 400);
@@ -55,11 +61,12 @@ Deno.serve(async (req) => {
 
     const ext = extForMime(mimeType);
     const form = new FormData();
-    form.append("model", "whisper-1");
+    form.append("model", GROQ_WHISPER_MODEL);
     form.append("language", "en");
+    form.append("response_format", "json");
     form.append("file", new Blob([bytes], { type: mimeType }), `dictation.${ext}`);
 
-    const res = await fetch("https://api.openai.com/v1/audio/transcriptions", {
+    const res = await fetch(GROQ_WHISPER_URL, {
       method: "POST",
       headers: { Authorization: `Bearer ${apiKey}` },
       body: form,

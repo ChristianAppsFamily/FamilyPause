@@ -116,18 +116,19 @@ Then:
 > The function requires a signed-in user (it verifies the Supabase JWT), so only your
 > logged-in users can spend tokens.
 
-## Speech-to-text (Whisper) — deploy `transcribe` + OpenAI key ~3 min
+## Speech-to-text (Whisper) — deploy `transcribe` + free Groq key ~3 min
 
-Dictation records audio in the browser (works in **Brave**) and sends it to OpenAI Whisper
-on save. This requires the `transcribe` edge function **and** an OpenAI API key on the server.
+Dictation records audio in the browser (works in **Brave**) and sends it to **Groq Whisper**
+on save (free tier — no credit card). Without a server key, the app falls back to on-device
+Whisper (~40 MB first-time download, slower).
 
 ```bash
 cd ~/Desktop/familypause
 supabase functions deploy transcribe
-supabase secrets set OPENAI_API_KEY=sk-...   # from https://platform.openai.com/api-keys
+supabase secrets set GROQ_API_KEY=gsk_...   # free: https://console.groq.com/keys
 ```
 
-Also add **`OPENAI_API_KEY`** to Vercel (Project ▸ Settings ▸ Environment Variables) as a
+Also add **`GROQ_API_KEY`** to Vercel (Project ▸ Settings ▸ Environment Variables) as a
 fallback via `/api/transcribe`, then **Redeploy**.
 
 On Brave desktop, live words while speaking are not available (browser blocks speech APIs).

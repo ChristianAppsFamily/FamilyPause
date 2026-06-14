@@ -88,7 +88,7 @@ function extractText(out) {
   return "";
 }
 
-/** On-device Whisper when server OPENAI_API_KEY is not configured. */
+/** On-device Whisper when server GROQ_API_KEY is not configured. */
 export async function transcribeLocally(blob, { onProgress, onStatus } = {}) {
   const transcriber = await loadTransformers(onProgress);
   onStatus?.("Turning speech into text…");

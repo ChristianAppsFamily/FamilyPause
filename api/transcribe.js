@@ -6,6 +6,9 @@ const cors = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
+const GROQ_WHISPER_URL = "https://api.groq.com/openai/v1/audio/transcriptions";
+const GROQ_WHISPER_MODEL = "whisper-large-v3-turbo";
+
 const extForMime = (mime) => {
   if (mime.includes("webm")) return "webm";
   if (mime.includes("ogg")) return "ogg";
@@ -35,10 +38,10 @@ export default async function handler(req, res) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return res.status(401).json({ error: "Unauthorized" });
 
-  const apiKey = process.env.OPENAI_API_KEY;
+  const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey) {
     return res.status(500).json({
-      error: "OPENAI_API_KEY not configured. Add it in Vercel env vars or run: supabase secrets set OPENAI_API_KEY=sk-...",
+      error: "GROQ_API_KEY not configured. Add a free key from https://console.groq.com/keys in Vercel env vars or run: supabase secrets set GROQ_API_KEY=gsk_...",
     });
   }
 
@@ -51,11 +54,12 @@ export default async function handler(req, res) {
 
   const ext = extForMime(mimeType);
   const form = new FormData();
-  form.append("model", "whisper-1");
+  form.append("model", GROQ_WHISPER_MODEL);
   form.append("language", "en");
+  form.append("response_format", "json");
   form.append("file", new Blob([bytes], { type: mimeType }), `dictation.${ext}`);
 
-  const whisper = await fetch("https://api.openai.com/v1/audio/transcriptions", {
+  const whisper = await fetch(GROQ_WHISPER_URL, {
     method: "POST",
     headers: { Authorization: `Bearer ${apiKey}` },
     body: form,
