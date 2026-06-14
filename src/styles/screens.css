@@ -208,6 +208,14 @@
 .dictbtn-cancel:hover { background: var(--red-soft); }
 .dictbtn-save { color: var(--olive-d); border-color: var(--olive-soft); background: var(--olive-tint); }
 .dictbtn-save:hover { background: var(--olive-soft); }
+.dictbtn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+
+.dictnotice {
+  margin: 0 0 12px; padding: 12px 14px; border-radius: var(--r-sm);
+  background: var(--gold-soft); border: 1px solid var(--line-2);
+  font-family: var(--serif); font-size: 14px; line-height: 1.5; color: var(--ink-2);
+}
+.dictnotice-warn { background: var(--red-tint); border-color: var(--red-soft); color: var(--red); }
 
 /* record mode */
 .recbox { padding: 38px 20px 30px; text-align: center; }

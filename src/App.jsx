@@ -4,7 +4,7 @@
 // screens.css) into a single React component, wired to real data:
 //   • Anthropic distillation (claude-haiku-4-5)
 //   • Supabase session save (on "Build my week") + realtime sync
-//   • Live speech capture (dictate mode)
+//   • Live speech capture (MediaRecorder + Whisper, ChatGPT-style)
 //   • workspace.family_context for people / categories / person routing
 //
 // Flow (StepRail): Agenda → Capture → Distill(processing) → Review → Plan
@@ -21,6 +21,7 @@ import CardSystem from "./components/CardSystem.jsx";
 import Paywall from "./components/Paywall.jsx";
 import { paywallReason } from "./lib/subscription";
 import { parseAppLocation, syncPath, SYNC_VIEWS } from "./lib/routes";
+import { canRecordAudio, pickRecordingMimeType, transcribeAudioBlob } from "./lib/transcribe";
 
 // ── DEFAULT CONTEXT (fallback when workspace has none) ───────────────────────
 const DEFAULT_CONTEXT = {
@@ -313,136 +314,142 @@ function SyncView({ family, categories, workspaceId, onDistill }) {
 function CaptureView({ text, setText, onBack, onProcess }) {
   const [mode, setMode] = useState("paste");
   const [dictating, setDictating] = useState(false);
-  const [liveText, setLiveText] = useState("");
-  const recRef = useRef(null);
+  const [transcribing, setTranscribing] = useState(false);
+  const [dictStatus, setDictStatus] = useState("");
+  const [dictNotice, setDictNotice] = useState("");
   const streamRef = useRef(null);
-  const activeRef = useRef(false);
+  const recorderRef = useRef(null);
+  const chunksRef = useRef([]);
+  const mimeRef = useRef("");
   const baseRef = useRef("");
-  const spokenRef = useRef("");
 
-  const releaseMic = () => {
+  const releaseStream = () => {
     streamRef.current?.getTracks().forEach((t) => t.stop());
     streamRef.current = null;
   };
 
-  const stopRec = () => {
-    activeRef.current = false;
-    recRef.current?.stop();
-    recRef.current = null;
-    releaseMic();
-    setDictating(false);
-  };
+  const stopRecorder = () => new Promise((resolve) => {
+    const rec = recorderRef.current;
+    if (!rec || rec.state === "inactive") {
+      releaseStream();
+      recorderRef.current = null;
+      resolve(null);
+      return;
+    }
+    rec.onstop = () => {
+      const blob = chunksRef.current.length
+        ? new Blob(chunksRef.current, { type: mimeRef.current || "audio/webm" })
+        : null;
+      chunksRef.current = [];
+      releaseStream();
+      recorderRef.current = null;
+      resolve(blob);
+    };
+    try { rec.stop(); } catch { resolve(null); }
+  });
 
   const pickMode = (next) => {
     if (dictating) cancelDictation();
     if (next !== mode) {
       setText("");
-      setLiveText("");
-      spokenRef.current = "";
+      setDictNotice("");
+      setDictStatus("");
       baseRef.current = "";
     }
     setMode(next);
   };
 
   const cancelDictation = () => {
-    stopRec();
-    setLiveText("");
-    spokenRef.current = "";
+    if (transcribing) return;
+    const rec = recorderRef.current;
+    if (rec && rec.state !== "inactive") {
+      rec.onstop = () => {
+        chunksRef.current = [];
+        releaseStream();
+        recorderRef.current = null;
+      };
+      try { rec.stop(); } catch { /* ignore */ }
+    } else {
+      releaseStream();
+      recorderRef.current = null;
+      chunksRef.current = [];
+    }
+    setDictating(false);
+    setDictStatus("");
     setText(baseRef.current);
   };
 
-  const mergeDictation = () => {
-    const addition = spokenRef.current.trim();
-    return baseRef.current && addition
-      ? `${baseRef.current.trim()} ${addition}`.trim()
-      : (addition || baseRef.current.trim());
-  };
-
-  const confirmDictation = () => {
-    const merged = mergeDictation();
-    stopRec();
-    setLiveText("");
-    spokenRef.current = "";
-    setText(merged);
-    return merged;
+  const confirmDictation = async () => {
+    if (transcribing) return text;
+    setTranscribing(true);
+    setDictStatus("Transcribing…");
+    try {
+      const blob = await stopRecorder();
+      setDictating(false);
+      if (!blob || blob.size < 200) {
+        setDictNotice("Recording too short. Speak a little longer, then tap the check mark.");
+        return baseRef.current;
+      }
+      const spoken = await transcribeAudioBlob(blob, mimeRef.current);
+      if (!spoken) {
+        setDictNotice("Couldn't pick up any speech. Try again.");
+        return baseRef.current;
+      }
+      const merged = baseRef.current
+        ? `${baseRef.current.trim()} ${spoken}`.trim()
+        : spoken;
+      setText(merged);
+      setDictNotice("");
+      return merged;
+    } catch (err) {
+      setDictNotice(err.message || "Transcription failed. Try again or use Write or paste.");
+      return baseRef.current;
+    } finally {
+      setTranscribing(false);
+      setDictStatus("");
+    }
   };
 
   const startDictation = async () => {
-    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SR) {
-      alert("Speech recognition requires Chrome or Safari on desktop/Android. iOS Safari has limited support.");
-      return;
-    }
-    if (!navigator.mediaDevices?.getUserMedia) {
-      alert("Microphone access is not available in this browser.");
+    setDictNotice("");
+    if (!canRecordAudio()) {
+      setDictNotice("Recording isn't supported in this browser. Use Write or paste instead.");
       return;
     }
 
     try {
-      streamRef.current = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mime = pickRecordingMimeType();
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: { echoCancellation: true, noiseSuppression: true },
+      });
+      streamRef.current = stream;
+      mimeRef.current = mime;
+      chunksRef.current = [];
+      baseRef.current = text.trim();
+
+      const rec = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined);
+      rec.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data); };
+      recorderRef.current = rec;
+      rec.start(250);
+      setDictating(true);
+      setDictStatus("Listening… speak naturally");
     } catch {
-      alert("Microphone access denied. Please allow microphone access in your browser settings and try again.");
-      return;
-    }
-
-    baseRef.current = text.trim();
-    spokenRef.current = "";
-    setLiveText("");
-    activeRef.current = true;
-    setDictating(true);
-
-    const rec = new SR();
-    rec.continuous = true;
-    rec.interimResults = true;
-    rec.lang = "en-US";
-
-    rec.onresult = (e) => {
-      let interim = "";
-      for (let i = e.resultIndex; i < e.results.length; i++) {
-        const chunk = e.results[i][0].transcript;
-        if (e.results[i].isFinal) spokenRef.current += chunk + " ";
-        else interim += chunk;
-      }
-      setLiveText((spokenRef.current + interim).trim());
-    };
-
-    rec.onerror = (e) => {
-      if (e.error === "not-allowed" || e.error === "permission-denied") {
-        alert("Microphone access denied. Please allow microphone access in your browser settings and try again.");
-        cancelDictation();
-      } else if (e.error === "aborted") {
-        /* user cancelled — ignore */
-      } else if (e.error !== "network" && e.error !== "no-speech") {
-        console.warn("SpeechRecognition error:", e.error);
-      }
-    };
-
-    rec.onend = () => {
-      if (recRef.current === rec && activeRef.current) {
-        try { rec.start(); } catch (_) { /* already running */ }
-      }
-    };
-
-    recRef.current = rec;
-    try {
-      rec.start();
-    } catch (err) {
-      releaseMic();
-      activeRef.current = false;
-      setDictating(false);
-      alert("Could not start dictation: " + err.message);
+      releaseStream();
+      setDictNotice("Microphone access denied. Allow the mic in your browser settings and try again.");
     }
   };
 
   useEffect(() => () => {
-    activeRef.current = false;
-    recRef.current?.stop();
-    releaseMic();
+    const rec = recorderRef.current;
+    if (rec && rec.state !== "inactive") {
+      try { rec.stop(); } catch { /* ignore */ }
+    }
+    releaseStream();
   }, []);
 
   const ready = text.trim().length > 30;
   const wordCount = text.trim() ? `${text.trim().split(/\s+/).length} words` : null;
-  const livePreview = liveText.trim();
+  const dictBusy = dictating || transcribing;
 
   return (
     <div className="view capwrap">
@@ -476,18 +483,21 @@ function CaptureView({ text, setText, onBack, onProcess }) {
 
         {mode === "dictate" && (
           <div style={{ padding: "4px 10px 10px" }}>
+            {dictNotice && !dictBusy && (
+              <p className="dictnotice dictnotice-warn">{dictNotice}</p>
+            )}
             <textarea
               className="capta"
               placeholder="Your transcript appears here after you save a dictation. You can edit anytime."
               value={text}
-              readOnly={dictating}
-              onChange={(e) => { if (!dictating) setText(e.target.value); }}
+              readOnly={dictBusy}
+              onChange={(e) => { if (!dictBusy) setText(e.target.value); }}
             />
 
-            {dictating ? (
+            {dictBusy ? (
               <div className="dictpanel">
                 <div className="dictlive" aria-live="polite">
-                  {livePreview || "Listening… start speaking"}
+                  {dictStatus || "Listening…"}
                 </div>
                 <div className="dictwave">
                   {Array.from({ length: 9 }).map((_, i) => (
@@ -495,11 +505,11 @@ function CaptureView({ text, setText, onBack, onProcess }) {
                   ))}
                 </div>
                 <div className="dictactions">
-                  <button type="button" className="dictbtn dictbtn-cancel" onClick={cancelDictation} aria-label="Cancel dictation">
+                  <button type="button" className="dictbtn dictbtn-cancel" onClick={cancelDictation} disabled={transcribing} aria-label="Cancel dictation">
                     <Ico d={I.x} size={20} />
                   </button>
-                  <span className="caphint">Cancel or save to the box</span>
-                  <button type="button" className="dictbtn dictbtn-save" onClick={confirmDictation} aria-label="Save dictation">
+                  <span className="caphint">{transcribing ? "Turning speech into text…" : "Cancel or save to the box"}</span>
+                  <button type="button" className="dictbtn dictbtn-save" onClick={confirmDictation} disabled={transcribing} aria-label="Save dictation">
                     <Ico d={I.check} size={20} />
                   </button>
                 </div>
@@ -517,10 +527,10 @@ function CaptureView({ text, setText, onBack, onProcess }) {
       </div>
 
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 22 }}>
-        <button type="button" className="linkish" onClick={() => { if (dictating) cancelDictation(); onBack(); }}>← Back to agenda</button>
-        <button type="button" className="btn btn-primary btn-lg" disabled={dictating ? !livePreview : !ready} onClick={() => {
-          const payload = dictating ? confirmDictation() : text;
-          if (payload.trim().length > 30) onProcess(payload, mode);
+        <button type="button" className="linkish" onClick={() => { if (dictating && !transcribing) cancelDictation(); onBack(); }}>← Back to agenda</button>
+        <button type="button" className="btn btn-primary btn-lg" disabled={dictBusy || !ready} onClick={async () => {
+          const payload = dictating ? await confirmDictation() : text;
+          if ((payload || "").trim().length > 30) onProcess(payload, mode);
         }}>
           <Ico d={I.bolt} size={16} fill /> Distill it
         </button>
