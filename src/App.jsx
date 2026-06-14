@@ -312,81 +312,137 @@ function SyncView({ family, categories, workspaceId, onDistill }) {
 // ── CAPTURE (View 2) ──────────────────────────────────────────────────────────
 function CaptureView({ text, setText, onBack, onProcess }) {
   const [mode, setMode] = useState("paste");
-  const [recording, setRecording] = useState(false);
+  const [dictating, setDictating] = useState(false);
+  const [liveText, setLiveText] = useState("");
   const recRef = useRef(null);
-  const accRef = useRef("");
-  const recordingRef = useRef(false);
+  const streamRef = useRef(null);
+  const activeRef = useRef(false);
+  const baseRef = useRef("");
+  const spokenRef = useRef("");
+
+  const releaseMic = () => {
+    streamRef.current?.getTracks().forEach((t) => t.stop());
+    streamRef.current = null;
+  };
 
   const stopRec = () => {
-    recordingRef.current = false;
+    activeRef.current = false;
     recRef.current?.stop();
     recRef.current = null;
-    setRecording(false);
+    releaseMic();
+    setDictating(false);
   };
 
   const pickMode = (next) => {
-    if (recording) stopRec();
+    if (dictating) cancelDictation();
     if (next !== mode) {
       setText("");
-      accRef.current = "";
+      setLiveText("");
+      spokenRef.current = "";
+      baseRef.current = "";
     }
     setMode(next);
   };
 
-  const startRec = () => {
+  const cancelDictation = () => {
+    stopRec();
+    setLiveText("");
+    spokenRef.current = "";
+    setText(baseRef.current);
+  };
+
+  const mergeDictation = () => {
+    const addition = spokenRef.current.trim();
+    return baseRef.current && addition
+      ? `${baseRef.current.trim()} ${addition}`.trim()
+      : (addition || baseRef.current.trim());
+  };
+
+  const confirmDictation = () => {
+    const merged = mergeDictation();
+    stopRec();
+    setLiveText("");
+    spokenRef.current = "";
+    setText(merged);
+    return merged;
+  };
+
+  const startDictation = async () => {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SR) {
       alert("Speech recognition requires Chrome or Safari on desktop/Android. iOS Safari has limited support.");
       return;
     }
+    if (!navigator.mediaDevices?.getUserMedia) {
+      alert("Microphone access is not available in this browser.");
+      return;
+    }
 
-    const launch = () => {
-      const rec = new SR();
-      rec.continuous = true;
-      rec.interimResults = true;
-      rec.lang = "en-US";
-      rec.onresult = (e) => {
-        let newFinal = "";
-        for (let i = e.resultIndex; i < e.results.length; i++) {
-          if (e.results[i].isFinal) {
-            newFinal += e.results[i][0].transcript + " ";
-          }
-        }
-        if (newFinal) accRef.current += newFinal;
+    try {
+      streamRef.current = await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch {
+      alert("Microphone access denied. Please allow microphone access in your browser settings and try again.");
+      return;
+    }
 
-        let interim = "";
-        for (let i = 0; i < e.results.length; i++) {
-          if (!e.results[i].isFinal) interim += e.results[i][0].transcript;
-        }
-        setText((accRef.current + interim).trim());
-      };
-      rec.onerror = (e) => {
-        if (e.error === "not-allowed" || e.error === "permission-denied") {
-          alert("Microphone access denied. Please allow microphone access in your browser settings and try again.");
-          setRecording(false);
-        } else if (e.error !== "network" && e.error !== "no-speech") {
-          console.warn("SpeechRecognition error:", e.error);
-        }
-      };
-      rec.onend = () => {
-        if (recRef.current === rec && recordingRef.current) {
-          try { rec.start(); } catch (_) { /* already started */ }
-        }
-      };
-      recRef.current = rec;
-      try { rec.start(); } catch (err) { alert("Could not start microphone: " + err.message); return; }
+    baseRef.current = text.trim();
+    spokenRef.current = "";
+    setLiveText("");
+    activeRef.current = true;
+    setDictating(true);
+
+    const rec = new SR();
+    rec.continuous = true;
+    rec.interimResults = true;
+    rec.lang = "en-US";
+
+    rec.onresult = (e) => {
+      let interim = "";
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const chunk = e.results[i][0].transcript;
+        if (e.results[i].isFinal) spokenRef.current += chunk + " ";
+        else interim += chunk;
+      }
+      setLiveText((spokenRef.current + interim).trim());
     };
 
-    accRef.current = text.trim() ? text.trim() + " " : "";
-    recordingRef.current = true;
-    setRecording(true);
-    launch();
+    rec.onerror = (e) => {
+      if (e.error === "not-allowed" || e.error === "permission-denied") {
+        alert("Microphone access denied. Please allow microphone access in your browser settings and try again.");
+        cancelDictation();
+      } else if (e.error === "aborted") {
+        /* user cancelled — ignore */
+      } else if (e.error !== "network" && e.error !== "no-speech") {
+        console.warn("SpeechRecognition error:", e.error);
+      }
+    };
+
+    rec.onend = () => {
+      if (recRef.current === rec && activeRef.current) {
+        try { rec.start(); } catch (_) { /* already running */ }
+      }
+    };
+
+    recRef.current = rec;
+    try {
+      rec.start();
+    } catch (err) {
+      releaseMic();
+      activeRef.current = false;
+      setDictating(false);
+      alert("Could not start dictation: " + err.message);
+    }
   };
 
-  const toggleRec = () => (recording ? stopRec() : startRec());
+  useEffect(() => () => {
+    activeRef.current = false;
+    recRef.current?.stop();
+    releaseMic();
+  }, []);
 
   const ready = text.trim().length > 30;
   const wordCount = text.trim() ? `${text.trim().split(/\s+/).length} words` : null;
+  const livePreview = liveText.trim();
 
   return (
     <div className="view capwrap">
@@ -422,29 +478,50 @@ function CaptureView({ text, setText, onBack, onProcess }) {
           <div style={{ padding: "4px 10px 10px" }}>
             <textarea
               className="capta"
-              placeholder="Tap Start dictation and speak — your words appear here. You can edit anytime."
+              placeholder="Your transcript appears here after you save a dictation. You can edit anytime."
               value={text}
-              onChange={(e) => {
-                setText(e.target.value);
-                if (!recording) accRef.current = e.target.value ? e.target.value + " " : "";
-              }}
+              readOnly={dictating}
+              onChange={(e) => { if (!dictating) setText(e.target.value); }}
             />
-            <div className="caprow">
-              <span className="caphint">
-                {recording ? "Listening… speak naturally" : wordCount || "Tap the mic to start dictating"}
-              </span>
-              <button type="button" className={"dictmic" + (recording ? " live" : "")} onClick={toggleRec}>
-                <Ico d={recording ? I.x : I.mic} size={14} />
-                {recording ? "Stop dictation" : "Start dictation"}
-              </button>
-            </div>
+
+            {dictating ? (
+              <div className="dictpanel">
+                <div className="dictlive" aria-live="polite">
+                  {livePreview || "Listening… start speaking"}
+                </div>
+                <div className="dictwave">
+                  {Array.from({ length: 9 }).map((_, i) => (
+                    <i key={i} style={{ animationDelay: `${(i % 5) * 0.1}s` }} />
+                  ))}
+                </div>
+                <div className="dictactions">
+                  <button type="button" className="dictbtn dictbtn-cancel" onClick={cancelDictation} aria-label="Cancel dictation">
+                    <Ico d={I.x} size={20} />
+                  </button>
+                  <span className="caphint">Cancel or save to the box</span>
+                  <button type="button" className="dictbtn dictbtn-save" onClick={confirmDictation} aria-label="Save dictation">
+                    <Ico d={I.check} size={20} />
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="caprow">
+                <span className="caphint">{wordCount || "Tap the mic, speak, then save or cancel"}</span>
+                <button type="button" className="dictmic" onClick={startDictation}>
+                  <Ico d={I.mic} size={14} /> Start dictation
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>
 
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 22 }}>
-        <button type="button" className="linkish" onClick={onBack}>← Back to agenda</button>
-        <button type="button" className="btn btn-primary btn-lg" disabled={!ready} onClick={() => { stopRec(); onProcess(text, mode); }}>
+        <button type="button" className="linkish" onClick={() => { if (dictating) cancelDictation(); onBack(); }}>← Back to agenda</button>
+        <button type="button" className="btn btn-primary btn-lg" disabled={dictating ? !livePreview : !ready} onClick={() => {
+          const payload = dictating ? confirmDictation() : text;
+          if (payload.trim().length > 30) onProcess(payload, mode);
+        }}>
           <Ico d={I.bolt} size={16} fill /> Distill it
         </button>
       </div>

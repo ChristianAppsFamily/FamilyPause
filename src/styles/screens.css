@@ -184,6 +184,31 @@
 .dictmic:hover { background: var(--terra-tint); }
 .dictmic.live { background: var(--red-tint); border-color: var(--red-soft); color: var(--red); }
 
+.dictpanel { margin-top: 14px; padding: 16px 14px 12px; border: 1px solid var(--line); border-radius: var(--r); background: var(--paper-2); }
+.dictlive {
+  min-height: 72px; padding: 14px 16px; border-radius: var(--r-sm);
+  background: var(--paper-card); border: 1px solid var(--line-2);
+  font-family: var(--serif); font-size: 16px; line-height: 1.55; color: var(--ink);
+}
+.dictlive:empty::before { content: "Listening… start speaking"; color: var(--ink-3); }
+.dictwave { display: flex; gap: 4px; justify-content: center; align-items: flex-end; height: 28px; margin: 14px 0 4px; }
+.dictwave i {
+  display: block; width: 4px; border-radius: 99px; background: var(--terra);
+  animation: dictwave 0.9s ease-in-out infinite alternate;
+}
+@keyframes dictwave { from { height: 6px; opacity: .45; } to { height: 22px; opacity: 1; } }
+.dictactions { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 8px; }
+.dictbtn {
+  width: 52px; height: 52px; border-radius: 50%; border: 1px solid var(--line-2);
+  display: grid; place-items: center; cursor: pointer; flex-shrink: 0;
+  background: var(--paper-card); transition: transform .12s, background .12s;
+}
+.dictbtn:hover { transform: scale(1.04); }
+.dictbtn-cancel { color: var(--red); border-color: var(--red-soft); background: var(--red-tint); }
+.dictbtn-cancel:hover { background: var(--red-soft); }
+.dictbtn-save { color: var(--olive-d); border-color: var(--olive-soft); background: var(--olive-tint); }
+.dictbtn-save:hover { background: var(--olive-soft); }
+
 /* record mode */
 .recbox { padding: 38px 20px 30px; text-align: center; }
 .recbtn {
