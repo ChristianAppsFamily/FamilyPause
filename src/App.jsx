@@ -23,6 +23,7 @@ import { paywallReason } from "./lib/subscription";
 import { parseAppLocation, syncPath, SYNC_VIEWS } from "./lib/routes";
 import { canRecordAudio, pickRecordingMimeType, transcribeAudioBlob } from "./lib/transcribe";
 import { speechPreviewSupported, startSpeechPreview } from "./lib/speechPreview";
+import { clearCaptureDraft, loadCaptureDraft, saveCaptureDraft } from "./lib/captureDraft";
 
 // ── DEFAULT CONTEXT (fallback when workspace has none) ───────────────────────
 const DEFAULT_CONTEXT = {
@@ -544,13 +545,7 @@ function SyncView({ family, workspaceId, onDistill }) {
 }
 
 // ── CAPTURE (View 2) ──────────────────────────────────────────────────────────
-function CaptureView({ text, setText, initialMode = "paste", onBack, onProcess }) {
-  const [mode, setMode] = useState(initialMode);
-  const [modeSwitchAsk, setModeSwitchAsk] = useState(null);
-
-  useEffect(() => {
-    setMode(initialMode);
-  }, [initialMode]);
+function CaptureView({ text, setText, mode, setMode, onBack, onProcess }) {
   const [dictating, setDictating] = useState(false);
   const [transcribing, setTranscribing] = useState(false);
   const [dictStatus, setDictStatus] = useState("");
@@ -617,39 +612,13 @@ function CaptureView({ text, setText, initialMode = "paste", onBack, onProcess }
     try { rec.stop(); } catch { resolve(null); }
   });
 
-  const modeLabel = (m) => (m === "paste" ? "Write or paste" : "Speech to text");
-
-  const applyModeSwitch = (next) => {
+  const pickMode = (next) => {
+    if (next === mode || transcribing) return;
     if (dictating) cancelDictation();
     setDictNotice("");
     setDictStatus("");
     setMode(next);
-    setModeSwitchAsk(null);
   };
-
-  const requestModeSwitch = (next) => {
-    if (next === mode || transcribing) return;
-    if (dictating || text.trim().length > 0) {
-      setModeSwitchAsk(next);
-      return;
-    }
-    applyModeSwitch(next);
-  };
-
-  const modeSwitchMessage = () => {
-    if (!modeSwitchAsk) return "";
-    const target = modeLabel(modeSwitchAsk);
-    const hasText = text.trim().length > 0;
-    if (dictating && hasText) {
-      return `Your saved transcript stays in the box. Switching to ${target} will cancel your in-progress recording unless you tap ✓ to save first.`;
-    }
-    if (dictating) {
-      return `You're still recording. Switching to ${target} will discard this recording unless you tap ✓ to save first.`;
-    }
-    return `Your transcript will come with you — nothing in the box will be lost.`;
-  };
-
-  const modeSwitchCancelLabel = () => (dictating ? "Keep recording" : `Stay on ${modeLabel(mode).toLowerCase()}`);
 
   const cancelDictation = () => {
     if (transcribing) return;
@@ -794,29 +763,6 @@ function CaptureView({ text, setText, initialMode = "paste", onBack, onProcess }
 
   return (
     <div className="view capwrap">
-      {modeSwitchAsk && (
-        <div className="capmodal-backdrop" role="presentation" onClick={() => setModeSwitchAsk(null)}>
-          <div
-            className="capmodal"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="capmodal-title"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h3 id="capmodal-title">Switch to {modeLabel(modeSwitchAsk)}?</h3>
-            <p>{modeSwitchMessage()}</p>
-            <div className="capmodal-actions">
-              <button type="button" className="btn btn-soft capmodal-btn" onClick={() => setModeSwitchAsk(null)}>
-                {modeSwitchCancelLabel()}
-              </button>
-              <button type="button" className="btn btn-primary capmodal-btn" onClick={() => applyModeSwitch(modeSwitchAsk)}>
-                Switch modes
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       <div className="lead">
         <div className="eyebrow" style={{ marginBottom: 12 }}>Step 2 · Have your meeting</div>
         <h1>Talk like humans.<br /><em>We&apos;ll handle the structure.</em></h1>
@@ -825,10 +771,10 @@ function CaptureView({ text, setText, initialMode = "paste", onBack, onProcess }
 
       <div className="panel capcard">
         <div className="captoggle">
-          <button type="button" className={"seg " + (mode === "paste" ? "on" : "")} onClick={() => requestModeSwitch("paste")} disabled={transcribing}>
+          <button type="button" className={"seg " + (mode === "paste" ? "on" : "")} onClick={() => pickMode("paste")} disabled={transcribing}>
             <Ico d={I.doc} size={15} /> Write or paste
           </button>
-          <button type="button" className={"seg " + (mode === "dictate" ? "on" : "")} onClick={() => requestModeSwitch("dictate")} disabled={transcribing}>
+          <button type="button" className={"seg " + (mode === "dictate" ? "on" : "")} onClick={() => pickMode("dictate")} disabled={transcribing}>
             <Ico d={I.wave} size={15} /> Speech to text
           </button>
         </div>
@@ -837,7 +783,10 @@ function CaptureView({ text, setText, initialMode = "paste", onBack, onProcess }
           <div style={{ padding: "4px 10px 10px" }}>
             <textarea className="capta" placeholder="Write or paste your conversation here…" value={text} onChange={(e) => setText(e.target.value)} />
             <div className="caprow">
-              <span className="caphint">{wordCount || "Nothing entered yet"}</span>
+              <span className="caphint">
+                {wordCount || "Nothing entered yet"}
+                {text.trim() ? " · draft saved if you refresh" : ""}
+              </span>
               <button type="button" className="usesample" onClick={() => setText(SAMPLE_TRANSCRIPT)}>
                 ✦ Use sample conversation
               </button>
@@ -889,7 +838,10 @@ function CaptureView({ text, setText, initialMode = "paste", onBack, onProcess }
               </div>
             ) : (
               <div className="caprow">
-                <span className="caphint">{wordCount || "Tap the mic, speak, then save or cancel"}</span>
+                <span className="caphint">
+                  {wordCount || "Tap the mic, speak, then save or cancel"}
+                  {text.trim() ? " · draft saved if you refresh" : ""}
+                </span>
                 <button type="button" className="dictmic" onClick={startDictation}>
                   <Ico d={I.mic} size={14} /> Start dictation
                 </button>
@@ -1160,8 +1112,22 @@ export default function App({ user, workspace, onSignOut }) {
 
   const sessionIdRef = useRef(null);
   const savedRef = useRef(false);
+  const captureDraftLoadedRef = useRef(false);
 
   useEffect(() => { setWs(workspace); }, [workspace]);
+
+  useEffect(() => {
+    if (!ws?.id || captureDraftLoadedRef.current) return;
+    captureDraftLoadedRef.current = true;
+    const draft = loadCaptureDraft(ws.id);
+    if (draft?.text) setCaptureText(draft.text);
+    if (draft?.mode) setCaptureMode(draft.mode);
+  }, [ws?.id]);
+
+  useEffect(() => {
+    if (!ws?.id) return;
+    saveCaptureDraft(ws.id, { text: captureText, mode: captureMode });
+  }, [ws?.id, captureText, captureMode]);
 
   useEffect(() => {
     const parsed = parseAppLocation(location.pathname, location.search);
@@ -1266,6 +1232,7 @@ export default function App({ user, workspace, onSignOut }) {
     setDistillDone(false);
     setDistillError(null);
     setCards([]);
+    if (ws?.id) clearCaptureDraft(ws.id);
     go("processing");
     savedRef.current = false;
     sessionIdRef.current = null;
@@ -1380,6 +1347,9 @@ Rules: extract everything actionable, use person names when mentioned, return on
     setDistillDone(false);
     savedRef.current = false;
     sessionIdRef.current = null;
+    setCaptureText("");
+    setCaptureMode("paste");
+    if (ws?.id) clearCaptureDraft(ws.id);
     go("agenda");
   };
 
@@ -1448,7 +1418,8 @@ Rules: extract everything actionable, use person names when mentioned, return on
         <CaptureView
           text={captureText}
           setText={setCaptureText}
-          initialMode={captureMode}
+          mode={captureMode}
+          setMode={setCaptureMode}
           onBack={() => go("agenda")}
           onProcess={runDistill}
         />

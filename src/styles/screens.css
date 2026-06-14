@@ -451,32 +451,6 @@
 }
 .dictnotice-warn { background: var(--red-tint); border-color: var(--red-soft); color: var(--red); }
 
-.capmodal-backdrop {
-  position: fixed; inset: 0; z-index: 200;
-  background: rgba(42, 37, 29, .42);
-  display: grid; place-items: center; padding: 20px;
-}
-.capmodal {
-  width: min(420px, 100%); padding: 26px 24px 22px;
-  border-radius: var(--r-lg); border: 1px solid var(--line-2);
-  background: var(--paper-card); box-shadow: var(--shadow-lg);
-}
-.capmodal h3 {
-  margin: 0 0 10px; font-family: var(--display); font-size: 22px; font-weight: 600; color: var(--ink);
-}
-.capmodal p {
-  margin: 0 0 22px; font-family: var(--serif); font-size: 15px; line-height: 1.55; color: var(--ink-2);
-}
-.capmodal-actions {
-  display: flex; flex-direction: column; gap: 10px;
-}
-.capmodal-actions .capmodal-btn {
-  width: 100%; justify-content: center;
-  font-family: var(--serif); font-size: 15px; font-weight: 500;
-  text-transform: none; letter-spacing: 0; line-height: 1.35;
-  padding: 13px 18px; white-space: normal;
-}
-
 /* record mode */
 .recbox { padding: 38px 20px 30px; text-align: center; }
 .recbtn {
