@@ -272,6 +272,7 @@
 .revhead { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; margin-bottom: 8px; }
 .revhead h1 { font-size: 34px; }
 .revhead h1 em { font-style: italic; color: var(--terra); }
+.revtitle em { font-style: italic; color: var(--terra); }
 .revmeta { display: flex; align-items: center; gap: 14px; margin: 14px 0 24px; flex-wrap: wrap; }
 .chip {
   font-family: var(--mono); font-size: 11.5px; letter-spacing: .05em; text-transform: uppercase;
@@ -398,19 +399,66 @@
 }
 
 @media (max-width: 600px) {
-  /* Step rail — show only dots + active label, hide inactive labels */
-  .steps { overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; gap: 0; }
-  .steps::-webkit-scrollbar { display: none; }
-  .steps .step { padding: 0 8px; }
-  .steps .step:not(.active) span { display: none; }
-  .steps .sep { width: 12px; }
-
   /* CTA bar stacks on mobile */
   .ctabar { flex-direction: column; align-items: flex-start; gap: 16px; padding: 18px 16px; }
   .ctabar .copy h3 { font-size: 18px; }
 
   /* Capture row wraps */
   .caprow { flex-wrap: wrap; gap: 10px; }
+
+  /* Review header — stack progress, compact single-line title */
+  .revhead {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  .revhead h1,
+  .revtitle {
+    font-size: clamp(17px, 4.6vw, 22px);
+    line-height: 1.2;
+    white-space: nowrap;
+  }
+  .progresswrap {
+    margin-left: 0;
+    width: 100%;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .minibar { flex: 1; min-width: 80px; }
+  .revmeta { gap: 8px; margin-bottom: 18px; }
+  .revmeta .linkish { margin-left: 0 !important; width: 100%; text-align: left; }
+
+  /* Review cards — quote + action buttons fit viewport */
+  .revcard { padding: 16px 14px; }
+  .revcard h3 { font-size: 18px; }
+  .revcard .cq {
+    font-size: 13px;
+    line-height: 1.35;
+    margin-bottom: 12px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .revcard .cwhen {
+    max-width: 100%;
+    font-size: 11px;
+    margin-bottom: 12px;
+  }
+  .revcard .cact {
+    display: flex;
+    gap: 8px;
+    width: 100%;
+  }
+  .revcard .cact .keepbtn,
+  .revcard .cact .discbtn,
+  .revcard .cact .calbtn {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 10px 6px;
+    font-size: 10.5px;
+    letter-spacing: .03em;
+    gap: 5px;
+  }
 
   /* Review done row stacks */
   .revdone { flex-direction: column; align-items: flex-start; gap: 14px; }

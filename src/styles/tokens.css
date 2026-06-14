@@ -146,6 +146,80 @@ h1, h2, h3 { font-family: var(--display); font-weight: 600; margin: 0; letter-sp
 .steps .step.active { color: var(--ink); }
 .steps .sep { width: 22px; height: 1.5px; background: var(--line-2); }
 
+/* brand bar — desktop tools + mobile drawer */
+.brandbar-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.brandbar-desktop { display: flex; align-items: center; gap: 18px; }
+.brandbar-tools { display: flex; gap: 4px; }
+.brandbar-menu-btn { display: none; padding: 8px; border-radius: var(--r-sm); }
+.brandbar-backdrop {
+  display: none;
+  position: fixed; inset: 0; z-index: 90;
+  background: rgba(42, 37, 29, .28);
+  border: none; cursor: pointer;
+}
+.brandbar-drawer {
+  display: none;
+  position: fixed; top: 0; right: 0; z-index: 100;
+  width: min(300px, 88vw);
+  height: 100%;
+  padding: 72px 20px 24px;
+  background: var(--paper-card);
+  border-left: 1px solid var(--line);
+  box-shadow: var(--shadow-lg);
+  overflow-y: auto;
+}
+.brandbar-drawer-label {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-bottom: 12px;
+}
+.steps-vertical {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+  margin-bottom: 22px;
+}
+.steps-vertical .sep { display: none; }
+.steps-vertical .step {
+  padding: 10px 12px;
+  border-radius: var(--r-sm);
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+}
+.steps-vertical .step.active {
+  background: var(--terra-tint);
+  border-color: var(--terra-soft);
+}
+.brandbar-drawer-links { display: flex; flex-direction: column; gap: 4px; border-top: 1px solid var(--line); padding-top: 16px; }
+.brandbar-drawer-link {
+  display: flex; align-items: center; gap: 12px;
+  width: 100%; padding: 12px 10px;
+  border: none; border-radius: var(--r-sm);
+  background: transparent;
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  cursor: pointer;
+  text-align: left;
+}
+.brandbar-drawer-link:hover { background: var(--paper-2); color: var(--ink); }
+.brandbar-drawer-link-danger { color: var(--red); }
+.brandbar-drawer-link-danger:hover { background: var(--red-tint); color: var(--red); }
+
+@media (max-width: 720px) {
+  .brandbar { margin-bottom: 18px; gap: 12px; }
+  .brand .word { font-size: 18px; }
+  .brandbar-desktop { display: none; }
+  .brandbar-menu-btn { display: inline-flex; }
+  .brandbar-backdrop { display: block; }
+  .brandbar-drawer { display: block; }
+}
+
 /* ============================================================
    Buttons
    ============================================================ */

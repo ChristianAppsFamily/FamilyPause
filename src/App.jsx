@@ -108,6 +108,7 @@ const I = {
   gear: ["M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6z", "M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1V21a2 2 0 1 1-4 0v-.1A1.6 1.6 0 0 0 7 19.4a1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0-1.1-2.7H1a2 2 0 1 1 0-4h.1A1.6 1.6 0 0 0 2.6 7a1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H7a1.6 1.6 0 0 0 1-1.5V1a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V7a1.6 1.6 0 0 0 1.5 1H23a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z"],
   out: ["M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4", "M16 17l5-5-5-5", "M21 12H9"],
   cards: ["M4 5h16a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z", "M8 5V3h8v2", "M8 10h8M8 14h5"],
+  menu: ["M4 7h16M4 12h16M4 17h16"],
 };
 
 // ── STEP RAIL ─────────────────────────────────────────────────────────────────
@@ -118,10 +119,10 @@ const STEPS = [
   { key: "review", label: "Review" },
   { key: "plan", label: "Plan" },
 ];
-function StepRail({ view }) {
+function StepRail({ view, vertical = false }) {
   const cur = STEPS.findIndex((s) => s.key === view);
   return (
-    <div className="steps">
+    <div className={"steps" + (vertical ? " steps-vertical" : "")}>
       {STEPS.map((s, i) => (
         <span key={s.key} style={{ display: "contents" }}>
           {i > 0 && <span className="sep" />}
@@ -132,6 +133,68 @@ function StepRail({ view }) {
         </span>
       ))}
     </div>
+  );
+}
+
+function BrandBar({ view, onOpenCards, onOpenHistory, onOpenSettings, onSignOut }) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const closeMenu = useCallback(() => setMenuOpen(false), []);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onKey = (e) => { if (e.key === "Escape") closeMenu(); };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [menuOpen, closeMenu]);
+
+  useEffect(() => { closeMenu(); }, [view, closeMenu]);
+
+  const run = (fn) => () => { fn(); closeMenu(); };
+
+  return (
+    <>
+      <div className="brandbar">
+        <div className="brand">
+          <div className="mark"><img src="/uploads/Logo_4.png" alt="FamilyPause" style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "inherit", display: "block" }} /></div>
+          <div className="word"><b>Family</b><span>Pause</span></div>
+        </div>
+        <div className="brandbar-actions">
+          <div className="brandbar-desktop">
+            <StepRail view={view} />
+            <div className="brandbar-tools">
+              <button className="linkish" title="Card deck" onClick={onOpenCards} style={{ display: "inline-flex", padding: 8 }}><Ico d={I.cards} size={16} /></button>
+              <button className="linkish" title="Session history" onClick={onOpenHistory} style={{ display: "inline-flex", padding: 8 }}><Ico d={I.clock} size={16} /></button>
+              <button className="linkish" title="Settings" onClick={onOpenSettings} style={{ display: "inline-flex", padding: 8 }}><Ico d={I.gear} size={16} /></button>
+              <button className="linkish" title="Sign out" onClick={onSignOut} style={{ display: "inline-flex", padding: 8 }}><Ico d={I.out} size={16} /></button>
+            </div>
+          </div>
+          <button
+            type="button"
+            className="brandbar-menu-btn linkish"
+            aria-expanded={menuOpen}
+            aria-label={menuOpen ? "Close menu" : "Open menu"}
+            onClick={() => setMenuOpen((o) => !o)}
+          >
+            <Ico d={menuOpen ? I.x : I.menu} size={20} />
+          </button>
+        </div>
+      </div>
+      {menuOpen && (
+        <>
+          <button type="button" className="brandbar-backdrop" aria-label="Close menu" onClick={closeMenu} />
+          <nav className="brandbar-drawer" aria-label="App menu">
+            <div className="brandbar-drawer-label">Weekly sync</div>
+            <StepRail view={view} vertical />
+            <div className="brandbar-drawer-links">
+              <button type="button" className="brandbar-drawer-link" onClick={run(onOpenCards)}><Ico d={I.cards} size={16} /> Card deck</button>
+              <button type="button" className="brandbar-drawer-link" onClick={run(onOpenHistory)}><Ico d={I.clock} size={16} /> Session history</button>
+              <button type="button" className="brandbar-drawer-link" onClick={run(onOpenSettings)}><Ico d={I.gear} size={16} /> Settings</button>
+              <button type="button" className="brandbar-drawer-link brandbar-drawer-link-danger" onClick={run(onSignOut)}><Ico d={I.out} size={16} /> Sign out</button>
+            </div>
+          </nav>
+        </>
+      )}
+    </>
   );
 }
 
@@ -591,7 +654,7 @@ function ReviewView({ cards, setCards, roleOf, onBack, onBuild, distillError }) 
       <div className="revhead">
         <div>
           <div className="eyebrow" style={{ marginBottom: 9 }}>Step 4 · This week's review</div>
-          <h1>Keep what matters.<br /><em>Discard the rest.</em></h1>
+          <h1 className="revtitle">Keep what matters. <em>Discard the rest.</em></h1>
         </div>
         <div className="progresswrap">
           <span className="chip chip-soft fw">{decided}/{total} reviewed</span>
@@ -1045,21 +1108,13 @@ Rules: extract everything actionable, use person names when mentioned, return on
 
   return (
     <div className="stage">
-      <div className="brandbar">
-        <div className="brand">
-          <div className="mark"><img src="/uploads/Logo_4.png" alt="FamilyPause" style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "inherit", display: "block" }} /></div>
-          <div className="word"><b>Family</b><span>Pause</span></div>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
-          <StepRail view={view} />
-          <div style={{ display: "flex", gap: 4 }}>
-            <button className="linkish" title="Card deck" onClick={openCardDeck} style={{ display: "inline-flex", padding: 8 }}><Ico d={I.cards} size={16} /></button>
-            <button className="linkish" title="Session history" onClick={() => openOverlay("history")} style={{ display: "inline-flex", padding: 8 }}><Ico d={I.clock} size={16} /></button>
-            <button className="linkish" title="Settings" onClick={() => openOverlay("settings")} style={{ display: "inline-flex", padding: 8 }}><Ico d={I.gear} size={16} /></button>
-            <button className="linkish" title="Sign out" onClick={onSignOut} style={{ display: "inline-flex", padding: 8 }}><Ico d={I.out} size={16} /></button>
-          </div>
-        </div>
-      </div>
+      <BrandBar
+        view={view}
+        onOpenCards={openCardDeck}
+        onOpenHistory={() => openOverlay("history")}
+        onOpenSettings={() => openOverlay("settings")}
+        onSignOut={onSignOut}
+      />
 
       {view === "agenda" && (
         <SyncView
