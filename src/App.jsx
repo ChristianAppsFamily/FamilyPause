@@ -629,7 +629,7 @@ function CaptureView({ text, setText, initialMode = "paste", onBack, onProcess }
 
   const requestModeSwitch = (next) => {
     if (next === mode || transcribing) return;
-    if (dictating) {
+    if (dictating || text.trim().length > 0) {
       setModeSwitchAsk(next);
       return;
     }
@@ -640,11 +640,16 @@ function CaptureView({ text, setText, initialMode = "paste", onBack, onProcess }
     if (!modeSwitchAsk) return "";
     const target = modeLabel(modeSwitchAsk);
     const hasText = text.trim().length > 0;
-    if (hasText) {
+    if (dictating && hasText) {
       return `Your saved transcript stays in the box. Switching to ${target} will cancel your in-progress recording unless you tap ✓ to save first.`;
     }
-    return `You're still recording. Switching to ${target} will discard this recording unless you tap ✓ to save first.`;
+    if (dictating) {
+      return `You're still recording. Switching to ${target} will discard this recording unless you tap ✓ to save first.`;
+    }
+    return `Your transcript will come with you — nothing in the box will be lost.`;
   };
+
+  const modeSwitchCancelLabel = () => (dictating ? "Keep recording" : `Stay on ${modeLabel(mode).toLowerCase()}`);
 
   const cancelDictation = () => {
     if (transcribing) return;
@@ -802,10 +807,10 @@ function CaptureView({ text, setText, initialMode = "paste", onBack, onProcess }
             <p>{modeSwitchMessage()}</p>
             <div className="capmodal-actions">
               <button type="button" className="btn btn-soft capmodal-btn" onClick={() => setModeSwitchAsk(null)}>
-                Keep recording
+                {modeSwitchCancelLabel()}
               </button>
               <button type="button" className="btn btn-primary capmodal-btn" onClick={() => applyModeSwitch(modeSwitchAsk)}>
-                Switch anyway
+                Switch modes
               </button>
             </div>
           </div>
