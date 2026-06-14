@@ -205,36 +205,25 @@ function BrandBar({ view, onOpenCards, onOpenHistory, onOpenSettings, onSignOut 
   );
 }
 
-// ── AGENDA (View 1) — Choose your approach (project/app/views.jsx) ───────────
-function SyncView({ onDistill }) {
-  const [expanded, setExpanded] = useState(false);
-  const [topics, setTopics] = useState(START_TOPICS);
-  const [selected, setSelected] = useState([]);
-  const [draft, setDraft] = useState("");
-  const panelRef = useRef(null);
+const AGENDA_TOPIC_OPTIONS = START_TOPICS;
 
-  const toggle = (name) =>
-    setSelected((s) => (s.includes(name) ? s.filter((x) => x !== name) : [...s, name]));
+function SyncHeader({ family, right }) {
+  return (
+    <div className="synchead">
+      <div className="who">
+        <div className="eyebrow">Weekly Sync</div>
+        <h1>{family.title}</h1>
+        <div className="when">
+          <span className="datepill"><Ico d={I.cal} size={14} /> {family.date}</span>
+          <span className="faded">A good pause, every week.</span>
+        </div>
+      </div>
+      {right}
+    </div>
+  );
+}
 
-  const addOwn = () => {
-    const v = draft.trim();
-    if (!v) return;
-    if (!topics.some((t) => t.toLowerCase() === v.toLowerCase())) setTopics((t) => [...t, v]);
-    setSelected((s) => (s.includes(v) ? s : [...s, v]));
-    setDraft("");
-  };
-
-  const openTopics = () => {
-    setExpanded(true);
-    requestAnimationFrame(() =>
-      panelRef.current?.scrollIntoView({ behavior: "smooth", block: "center" })
-    );
-  };
-
-  const goRecord = (topicList = selected) => {
-    onDistill({ mode: "dictate", topics: topicList.length ? topicList : undefined });
-  };
-
+function ApproachChoice({ onGuide, onJump }) {
   return (
     <div className="view choicewrap">
       <div className="choicehead rise">
@@ -245,8 +234,8 @@ function SyncView({ onDistill }) {
       <div className="choicecards rise">
         <div
           className="choicecard"
-          onClick={openTopics}
-          onKeyDown={(e) => e.key === "Enter" && openTopics()}
+          onClick={onGuide}
+          onKeyDown={(e) => e.key === "Enter" && onGuide()}
           role="button"
           tabIndex={0}
         >
@@ -259,7 +248,7 @@ function SyncView({ onDistill }) {
             <span className="egpill">Marriage</span>
           </div>
           <div className="cardfoot">
-            <button type="button" className="choicebtn outline" onClick={(e) => { e.stopPropagation(); openTopics(); }}>
+            <button type="button" className="choicebtn outline" onClick={(e) => { e.stopPropagation(); onGuide(); }}>
               Choose Topics <Ico d={I.arrow} size={15} />
             </button>
           </div>
@@ -267,8 +256,8 @@ function SyncView({ onDistill }) {
 
         <div
           className="choicecard rec"
-          onClick={() => goRecord([])}
-          onKeyDown={(e) => e.key === "Enter" && goRecord([])}
+          onClick={onJump}
+          onKeyDown={(e) => e.key === "Enter" && onJump()}
           role="button"
           tabIndex={0}
         >
@@ -277,55 +266,243 @@ function SyncView({ onDistill }) {
           <h3>Jump straight in.</h3>
           <p>Hit record and talk freely. FamilyPause listens to everything and organizes your week automatically when you&apos;re done.</p>
           <div className="cardfoot">
-            <button type="button" className="choicebtn solid" onClick={(e) => { e.stopPropagation(); goRecord([]); }}>
+            <button type="button" className="choicebtn solid" onClick={(e) => { e.stopPropagation(); onJump(); }}>
               Start Recording <Ico d={I.arrow} size={15} />
             </button>
           </div>
         </div>
       </div>
+    </div>
+  );
+}
 
-      {expanded && (
-        <div className="topicspanel rise" ref={panelRef}>
-          <div className="tphead">
-            <div className="eyebrow">Pick the topics for this week</div>
-            <span className="tpcount">{selected.length ? `${selected.length} selected` : "None yet"}</span>
-          </div>
+function AgendaBuilder({ family, workspaceId, onDistill, onBackToChoice }) {
+  const [tab, setTab] = useState("agenda");
+  const [showPrevious, setShowPrevious] = useState(true);
+  const [lastSession, setLastSession] = useState(null);
+  const [prevLoading, setPrevLoading] = useState(!!workspaceId);
+  const rowIdRef = useRef(1);
+  const [rows, setRows] = useState([
+    { id: "t1", cat: AGENDA_TOPIC_OPTIONS[0], topic: "" },
+  ]);
 
-          <div className="topicgrid">
-            {topics.map((name) => (
-              <button
-                key={name}
-                type="button"
-                className={"topicpill " + (selected.includes(name) ? "on" : "")}
-                onClick={() => toggle(name)}
-              >
-                {selected.includes(name) && <Ico d={I.check} size={13} />}
-                {name}
-              </button>
-            ))}
-          </div>
+  useEffect(() => {
+    if (!workspaceId) { setPrevLoading(false); return; }
+    let active = true;
+    (async () => {
+      const { data } = await supabase
+        .from("sessions")
+        .select("id, meeting_date, cards, status")
+        .eq("workspace_id", workspaceId)
+        .eq("status", "complete")
+        .order("meeting_date", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (active) {
+        setLastSession(data);
+        setPrevLoading(false);
+      }
+    })();
+    return () => { active = false; };
+  }, [workspaceId]);
 
-          <div className="addown">
-            <input
-              className="addinput"
-              placeholder="Add your own topic…"
-              value={draft}
-              onChange={(e) => setDraft(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addOwn(); } }}
-            />
-            <button type="button" className="btn btn-soft" onClick={addOwn}><Ico d={I.plus} size={14} /> Add</button>
-          </div>
+  const addTopic = () => {
+    rowIdRef.current += 1;
+    setRows((r) => [...r, { id: "t" + rowIdRef.current, cat: AGENDA_TOPIC_OPTIONS[0], topic: "" }]);
+  };
 
-          {selected.length > 0 && (
-            <div className="controw rise">
-              <button type="button" className="btn btn-primary btn-lg btn-block" onClick={() => goRecord(selected)}>
-                <Ico d={I.mic} size={16} /> Continue to Record
+  const updateRow = (id, patch) =>
+    setRows((r) => r.map((row) => (row.id === id ? { ...row, ...patch } : row)));
+
+  const deleteRow = (id) =>
+    setRows((r) => (r.length <= 1 ? r : r.filter((row) => row.id !== id)));
+
+  const agendaTopicsForDistill = () =>
+    rows.map((r) => {
+      const detail = r.topic.trim();
+      return detail ? `${r.cat}: ${detail}` : r.cat;
+    });
+
+  const prevCards = (Array.isArray(lastSession?.cards) ? lastSession.cards : [])
+    .filter((c) => c.status === "kept" || c.status === "calendared");
+  const prevDate = lastSession?.meeting_date ? prettyDate(lastSession.meeting_date) : null;
+
+  return (
+    <div className="view">
+      <SyncHeader
+        family={family}
+        right={
+          <button type="button" className={"btn " + (showPrevious ? "btn-soft" : "btn-ghost")} onClick={() => setShowPrevious((v) => !v)}>
+            <Ico d={I.clock} size={15} /> {showPrevious ? "Hide Previous FamilyPause" : "Previous FamilyPause"}
+          </button>
+        }
+      />
+
+      <div className="tabs">
+        <button type="button" className={"tab " + (tab === "agenda" ? "on" : "")} onClick={() => setTab("agenda")}>Agenda</button>
+        <button type="button" className={"tab " + (tab === "actions" ? "on" : "")} onClick={() => setTab("actions")}>
+          Actions <span className="count">(0)</span>
+        </button>
+        <button type="button" className={"tab " + (tab === "log" ? "on" : "")} onClick={() => setTab("log")}>Log</button>
+      </div>
+
+      <div className={"worksplit " + (showPrevious ? "with-rail" : "")}>
+        <div>
+          {tab === "agenda" && (
+            <div className="rise">
+              <div className="rowhead">
+                <span className="ct">{rows.length} Topic{rows.length === 1 ? "" : "s"}</span>
+                <button type="button" className="btn btn-soft" onClick={addTopic} style={{ padding: "9px 15px" }}>
+                  <Ico d={I.plus} size={14} /> Add Topic
+                </button>
+              </div>
+              {rows.map((r, i) => (
+                <div className="agrow" key={r.id}>
+                  <span className="idx">{String(i + 1).padStart(2, "0")}</span>
+                  <select
+                    className="agcat"
+                    value={r.cat}
+                    aria-label="Topic category"
+                    onChange={(e) => updateRow(r.id, { cat: e.target.value })}
+                  >
+                    {AGENDA_TOPIC_OPTIONS.map((opt) => (
+                      <option key={opt} value={opt}>{opt}</option>
+                    ))}
+                  </select>
+                  <input
+                    type="text"
+                    className="agtopic"
+                    value={r.topic}
+                    placeholder="What do you want to cover?"
+                    aria-label="Topic detail"
+                    onChange={(e) => updateRow(r.id, { topic: e.target.value })}
+                  />
+                  <button
+                    type="button"
+                    className="agdel"
+                    onClick={() => deleteRow(r.id)}
+                    disabled={rows.length <= 1}
+                    aria-label="Remove topic"
+                    title={rows.length <= 1 ? "Keep at least one topic" : "Remove topic"}
+                  >
+                    <Ico d={I.x} size={16} />
+                  </button>
+                </div>
+              ))}
+              <button type="button" className="addtopic" onClick={addTopic}>
+                <Ico d={I.plus} size={14} /> Add another topic
               </button>
             </div>
           )}
+
+          {tab === "actions" && (
+            <div className="rise" style={{ textAlign: "center", padding: "70px 20px", color: "var(--ink-3)" }}>
+              <div style={{ fontFamily: "var(--display)", fontSize: 22, fontStyle: "italic", color: "var(--ink-2)", marginBottom: 8 }}>
+                No open actions yet.
+              </div>
+              <div style={{ fontSize: 15 }}>Distill your conversation and your actions appear here — sorted by person.</div>
+            </div>
+          )}
+
+          {tab === "log" && (
+            <div className="rise" style={{ textAlign: "center", padding: "70px 20px", color: "var(--ink-3)" }}>
+              <div style={{ fontFamily: "var(--display)", fontSize: 22, fontStyle: "italic", color: "var(--ink-2)", marginBottom: 8 }}>
+                Your past syncs live here.
+              </div>
+              <div style={{ fontSize: 15 }}>Every meeting, summarized and searchable.</div>
+            </div>
+          )}
+
+          {tab === "agenda" && (
+            <div className="ctabar">
+              <div className="copy">
+                <h3>Ready when you are.</h3>
+                <p>Record live or paste your conversation — FamilyPause turns it into a plan in about ten seconds.</p>
+              </div>
+              <button
+                type="button"
+                className="btn btn-primary btn-lg"
+                onClick={() => onDistill({ mode: "dictate", topics: agendaTopicsForDistill() })}
+              >
+                <Ico d={I.bolt} size={16} fill /> Distill this week
+              </button>
+            </div>
+          )}
+
+          {onBackToChoice && (
+            <p style={{ marginTop: 16 }}>
+              <button type="button" className="linkish" onClick={onBackToChoice}>← Back to approach</button>
+            </p>
+          )}
         </div>
-      )}
+
+        {showPrevious && (
+          <aside className="assist prev-rail rise">
+            <div className="ahead">
+              <div className="aico prev-ico"><Ico d={I.cal} size={17} /></div>
+              <div>
+                <div className="at">Previous FamilyPause</div>
+                <div className="as">{prevDate ? prevDate : "Your last weekly sync"}</div>
+              </div>
+            </div>
+            {prevLoading ? (
+              <div className="prev-empty">Loading your last sync…</div>
+            ) : !lastSession ? (
+              <div className="prev-empty">
+                <strong>Nothing yet from last week.</strong>
+                <span>After your first complete sync, the items you kept will show up here as a quick reference.</span>
+              </div>
+            ) : prevCards.length === 0 ? (
+              <div className="prev-empty">
+                <strong>No kept items from that sync.</strong>
+                <span>Your last meeting on {prevDate} didn&apos;t save any kept actions or events.</span>
+              </div>
+            ) : (
+              <div className="prev-items">
+                {prevCards.map((c, i) => {
+                  const when = formatWhen(c.date, c.time);
+                  return (
+                    <div key={c.id ?? i} className="prev-item">
+                      <div className="prev-item-top">
+                        {c.category && <span className="tag tag-cat">{c.category}</span>}
+                        <span className="prev-type">{c.type || "item"}</span>
+                      </div>
+                      <div className="prev-task">{c.task}</div>
+                      <div className="prev-meta">
+                        <span>{c.person || "Family"}</span>
+                        {when && <span>· {when}</span>}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </aside>
+        )}
+      </div>
     </div>
+  );
+}
+
+function SyncView({ family, workspaceId, onDistill }) {
+  const [phase, setPhase] = useState("choice");
+
+  if (phase === "choice") {
+    return (
+      <ApproachChoice
+        onGuide={() => setPhase("builder")}
+        onJump={() => onDistill({ mode: "dictate", topics: [] })}
+      />
+    );
+  }
+
+  return (
+    <AgendaBuilder
+      family={family}
+      workspaceId={workspaceId}
+      onDistill={onDistill}
+      onBackToChoice={() => setPhase("choice")}
+    />
   );
 }
 
@@ -977,6 +1154,7 @@ export default function App({ user, workspace, onSignOut }) {
   }, [adults]);
 
   const processingFamilyLabel = [...adults, ...(kids.length ? ["the kids"] : [])].join(", ") || "Everyone";
+  const family = { title: adults.length ? adults.join(" & ") : (ws?.name || "Your Family"), date: prettyDate(meetingDate) };
 
   // ── Realtime sync (Step 12) ──────────────────────────────────────────────
   useEffect(() => {
@@ -1170,6 +1348,8 @@ Rules: extract everything actionable, use person names when mentioned, return on
 
       {view === "agenda" && (
         <SyncView
+          family={family}
+          workspaceId={ws?.id}
           onDistill={({ mode = "paste", topics } = {}) => {
             if (topics?.length) setAgendaTopics(topics);
             else setAgendaTopics([]);
