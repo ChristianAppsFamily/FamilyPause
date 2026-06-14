@@ -110,7 +110,13 @@ const I = {
   out: ["M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4", "M16 17l5-5-5-5", "M21 12H9"],
   cards: ["M4 5h16a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z", "M8 5V3h8v2", "M8 10h8M8 14h5"],
   menu: ["M4 7h16M4 12h16M4 17h16"],
+  grid: ["M4 4h6v6H4z", "M14 4h6v6h-6z", "M4 14h6v6H4z", "M14 14h6v6h-6z"],
 };
+
+const START_TOPICS = [
+  "Kids", "Finances", "Marriage", "Faith", "Health",
+  "Work & Business", "Home & Chores", "Travel & Plans", "Friends & Family", "Rest & Sabbath",
+];
 
 // ── STEP RAIL ─────────────────────────────────────────────────────────────────
 const STEPS = [
@@ -199,184 +205,137 @@ function BrandBar({ view, onOpenCards, onOpenHistory, onOpenSettings, onSignOut 
   );
 }
 
-// ── AGENDA (View 1) — Weekly Sync from project/app/views.jsx ─────────────────
-function SyncHeader({ family, right }) {
+// ── AGENDA (View 1) — Choose your approach (project/app/views.jsx) ───────────
+function SyncView({ onDistill }) {
+  const [expanded, setExpanded] = useState(false);
+  const [topics, setTopics] = useState(START_TOPICS);
+  const [selected, setSelected] = useState([]);
+  const [draft, setDraft] = useState("");
+  const panelRef = useRef(null);
+
+  const toggle = (name) =>
+    setSelected((s) => (s.includes(name) ? s.filter((x) => x !== name) : [...s, name]));
+
+  const addOwn = () => {
+    const v = draft.trim();
+    if (!v) return;
+    if (!topics.some((t) => t.toLowerCase() === v.toLowerCase())) setTopics((t) => [...t, v]);
+    setSelected((s) => (s.includes(v) ? s : [...s, v]));
+    setDraft("");
+  };
+
+  const openTopics = () => {
+    setExpanded(true);
+    requestAnimationFrame(() =>
+      panelRef.current?.scrollIntoView({ behavior: "smooth", block: "center" })
+    );
+  };
+
+  const goRecord = (topicList = selected) => {
+    onDistill({ mode: "dictate", topics: topicList.length ? topicList : undefined });
+  };
+
   return (
-    <div className="synchead">
-      <div className="who">
-        <div className="eyebrow">Weekly Sync</div>
-        <h1>{family.title}</h1>
-        <div className="when">
-          <span className="datepill"><Ico d={I.cal} size={14} /> {family.date}</span>
-          <span className="faded">A good pause, every week.</span>
+    <div className="view choicewrap">
+      <div className="choicehead rise">
+        <div className="eyebrow">How would you like to begin</div>
+        <h1 className="choicetitle">Choose your approach.</h1>
+      </div>
+
+      <div className="choicecards rise">
+        <div
+          className="choicecard"
+          onClick={openTopics}
+          onKeyDown={(e) => e.key === "Enter" && openTopics()}
+          role="button"
+          tabIndex={0}
+        >
+          <div className="cico"><Ico d={I.grid} size={22} /></div>
+          <h3>Guide your conversation.</h3>
+          <p>Choose topics before you record. Helps the AI organize your week more accurately and gives you a structure to follow together.</p>
+          <div className="egrow">
+            <span className="egpill">Kids</span>
+            <span className="egpill">Finances</span>
+            <span className="egpill">Marriage</span>
+          </div>
+          <div className="cardfoot">
+            <button type="button" className="choicebtn outline" onClick={(e) => { e.stopPropagation(); openTopics(); }}>
+              Choose Topics <Ico d={I.arrow} size={15} />
+            </button>
+          </div>
+        </div>
+
+        <div
+          className="choicecard rec"
+          onClick={() => goRecord([])}
+          onKeyDown={(e) => e.key === "Enter" && goRecord([])}
+          role="button"
+          tabIndex={0}
+        >
+          <span className="poppop">Most Popular</span>
+          <div className="cico"><Ico d={I.mic} size={22} /></div>
+          <h3>Jump straight in.</h3>
+          <p>Hit record and talk freely. FamilyPause listens to everything and organizes your week automatically when you&apos;re done.</p>
+          <div className="cardfoot">
+            <button type="button" className="choicebtn solid" onClick={(e) => { e.stopPropagation(); goRecord([]); }}>
+              Start Recording <Ico d={I.arrow} size={15} />
+            </button>
+          </div>
         </div>
       </div>
-      {right}
-    </div>
-  );
-}
 
-function SyncView({ family, categories, workspaceId, onDistill }) {
-  const [tab, setTab] = useState("agenda");
-  const [showPrevious, setShowPrevious] = useState(true);
-  const [lastSession, setLastSession] = useState(null);
-  const [prevLoading, setPrevLoading] = useState(!!workspaceId);
-  const [rows, setRows] = useState([
-    { id: "t1", cat: categories[0] || "Family", topic: "" },
-  ]);
+      {expanded && (
+        <div className="topicspanel rise" ref={panelRef}>
+          <div className="tphead">
+            <div className="eyebrow">Pick the topics for this week</div>
+            <span className="tpcount">{selected.length ? `${selected.length} selected` : "None yet"}</span>
+          </div>
 
-  useEffect(() => {
-    if (!workspaceId) { setPrevLoading(false); return; }
-    let active = true;
-    (async () => {
-      const { data } = await supabase
-        .from("sessions")
-        .select("id, meeting_date, cards, status")
-        .eq("workspace_id", workspaceId)
-        .eq("status", "complete")
-        .order("meeting_date", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      if (active) {
-        setLastSession(data);
-        setPrevLoading(false);
-      }
-    })();
-    return () => { active = false; };
-  }, [workspaceId]);
-
-  const addTopic = () =>
-    setRows((r) => [...r, { id: "t" + (r.length + 1), cat: categories[0] || "Family", topic: "" }]);
-
-  const prevCards = (Array.isArray(lastSession?.cards) ? lastSession.cards : [])
-    .filter((c) => c.status === "kept" || c.status === "calendared");
-  const prevDate = lastSession?.meeting_date ? prettyDate(lastSession.meeting_date) : null;
-
-  return (
-    <div className="view">
-      <SyncHeader
-        family={family}
-        right={
-          <button type="button" className={"btn " + (showPrevious ? "btn-soft" : "btn-ghost")} onClick={() => setShowPrevious((v) => !v)}>
-            <Ico d={I.clock} size={15} /> {showPrevious ? "Hide Previous FamilyPause" : "Previous FamilyPause"}
-          </button>
-        }
-      />
-
-      <div className="tabs">
-        <button type="button" className={"tab " + (tab === "agenda" ? "on" : "")} onClick={() => setTab("agenda")}>Agenda</button>
-        <button type="button" className={"tab " + (tab === "actions" ? "on" : "")} onClick={() => setTab("actions")}>
-          Actions <span className="count">(0)</span>
-        </button>
-        <button type="button" className={"tab " + (tab === "log" ? "on" : "")} onClick={() => setTab("log")}>Log</button>
-      </div>
-
-      <div className={"worksplit " + (showPrevious ? "with-rail" : "")}>
-        <div>
-          {tab === "agenda" && (
-            <div className="rise">
-              <div className="rowhead">
-                <span className="ct">{rows.length} Topics</span>
-                <button type="button" className="btn btn-soft" onClick={addTopic} style={{ padding: "9px 15px" }}>
-                  <Ico d={I.plus} size={14} /> Add Topic
-                </button>
-              </div>
-              {rows.map((r, i) => (
-                <div className="agrow" key={r.id}>
-                  <span className="idx">{String(i + 1).padStart(2, "0")}</span>
-                  <span className="catsel">{r.cat} ▾</span>
-                  <span className={"tp " + (r.topic ? "" : "ph")}>{r.topic || "Topic…"}</span>
-                  <span className="chev"><Ico d={I.chevD} size={14} /></span>
-                </div>
-              ))}
-              <button type="button" className="addtopic" onClick={addTopic}>
-                <Ico d={I.plus} size={14} /> Add another topic
+          <div className="topicgrid">
+            {topics.map((name) => (
+              <button
+                key={name}
+                type="button"
+                className={"topicpill " + (selected.includes(name) ? "on" : "")}
+                onClick={() => toggle(name)}
+              >
+                {selected.includes(name) && <Ico d={I.check} size={13} />}
+                {name}
               </button>
-            </div>
-          )}
+            ))}
+          </div>
 
-          {tab === "actions" && (
-            <div className="rise" style={{ textAlign: "center", padding: "70px 20px", color: "var(--ink-3)" }}>
-              <div style={{ fontFamily: "var(--display)", fontSize: 22, fontStyle: "italic", color: "var(--ink-2)", marginBottom: 8 }}>
-                No open actions yet.
-              </div>
-              <div style={{ fontSize: 15 }}>Distill your conversation and your actions appear here — sorted by person.</div>
-            </div>
-          )}
+          <div className="addown">
+            <input
+              className="addinput"
+              placeholder="Add your own topic…"
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addOwn(); } }}
+            />
+            <button type="button" className="btn btn-soft" onClick={addOwn}><Ico d={I.plus} size={14} /> Add</button>
+          </div>
 
-          {tab === "log" && (
-            <div className="rise" style={{ textAlign: "center", padding: "70px 20px", color: "var(--ink-3)" }}>
-              <div style={{ fontFamily: "var(--display)", fontSize: 22, fontStyle: "italic", color: "var(--ink-2)", marginBottom: 8 }}>
-                Your past syncs live here.
-              </div>
-              <div style={{ fontSize: 15 }}>Every meeting, summarized and searchable.</div>
-            </div>
-          )}
-
-          {tab === "agenda" && (
-            <div className="ctabar">
-              <div className="copy">
-                <h3>Ready when you are.</h3>
-                <p>Record live or paste your conversation — FamilyPause turns it into a plan in about ten seconds.</p>
-              </div>
-              <button type="button" className="btn btn-primary btn-lg" onClick={onDistill}>
-                <Ico d={I.bolt} size={16} fill /> Distill this week
+          {selected.length > 0 && (
+            <div className="controw rise">
+              <button type="button" className="btn btn-primary btn-lg btn-block" onClick={() => goRecord(selected)}>
+                <Ico d={I.mic} size={16} /> Continue to Record
               </button>
             </div>
           )}
         </div>
-
-        {showPrevious && (
-          <aside className="assist prev-rail rise">
-            <div className="ahead">
-              <div className="aico prev-ico"><Ico d={I.cal} size={17} /></div>
-              <div>
-                <div className="at">Previous FamilyPause</div>
-                <div className="as">{prevDate ? prevDate : "Your last weekly sync"}</div>
-              </div>
-            </div>
-            {prevLoading ? (
-              <div className="prev-empty">Loading your last sync…</div>
-            ) : !lastSession ? (
-              <div className="prev-empty">
-                <strong>Nothing yet from last week.</strong>
-                <span>After your first complete sync, the items you kept will show up here as a quick reference.</span>
-              </div>
-            ) : prevCards.length === 0 ? (
-              <div className="prev-empty">
-                <strong>No kept items from that sync.</strong>
-                <span>Your last meeting on {prevDate} didn't save any kept actions or events.</span>
-              </div>
-            ) : (
-              <div className="prev-items">
-                {prevCards.map((c, i) => {
-                  const when = formatWhen(c.date, c.time);
-                  return (
-                    <div key={c.id ?? i} className="prev-item">
-                      <div className="prev-item-top">
-                        {c.category && <span className="tag tag-cat">{c.category}</span>}
-                        <span className="prev-type">{c.type || "item"}</span>
-                      </div>
-                      <div className="prev-task">{c.task}</div>
-                      <div className="prev-meta">
-                        <span>{c.person || "Family"}</span>
-                        {when && <span>· {when}</span>}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </aside>
-        )}
-      </div>
+      )}
     </div>
   );
 }
 
 // ── CAPTURE (View 2) ──────────────────────────────────────────────────────────
-function CaptureView({ text, setText, onBack, onProcess }) {
-  const [mode, setMode] = useState("paste");
+function CaptureView({ text, setText, initialMode = "paste", onBack, onProcess }) {
+  const [mode, setMode] = useState(initialMode);
+
+  useEffect(() => {
+    setMode(initialMode);
+  }, [initialMode]);
   const [dictating, setDictating] = useState(false);
   const [transcribing, setTranscribing] = useState(false);
   const [dictStatus, setDictStatus] = useState("");
@@ -931,6 +890,8 @@ export default function App({ user, workspace, onSignOut }) {
   const [distillError, setDistillError] = useState(null);
   const [distillDone, setDistillDone] = useState(false);
   const [captureText, setCaptureText] = useState("");
+  const [captureMode, setCaptureMode] = useState("paste");
+  const [agendaTopics, setAgendaTopics] = useState([]);
   const [meetingDate] = useState(todayStr());
   const [ws, setWs] = useState(workspace);
 
@@ -1015,7 +976,6 @@ export default function App({ user, workspace, onSignOut }) {
     return "both";
   }, [adults]);
 
-  const family = { title: adults.length ? adults.join(" & ") : (ws?.name || "Your Family"), date: prettyDate(meetingDate) };
   const processingFamilyLabel = [...adults, ...(kids.length ? ["the kids"] : [])].join(", ") || "Everyone";
 
   // ── Realtime sync (Step 12) ──────────────────────────────────────────────
@@ -1046,10 +1006,14 @@ export default function App({ user, workspace, onSignOut }) {
     savedRef.current = false;
     sessionIdRef.current = null;
 
+    const topicHint = agendaTopics.length
+      ? `\nFocus topics for this sync: ${agendaTopics.join(", ")}. Prioritize items related to these topics when present in the transcript.`
+      : "";
+
     const system = `You are FamilyPause, a family meeting intelligence assistant.
 Known people: ${(context.people || []).join(", ")}
 Known businesses: ${(context.businesses || []).join(", ")}
-Categories: ${(context.categories || []).join(", ")}
+Categories: ${(context.categories || []).join(", ")}${topicHint}
 
 Extract EVERY actionable item, appointment, decision, task, or commitment. Return ONLY a valid JSON array, no markdown, no backticks.
 
@@ -1206,13 +1170,23 @@ Rules: extract everything actionable, use person names when mentioned, return on
 
       {view === "agenda" && (
         <SyncView
-          family={family}
-          categories={context.categories || DEFAULT_CONTEXT.categories}
-          workspaceId={ws?.id}
-          onDistill={() => go("capture")}
+          onDistill={({ mode = "paste", topics } = {}) => {
+            if (topics?.length) setAgendaTopics(topics);
+            else setAgendaTopics([]);
+            setCaptureMode(mode);
+            go("capture");
+          }}
         />
       )}
-      {view === "capture" && <CaptureView text={captureText} setText={setCaptureText} onBack={() => go("agenda")} onProcess={runDistill} />}
+      {view === "capture" && (
+        <CaptureView
+          text={captureText}
+          setText={setCaptureText}
+          initialMode={captureMode}
+          onBack={() => go("agenda")}
+          onProcess={runDistill}
+        />
+      )}
       {view === "processing" && <ProcessingView done={distillDone} familyNames={processingFamilyLabel} />}
       {view === "review" && <ReviewView cards={cards} setCards={setCards} roleOf={roleOf} onBack={() => go("capture")} onBuild={buildWeek} distillError={distillError} />}
       {view === "plan" && <PlanView keptCards={keptCards} adults={adults} roleOf={roleOf} onRestart={restart} />}
