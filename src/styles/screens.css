@@ -152,6 +152,7 @@
 
 .capcard { padding: 8px; }
 .captoggle { display: flex; gap: 6px; padding: 8px; }
+.captoggle.three .seg { font-size: 10.5px; letter-spacing: .04em; padding: 10px 8px; gap: 6px; }
 .captoggle .seg {
   flex: 1; font-family: var(--mono); font-size: 12px; letter-spacing: .05em; text-transform: uppercase;
   padding: 11px; border-radius: var(--r-sm); border: 1px solid transparent; background: transparent;
@@ -173,6 +174,15 @@
   border-radius: 999px; padding: 7px 13px; cursor: pointer;
 }
 .usesample:hover { background: var(--terra-soft); }
+
+.dictmic {
+  font-family: var(--mono); font-size: 11.5px; letter-spacing: .04em; text-transform: uppercase;
+  color: var(--terra); background: var(--paper-card); border: 1px solid var(--terra-soft);
+  border-radius: 999px; padding: 7px 13px; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 7px; flex-shrink: 0;
+}
+.dictmic:hover { background: var(--terra-tint); }
+.dictmic.live { background: var(--red-tint); border-color: var(--red-soft); color: var(--red); }
 
 /* record mode */
 .recbox { padding: 38px 20px 30px; text-align: center; }

@@ -101,7 +101,7 @@ const I = {
   mic: ["M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3z", "M5 11a7 7 0 0 0 14 0", "M12 18v3"],
   doc: ["M7 3h7l4 4v14a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z", "M14 3v4h4"],
   arrow: "M5 12h14M13 6l6 6-6 6",
-  spark: "M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3z",
+  wave: ["M4 10v4M8 8v8M12 6v12M16 8v8M20 10v4"],
   x: "M6 6l12 12M18 6 6 18",
   clock: ["M12 7v5l3 2", "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z"],
   gear: ["M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6z", "M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1V21a2 2 0 1 1-4 0v-.1A1.6 1.6 0 0 0 7 19.4a1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0-1.1-2.7H1a2 2 0 1 1 0-4h.1A1.6 1.6 0 0 0 2.6 7a1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H7a1.6 1.6 0 0 0 1-1.5V1a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V7a1.6 1.6 0 0 0 1.5 1H23a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z"],
@@ -317,39 +317,64 @@ function CaptureView({ text, setText, onBack, onProcess }) {
   const recRef = useRef(null);
   const accRef = useRef("");
   const recordingRef = useRef(false);
+  const modeRef = useRef("paste");
+
+  useEffect(() => { modeRef.current = mode; }, [mode]);
 
   useEffect(() => {
-    if (!recording) return;
+    if (!recording || mode !== "record") return;
     const t = setInterval(() => setSecs((s) => s + 1), 1000);
     return () => clearInterval(t);
-  }, [recording]);
+  }, [recording, mode]);
+
+  const stopRec = () => {
+    recordingRef.current = false;
+    recRef.current?.stop();
+    recRef.current = null;
+    setRecording(false);
+  };
+
+  const pickMode = (next) => {
+    if (recording) stopRec();
+    setMode(next);
+    if (next !== "record") setSecs(0);
+  };
 
   const startRec = () => {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SR) { alert("Live recording requires Chrome or Safari on desktop/Android. iOS Safari has limited support."); return; }
+    if (!SR) {
+      alert("Speech recognition requires Chrome or Safari on desktop/Android. iOS Safari has limited support.");
+      return;
+    }
 
     const launch = () => {
       const rec = new SR();
-      rec.continuous = true; rec.interimResults = true; rec.lang = "en-US";
+      rec.continuous = true;
+      rec.interimResults = true;
+      rec.lang = "en-US";
       rec.onresult = (e) => {
         let final = "";
-        for (let i = e.resultIndex; i < e.results.length; i++) if (e.results[i].isFinal) final += e.results[i][0].transcript + " ";
-        if (final) { accRef.current += final; setText(accRef.current.trim()); }
+        let interim = "";
+        for (let i = e.resultIndex; i < e.results.length; i++) {
+          const chunk = e.results[i][0].transcript;
+          if (e.results[i].isFinal) final += chunk + " ";
+          else if (modeRef.current === "dictate") interim += chunk;
+        }
+        if (final) accRef.current += final;
+        if (modeRef.current === "dictate") {
+          setText((accRef.current + interim).trim());
+        } else {
+          setText(accRef.current.trim());
+        }
       };
       rec.onerror = (e) => {
         if (e.error === "not-allowed" || e.error === "permission-denied") {
           alert("Microphone access denied. Please allow microphone access in your browser settings and try again.");
           setRecording(false);
-        } else if (e.error === "network") {
-          // Network errors are common on mobile — just restart silently
-        } else if (e.error === "no-speech") {
-          // No speech detected — browser will fire onend and we'll restart
-        } else {
+        } else if (e.error !== "network" && e.error !== "no-speech") {
           console.warn("SpeechRecognition error:", e.error);
         }
       };
-      // Browsers stop recognition after silence even with continuous:true.
-      // Auto-restart so the mic stays live until the user taps stop.
       rec.onend = () => {
         if (recRef.current === rec && recordingRef.current) {
           try { rec.start(); } catch (_) { /* already started */ }
@@ -362,46 +387,77 @@ function CaptureView({ text, setText, onBack, onProcess }) {
     accRef.current = text ? text + " " : "";
     recordingRef.current = true;
     setRecording(true);
+    if (modeRef.current === "record") setSecs(0);
     launch();
   };
-  const stopRec = () => {
-    recordingRef.current = false;
-    recRef.current?.stop();
-    recRef.current = null;
-    setRecording(false);
-  };
+
   const toggleRec = () => (recording ? stopRec() : startRec());
 
   const fmt = (s) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
   const ready = text.trim().length > 30;
+  const wordCount = text.trim() ? `${text.trim().split(/\s+/).length} words` : null;
 
   return (
     <div className="view capwrap">
       <div className="lead">
         <div className="eyebrow" style={{ marginBottom: 12 }}>Step 2 · Have your meeting</div>
-        <h1>Talk like humans.<br /><em>We'll handle the structure.</em></h1>
-        <p>Paste a transcript from Otter or Apple Dictation, or record live. Talk about whatever needs talking about — kids, money, work, the week ahead.</p>
+        <h1>Talk like humans.<br /><em>We&apos;ll handle the structure.</em></h1>
+        <p>Type or paste a transcript, dictate with speech-to-text, or record your meeting live. Kids, money, work, the week ahead — whatever needs talking about.</p>
       </div>
 
       <div className="panel capcard">
-        <div className="captoggle">
-          <button className={"seg " + (mode === "paste" ? "on" : "")} onClick={() => setMode("paste")}><Ico d={I.doc} size={15} /> Paste transcript</button>
-          <button className={"seg " + (mode === "record" ? "on" : "")} onClick={() => setMode("record")}><Ico d={I.mic} size={15} /> Record live</button>
+        <div className="captoggle three">
+          <button type="button" className={"seg " + (mode === "paste" ? "on" : "")} onClick={() => pickMode("paste")}>
+            <Ico d={I.doc} size={15} /> Write or paste
+          </button>
+          <button type="button" className={"seg " + (mode === "dictate" ? "on" : "")} onClick={() => pickMode("dictate")}>
+            <Ico d={I.wave} size={15} /> Speech to text
+          </button>
+          <button type="button" className={"seg " + (mode === "record" ? "on" : "")} onClick={() => pickMode("record")}>
+            <Ico d={I.mic} size={15} /> Recording
+          </button>
         </div>
 
-        {mode === "paste" ? (
+        {mode === "paste" && (
           <div style={{ padding: "4px 10px 10px" }}>
-            <textarea className="capta" placeholder="Paste your conversation here…" value={text} onChange={(e) => setText(e.target.value)} />
+            <textarea className="capta" placeholder="Write or paste your conversation here…" value={text} onChange={(e) => setText(e.target.value)} />
             <div className="caprow">
-              <span className="caphint">{text.trim() ? `${text.trim().split(/\s+/).length} words` : "Nothing pasted yet"}</span>
+              <span className="caphint">{wordCount || "Nothing entered yet"}</span>
               <button type="button" className="usesample" onClick={() => setText(SAMPLE_TRANSCRIPT)}>
                 ✦ Use sample conversation
               </button>
             </div>
           </div>
-        ) : (
+        )}
+
+        {mode === "dictate" && (
+          <div style={{ padding: "4px 10px 10px" }}>
+            <textarea
+              className="capta"
+              placeholder="Tap Start dictation and speak — your words appear here. You can edit anytime."
+              value={text}
+              onChange={(e) => {
+                setText(e.target.value);
+                if (!recording) accRef.current = e.target.value ? e.target.value + " " : "";
+              }}
+            />
+            <div className="caprow">
+              <span className="caphint">
+                {recording ? "Listening… speak naturally" : wordCount || "Tap the mic to start dictating"}
+              </span>
+              <button type="button" className={"dictmic" + (recording ? " live" : "")} onClick={toggleRec}>
+                <Ico d={recording ? I.x : I.mic} size={14} />
+                {recording ? "Stop dictation" : "Start dictation"}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {mode === "record" && (
           <div className="recbox">
-            <button className={"recbtn " + (recording ? "live" : "")} onClick={toggleRec}><Ico d={recording ? I.x : I.mic} size={30} /></button>
+            <button type="button" className={"recbtn " + (recording ? "live" : "")} onClick={toggleRec}>
+              <Ico d={recording ? I.x : I.mic} size={30} />
+            </button>
             <div className="rectime">{fmt(secs)}</div>
             {recording ? (
               <div className="recwave">{Array.from({ length: 13 }).map((_, i) => <i key={i} style={{ animationDelay: `${(i % 7) * 0.09}s`, height: 8 }} />)}</div>
@@ -414,8 +470,8 @@ function CaptureView({ text, setText, onBack, onProcess }) {
       </div>
 
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 22 }}>
-        <button className="linkish" onClick={onBack}>← Back to agenda</button>
-        <button className="btn btn-primary btn-lg" disabled={!ready} onClick={() => { stopRec(); onProcess(text, mode); }}>
+        <button type="button" className="linkish" onClick={onBack}>← Back to agenda</button>
+        <button type="button" className="btn btn-primary btn-lg" disabled={!ready} onClick={() => { stopRec(); onProcess(text, mode); }}>
           <Ico d={I.bolt} size={16} fill /> Distill it
         </button>
       </div>
