@@ -111,6 +111,7 @@ const I = {
   cards: ["M4 5h16a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z", "M8 5V3h8v2", "M8 10h8M8 14h5"],
   menu: ["M4 7h16M4 12h16M4 17h16"],
   grid: ["M4 4h6v6H4z", "M14 4h6v6h-6z", "M4 14h6v6H4z", "M14 14h6v6h-6z"],
+  spark: "M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3z",
 };
 
 const START_TOPICS = [
@@ -223,7 +224,36 @@ function SyncHeader({ family, right }) {
   );
 }
 
-function ApproachChoice({ onGuide, onJump }) {
+function ApproachChoice({ onStartSync, onJump }) {
+  const [expanded, setExpanded] = useState(false);
+  const [topics, setTopics] = useState(AGENDA_TOPIC_OPTIONS);
+  const [selected, setSelected] = useState([]);
+  const [draft, setDraft] = useState("");
+  const panelRef = useRef(null);
+
+  const toggle = (name) =>
+    setSelected((s) => (s.includes(name) ? s.filter((x) => x !== name) : [...s, name]));
+
+  const addOwn = () => {
+    const v = draft.trim();
+    if (!v) return;
+    if (!topics.some((t) => t.toLowerCase() === v.toLowerCase())) setTopics((t) => [...t, v]);
+    setSelected((s) => (s.includes(v) ? s : [...s, v]));
+    setDraft("");
+  };
+
+  const openTopics = () => {
+    setExpanded(true);
+    requestAnimationFrame(() =>
+      panelRef.current?.scrollIntoView({ behavior: "smooth", block: "center" })
+    );
+  };
+
+  const startWeeklySync = () => {
+    if (selected.length === 0) return;
+    onStartSync(selected);
+  };
+
   return (
     <div className="view choicewrap">
       <div className="choicehead rise">
@@ -234,8 +264,8 @@ function ApproachChoice({ onGuide, onJump }) {
       <div className="choicecards rise">
         <div
           className="choicecard"
-          onClick={onGuide}
-          onKeyDown={(e) => e.key === "Enter" && onGuide()}
+          onClick={openTopics}
+          onKeyDown={(e) => e.key === "Enter" && openTopics()}
           role="button"
           tabIndex={0}
         >
@@ -248,7 +278,7 @@ function ApproachChoice({ onGuide, onJump }) {
             <span className="egpill">Marriage</span>
           </div>
           <div className="cardfoot">
-            <button type="button" className="choicebtn outline" onClick={(e) => { e.stopPropagation(); onGuide(); }}>
+            <button type="button" className="choicebtn outline" onClick={(e) => { e.stopPropagation(); openTopics(); }}>
               Choose Topics <Ico d={I.arrow} size={15} />
             </button>
           </div>
@@ -272,39 +302,68 @@ function ApproachChoice({ onGuide, onJump }) {
           </div>
         </div>
       </div>
+
+      {expanded && (
+        <div className="topicspanel rise" ref={panelRef}>
+          <div className="tphead">
+            <div className="eyebrow">Pick the topics for this week</div>
+            <span className="tpcount">{selected.length ? `${selected.length} selected` : "None yet"}</span>
+          </div>
+
+          <div className="topicgrid">
+            {topics.map((name) => (
+              <button
+                key={name}
+                type="button"
+                className={"topicpill " + (selected.includes(name) ? "on" : "")}
+                onClick={() => toggle(name)}
+              >
+                {selected.includes(name) && <Ico d={I.check} size={13} />}
+                {name}
+              </button>
+            ))}
+          </div>
+
+          <div className="addown">
+            <input
+              className="addinput"
+              placeholder="Add your own topic…"
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addOwn(); } }}
+            />
+            <button type="button" className="btn btn-soft" onClick={addOwn}><Ico d={I.plus} size={14} /> Add</button>
+          </div>
+
+          {selected.length > 0 && (
+            <div className="controw rise">
+              <button type="button" className="btn btn-primary btn-lg btn-block" onClick={startWeeklySync}>
+                <Ico d={I.cal} size={16} /> Start your weekly sync
+              </button>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
 
-function AgendaBuilder({ family, workspaceId, onDistill, onBackToChoice }) {
-  const [tab, setTab] = useState("agenda");
-  const [showPrevious, setShowPrevious] = useState(true);
-  const [lastSession, setLastSession] = useState(null);
-  const [prevLoading, setPrevLoading] = useState(!!workspaceId);
-  const rowIdRef = useRef(1);
-  const [rows, setRows] = useState([
-    { id: "t1", cat: AGENDA_TOPIC_OPTIONS[0], topic: "" },
-  ]);
+function buildAgendaRowsFromTopics(topicNames = []) {
+  if (!topicNames.length) {
+    return [{ id: "t1", cat: AGENDA_TOPIC_OPTIONS[0], topic: "" }];
+  }
+  return topicNames.map((cat, i) => ({
+    id: "t" + (i + 1),
+    cat: AGENDA_TOPIC_OPTIONS.includes(cat) ? cat : AGENDA_TOPIC_OPTIONS[0],
+    topic: AGENDA_TOPIC_OPTIONS.includes(cat) ? "" : cat,
+  }));
+}
 
-  useEffect(() => {
-    if (!workspaceId) { setPrevLoading(false); return; }
-    let active = true;
-    (async () => {
-      const { data } = await supabase
-        .from("sessions")
-        .select("id, meeting_date, cards, status")
-        .eq("workspace_id", workspaceId)
-        .eq("status", "complete")
-        .order("meeting_date", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      if (active) {
-        setLastSession(data);
-        setPrevLoading(false);
-      }
-    })();
-    return () => { active = false; };
-  }, [workspaceId]);
+function AgendaBuilder({ family, workspaceId, initialTopics = [], onDistill, onBackToChoice }) {
+  const [tab, setTab] = useState("agenda");
+  const [showAssistant, setShowAssistant] = useState(true);
+  const rowIdRef = useRef(Math.max(1, initialTopics.length));
+  const [rows, setRows] = useState(() => buildAgendaRowsFromTopics(initialTopics));
 
   const addTopic = () => {
     rowIdRef.current += 1;
@@ -323,17 +382,13 @@ function AgendaBuilder({ family, workspaceId, onDistill, onBackToChoice }) {
       return detail ? `${r.cat}: ${detail}` : r.cat;
     });
 
-  const prevCards = (Array.isArray(lastSession?.cards) ? lastSession.cards : [])
-    .filter((c) => c.status === "kept" || c.status === "calendared");
-  const prevDate = lastSession?.meeting_date ? prettyDate(lastSession.meeting_date) : null;
-
   return (
     <div className="view">
       <SyncHeader
         family={family}
         right={
-          <button type="button" className={"btn " + (showPrevious ? "btn-soft" : "btn-ghost")} onClick={() => setShowPrevious((v) => !v)}>
-            <Ico d={I.clock} size={15} /> {showPrevious ? "Hide Previous FamilyPause" : "Previous FamilyPause"}
+          <button type="button" className={"btn " + (showAssistant ? "btn-soft" : "btn-ghost")} onClick={() => setShowAssistant((v) => !v)}>
+            <Ico d={I.spark} size={15} /> {showAssistant ? "Hide Assistant" : "AI Assistant"}
           </button>
         }
       />
@@ -346,7 +401,7 @@ function AgendaBuilder({ family, workspaceId, onDistill, onBackToChoice }) {
         <button type="button" className={"tab " + (tab === "log" ? "on" : "")} onClick={() => setTab("log")}>Log</button>
       </div>
 
-      <div className={"worksplit " + (showPrevious ? "with-rail" : "")}>
+      <div className={"worksplit " + (showAssistant ? "with-rail" : "")}>
         <div>
           {tab === "agenda" && (
             <div className="rise">
@@ -436,47 +491,23 @@ function AgendaBuilder({ family, workspaceId, onDistill, onBackToChoice }) {
           )}
         </div>
 
-        {showPrevious && (
-          <aside className="assist prev-rail rise">
+        {showAssistant && (
+          <aside className="assist rise">
             <div className="ahead">
-              <div className="aico prev-ico"><Ico d={I.cal} size={17} /></div>
+              <div className="aico"><Ico d={I.spark} size={17} /></div>
               <div>
-                <div className="at">Previous FamilyPause</div>
-                <div className="as">{prevDate ? prevDate : "Your last weekly sync"}</div>
+                <div className="at">Meeting Assistant</div>
+                <div className="as">Reads &amp; writes your agenda</div>
               </div>
             </div>
-            {prevLoading ? (
-              <div className="prev-empty">Loading your last sync…</div>
-            ) : !lastSession ? (
-              <div className="prev-empty">
-                <strong>Nothing yet from last week.</strong>
-                <span>After your first complete sync, the items you kept will show up here as a quick reference.</span>
-              </div>
-            ) : prevCards.length === 0 ? (
-              <div className="prev-empty">
-                <strong>No kept items from that sync.</strong>
-                <span>Your last meeting on {prevDate} didn&apos;t save any kept actions or events.</span>
-              </div>
-            ) : (
-              <div className="prev-items">
-                {prevCards.map((c, i) => {
-                  const when = formatWhen(c.date, c.time);
-                  return (
-                    <div key={c.id ?? i} className="prev-item">
-                      <div className="prev-item-top">
-                        {c.category && <span className="tag tag-cat">{c.category}</span>}
-                        <span className="prev-type">{c.type || "item"}</span>
-                      </div>
-                      <div className="prev-task">{c.task}</div>
-                      <div className="prev-meta">
-                        <span>{c.person || "Family"}</span>
-                        {when && <span>· {when}</span>}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+            <div className="assbubble">
+              Hi — I&apos;m here while you talk. I can add notes, draft action items, and tell you what you&apos;re forgetting.
+            </div>
+            <div className="suggs">
+              <span className="sugg">Summarize our agenda</span>
+              <span className="sugg">What are we forgetting?</span>
+              <span className="sugg">Add a note to Finance</span>
+            </div>
           </aside>
         )}
       </div>
@@ -486,11 +517,15 @@ function AgendaBuilder({ family, workspaceId, onDistill, onBackToChoice }) {
 
 function SyncView({ family, workspaceId, onDistill }) {
   const [phase, setPhase] = useState("choice");
+  const [pickedTopics, setPickedTopics] = useState([]);
 
   if (phase === "choice") {
     return (
       <ApproachChoice
-        onGuide={() => setPhase("builder")}
+        onStartSync={(topics) => {
+          setPickedTopics(topics);
+          setPhase("builder");
+        }}
         onJump={() => onDistill({ mode: "dictate", topics: [] })}
       />
     );
@@ -498,8 +533,10 @@ function SyncView({ family, workspaceId, onDistill }) {
 
   return (
     <AgendaBuilder
+      key={pickedTopics.join("|")}
       family={family}
       workspaceId={workspaceId}
+      initialTopics={pickedTopics}
       onDistill={onDistill}
       onBackToChoice={() => setPhase("choice")}
     />
