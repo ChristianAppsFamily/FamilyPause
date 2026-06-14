@@ -4,7 +4,7 @@
 // screens.css) into a single React component, wired to real data:
 //   • Anthropic distillation (claude-haiku-4-5)
 //   • Supabase session save (on "Build my week") + realtime sync
-//   • Live speech capture (record mode)
+//   • Live speech capture (dictate mode)
 //   • workspace.family_context for people / categories / person routing
 //
 // Flow (StepRail): Agenda → Capture → Distill(processing) → Review → Plan
@@ -313,19 +313,9 @@ function SyncView({ family, categories, workspaceId, onDistill }) {
 function CaptureView({ text, setText, onBack, onProcess }) {
   const [mode, setMode] = useState("paste");
   const [recording, setRecording] = useState(false);
-  const [secs, setSecs] = useState(0);
   const recRef = useRef(null);
   const accRef = useRef("");
   const recordingRef = useRef(false);
-  const modeRef = useRef("paste");
-
-  useEffect(() => { modeRef.current = mode; }, [mode]);
-
-  useEffect(() => {
-    if (!recording || mode !== "record") return;
-    const t = setInterval(() => setSecs((s) => s + 1), 1000);
-    return () => clearInterval(t);
-  }, [recording, mode]);
 
   const stopRec = () => {
     recordingRef.current = false;
@@ -336,8 +326,11 @@ function CaptureView({ text, setText, onBack, onProcess }) {
 
   const pickMode = (next) => {
     if (recording) stopRec();
+    if (next !== mode) {
+      setText("");
+      accRef.current = "";
+    }
     setMode(next);
-    if (next !== "record") setSecs(0);
   };
 
   const startRec = () => {
@@ -353,19 +346,19 @@ function CaptureView({ text, setText, onBack, onProcess }) {
       rec.interimResults = true;
       rec.lang = "en-US";
       rec.onresult = (e) => {
-        let final = "";
-        let interim = "";
+        let newFinal = "";
         for (let i = e.resultIndex; i < e.results.length; i++) {
-          const chunk = e.results[i][0].transcript;
-          if (e.results[i].isFinal) final += chunk + " ";
-          else if (modeRef.current === "dictate") interim += chunk;
+          if (e.results[i].isFinal) {
+            newFinal += e.results[i][0].transcript + " ";
+          }
         }
-        if (final) accRef.current += final;
-        if (modeRef.current === "dictate") {
-          setText((accRef.current + interim).trim());
-        } else {
-          setText(accRef.current.trim());
+        if (newFinal) accRef.current += newFinal;
+
+        let interim = "";
+        for (let i = 0; i < e.results.length; i++) {
+          if (!e.results[i].isFinal) interim += e.results[i][0].transcript;
         }
+        setText((accRef.current + interim).trim());
       };
       rec.onerror = (e) => {
         if (e.error === "not-allowed" || e.error === "permission-denied") {
@@ -384,16 +377,14 @@ function CaptureView({ text, setText, onBack, onProcess }) {
       try { rec.start(); } catch (err) { alert("Could not start microphone: " + err.message); return; }
     };
 
-    accRef.current = text ? text + " " : "";
+    accRef.current = text.trim() ? text.trim() + " " : "";
     recordingRef.current = true;
     setRecording(true);
-    if (modeRef.current === "record") setSecs(0);
     launch();
   };
 
   const toggleRec = () => (recording ? stopRec() : startRec());
 
-  const fmt = (s) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
   const ready = text.trim().length > 30;
   const wordCount = text.trim() ? `${text.trim().split(/\s+/).length} words` : null;
 
@@ -402,19 +393,16 @@ function CaptureView({ text, setText, onBack, onProcess }) {
       <div className="lead">
         <div className="eyebrow" style={{ marginBottom: 12 }}>Step 2 · Have your meeting</div>
         <h1>Talk like humans.<br /><em>We&apos;ll handle the structure.</em></h1>
-        <p>Type or paste a transcript, dictate with speech-to-text, or record your meeting live. Kids, money, work, the week ahead — whatever needs talking about.</p>
+        <p>Type or paste a transcript, or dictate with speech-to-text. Kids, money, work, the week ahead — whatever needs talking about.</p>
       </div>
 
       <div className="panel capcard">
-        <div className="captoggle three">
+        <div className="captoggle">
           <button type="button" className={"seg " + (mode === "paste" ? "on" : "")} onClick={() => pickMode("paste")}>
             <Ico d={I.doc} size={15} /> Write or paste
           </button>
           <button type="button" className={"seg " + (mode === "dictate" ? "on" : "")} onClick={() => pickMode("dictate")}>
             <Ico d={I.wave} size={15} /> Speech to text
-          </button>
-          <button type="button" className={"seg " + (mode === "record" ? "on" : "")} onClick={() => pickMode("record")}>
-            <Ico d={I.mic} size={15} /> Recording
           </button>
         </div>
 
@@ -450,21 +438,6 @@ function CaptureView({ text, setText, onBack, onProcess }) {
                 {recording ? "Stop dictation" : "Start dictation"}
               </button>
             </div>
-          </div>
-        )}
-
-        {mode === "record" && (
-          <div className="recbox">
-            <button type="button" className={"recbtn " + (recording ? "live" : "")} onClick={toggleRec}>
-              <Ico d={recording ? I.x : I.mic} size={30} />
-            </button>
-            <div className="rectime">{fmt(secs)}</div>
-            {recording ? (
-              <div className="recwave">{Array.from({ length: 13 }).map((_, i) => <i key={i} style={{ animationDelay: `${(i % 7) * 0.09}s`, height: 8 }} />)}</div>
-            ) : (
-              <div className="caphint" style={{ marginTop: 14 }}>{text.trim() ? "Recording captured · ready to distill" : "Tap to start recording your sync"}</div>
-            )}
-            {recording && text && <div style={{ marginTop: 14, fontSize: 14, color: "var(--ink-2)", maxWidth: 520, marginInline: "auto" }}>{text}</div>}
           </div>
         )}
       </div>
