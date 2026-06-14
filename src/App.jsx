@@ -599,6 +599,7 @@ function CaptureView({ text, setText, initialMode = "paste", onBack, onProcess }
       return;
     }
     rec.onstop = () => {
+      // Brave needs extra time to flush the final webm/opus chunk after stop().
       setTimeout(() => {
         const blob = chunksRef.current.length
           ? new Blob(chunksRef.current, { type: mimeRef.current || "audio/webm" })
@@ -607,7 +608,7 @@ function CaptureView({ text, setText, initialMode = "paste", onBack, onProcess }
         releaseStream();
         recorderRef.current = null;
         resolve(blob);
-      }, 80);
+      }, 320);
     };
     if (rec.state === "recording") {
       try { rec.requestData(); } catch { /* ignore */ }
@@ -739,7 +740,8 @@ function CaptureView({ text, setText, initialMode = "paste", onBack, onProcess }
       const rec = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined);
       rec.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data); };
       recorderRef.current = rec;
-      rec.start(100);
+      // Single blob on stop — more reliable in Brave than small timeslices.
+      rec.start();
       setDictating(true);
       setDictStatus(speechPreviewSupported()
         ? "Listening… words appear below as you speak"

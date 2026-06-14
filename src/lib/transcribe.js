@@ -143,6 +143,13 @@ export async function transcribeAudioBlob(blob, mimeType, { onStatus, onProgress
       },
     });
   } catch (localErr) {
-    throw new Error(localErr.message || serverErr || "Transcription failed");
+    const localMsg = localErr.message || "Transcription failed";
+    const needsServerKey = /GROQ_API_KEY|not configured/i.test(serverErr);
+    if (needsServerKey && /No speech detected|timed out/i.test(localMsg)) {
+      throw new Error(
+        "Couldn't transcribe in the browser. Add a free GROQ_API_KEY (console.groq.com/keys) for fast server transcription — or use Write or paste."
+      );
+    }
+    throw new Error(localMsg || serverErr || "Transcription failed");
   }
 }

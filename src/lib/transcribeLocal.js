@@ -1,5 +1,8 @@
 let pipelinePromise = null;
 
+const SAMPLE_RATE = 16000;
+const MIN_SAMPLES = SAMPLE_RATE * 2; // 2 seconds at 16 kHz
+
 function withTimeout(promise, ms, message) {
   return Promise.race([
     promise,
@@ -25,32 +28,59 @@ function resampleLinear(samples, fromRate, toRate) {
   return out;
 }
 
-/** Decode MediaRecorder blobs via Web Audio (most reliable in Brave for webm/opus). */
+function toMonoBuffer(decoded) {
+  if (decoded.numberOfChannels === 1) return decoded.getChannelData(0);
+  const ch0 = decoded.getChannelData(0);
+  const ch1 = decoded.getChannelData(1);
+  const mono = new Float32Array(ch0.length);
+  for (let i = 0; i < ch0.length; i++) mono[i] = (ch0[i] + (ch1[i] ?? 0)) / 2;
+  return mono;
+}
+
+function normalizeAmplitude(samples) {
+  let peak = 0;
+  for (let i = 0; i < samples.length; i++) peak = Math.max(peak, Math.abs(samples[i]));
+  if (peak < 0.0005) {
+    throw new Error("No speech detected — check mic input and try again.");
+  }
+  if (peak >= 0.15) return samples;
+  const scale = 0.85 / peak;
+  const out = new Float32Array(samples.length);
+  for (let i = 0; i < samples.length; i++) out[i] = samples[i] * scale;
+  return out;
+}
+
+/** Decode MediaRecorder blob → mono Float32 @ 16 kHz (Whisper requirement). */
 async function decodeAudioBlob(blob) {
   const arrayBuffer = await blob.arrayBuffer();
   if (arrayBuffer.byteLength < 200) {
     throw new Error("Recording too short — speak for at least 2 seconds.");
   }
 
-  const audioCtx = new AudioContext();
+  // Resample during decode — manual resample alone often yields empty Whisper output.
+  const audioCtx = new AudioContext({ sampleRate: SAMPLE_RATE });
   try {
     const decoded = await audioCtx.decodeAudioData(arrayBuffer.slice(0));
-    const samples = decoded.getChannelData(0);
-    if (!samples?.length || samples.length < 8000) {
+    let samples = toMonoBuffer(decoded);
+    if (decoded.sampleRate !== SAMPLE_RATE) {
+      samples = resampleLinear(samples, decoded.sampleRate, SAMPLE_RATE);
+    } else {
+      samples = Float32Array.from(samples);
+    }
+    if (samples.length < MIN_SAMPLES) {
       throw new Error("Recording too short — speak for at least 2 seconds.");
     }
-    return decoded.sampleRate === 16000
-      ? Float32Array.from(samples)
-      : resampleLinear(samples, decoded.sampleRate, 16000);
-  } catch {
+    return normalizeAmplitude(samples);
+  } catch (err) {
+    if (err.message?.includes("No speech detected") || err.message?.includes("too short")) throw err;
     const url = URL.createObjectURL(blob);
     try {
       const { read_audio } = await import("@xenova/transformers");
-      const audio = await read_audio(url, 16000);
-      if (!audio?.length || audio.length < 8000) {
+      const audio = await read_audio(url, SAMPLE_RATE);
+      if (!audio?.length || audio.length < MIN_SAMPLES) {
         throw new Error("Recording too short — speak for at least 2 seconds.");
       }
-      return audio;
+      return normalizeAmplitude(audio);
     } finally {
       URL.revokeObjectURL(url);
     }
@@ -64,7 +94,6 @@ async function loadTransformers(onProgress) {
   env.allowLocalModels = false;
   env.useBrowserCache = true;
   env.allowRemoteModels = true;
-  // Brave lacks cross-origin isolation — multithreaded WASM + proxy workers hang at inference.
   env.backends.onnx.wasm.proxy = false;
   env.backends.onnx.wasm.numThreads = 1;
 
@@ -88,24 +117,38 @@ function extractText(out) {
   return "";
 }
 
+function cleanTranscript(text) {
+  const t = (text || "").trim();
+  if (!t || /^\[BLANK_AUDIO\]$/i.test(t) || /^\(silence\)$/i.test(t)) return "";
+  return t;
+}
+
+async function runTranscriber(transcriber, input) {
+  return withTimeout(
+    transcriber(input, { task: "transcribe" }),
+    90000,
+    "Transcription timed out. Try again or use Write or paste."
+  );
+}
+
 /** On-device Whisper when server GROQ_API_KEY is not configured. */
 export async function transcribeLocally(blob, { onProgress, onStatus } = {}) {
   const transcriber = await loadTransformers(onProgress);
   onStatus?.("Turning speech into text…");
 
+  // Prefer blob URL — transformers.js read_audio handles webm/opus reliably.
+  const url = URL.createObjectURL(blob);
+  try {
+    const fromUrl = cleanTranscript(extractText(await runTranscriber(transcriber, url)));
+    if (fromUrl) return fromUrl;
+  } catch {
+    /* fall through to manual decode */
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+
   const audio = await decodeAudioBlob(blob);
-
-  // Short dictation clips: skip chunk_length_s — it can stall inference in browser WASM.
-  const out = await withTimeout(
-    transcriber(audio, {
-      language: "english",
-      task: "transcribe",
-    }),
-    90000,
-    "Transcription timed out. Try again or use Write or paste."
-  );
-
-  const text = extractText(out);
-  if (!text) throw new Error("No speech detected — check mic input and try again.");
-  return text;
+  const fromPcm = cleanTranscript(extractText(await runTranscriber(transcriber, audio)));
+  if (!fromPcm) throw new Error("No speech detected — check mic input and try again.");
+  return fromPcm;
 }
