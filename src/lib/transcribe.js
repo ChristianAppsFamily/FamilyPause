@@ -29,6 +29,11 @@ async function blobToBase64(blob) {
   return btoa(binary);
 }
 
+function pickText(value) {
+  const text = (value || "").trim();
+  return text || null;
+}
+
 async function parseInvokeError(error) {
   let detail = error?.message || "Transcription failed";
   try {
@@ -71,7 +76,7 @@ async function invokeVercelTranscribe(body) {
     throw new Error(payload?.error || `Transcription failed (${res.status})`);
   }
   if (payload?.error) throw new Error(payload.error);
-  return (payload?.text || "").trim();
+  return pickText(payload?.text);
 }
 
 function modelProgressLabel(progress) {
@@ -92,13 +97,13 @@ export async function transcribeAudioBlob(blob, mimeType, { onStatus, onProgress
   let serverErr = "";
 
   const { data, error } = await supabase.functions.invoke("transcribe", { body });
-  if (!error && !data?.error) {
-    return (data?.text || "").trim();
-  }
+  const edgeText = !error && !data?.error ? pickText(data?.text) : null;
+  if (edgeText) return edgeText;
   serverErr = error ? await parseInvokeError(error) : (data?.error || "");
 
   try {
-    return await invokeVercelTranscribe(body);
+    const vercelText = await invokeVercelTranscribe(body);
+    if (vercelText) return vercelText;
   } catch (vercelErr) {
     serverErr = serverErr || vercelErr.message;
   }
@@ -116,7 +121,6 @@ export async function transcribeAudioBlob(blob, mimeType, { onStatus, onProgress
       },
     });
   } catch (localErr) {
-    const base = serverErr || localErr.message;
-    throw new Error(base.includes("OPENAI") ? `${base} On-device fallback failed — try Write or paste.` : base);
+    throw new Error(localErr.message || serverErr || "Transcription failed");
   }
 }

@@ -426,14 +426,19 @@ function CaptureView({ text, setText, onBack, onProcess }) {
       return;
     }
     rec.onstop = () => {
-      const blob = chunksRef.current.length
-        ? new Blob(chunksRef.current, { type: mimeRef.current || "audio/webm" })
-        : null;
-      chunksRef.current = [];
-      releaseStream();
-      recorderRef.current = null;
-      resolve(blob);
+      setTimeout(() => {
+        const blob = chunksRef.current.length
+          ? new Blob(chunksRef.current, { type: mimeRef.current || "audio/webm" })
+          : null;
+        chunksRef.current = [];
+        releaseStream();
+        recorderRef.current = null;
+        resolve(blob);
+      }, 80);
     };
+    if (rec.state === "recording") {
+      try { rec.requestData(); } catch { /* ignore */ }
+    }
     try { rec.stop(); } catch { resolve(null); }
   });
 
@@ -475,16 +480,16 @@ function CaptureView({ text, setText, onBack, onProcess }) {
   const confirmDictation = async () => {
     if (transcribing) return text;
     const previewFallback = livePreview.trim();
-    stopPreview();
-    stopMeter();
     setTranscribing(true);
     setDictStatus("Transcribing…");
     setLivePreview("");
     try {
+      stopPreview();
       const blob = await stopRecorder();
+      stopMeter();
       setDictating(false);
       if (!blob || blob.size < 200) {
-        setDictNotice("Recording too short. Speak a little longer, then tap the check mark.");
+        setDictNotice("Recording too short. Speak for at least 2–3 seconds, then tap the check mark.");
         return baseRef.current;
       }
       const spoken = await transcribeAudioBlob(blob, mimeRef.current, {
@@ -492,7 +497,7 @@ function CaptureView({ text, setText, onBack, onProcess }) {
         onStatus: setDictStatus,
       });
       if (!spoken) {
-        setDictNotice("Couldn't pick up any speech. Try again.");
+        setDictNotice("Couldn't pick up any speech. Check your mic, speak a little longer, and try again.");
         return baseRef.current;
       }
       const merged = baseRef.current
@@ -561,7 +566,7 @@ function CaptureView({ text, setText, onBack, onProcess }) {
       const rec = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined);
       rec.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data); };
       recorderRef.current = rec;
-      rec.start(250);
+      rec.start(100);
       setDictating(true);
       setDictStatus(speechPreviewSupported()
         ? "Listening… words appear below as you speak"
