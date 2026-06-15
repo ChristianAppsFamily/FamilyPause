@@ -16,14 +16,18 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "./lib/supabase";
 import { callFamilyPauseAI, buildSystemPrompt } from "./lib/ai";
 import Settings from "./components/Settings.jsx";
-import SessionHistory from "./components/SessionHistory.jsx";
 import CardSystem from "./components/CardSystem.jsx";
 import Paywall from "./components/Paywall.jsx";
 import { paywallReason } from "./lib/subscription";
 import { parseAppLocation, syncPath, SYNC_VIEWS } from "./lib/routes";
 import { canRecordAudio, pickRecordingMimeType, transcribeAudioBlob } from "./lib/transcribe";
 import { speechPreviewSupported, startSpeechPreview } from "./lib/speechPreview";
-import { clearCaptureDraft, loadCaptureDraft, saveCaptureDraft } from "./lib/captureDraft";
+import {
+  deleteSessionRow,
+  fetchInputDraft,
+  saveInputDraft,
+  uiInputMode,
+} from "./lib/sessionDraft";
 
 // ── DEFAULT CONTEXT (fallback when workspace has none) ───────────────────────
 const DEFAULT_CONTEXT = {
@@ -145,7 +149,7 @@ function StepRail({ view, vertical = false }) {
   );
 }
 
-function BrandBar({ view, onOpenCards, onOpenHistory, onOpenSettings, onSignOut }) {
+function BrandBar({ view, onOpenCards, onOpenSettings, onSignOut }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const closeMenu = useCallback(() => setMenuOpen(false), []);
 
@@ -172,7 +176,6 @@ function BrandBar({ view, onOpenCards, onOpenHistory, onOpenSettings, onSignOut 
             <StepRail view={view} />
             <div className="brandbar-tools">
               <button className="linkish" title="Card deck" onClick={onOpenCards} style={{ display: "inline-flex", padding: 8 }}><Ico d={I.cards} size={16} /></button>
-              <button className="linkish" title="Session history" onClick={onOpenHistory} style={{ display: "inline-flex", padding: 8 }}><Ico d={I.clock} size={16} /></button>
               <button className="linkish" title="Settings" onClick={onOpenSettings} style={{ display: "inline-flex", padding: 8 }}><Ico d={I.gear} size={16} /></button>
               <button className="linkish" title="Sign out" onClick={onSignOut} style={{ display: "inline-flex", padding: 8 }}><Ico d={I.out} size={16} /></button>
             </div>
@@ -196,7 +199,6 @@ function BrandBar({ view, onOpenCards, onOpenHistory, onOpenSettings, onSignOut 
             <StepRail view={view} vertical />
             <div className="brandbar-drawer-links">
               <button type="button" className="brandbar-drawer-link" onClick={run(onOpenCards)}><Ico d={I.cards} size={16} /> Card deck</button>
-              <button type="button" className="brandbar-drawer-link" onClick={run(onOpenHistory)}><Ico d={I.clock} size={16} /> Session history</button>
               <button type="button" className="brandbar-drawer-link" onClick={run(onOpenSettings)}><Ico d={I.gear} size={16} /> Settings</button>
               <button type="button" className="brandbar-drawer-link brandbar-drawer-link-danger" onClick={run(onSignOut)}><Ico d={I.out} size={16} /> Sign out</button>
             </div>
@@ -208,6 +210,31 @@ function BrandBar({ view, onOpenCards, onOpenHistory, onOpenSettings, onSignOut 
 }
 
 const AGENDA_TOPIC_OPTIONS = START_TOPICS;
+
+function ResumeBanner({ draft, onResume, onDiscard }) {
+  const words = draft.transcript?.trim() ? draft.transcript.trim().split(/\s+/).length : 0;
+  const when = draft.updated_at
+    ? new Date(draft.updated_at).toLocaleString("en-US", { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })
+    : "";
+
+  return (
+    <div className="resume-banner rise">
+      <div className="resume-banner-copy">
+        <div className="eyebrow" style={{ marginBottom: 6 }}>Interrupted sync</div>
+        <p>
+          {words > 0
+            ? `You left a draft in progress (${words} word${words === 1 ? "" : "s"}).`
+            : "You left a sync in progress."}
+          {when ? ` Last saved ${when}.` : ""}
+        </p>
+      </div>
+      <div className="resume-banner-actions">
+        <button type="button" className="btn btn-soft" onClick={onDiscard}>Discard</button>
+        <button type="button" className="btn btn-primary" onClick={onResume}>Resume</button>
+      </div>
+    </div>
+  );
+}
 
 function SyncHeader({ family, right }) {
   return (
@@ -463,9 +490,9 @@ function AgendaBuilder({ family, workspaceId, initialTopics = [], onDistill, onB
           {tab === "log" && (
             <div className="rise" style={{ textAlign: "center", padding: "70px 20px", color: "var(--ink-3)" }}>
               <div style={{ fontFamily: "var(--display)", fontSize: 22, fontStyle: "italic", color: "var(--ink-2)", marginBottom: 8 }}>
-                Your past syncs live here.
+                No meeting log yet.
               </div>
-              <div style={{ fontSize: 15 }}>Every meeting, summarized and searchable.</div>
+              <div style={{ fontSize: 15 }}>FamilyPause organizes this week — it does not keep a searchable history of past syncs.</div>
             </div>
           )}
 
@@ -783,10 +810,7 @@ function CaptureView({ text, setText, mode, setMode, onBack, onProcess }) {
           <div style={{ padding: "4px 10px 10px" }}>
             <textarea className="capta" placeholder="Write or paste your conversation here…" value={text} onChange={(e) => setText(e.target.value)} />
             <div className="caprow">
-              <span className="caphint">
-                {wordCount || "Nothing entered yet"}
-                {text.trim() ? " · draft saved if you refresh" : ""}
-              </span>
+              <span className="caphint">{wordCount || "Nothing entered yet"}</span>
               <button type="button" className="usesample" onClick={() => setText(SAMPLE_TRANSCRIPT)}>
                 ✦ Use sample conversation
               </button>
@@ -838,10 +862,7 @@ function CaptureView({ text, setText, mode, setMode, onBack, onProcess }) {
               </div>
             ) : (
               <div className="caprow">
-                <span className="caphint">
-                  {wordCount || "Tap the mic, speak, then save or cancel"}
-                  {text.trim() ? " · draft saved if you refresh" : ""}
-                </span>
+                <span className="caphint">{wordCount || "Tap the mic, speak, then save or cancel"}</span>
                 <button type="button" className="dictmic" onClick={startDictation}>
                   <Ico d={I.mic} size={14} /> Start dictation
                 </button>
@@ -1107,27 +1128,30 @@ export default function App({ user, workspace, onSignOut }) {
   const [captureText, setCaptureText] = useState("");
   const [captureMode, setCaptureMode] = useState("paste");
   const [agendaTopics, setAgendaTopics] = useState([]);
+  const [inputDraft, setInputDraft] = useState(null);
   const [meetingDate] = useState(todayStr());
   const [ws, setWs] = useState(workspace);
 
   const sessionIdRef = useRef(null);
   const savedRef = useRef(false);
-  const captureDraftLoadedRef = useRef(false);
 
   useEffect(() => { setWs(workspace); }, [workspace]);
 
-  useEffect(() => {
-    if (!ws?.id || captureDraftLoadedRef.current) return;
-    captureDraftLoadedRef.current = true;
-    const draft = loadCaptureDraft(ws.id);
-    if (draft?.text) setCaptureText(draft.text);
-    if (draft?.mode) setCaptureMode(draft.mode);
+  const loadInputDraft = useCallback(async () => {
+    if (!ws?.id) return;
+    try {
+      const draft = await fetchInputDraft(supabase, ws.id);
+      if (draft?.transcript?.trim()) setInputDraft(draft);
+      else setInputDraft(null);
+    } catch {
+      setInputDraft(null);
+    }
   }, [ws?.id]);
 
   useEffect(() => {
     if (!ws?.id) return;
-    saveCaptureDraft(ws.id, { text: captureText, mode: captureMode });
-  }, [ws?.id, captureText, captureMode]);
+    loadInputDraft();
+  }, [ws?.id, loadInputDraft]);
 
   useEffect(() => {
     const parsed = parseAppLocation(location.pathname, location.search);
@@ -1139,6 +1163,10 @@ export default function App({ user, workspace, onSignOut }) {
     }
   }, [location.pathname, location.search]);
 
+  useEffect(() => {
+    if (view === "agenda") loadInputDraft();
+  }, [view, loadInputDraft]);
+
   const go = (v, { replace = false } = {}) => {
     window.scrollTo({ top: 0, behavior: "smooth" });
     navigate(syncPath(v), { replace });
@@ -1147,7 +1175,6 @@ export default function App({ user, workspace, onSignOut }) {
   const openOverlay = (name) => {
     const paths = {
       settings: "/app/settings",
-      history: "/app/history",
       decks: "/app/cards",
       paywall: "/app/paywall",
     };
@@ -1187,6 +1214,7 @@ export default function App({ user, workspace, onSignOut }) {
         .from("sessions")
         .select("*", { count: "exact", head: true })
         .eq("workspace_id", ws.id)
+        .neq("status", "input")
         .gte("created_at", startOfMonth.toISOString());
       if (active) setSessionsThisMonth(count || 0);
     })();
@@ -1219,6 +1247,79 @@ export default function App({ user, workspace, onSignOut }) {
     return () => { supabase.removeChannel(channel); };
   }, [ws?.id]);
 
+  // Auto-save capture transcript as status `input` every 30s (safety net for refresh/crash).
+  useEffect(() => {
+    if (!ws?.id || view !== "capture") return undefined;
+
+    const persist = async () => {
+      const existingId = sessionIdRef.current || inputDraft?.id;
+      if (!captureText.trim()) {
+        if (existingId) {
+          try {
+            await deleteSessionRow(supabase, existingId);
+            if (sessionIdRef.current === existingId) sessionIdRef.current = null;
+            setInputDraft(null);
+          } catch {
+            /* ignore */
+          }
+        }
+        return;
+      }
+      try {
+        const id = await saveInputDraft(supabase, {
+          workspaceId: ws.id,
+          userId: user?.id,
+          sessionId: existingId,
+          transcript: captureText,
+          inputMode: captureMode,
+          meetingDate,
+        });
+        if (id) sessionIdRef.current = id;
+      } catch {
+        /* best-effort */
+      }
+    };
+
+    persist();
+    const timer = setInterval(persist, 30000);
+    return () => clearInterval(timer);
+  }, [ws?.id, view, captureText, captureMode, meetingDate, user?.id, inputDraft?.id]);
+
+  const resumeInputDraft = () => {
+    if (!inputDraft) return;
+    sessionIdRef.current = inputDraft.id;
+    setCaptureText(inputDraft.transcript || "");
+    setCaptureMode(uiInputMode(inputDraft.input_mode));
+    setInputDraft(null);
+    go("capture");
+  };
+
+  const discardInputDraft = async () => {
+    if (!inputDraft?.id) {
+      setInputDraft(null);
+      return;
+    }
+    try {
+      await deleteSessionRow(supabase, inputDraft.id);
+      if (sessionIdRef.current === inputDraft.id) sessionIdRef.current = null;
+    } catch {
+      /* ignore */
+    }
+    setInputDraft(null);
+  };
+
+  const clearActiveSession = async () => {
+    const id = sessionIdRef.current;
+    sessionIdRef.current = null;
+    if (!id) return;
+    try {
+      await deleteSessionRow(supabase, id);
+    } catch {
+      /* ignore */
+    }
+    setInputDraft(null);
+  };
+
   // ── Distill (real AI) ────────────────────────────────────────────────────
   const runDistill = async (text, mode = "paste") => {
     const block = paywallReason(subscription, sessionsThisMonth);
@@ -1232,10 +1333,25 @@ export default function App({ user, workspace, onSignOut }) {
     setDistillDone(false);
     setDistillError(null);
     setCards([]);
-    if (ws?.id) clearCaptureDraft(ws.id);
+    setInputDraft(null);
     go("processing");
     savedRef.current = false;
-    sessionIdRef.current = null;
+
+    if (ws?.id && text?.trim()) {
+      try {
+        const id = await saveInputDraft(supabase, {
+          workspaceId: ws.id,
+          userId: user?.id,
+          sessionId: sessionIdRef.current,
+          transcript: text,
+          inputMode: mode,
+          meetingDate,
+        });
+        if (id) sessionIdRef.current = id;
+      } catch {
+        /* best-effort */
+      }
+    }
 
     const topicHint = agendaTopics.length
       ? `\nFocus topics for this sync: ${agendaTopics.join(", ")}. Prioritize items related to these topics when present in the transcript.`
@@ -1282,20 +1398,31 @@ Rules: extract everything actionable, use person names when mentioned, return on
 
     if (!errorMsg && ws?.id && newCards.length > 0) {
       try {
-        const { data, error } = await supabase.from("sessions").insert({
-          workspace_id: ws.id,
-          meeting_date: meetingDate,
+        const reviewPayload = {
           transcript: text,
-          input_mode: mode,
+          input_mode: mode === "dictate" ? "record" : "paste",
           cards: newCards,
           status: "review",
-          created_by: user?.id,
-        }).select().single();
-        if (!error && data) {
-          sessionIdRef.current = data.id;
-          setSessionsThisMonth((n) => n + 1);
+        };
+        if (sessionIdRef.current) {
+          const { error } = await supabase
+            .from("sessions")
+            .update(reviewPayload)
+            .eq("id", sessionIdRef.current);
+          if (!error) setSessionsThisMonth((n) => n + 1);
+        } else {
+          const { data, error } = await supabase.from("sessions").insert({
+            workspace_id: ws.id,
+            meeting_date: meetingDate,
+            created_by: user?.id,
+            ...reviewPayload,
+          }).select().single();
+          if (!error && data) {
+            sessionIdRef.current = data.id;
+            setSessionsThisMonth((n) => n + 1);
+          }
         }
-      } catch { /* session insert is best-effort */ }
+      } catch { /* session update is best-effort */ }
     }
 
     setTimeout(() => go("review", { replace: true }), 650); // let the orb finish
@@ -1317,40 +1444,22 @@ Rules: extract everything actionable, use person names when mentioned, return on
     savedRef.current = true;
     (async () => {
       try {
-        if (sessionIdRef.current) {
-          const { error } = await supabase.from("sessions").update({
-            cards,
-            status: "complete",
-            transcript: captureText,
-            input_mode: inputMode,
-          }).eq("id", sessionIdRef.current);
-          if (error) savedRef.current = false;
-          return;
-        }
-        const { data, error } = await supabase.from("sessions").insert({
-          workspace_id: ws.id,
-          meeting_date: meetingDate,
-          transcript: captureText,
-          input_mode: inputMode,
-          cards,
-          status: "complete",
-          created_by: user?.id,
-        }).select().single();
-        if (error) { savedRef.current = false; return; }
-        if (data) sessionIdRef.current = data.id;
-      } catch { savedRef.current = false; }
+        await clearActiveSession();
+      } catch {
+        savedRef.current = false;
+      }
     })();
   };
 
-  const restart = () => {
+  const restart = async () => {
     setCards([]);
     setDistillDone(false);
     savedRef.current = false;
-    sessionIdRef.current = null;
+    await clearActiveSession();
     setCaptureText("");
     setCaptureMode("paste");
-    if (ws?.id) clearCaptureDraft(ws.id);
     go("agenda");
+    loadInputDraft();
   };
 
   const keptCards = cards.filter((c) => c.status === STATUS.KEPT || c.status === STATUS.CALENDARED);
@@ -1372,13 +1481,9 @@ Rules: extract everything actionable, use person names when mentioned, return on
         onSignOut={onSignOut}
         onClose={closeOverlay}
         onOpenDecks={() => navigate("/app/cards")}
-        onOpenHistory={() => navigate("/app/history")}
         onWorkspaceUpdate={setWs}
       />
     );
-  }
-  if (overlay === "history") {
-    return <SessionHistory workspace={ws} onClose={closeOverlay} />;
   }
   if (overlay === "decks") {
     return (
@@ -1397,19 +1502,32 @@ Rules: extract everything actionable, use person names when mentioned, return on
       <BrandBar
         view={view}
         onOpenCards={openCardDeck}
-        onOpenHistory={() => openOverlay("history")}
         onOpenSettings={() => openOverlay("settings")}
         onSignOut={onSignOut}
       />
+
+      {inputDraft && view !== "capture" && view !== "processing" && view !== "review" && view !== "plan" && (
+        <ResumeBanner draft={inputDraft} onResume={resumeInputDraft} onDiscard={discardInputDraft} />
+      )}
 
       {view === "agenda" && (
         <SyncView
           family={family}
           workspaceId={ws?.id}
-          onDistill={({ mode = "paste", topics } = {}) => {
+          onDistill={async ({ mode = "paste", topics } = {}) => {
             if (topics?.length) setAgendaTopics(topics);
             else setAgendaTopics([]);
             setCaptureMode(mode);
+            setCaptureText("");
+            if (inputDraft?.id) {
+              try {
+                await deleteSessionRow(supabase, inputDraft.id);
+              } catch {
+                /* ignore */
+              }
+              if (sessionIdRef.current === inputDraft.id) sessionIdRef.current = null;
+              setInputDraft(null);
+            }
             go("capture");
           }}
         />
@@ -1420,7 +1538,10 @@ Rules: extract everything actionable, use person names when mentioned, return on
           setText={setCaptureText}
           mode={captureMode}
           setMode={setCaptureMode}
-          onBack={() => go("agenda")}
+          onBack={() => {
+            loadInputDraft();
+            go("agenda");
+          }}
           onProcess={runDistill}
         />
       )}

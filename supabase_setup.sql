@@ -148,6 +148,10 @@ drop policy if exists "sessions_update" on sessions;
 create policy "sessions_update" on sessions for update using (
   workspace_id in (select workspace_id from workspace_members where user_id = auth.uid())
 );
+drop policy if exists "sessions_delete" on sessions;
+create policy "sessions_delete" on sessions for delete using (
+  workspace_id in (select workspace_id from workspace_members where user_id = auth.uid())
+);
 
 -- Subscriptions: members can read; only workspace owner can write
 drop policy if exists "subs_select" on subscriptions;

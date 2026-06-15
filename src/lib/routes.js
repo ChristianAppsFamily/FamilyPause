@@ -46,7 +46,6 @@ export function parseAppLocation(pathname, search = "") {
   }
 
   if (pathname === "/app/settings") return { area: "overlay", overlay: "settings" };
-  if (pathname === "/app/history") return { area: "overlay", overlay: "history" };
   if (pathname === "/app/cards") return { area: "overlay", overlay: "decks" };
   if (pathname === "/app/paywall") return { area: "overlay", overlay: "paywall" };
 

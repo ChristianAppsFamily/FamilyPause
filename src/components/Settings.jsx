@@ -11,7 +11,7 @@
 //   onSignOut() called to sign the user out (passed from AppRouter)
 //   onClose()   optional: return to the main app
 //   onOpenDecks() optional: open the CardSystem unlock flow
-//   onOpenHistory() optional: open SessionHistory overlay
+//   onOpenDecks() optional: open CardSystem overlay
 //   onWorkspaceUpdate(updatedWorkspace) optional: bubble saved workspace up
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -112,7 +112,7 @@ function NameList({ label, items, tone, onAdd, onRemove, placeholder, emptyNote 
 }
 
 // ── MAIN ──────────────────────────────────────────────────────────────────────
-export default function Settings({ workspace, user, onSignOut, onClose, onOpenDecks, onOpenHistory, onWorkspaceUpdate }) {
+export default function Settings({ workspace, user, onSignOut, onClose, onOpenDecks, onWorkspaceUpdate }) {
   const fc = workspace?.family_context || {};
   const initialKids = Array.isArray(fc.kids) ? fc.kids : [];
   // "people" stores adults + kids together; derive adults by removing kids.
@@ -345,24 +345,6 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
               ))}
             </div>
           )}
-        </section>
-
-        {/* ── SESSION HISTORY ────────────────────────────────────────── */}
-        <section className="panel set-sec rise">
-          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, marginBottom: 18 }}>
-            <div>
-              <div className="eyebrow" style={{ marginBottom: 9 }}>Past syncs</div>
-              <h2 style={{ margin: 0 }}>Session history</h2>
-            </div>
-            {onOpenHistory && (
-              <button className="btn btn-ghost" onClick={onOpenHistory} style={{ flexShrink: 0, marginTop: 4 }}>
-                View history
-              </button>
-            )}
-          </div>
-          <p className="set-sub" style={{ margin: 0 }}>
-            Every completed FamilyPause sync is saved here — dates, kept items, and the full card list.
-          </p>
         </section>
 
         {/* ── CARD DECKS ─────────────────────────────────────────────── */}

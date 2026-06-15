@@ -337,37 +337,18 @@
 }
 .sugg:hover { border-color: var(--olive); color: var(--olive-d); background: var(--olive-tint); }
 
-/* previous FamilyPause rail (replaces assistant on agenda) */
-.prev-rail .prev-ico {
-  background: var(--gold-soft); color: var(--gold);
-  border-color: rgba(192, 151, 64, 0.35);
+/* resume draft banner */
+.resume-banner {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px;
+  margin: 0 0 22px; padding: 18px 20px;
+  background: var(--gold-soft); border: 1px solid var(--line-2);
+  border-radius: var(--r-lg); box-shadow: var(--shadow-sm);
 }
-.prev-items {
-  display: flex; flex-direction: column; gap: 10px;
-  max-height: min(52vh, 460px); overflow-y: auto; padding-right: 2px;
+.resume-banner-copy { flex: 1; min-width: 200px; }
+.resume-banner-copy p {
+  margin: 0; font-family: var(--serif); font-size: 15px; line-height: 1.5; color: var(--ink-2);
 }
-.prev-item {
-  background: var(--paper-2); border: 1px solid var(--line);
-  border-radius: var(--r); padding: 12px 14px;
-}
-.prev-item-top { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; flex-wrap: wrap; }
-.prev-type {
-  font-family: var(--mono); font-size: 10px; letter-spacing: .06em;
-  text-transform: uppercase; color: var(--ink-3);
-}
-.prev-task { font-family: var(--body); font-size: 14.5px; line-height: 1.45; color: var(--ink); }
-.prev-meta {
-  margin-top: 6px; font-family: var(--mono); font-size: 10px;
-  letter-spacing: .04em; text-transform: uppercase; color: var(--ink-3);
-  display: flex; flex-wrap: wrap; gap: 4px;
-}
-.prev-empty {
-  display: flex; flex-direction: column; gap: 8px;
-  font-family: var(--body); font-size: 14px; line-height: 1.55; color: var(--ink-2);
-  background: var(--paper-2); border: 1px solid var(--line);
-  border-radius: var(--r); padding: 14px 15px;
-}
-.prev-empty strong { font-family: var(--display); font-weight: 600; font-size: 16px; color: var(--ink); }
+.resume-banner-actions { display: flex; gap: 10px; flex-shrink: 0; }
 
 /* ============================================================
    Capture view
