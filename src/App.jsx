@@ -1186,15 +1186,9 @@ export default function App({ user, workspace, onSignOut }) {
     else navigate(syncPath(view));
   };
 
-  const openCardDeck = () => {
-    if (!ws?.cards_unlocked) navigate("/app/cards?setup=1");
-    else navigate("/app/cards");
-  };
+  const openCardDeck = () => openOverlay("decks");
 
-  const cardDeckInitialView = () => {
-    const wantsSetup = new URLSearchParams(location.search).get("setup") === "1";
-    return wantsSetup ? "unlock" : "draw";
-  };
+  const cardDeckInitialView = () => "draw";
 
   useEffect(() => {
     if (!ws?.id) return;
