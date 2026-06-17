@@ -23,11 +23,11 @@ import { parseAppLocation, syncPath, SYNC_VIEWS } from "./lib/routes";
 import { canRecordAudio, pickRecordingMimeType, transcribeAudioBlob } from "./lib/transcribe";
 import { speechPreviewSupported, startSpeechPreview } from "./lib/speechPreview";
 import {
-  deleteSessionRow,
-  fetchInputDraft,
-  saveInputDraft,
-  uiInputMode,
-} from "./lib/sessionDraft";
+  clearCaptureDraft,
+  loadCaptureDraft,
+  saveCaptureDraft,
+} from "./lib/captureDraftLocal";
+import { deleteSessionRow, uiInputMode } from "./lib/sessionDraft";
 
 // ── DEFAULT CONTEXT (fallback when workspace has none) ───────────────────────
 const DEFAULT_CONTEXT = {
@@ -1128,7 +1128,7 @@ export default function App({ user, workspace, onSignOut }) {
   const [captureText, setCaptureText] = useState("");
   const [captureMode, setCaptureMode] = useState("paste");
   const [agendaTopics, setAgendaTopics] = useState([]);
-  const [inputDraft, setInputDraft] = useState(null);
+  const [captureDraft, setCaptureDraft] = useState(null);
   const [meetingDate] = useState(todayStr());
   const [ws, setWs] = useState(workspace);
 
@@ -1137,21 +1137,16 @@ export default function App({ user, workspace, onSignOut }) {
 
   useEffect(() => { setWs(workspace); }, [workspace]);
 
-  const loadInputDraft = useCallback(async () => {
+  const loadCaptureDraftState = useCallback(() => {
     if (!ws?.id) return;
-    try {
-      const draft = await fetchInputDraft(supabase, ws.id);
-      if (draft?.transcript?.trim()) setInputDraft(draft);
-      else setInputDraft(null);
-    } catch {
-      setInputDraft(null);
-    }
+    const draft = loadCaptureDraft(ws.id);
+    setCaptureDraft(draft?.transcript?.trim() ? draft : null);
   }, [ws?.id]);
 
   useEffect(() => {
     if (!ws?.id) return;
-    loadInputDraft();
-  }, [ws?.id, loadInputDraft]);
+    loadCaptureDraftState();
+  }, [ws?.id, loadCaptureDraftState]);
 
   useEffect(() => {
     const parsed = parseAppLocation(location.pathname, location.search);
@@ -1164,8 +1159,8 @@ export default function App({ user, workspace, onSignOut }) {
   }, [location.pathname, location.search]);
 
   useEffect(() => {
-    if (view === "agenda") loadInputDraft();
-  }, [view, loadInputDraft]);
+    if (view === "agenda" || overlay === "decks") loadCaptureDraftState();
+  }, [view, overlay, loadCaptureDraftState]);
 
   const go = (v, { replace = false } = {}) => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -1187,6 +1182,15 @@ export default function App({ user, workspace, onSignOut }) {
   };
 
   const openCardDeck = () => openOverlay("decks");
+
+  const startWeeklySync = () => {
+    navigate(syncPath("agenda"));
+  };
+
+  const leaveCards = () => {
+    if (window.history.length > 1) navigate(-1);
+    else navigate(syncPath(view));
+  };
 
   const cardDeckInitialView = () => "draw";
 
@@ -1241,77 +1245,62 @@ export default function App({ user, workspace, onSignOut }) {
     return () => { supabase.removeChannel(channel); };
   }, [ws?.id]);
 
-  // Auto-save capture transcript as status `input` every 30s (safety net for refresh/crash).
+  // Auto-save capture transcript locally every 30s (safety net for refresh/close).
   useEffect(() => {
     if (!ws?.id || view !== "capture") return undefined;
 
-    const persist = async () => {
-      const existingId = sessionIdRef.current || inputDraft?.id;
+    const persist = () => {
       if (!captureText.trim()) {
-        if (existingId) {
-          try {
-            await deleteSessionRow(supabase, existingId);
-            if (sessionIdRef.current === existingId) sessionIdRef.current = null;
-            setInputDraft(null);
-          } catch {
-            /* ignore */
-          }
-        }
+        clearCaptureDraft(ws.id);
+        setCaptureDraft(null);
         return;
       }
-      try {
-        const id = await saveInputDraft(supabase, {
-          workspaceId: ws.id,
-          userId: user?.id,
-          sessionId: existingId,
-          transcript: captureText,
-          inputMode: captureMode,
-          meetingDate,
-        });
-        if (id) sessionIdRef.current = id;
-      } catch {
-        /* best-effort */
-      }
+      saveCaptureDraft(ws.id, {
+        transcript: captureText,
+        inputMode: captureMode,
+        meetingDate,
+      });
     };
 
+    const debounce = setTimeout(persist, 400);
     persist();
     const timer = setInterval(persist, 30000);
-    return () => clearInterval(timer);
-  }, [ws?.id, view, captureText, captureMode, meetingDate, user?.id, inputDraft?.id]);
+    const onUnload = () => persist();
+    window.addEventListener("beforeunload", onUnload);
+    return () => {
+      clearTimeout(debounce);
+      clearInterval(timer);
+      window.removeEventListener("beforeunload", onUnload);
+    };
+  }, [ws?.id, view, captureText, captureMode, meetingDate]);
 
-  const resumeInputDraft = () => {
-    if (!inputDraft) return;
-    sessionIdRef.current = inputDraft.id;
-    setCaptureText(inputDraft.transcript || "");
-    setCaptureMode(uiInputMode(inputDraft.input_mode));
-    setInputDraft(null);
-    go("capture");
+  const resumeCaptureDraft = () => {
+    if (!captureDraft) return;
+    setCaptureText(captureDraft.transcript || "");
+    setCaptureMode(uiInputMode(captureDraft.input_mode));
+    navigate(syncPath("capture"));
   };
 
-  const discardInputDraft = async () => {
-    if (!inputDraft?.id) {
-      setInputDraft(null);
-      return;
-    }
-    try {
-      await deleteSessionRow(supabase, inputDraft.id);
-      if (sessionIdRef.current === inputDraft.id) sessionIdRef.current = null;
-    } catch {
-      /* ignore */
-    }
-    setInputDraft(null);
+  const discardCaptureDraft = () => {
+    if (ws?.id) clearCaptureDraft(ws.id);
+    setCaptureDraft(null);
+  };
+
+  const clearLocalCaptureDraft = () => {
+    if (ws?.id) clearCaptureDraft(ws.id);
+    setCaptureDraft(null);
   };
 
   const clearActiveSession = async () => {
     const id = sessionIdRef.current;
     sessionIdRef.current = null;
+    clearLocalCaptureDraft();
     if (!id) return;
     try {
       await deleteSessionRow(supabase, id);
     } catch {
       /* ignore */
     }
-    setInputDraft(null);
   };
 
   // ── Distill (real AI) ────────────────────────────────────────────────────
@@ -1327,25 +1316,10 @@ export default function App({ user, workspace, onSignOut }) {
     setDistillDone(false);
     setDistillError(null);
     setCards([]);
-    setInputDraft(null);
+    clearLocalCaptureDraft();
+    sessionIdRef.current = null;
     go("processing");
     savedRef.current = false;
-
-    if (ws?.id && text?.trim()) {
-      try {
-        const id = await saveInputDraft(supabase, {
-          workspaceId: ws.id,
-          userId: user?.id,
-          sessionId: sessionIdRef.current,
-          transcript: text,
-          inputMode: mode,
-          meetingDate,
-        });
-        if (id) sessionIdRef.current = id;
-      } catch {
-        /* best-effort */
-      }
-    }
 
     const topicHint = agendaTopics.length
       ? `\nFocus topics for this sync: ${agendaTopics.join(", ")}. Prioritize items related to these topics when present in the transcript.`
@@ -1453,7 +1427,7 @@ Rules: extract everything actionable, use person names when mentioned, return on
     setCaptureText("");
     setCaptureMode("paste");
     go("agenda");
-    loadInputDraft();
+    loadCaptureDraftState();
   };
 
   const keptCards = cards.filter((c) => c.status === STATUS.KEPT || c.status === STATUS.CALENDARED);
@@ -1480,14 +1454,24 @@ Rules: extract everything actionable, use person names when mentioned, return on
     );
   }
   if (overlay === "decks") {
+    const showResume = captureDraft && overlay === "decks";
     return (
-      <CardSystem
-        workspace={ws}
-        initialView={cardDeckInitialView()}
-        onClose={closeOverlay}
-        onStartSession={closeOverlay}
-        onWorkspaceUpdate={setWs}
-      />
+      <div className="stage">
+        {showResume && (
+          <div style={{ maxWidth: 900, margin: "0 auto", padding: "0 24px" }}>
+            <ResumeBanner draft={captureDraft} onResume={resumeCaptureDraft} onDiscard={discardCaptureDraft} />
+          </div>
+        )}
+        <CardSystem
+          workspace={ws}
+          meetingDate={meetingDate}
+          initialView={cardDeckInitialView()}
+          onClose={leaveCards}
+          onStartSession={startWeeklySync}
+          onSkip={startWeeklySync}
+          onWorkspaceUpdate={setWs}
+        />
+      </div>
     );
   }
 
@@ -1500,8 +1484,8 @@ Rules: extract everything actionable, use person names when mentioned, return on
         onSignOut={onSignOut}
       />
 
-      {inputDraft && view !== "capture" && view !== "processing" && view !== "review" && view !== "plan" && (
-        <ResumeBanner draft={inputDraft} onResume={resumeInputDraft} onDiscard={discardInputDraft} />
+      {captureDraft && view !== "capture" && view !== "processing" && view !== "review" && view !== "plan" && (
+        <ResumeBanner draft={captureDraft} onResume={resumeCaptureDraft} onDiscard={discardCaptureDraft} />
       )}
 
       {view === "agenda" && (
@@ -1513,15 +1497,7 @@ Rules: extract everything actionable, use person names when mentioned, return on
             else setAgendaTopics([]);
             setCaptureMode(mode);
             setCaptureText("");
-            if (inputDraft?.id) {
-              try {
-                await deleteSessionRow(supabase, inputDraft.id);
-              } catch {
-                /* ignore */
-              }
-              if (sessionIdRef.current === inputDraft.id) sessionIdRef.current = null;
-              setInputDraft(null);
-            }
+            clearLocalCaptureDraft();
             go("capture");
           }}
         />
@@ -1533,7 +1509,7 @@ Rules: extract everything actionable, use person names when mentioned, return on
           mode={captureMode}
           setMode={setCaptureMode}
           onBack={() => {
-            loadInputDraft();
+            loadCaptureDraftState();
             go("agenda");
           }}
           onProcess={runDistill}

@@ -15,7 +15,7 @@ import {
   parseAppLocation,
   inviteCodeFromPath,
   onboardingPath,
-  syncPath,
+  cardsPath,
 } from "./lib/routes";
 import Auth from "./components/Auth";
 import Onboarding from "./components/Onboarding";
@@ -97,9 +97,9 @@ export default function AppRouter() {
         bootstrapped.current = true;
 
         if (parsed.area === "onboarding") {
-          navigate(syncPath("agenda"), { replace: true });
+          navigate(cardsPath(), { replace: true });
         } else if (parsed.area === "auth" || parsed.area === "unknown") {
-          navigate(syncPath("agenda"), { replace: true });
+          navigate(cardsPath(), { replace: true });
         }
         return;
       }
@@ -165,7 +165,7 @@ export default function AppRouter() {
         navigate(onboardingPath(1), { replace: true });
         return;
       }
-      navigate(syncPath("agenda"), { replace: true });
+      navigate(cardsPath(), { replace: true });
       if (phase !== "app") setPhase("app");
       return;
     }
@@ -174,7 +174,7 @@ export default function AppRouter() {
       if (user && onboardingData) {
         if (phase !== "onboarding") setPhase("onboarding");
       } else if (user && !onboardingData) {
-        navigate(syncPath("agenda"), { replace: true });
+        navigate(cardsPath(), { replace: true });
       } else if (!user) {
         setPhase("auth");
         navigate("/app", { replace: true });
@@ -198,7 +198,7 @@ export default function AppRouter() {
     }
 
     if (user && phase === "app" && parsed.area === "unknown") {
-      navigate(syncPath("agenda"), { replace: true });
+      navigate(cardsPath(), { replace: true });
     }
   }, [location.pathname, location.search, phase, user, onboardingData, navigate]);
 
@@ -221,7 +221,7 @@ export default function AppRouter() {
     setUser(userData);
     setWorkspace(workspaceData || null);
     setPhase("app");
-    navigate(syncPath("agenda"), { replace: true });
+    navigate(cardsPath(), { replace: true });
   };
 
   const handleOnboardingComplete = async () => {
@@ -253,7 +253,7 @@ export default function AppRouter() {
       setWorkspace(ws);
       setOnboardingData(null);
       setPhase("app");
-      navigate(syncPath("agenda"), { replace: true });
+      navigate(cardsPath(), { replace: true });
     } catch (err) {
       console.error("Onboarding complete failed:", err);
       if (wsId) {
@@ -262,7 +262,7 @@ export default function AppRouter() {
       }
       setOnboardingData(null);
       setPhase("app");
-      navigate(syncPath("agenda"), { replace: true });
+      navigate(cardsPath(), { replace: true });
     }
   };
 

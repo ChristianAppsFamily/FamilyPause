@@ -20,6 +20,35 @@ import { useState, useEffect, useRef } from "react";
 import { supabase } from "../lib/supabase";
 import "../styles/cards.css";
 
+function formatSyncDate(dateStr) {
+  const dt = dateStr ? new Date(`${dateStr}T00:00:00`) : new Date();
+  return dt.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
+}
+
+function SyncDatePill({ meetingDate }) {
+  return (
+    <div
+      className="cs-sync-date"
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 8,
+        fontFamily: "'JetBrains Mono', monospace",
+        fontSize: 11,
+        letterSpacing: "0.08em",
+        color: T.gold,
+        background: T.goldL,
+        border: `1px solid ${T.gold}44`,
+        borderRadius: 999,
+        padding: "8px 14px",
+        marginBottom: 20,
+      }}
+    >
+      {formatSyncDate(meetingDate)}
+    </div>
+  );
+}
+
 // ── PALETTE ───────────────────────────────────────────────────────────────────
 // Palette mapped to the design bundle (src/styles/tokens.css): source of truth.
 const T = {
@@ -426,7 +455,7 @@ function CardBack({ style = {}, year = 2026 }) {
 // ─────────────────────────────────────────────────────────────────────────────
 // 1. CARD DRAW: pre-session screen
 // ─────────────────────────────────────────────────────────────────────────────
-function CardDraw({ workspace, onStartSession, onSkip, onUnlock }) {
+function CardDraw({ workspace, meetingDate, onStartSession, onSkip, onUnlock }) {
   const [phase, setPhase] = useState("intro"); // intro | drawing | revealed | locked
   const [drawnCard, setDrawnCard] = useState(null);
   const [deckYear, setDeckYear] = useState(2026);
@@ -468,6 +497,7 @@ function CardDraw({ workspace, onStartSession, onSkip, onUnlock }) {
             <div className="cs-pv-cap cs-fade-1">Front &amp; back · 52 cards in the deck</div>
 
             <div className="cs-fade-2" style={{ marginBottom: 30, width: "100%", maxWidth: 420 }}>
+              <SyncDatePill meetingDate={meetingDate} />
               <div className="cs-eyebrow" style={{ marginBottom: 12 }}>The {previewYear} Deck</div>
               <h1 className="cs-hl">
                 A question to sit with <em>before you record</em>
@@ -505,6 +535,7 @@ function CardDraw({ workspace, onStartSession, onSkip, onUnlock }) {
       <div style={{ minHeight: "100vh", background: T.bg, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "48px 24px", fontFamily: "'Lora', serif" }}>
         <style>{css}</style>
         <div style={{ width: "100%", maxWidth: 420, textAlign: "center" }}>
+          <SyncDatePill meetingDate={meetingDate} />
           <div style={{ marginBottom: 40 }}>
             <CardBack />
           </div>
@@ -558,6 +589,7 @@ function CardDraw({ workspace, onStartSession, onSkip, onUnlock }) {
         <div style={{ width: "100%", maxWidth: 460 }}>
 
           <div style={{ textAlign: "center", marginBottom: 32 }}>
+            <SyncDatePill meetingDate={meetingDate} />
             <div className="cs-fade" style={{ fontSize: 11, letterSpacing: "0.25em", color: T.terra, fontFamily: "'JetBrains Mono', monospace", textTransform: "uppercase", marginBottom: 8 }}>
               This week's card
             </div>
@@ -964,9 +996,10 @@ function DeckLibrary({ workspace, onClose, onUnlock }) {
 // ─────────────────────────────────────────────────────────────────────────────
 // 4. CARD SYSTEM ROOT: main export
 // ─────────────────────────────────────────────────────────────────────────────
-export default function CardSystemRoot({ workspace, onStartSession, onClose, initialView = "draw", onWorkspaceUpdate }) {
+export default function CardSystemRoot({ workspace, meetingDate, onStartSession, onClose, onSkip, initialView = "draw", onWorkspaceUpdate }) {
   const [view, setView] = useState(initialView); // draw | unlock | library
   const enteredUnlockFromDraw = useRef(false);
+  const skipSession = onSkip || onClose;
 
   // Sync workspace state after unlock
   const [localWorkspace, setLocalWorkspace] = useState(workspace);
@@ -1005,8 +1038,9 @@ export default function CardSystemRoot({ workspace, onStartSession, onClose, ini
       {view === "draw" && (
         <CardDraw
           workspace={localWorkspace}
+          meetingDate={meetingDate}
           onStartSession={onStartSession}
-          onSkip={onClose}
+          onSkip={skipSession}
           onUnlock={() => {
             enteredUnlockFromDraw.current = true;
             setView("unlock");

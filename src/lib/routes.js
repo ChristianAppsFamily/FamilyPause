@@ -10,6 +10,10 @@ export function syncPath(view = "agenda") {
   return `/app/sync/${view}`;
 }
 
+export function cardsPath() {
+  return "/app/cards";
+}
+
 export function authPathForScreen(screen, inviteCode = "") {
   switch (screen) {
     case "signup":
