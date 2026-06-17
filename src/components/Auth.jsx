@@ -81,6 +81,29 @@ const css = `
   }
   .fp-input::placeholder { color: ${T.muted}; }
   .fp-input.error { border-color: ${T.red}; box-shadow: 0 0 0 3px ${T.redL}; }
+  .fp-input-wrap { position: relative; }
+  .fp-input-wrap .fp-input { padding-right: 46px; }
+  .fp-pw-toggle {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: ${T.muted};
+    padding: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    transition: color 0.15s;
+  }
+  .fp-pw-toggle:hover { color: ${T.mid}; }
+  .fp-pw-toggle:focus-visible {
+    outline: 2px solid ${T.terra};
+    outline-offset: 2px;
+  }
   /* Auth prototype uses Lora sentence-case primary buttons (not the app's mono). */
   .fp-btn-primary {
     width: 100%;
@@ -369,6 +392,53 @@ function GoogleIcon() {
   );
 }
 
+function EyeIcon({ visible }) {
+  if (visible) {
+    return (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" />
+        <circle cx="12" cy="12" r="3" />
+      </svg>
+    );
+  }
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-10-8-10-8a18.45 18.45 0 0 1 5.06-5.94" />
+      <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 10 8 10 8a18.5 18.5 0 0 1-2.16 3.19" />
+      <path d="M1 1l22 22" />
+      <path d="M14.12 14.12a3 3 0 1 1-4.24-4.24" />
+    </svg>
+  );
+}
+
+function PasswordInput({ value, onChange, onKeyDown, placeholder, autoFocus }) {
+  const [visible, setVisible] = useState(false);
+
+  return (
+    <div className="fp-input-wrap">
+      <input
+        className="fp-input"
+        type={visible ? "text" : "password"}
+        placeholder={placeholder}
+        value={value}
+        onChange={onChange}
+        onKeyDown={onKeyDown}
+        autoFocus={autoFocus}
+        autoComplete={visible ? "off" : "current-password"}
+      />
+      <button
+        type="button"
+        className="fp-pw-toggle"
+        onClick={() => setVisible((v) => !v)}
+        aria-label={visible ? "Hide password" : "Show password"}
+        tabIndex={-1}
+      >
+        <EyeIcon visible={visible} />
+      </button>
+    </div>
+  );
+}
+
 // ── SIGN IN ───────────────────────────────────────────────────────────────────
 function SignIn({ onSwitch, onSuccess }) {
   const [email, setEmail] = useState("");
@@ -437,8 +507,12 @@ function SignIn({ onSwitch, onSuccess }) {
           <label className="fp-label" style={{ margin: 0 }}>Password</label>
           <button className="fp-link" onClick={() => onSwitch("forgot")} style={{ fontSize: 12 }}>Forgot password?</button>
         </div>
-        <input className="fp-input" type="password" placeholder="••••••••"
-          value={password} onChange={e => setPassword(e.target.value)} onKeyDown={handleKey} />
+        <PasswordInput
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          onKeyDown={handleKey}
+          placeholder="••••••••"
+        />
       </div>
 
       <div className="fp-fade-3" style={{ marginBottom: 20 }}>
@@ -531,7 +605,7 @@ function SignUp({ onSwitch, onSuccess }) {
 
       <div className="fp-fade-1 fp-field">
         <label className="fp-label">Your first name</label>
-        <input className="fp-input" type="text" placeholder="Spence"
+        <input className="fp-input" type="text" placeholder="John"
           value={name} onChange={e => setName(e.target.value)} onKeyDown={handleKey} />
       </div>
 
@@ -543,14 +617,22 @@ function SignUp({ onSwitch, onSuccess }) {
 
       <div className="fp-fade-3 fp-field">
         <label className="fp-label">Password</label>
-        <input className="fp-input" type="password" placeholder="Min. 8 characters"
-          value={password} onChange={e => setPassword(e.target.value)} onKeyDown={handleKey} />
+        <PasswordInput
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          onKeyDown={handleKey}
+          placeholder="Min. 8 characters"
+        />
       </div>
 
       <div className="fp-fade-4 fp-field">
         <label className="fp-label">Confirm password</label>
-        <input className="fp-input" type="password" placeholder="••••••••"
-          value={confirm} onChange={e => setConfirm(e.target.value)} onKeyDown={handleKey} />
+        <PasswordInput
+          value={confirm}
+          onChange={(e) => setConfirm(e.target.value)}
+          onKeyDown={handleKey}
+          placeholder="••••••••"
+        />
       </div>
 
       <div className="fp-fade-5" style={{ marginBottom: 16 }}>
@@ -560,7 +642,7 @@ function SignUp({ onSwitch, onSuccess }) {
       </div>
 
       <p style={{ fontSize: 12, color: T.muted, fontFamily: "'JetBrains Mono', monospace", textAlign: "center", marginBottom: 24, lineHeight: 1.5 }} className="fp-fade-5">
-        By signing up you agree to our <a href="/terms.html" style={{ color: T.terra }}>Terms of Service</a>.<br />Ad-free forever. Your conversations are private.
+        By signing up you agree to our <a href="/terms.html" style={{ color: T.terra }}>Terms of Service</a>.<br />Your conversations are private.
       </p>
 
       <div className="fp-divider fp-fade-5"><span>OR</span></div>
