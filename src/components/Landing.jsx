@@ -239,13 +239,14 @@ const css = `
   border-radius: 999px;
   padding: 7px 12px;
   cursor: pointer;
-  background: #F0EAE0;
-  color: #A09070;
-  transition: background .18s, color .18s;
+  background: rgba(250,247,242,.18);
+  color: rgba(250,247,242,.72);
+  transition: background .18s, color .18s, box-shadow .18s;
 }
 .fp-landing .tier.pop .billing-pill.on {
-  background: #B85C38;
-  color: #FAF7F2;
+  background: #FAF7F2;
+  color: #B85C38;
+  box-shadow: 0 2px 8px rgba(46,40,32,.12);
 }
 .fp-landing .tier.pop .planhint {
   font-family: var(--serif);
@@ -953,13 +954,11 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                     </button>
                   </div>
                   <div className="price">
-                    <span className="amt">{familyBilling === "annual" ? "$59" : "$7"}</span>
-                    <span className="per">{familyBilling === "annual" ? "/ year" : "/ month"}</span>
+                    <span className="amt">{familyBilling === "monthly" ? "$7" : "$59"}</span>
+                    <span className="per">{familyBilling === "monthly" ? "/ month" : "/ year"}</span>
                   </div>
                   <p className="planhint">
-                    {familyBilling === "annual" ? (
-                      "Less than $5 a month"
-                    ) : (
+                    {familyBilling === "monthly" ? (
                       <button
                         type="button"
                         className="planhint-link"
@@ -967,6 +966,8 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                       >
                         Save $25 with annual
                       </button>
+                    ) : (
+                      "Less than $5 a month"
                     )}
                   </p>
                   <ul className="feats">
