@@ -101,9 +101,53 @@ const css = `
 
 /* hero mockup */
 .fp-landing .mock { background: var(--paper-card); border: 1px solid var(--line); border-radius: var(--r-xl); box-shadow: var(--shadow-lg); padding: 20px; position: relative; transform: rotate(.4deg); }
+.fp-landing .mock.mock-live {
+  animation: mockFloat 7s ease-in-out infinite;
+  will-change: transform;
+}
+@keyframes mockFloat {
+  0%, 100% { transform: rotate(.4deg) translateY(0); }
+  50% { transform: rotate(.4deg) translateY(-7px); }
+}
+.fp-landing .mock .extracted {
+  animation: mockBadgeIn .55s cubic-bezier(.2,.7,.2,1) .25s both, mockBadgePulse 3.2s ease-in-out 1.1s infinite;
+}
+@keyframes mockBadgeIn {
+  from { opacity: 0; transform: scale(.88) translateY(-6px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+@keyframes mockBadgePulse {
+  0%, 100% { box-shadow: 0 8px 18px rgba(94,107,55,.28); }
+  50% { box-shadow: 0 10px 24px rgba(94,107,55,.4); }
+}
+.fp-landing .mock .mock-card {
+  opacity: 0;
+  animation: mockCardIn .55s cubic-bezier(.2,.7,.2,1) forwards;
+}
+.fp-landing .mock .mock-card-1 { animation-delay: .45s; }
+.fp-landing .mock .mock-card-2 { animation-delay: .62s; }
+.fp-landing .mock .mock-card-3 { animation-delay: .79s; }
+@keyframes mockCardIn {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.fp-landing .mock .mfoot {
+  position: absolute; bottom: -14px; left: 24px;
+  font-family: var(--mono); font-size: 11px; letter-spacing: .04em;
+  color: var(--olive-d); background: var(--olive-tint); border: 1px solid var(--olive-soft);
+  padding: 7px 13px; border-radius: 999px;
+  opacity: 0;
+  animation: mockFootIn .5s cubic-bezier(.2,.7,.2,1) 1.05s forwards;
+}
+@keyframes mockFootIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.fp-landing .mock .macts { pointer-events: none; }
+.fp-landing .mock .mbtn { cursor: default; }
+.fp-landing .mock .mbar i:nth-child(1){ background:#D98E6A; } .fp-landing .mock .mbar i:nth-child(2){ background:var(--gold); } .fp-landing .mock .mbar i:nth-child(3){ background:var(--olive); }
 .fp-landing .mock .mbar { display: flex; align-items: center; gap: 7px; padding: 4px 4px 16px; }
 .fp-landing .mock .mbar i { width: 11px; height: 11px; border-radius: 50%; background: var(--line-2); }
-.fp-landing .mock .mbar i:nth-child(1){ background:#D98E6A; } .fp-landing .mock .mbar i:nth-child(2){ background:var(--gold); } .fp-landing .mock .mbar i:nth-child(3){ background:var(--olive); }
 .fp-landing .mock .mtitle { margin-left: auto; font-family: var(--mono); font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-3); }
 .fp-landing .mock .extracted { position: absolute; top: -16px; right: 20px; font-family: var(--mono); font-size: 11px; letter-spacing: .05em; background: var(--olive); color: #fff; padding: 8px 14px; border-radius: 999px; box-shadow: 0 8px 18px rgba(94,107,55,.28); display: inline-flex; align-items: center; gap: 7px; }
 .fp-landing .mock .review-eyebrow { text-align: right; font-family: var(--mono); font-size: 10.5px; letter-spacing: .16em; text-transform: uppercase; color: var(--ink-3); padding: 0 4px 12px; }
@@ -124,7 +168,6 @@ const css = `
 .fp-landing .mbtn.keep { background: var(--olive-soft); color: var(--olive-d); }
 .fp-landing .mbtn.disc { background: var(--terra-tint); color: var(--terra-d); }
 .fp-landing .mbtn.cal  { background: var(--gold-soft); color: #8a6a16; }
-.fp-landing .mock .mfoot { position: absolute; bottom: -14px; left: 24px; font-family: var(--mono); font-size: 11px; letter-spacing: .04em; color: var(--olive-d); background: var(--olive-tint); border: 1px solid var(--olive-soft); padding: 7px 13px; border-radius: 999px; }
 
 /* sections */
 .fp-landing .section { padding: 96px 0; }
@@ -543,7 +586,13 @@ const css = `
 
 .fp-landing .reveal { opacity: 1; transform: translateY(22px); transition: opacity .7s cubic-bezier(.2,.7,.2,1), transform .7s cubic-bezier(.2,.7,.2,1); }
 .fp-landing .reveal.in { opacity: 1; transform: none; }
-@media (prefers-reduced-motion: reduce) { .fp-landing .reveal { opacity: 1; transform: none; transition: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .fp-landing .reveal { opacity: 1; transform: none; transition: none; }
+  .fp-landing .mock.mock-live { animation: none; }
+  .fp-landing .mock .extracted,
+  .fp-landing .mock .mock-card,
+  .fp-landing .mock .mfoot { animation: none; opacity: 1; transform: none; }
+}
 
 @media (max-width: 960px) {
   .fp-landing .herogrid { grid-template-columns: 1fr; gap: 48px; padding: 60px 0 72px; }
@@ -682,7 +731,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
               </div>
 
               {/* live review mockup */}
-              <div className="mock" aria-hidden="true">
+              <div className="mock mock-live" aria-hidden="true">
                 <span className="extracted">
                   <svg width="13" height="13" viewBox="0 0 24 24" {...stroke} strokeWidth={2.4}><path d="M5 12.5 10 17.5 19.5 6.5" /></svg>
                   6 items extracted
@@ -690,27 +739,36 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                 <div className="mbar"><i /><i /><i /><span className="mtitle">FamilyPause · Review</span></div>
                 <div className="review-eyebrow">This week's review</div>
 
-                <div className="mcard">
+                <div className="mcard mock-card mock-card-1">
                   <div className="mtags"><span className="mtag spence">Spence</span><span className="mtag cat">Finance</span></div>
                   <div className="mt">Call the accountant re: Q2 filing</div>
                   <div className="mq">"we need to call the accountant before month end"</div>
-                  <div className="macts"><button className="mbtn keep">Keep</button><button className="mbtn disc">Discard</button></div>
+                  <div className="mwhen">
+                    <svg width="12" height="12" viewBox="0 0 24 24" {...stroke} strokeWidth={2}><path d="M7 3v3M17 3v3M4 8h16" /><path d="M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z" /></svg>
+                    Due · Fri, Jun 6
+                  </div>
+                  <div className="macts"><button type="button" tabIndex={-1} className="mbtn keep">Keep</button><button type="button" tabIndex={-1} className="mbtn disc">Discard</button></div>
                 </div>
 
-                <div className="mcard amanda olive">
+                <div className="mcard olive mock-card mock-card-2">
                   <div className="mtags"><span className="mtag amanda">Amanda</span><span className="mtag cat">Kids</span></div>
                   <div className="mt">Take Jordan to the dentist</div>
                   <div className="mwhen">
                     <svg width="12" height="12" viewBox="0 0 24 24" {...stroke} strokeWidth={2}><path d="M7 3v3M17 3v3M4 8h16" /><path d="M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z" /></svg>
                     Thu, Jun 11 · 3:00 PM
                   </div>
-                  <div className="macts"><button className="mbtn keep">Keep</button><button className="mbtn cal">+ Calendar</button></div>
+                  <div className="macts"><button type="button" tabIndex={-1} className="mbtn keep">Keep</button><button type="button" tabIndex={-1} className="mbtn cal">+ Calendar</button></div>
                 </div>
 
-                <div className="mcard both gold">
+                <div className="mcard gold mock-card mock-card-3">
                   <div className="mtags"><span className="mtag both">Both</span><span className="mtag cat">Finance</span></div>
                   <div className="mt">Review Q2 household budget together</div>
                   <div className="mq">"can we block 30 minutes Tuesday night?"</div>
+                  <div className="mwhen">
+                    <svg width="12" height="12" viewBox="0 0 24 24" {...stroke} strokeWidth={2}><path d="M7 3v3M17 3v3M4 8h16" /><path d="M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z" /></svg>
+                    Due · Tue, Jun 10 · 7:30 PM
+                  </div>
+                  <div className="macts"><button type="button" tabIndex={-1} className="mbtn keep">Keep</button><button type="button" tabIndex={-1} className="mbtn disc">Discard</button></div>
                 </div>
 
                 <span className="mfoot">~ 2 min to review</span>
