@@ -30,6 +30,8 @@ Each item:
   "person": ("Spence", "Amanda", or "Both" — use Both when shared or unclear),
   "task": (clear one-sentence description),
   "source": (exact phrase from the input, under 15 words, in quotes not needed in JSON),
+  "date": (YYYY-MM-DD if mentioned, else null),
+  "time": (HH:MM 24h if mentioned, else null),
   "type": ("action", "event", or "decision")
 }
 
@@ -37,6 +39,7 @@ Rules:
 - Return 3 to 5 items when possible
 - Use person names when mentioned; default to Both if unclear
 - source must be a substring of the user's text
+- Include date and time for appointments and deadlines when mentioned in the text
 - Return only the JSON array`;
 
 Deno.serve(async (req) => {

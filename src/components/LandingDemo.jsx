@@ -3,7 +3,7 @@ import {
   callLandingDemoAI,
   DEMO_MAX_CHARS,
   DEMO_MIN_LOADING_MS,
-  formatCardType,
+  formatDemoWhen,
   getLoadingMessage,
   isDemoLimited,
   markDemoUsed,
@@ -23,20 +23,43 @@ function FpMark() {
   );
 }
 
+const stroke = { fill: 'none', stroke: 'currentColor', strokeWidth: 1.7, strokeLinecap: 'round', strokeLinejoin: 'round' };
+
 function DemoCard({ card, index, visible }) {
   const role = personRole(card.person);
+  const isEvent = card.type === 'event';
+  const when = formatDemoWhen(card.date, card.time, card.type);
+  const roleClass = role === 'amanda' ? 'olive' : role === 'both' ? 'gold' : '';
+  const personTag = role === 'spence' ? 'spence' : role === 'amanda' ? 'amanda' : 'both';
+
   return (
     <div
-      className={`democard ${role} ${visible ? 'in' : ''}`}
+      className={`democard mcard ${roleClass} ${visible ? 'in' : ''}`}
       style={{ animationDelay: `${index * 80}ms` }}
     >
-      <div className="dcard-top">
-        <span className={`dpill dpill-${role}`}>{card.person}</span>
-        <span className="dpill dpill-cat">{card.category}</span>
+      <div className="mtags">
+        <span className={`mtag ${personTag}`}>{card.person}</span>
+        <span className="mtag cat">{card.category}</span>
       </div>
-      <p className="dcard-task">{card.task}</p>
-      {card.source && <p className="dcard-source">&ldquo;{card.source}&rdquo;</p>}
-      <p className="dcard-type">{formatCardType(card.type)}</p>
+      <div className="mt">{card.task}</div>
+      {card.source && <div className="mq">&ldquo;{card.source}&rdquo;</div>}
+      {when && (
+        <div className="mwhen">
+          <svg width="12" height="12" viewBox="0 0 24 24" {...stroke} strokeWidth={2}>
+            <path d="M7 3v3M17 3v3M4 8h16" />
+            <path d="M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z" />
+          </svg>
+          {when}
+        </div>
+      )}
+      <div className="macts demo-static" aria-hidden="true">
+        <span className="mbtn keep">Keep</span>
+        {isEvent ? (
+          <span className="mbtn cal">+ Calendar</span>
+        ) : (
+          <span className="mbtn disc">Discard</span>
+        )}
+      </div>
     </div>
   );
 }

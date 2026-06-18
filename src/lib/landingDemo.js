@@ -57,8 +57,21 @@ export function parseDemoCards(raw) {
       category: c.category || 'Home',
       task: c.task || '',
       source: c.source || '',
+      date: c.date || null,
+      time: c.time || null,
       type: (c.type || 'action').toLowerCase(),
     }));
+}
+
+export function formatDemoWhen(date, time, type) {
+  if (!date) return '';
+  const dt = new Date(`${date}T${time || '00:00'}:00`);
+  if (Number.isNaN(dt.getTime())) return '';
+  const day = dt.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+  if (!time) return type === 'event' ? day : `Due · ${day}`;
+  const t = dt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+  const formatted = `${day} · ${t}`;
+  return type === 'event' ? formatted : `Due · ${formatted}`;
 }
 
 export function personRole(person) {
@@ -69,12 +82,6 @@ export function personRole(person) {
   return 'both';
 }
 
-export function formatCardType(type) {
-  const t = (type || 'action').toLowerCase();
-  if (t === 'event') return 'EVENT';
-  if (t === 'decision') return 'DECISION';
-  return 'ACTION';
-}
 
 export async function callLandingDemoAI(prompt) {
   const { data, error } = await supabase.functions.invoke('landing-demo', {

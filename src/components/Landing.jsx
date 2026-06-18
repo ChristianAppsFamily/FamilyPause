@@ -437,59 +437,25 @@ const css = `
   to { transform: scale(1); opacity: 1; }
 }
 .fp-landing .rescards { margin-bottom: 28px; }
-.fp-landing .democard {
-  background: var(--demo-surface);
-  border: 1px solid var(--demo-border);
-  border-left: 3px solid var(--demo-terra);
-  border-radius: 12px;
-  padding: 18px 20px;
-  margin-bottom: 12px;
+.fp-landing .trysec .democard.mcard {
   opacity: 0;
   transform: translateY(16px);
+  margin-bottom: 12px;
+  background: var(--demo-surface);
 }
-.fp-landing .democard.amanda { border-left-color: var(--demo-olive); }
-.fp-landing .democard.both { border-left-color: var(--demo-gold); }
-.fp-landing .democard.in {
+.fp-landing .trysec .democard.mcard.in {
   animation: demoFadeUp 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
 }
 @keyframes demoFadeUp {
   to { opacity: 1; transform: translateY(0); }
 }
-.fp-landing .dcard-top { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
-.fp-landing .dpill {
-  font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  padding: 4px 10px;
-  border-radius: 6px;
+.fp-landing .trysec .demo-static {
+  pointer-events: none;
+  user-select: none;
 }
-.fp-landing .dpill-spence { background: var(--demo-terra-light); color: var(--demo-terra-dark); }
-.fp-landing .dpill-amanda { background: var(--demo-olive-light); color: var(--demo-olive); }
-.fp-landing .dpill-both { background: var(--demo-gold-light); color: #8a6a16; }
-.fp-landing .dpill-cat { background: var(--demo-cream); color: var(--demo-mid); border: 1px solid var(--demo-border); }
-.fp-landing .dcard-task {
-  font-family: var(--serif);
-  font-size: 16px;
-  color: var(--demo-ink);
-  line-height: 1.45;
-  margin: 0 0 10px;
-}
-.fp-landing .dcard-source {
-  font-family: var(--serif);
-  font-style: italic;
-  font-size: 12px;
-  color: var(--demo-muted);
-  margin: 0 0 10px;
-  line-height: 1.45;
-}
-.fp-landing .dcard-type {
-  font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 0.1em;
-  color: var(--demo-muted);
-  margin: 0;
-  text-transform: uppercase;
+.fp-landing .trysec .democard .mbtn {
+  cursor: default;
+  display: inline-block;
 }
 .fp-landing .trysec .conv {
   background: var(--demo-surface);
