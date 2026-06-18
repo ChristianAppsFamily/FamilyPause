@@ -683,6 +683,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
           </a>
           <nav className="navlinks">
             <a href="#how">How it works</a>
+            <a href="#try">Try It Now</a>
             <a href="#who">Who it's for</a>
             <a href="#pricing">Pricing</a>
           </nav>
@@ -707,7 +708,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                 <p className="sub">Record your weekly family meeting. AI extracts every action, appointment, and decision. Review in minutes. <b>Your week, planned before Sunday ends.</b></p>
                 <div className="ctas">
                   <button className="btn btn-primary btn-lg" onClick={onStart}>Start Your Free Week</button>
-                  <a className="linktext" href="#how">See how it works
+                  <a className="linktext" href="#try">See how it works
                     <svg width="15" height="15" viewBox="0 0 24 24" {...stroke} strokeWidth={2}><path d="M5 12h14M13 6l6 6-6 6" /></svg>
                   </a>
                 </div>

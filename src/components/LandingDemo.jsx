@@ -176,7 +176,7 @@ export default function LandingDemo({ onStart = () => {}, onSeePricing }) {
     <section className="trysec" id="try">
       <div className="trywrap">
         <div className="tryhead reveal">
-          <span className="eyebrow demo-eyebrow">Try it right now</span>
+          <span className="eyebrow demo-eyebrow">Try It Now!</span>
           <h2>See what FamilyPause<br /><em>does</em>.</h2>
           <p className="lead">
             Paste a few sentences from a real family conversation — anything you have talked about recently. Hit Distill and watch the AI organize it in seconds.
