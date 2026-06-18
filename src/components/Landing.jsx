@@ -225,6 +225,48 @@ const css = `
 .fp-landing .tier.pop .price .per { color: rgba(255,255,255,.85); }
 .fp-landing .tier .subprice { font-family: var(--mono); font-size: 12px; letter-spacing: .03em; color: var(--ink-3); margin-bottom: 26px; }
 .fp-landing .tier.pop .subprice { color: rgba(255,255,255,.85); }
+.fp-landing .tier.pop .billing-toggle {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+.fp-landing .tier.pop .billing-pill {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  border: none;
+  border-radius: 999px;
+  padding: 7px 12px;
+  cursor: pointer;
+  background: #F0EAE0;
+  color: #A09070;
+  transition: background .18s, color .18s;
+}
+.fp-landing .tier.pop .billing-pill.on {
+  background: #B85C38;
+  color: #FAF7F2;
+}
+.fp-landing .tier.pop .planhint {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 13px;
+  color: rgba(250,247,242,.78);
+  margin: 0 0 26px;
+  line-height: 1.4;
+}
+.fp-landing .tier.pop .planhint-link {
+  font: inherit;
+  font-style: italic;
+  color: inherit;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.fp-landing .tier.pop .planhint-link:hover { color: #FAF7F2; }
 .fp-landing .feats { list-style: none; padding: 0; margin: 0 0 28px; display: flex; flex-direction: column; gap: 13px; flex: 1; }
 .fp-landing .feats li { display: flex; gap: 11px; font-size: 15px; line-height: 1.4; color: var(--ink-2); }
 .fp-landing .tier.pop .feats li { color: rgba(255,255,255,.94); }
@@ -647,6 +689,7 @@ const stroke = { fill: "none", stroke: "currentColor", strokeWidth: 1.7, strokeL
 
 export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
   const [scrolled, setScrolled] = useState(false);
+  const [familyBilling, setFamilyBilling] = useState("annual");
   const rootRef = useRef(null);
 
   useEffect(() => {
@@ -891,8 +934,41 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                 <div className="tier pop">
                   <span className="popbadge">Most Popular</span>
                   <div className="plabel">Family Plan</div>
-                  <div className="price"><span className="amt">$59</span><span className="per">/ year</span></div>
-                  <div className="subprice">$4.92 / month · billed annually</div>
+                  <div className="billing-toggle" role="group" aria-label="Billing period">
+                    <button
+                      type="button"
+                      className={`billing-pill${familyBilling === "annual" ? " on" : ""}`}
+                      aria-pressed={familyBilling === "annual"}
+                      onClick={() => setFamilyBilling("annual")}
+                    >
+                      Annual · Best Value
+                    </button>
+                    <button
+                      type="button"
+                      className={`billing-pill${familyBilling === "monthly" ? " on" : ""}`}
+                      aria-pressed={familyBilling === "monthly"}
+                      onClick={() => setFamilyBilling("monthly")}
+                    >
+                      Monthly
+                    </button>
+                  </div>
+                  <div className="price">
+                    <span className="amt">{familyBilling === "annual" ? "$59" : "$7"}</span>
+                    <span className="per">{familyBilling === "annual" ? "/ year" : "/ month"}</span>
+                  </div>
+                  <p className="planhint">
+                    {familyBilling === "annual" ? (
+                      "Less than $5 a month"
+                    ) : (
+                      <button
+                        type="button"
+                        className="planhint-link"
+                        onClick={() => setFamilyBilling("annual")}
+                      >
+                        Save $25 with annual
+                      </button>
+                    )}
+                  </p>
                   <ul className="feats">
                     <li><span className="far">→</span> Unlimited AI sessions</li>
                     <li><span className="far">→</span> Full meeting history</li>
