@@ -2,9 +2,8 @@ import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { onboardingPath } from "../lib/routes";
+import { STRIPE_LINKS } from "../lib/stripeLinks";
 import "../styles/onboarding.css";
-
-const STRIPE_DIGITAL = "https://buy.stripe.com/PLACEHOLDER_digital_12";
 const PHYSICAL_DECK_URL = "https://familypause.com/cards";
 const TOTAL = 5;
 
@@ -364,7 +363,7 @@ function StepCardDeck({ workspaceId, onComplete }) {
                   <div key={f} className="ob-feat"><span className="ob-arr">→</span><span>{f}</span></div>
                 ))}
               </div>
-              <a href={STRIPE_DIGITAL} className="ob-btn-primary" style={{ marginBottom: 12, textDecoration: "none" }}>Purchase Digital Access — $12</a>
+              <a href={STRIPE_LINKS.digital} className="ob-btn-primary" style={{ marginBottom: 12, textDecoration: "none" }}>Purchase Digital Access — $12</a>
               <p className="ob-field-note ob-center" style={{ marginBottom: 16 }}>Secure payment via Stripe · Instant access</p>
               <div className="ob-info-terra">
                 <p className="ob-body" style={{ fontSize: 13, color: "var(--terra-d)" }}>

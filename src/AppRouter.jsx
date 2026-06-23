@@ -162,7 +162,7 @@ export default function AppRouter() {
     if (user && parsed.area === "auth") {
       if (onboardingData) {
         if (phase !== "onboarding") setPhase("onboarding");
-        navigate(onboardingPath(1), { replace: true });
+        navigate(onboardingPath(onboardingData.joined ? 4 : 1), { replace: true });
         return;
       }
       navigate(cardsPath(), { replace: true });

@@ -75,7 +75,33 @@ const css = `
 .fp-landing .logo { display: flex; align-items: center; gap: 11px; }
 .fp-landing .logo .word { font-family: var(--display); font-size: 21px; font-weight: 600; }
 .fp-landing .logo .word b { color: var(--terra); font-weight: 600; }
-.fp-landing .navlinks { display: flex; align-items: center; gap: 34px; }
+  .fp-landing .navlinks { display: flex; align-items: center; gap: 34px; }
+  .fp-landing .navmenu-btn {
+    display: none;
+    background: none; border: 1px solid var(--line); border-radius: 8px;
+    width: 42px; height: 42px; align-items: center; justify-content: center;
+    cursor: pointer; color: var(--ink); padding: 0;
+  }
+  .fp-landing .navmenu-btn svg { display: block; }
+  .fp-landing .navmobile {
+    display: none;
+    position: fixed; inset: 64px 0 0 0; z-index: 90;
+    background: rgba(42, 37, 29, 0.35);
+    backdrop-filter: blur(2px);
+  }
+  .fp-landing .navmobile.open { display: block; }
+  .fp-landing .navmobile-panel {
+    background: var(--paper-card);
+    border-bottom: 1px solid var(--line);
+    padding: 20px 22px 24px;
+    display: flex; flex-direction: column; gap: 18px;
+    box-shadow: var(--shadow);
+  }
+  .fp-landing .navmobile-panel a {
+    font-family: var(--mono); font-size: 12.5px; letter-spacing: .08em; text-transform: uppercase;
+    color: var(--ink-2); text-decoration: none;
+  }
+  .fp-landing .navmobile-panel a:hover { color: var(--terra); }
 .fp-landing .navlinks a { font-family: var(--mono); font-size: 12.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-2); transition: color .18s; }
 .fp-landing .navlinks a:hover { color: var(--terra); }
 .fp-landing .navcta { display: flex; align-items: center; gap: 18px; }
@@ -648,6 +674,7 @@ const css = `
   .fp-landing .pricegrid { grid-template-columns: 1fr; }
   .fp-landing .tier.pop { transform: none; }
   .fp-landing .navlinks { display: none; }
+  .fp-landing .navmenu-btn { display: inline-flex; }
   .fp-landing .shead h2, .fp-landing .finalcta h2 { font-size: 40px; }
   .fp-landing .quote blockquote { font-size: 30px; }
   .fp-landing .privacy p { font-size: 26px; }
@@ -691,6 +718,7 @@ const stroke = { fill: "none", stroke: "currentColor", strokeWidth: 1.7, strokeL
 export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
   const [scrolled, setScrolled] = useState(false);
   const [familyBilling, setFamilyBilling] = useState("annual");
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const rootRef = useRef(null);
 
   useEffect(() => {
@@ -736,7 +764,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
       {/* NAV */}
       <header className={"nav" + (scrolled ? " scrolled" : "")}>
         <div className="wrap row">
-          <a className="logo" href="#top">
+          <a className="logo" href="#top" onClick={() => setMobileNavOpen(false)}>
             <img src="/uploads/Logo_4.png" alt="FamilyPause" style={{ height: 36, width: 36, borderRadius: 8, display: "block" }} />
             <span className="word"><b>Family</b>Pause</span>
           </a>
@@ -745,6 +773,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
             <a href="#try">Try It Now</a>
             <a href="#who">Who it's for</a>
             <a href="#pricing">Pricing</a>
+            <a href="/cards">Card deck</a>
           </nav>
           <div className="navcta">
             <button className="signin" onClick={onSignIn}>Sign in</button>
@@ -752,7 +781,27 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
               <span className="long-label">Start Free Week</span>
               <span className="short-label">Start Free</span>
             </button>
+            <button
+              type="button"
+              className="navmenu-btn"
+              aria-label={mobileNavOpen ? "Close menu" : "Open menu"}
+              aria-expanded={mobileNavOpen}
+              onClick={() => setMobileNavOpen((o) => !o)}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" {...stroke} strokeWidth={2}>
+                {mobileNavOpen ? <path d="M6 6l12 12M18 6L6 18" /> : <path d="M4 7h16M4 12h16M4 17h16" />}
+              </svg>
+            </button>
           </div>
+        </div>
+        <div className={"navmobile" + (mobileNavOpen ? " open" : "")} onClick={() => setMobileNavOpen(false)}>
+          <nav className="navmobile-panel" onClick={(e) => e.stopPropagation()}>
+            <a href="#how" onClick={() => setMobileNavOpen(false)}>How it works</a>
+            <a href="#try" onClick={() => setMobileNavOpen(false)}>Try It Now</a>
+            <a href="#who" onClick={() => setMobileNavOpen(false)}>Who it's for</a>
+            <a href="#pricing" onClick={() => setMobileNavOpen(false)}>Pricing</a>
+            <a href="/cards" onClick={() => setMobileNavOpen(false)}>Card deck</a>
+          </nav>
         </div>
       </header>
 

@@ -18,6 +18,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "../lib/supabase";
+import { STRIPE_LINKS } from "../lib/stripeLinks";
 import "../styles/cards.css";
 
 function formatSyncDate(dateStr) {
@@ -689,8 +690,7 @@ function UnlockDeck({ workspace, onSuccess, onClose }) {
   };
 
   const handleDigitalPurchase = () => {
-    // Stripe Checkout URL: replace with your actual Stripe payment link
-    window.open("https://buy.stripe.com/PLACEHOLDER_card_digital", "_blank");
+    if (STRIPE_LINKS.cardDigital) window.open(STRIPE_LINKS.cardDigital, "_blank");
   };
 
   if (success) {

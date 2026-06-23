@@ -8,14 +8,10 @@
 //   reason     "trial" | "limit"  (tailors the headline/subcopy, default "trial")
 //   onClose()  optional (dismiss / go back)
 //
-// NOTE: Stripe payment links are PLACEHOLDERS. Spence replaces STRIPE_LINKS
-// with the real Checkout/Payment Link URLs before launch.
+// Stripe links: VITE_STRIPE_* in .env.local / Vercel (see src/lib/stripeLinks.js).
 // ─────────────────────────────────────────────────────────────────────────────
 
-const STRIPE_LINKS = {
-  family: "https://buy.stripe.com/PLACEHOLDER_family_59",   // TODO: real Stripe link for Family Plan $59/yr
-  pro:    "https://buy.stripe.com/PLACEHOLDER_pro_99",      // TODO: real Stripe link for Family Pro $99/yr
-};
+import { STRIPE_LINKS } from "../lib/stripeLinks";
 
 const css = `
   .pw-wrap { max-width: 760px; margin: 0 auto; }
@@ -79,12 +75,16 @@ function Check() {
 export default function Paywall({ reason = "trial", onClose }) {
   const headline = reason === "limit"
     ? <>You've used <em>this month's</em> free session</>
-    : <>Your <em>free trial</em> has ended</>;
+    : reason === "upgrade"
+      ? <>Upgrade when <em>you're ready</em></>
+      : <>Your <em>free trial</em> has ended</>;
   const sub = reason === "limit"
     ? "The free plan includes one AI session a month. Upgrade to FamilyPause Family for unlimited weekly syncs, and keep your whole family on the same page."
-    : "We hope the last 7 days brought a little more calm to your week. Keep the rhythm going with unlimited AI sessions, spouse sync, and full session history.";
+    : reason === "upgrade"
+      ? "You're on a free trial with full access. Upgrade anytime for unlimited AI sessions, spouse sync, and session history after your trial ends."
+      : "We hope the last 7 days brought a little more calm to your week. Keep the rhythm going with unlimited AI sessions, spouse sync, and full session history.";
 
-  const go = (url) => { window.location.href = url; };
+  const go = (url) => { if (url) window.location.href = url; };
 
   return (
     <div className="stage view">

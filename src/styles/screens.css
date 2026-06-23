@@ -495,6 +495,7 @@
 }
 .chip-ok { background: var(--olive-tint); color: var(--olive-d); border: 1px solid var(--olive-soft); }
 .chip-soft { background: var(--paper-2); color: var(--ink-2); border: 1px solid var(--line); }
+.chip-terra { background: var(--terra-tint); color: var(--terra-d); border: 1px solid var(--terra-soft); }
 
 .progresswrap { display: flex; align-items: center; gap: 12px; margin-left: auto; }
 .minibar { width: 130px; height: 6px; background: var(--paper-3); border-radius: 999px; overflow: hidden; }
@@ -600,7 +601,7 @@
 .planfoot { display: flex; align-items: center; justify-content: center; gap: 14px; margin-top: 34px; }
 
 /* confetti */
-.confetti { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 50; }
+.confetti { position: fixed; top: 0; left: 0; right: 0; height: 100px; pointer-events: none; overflow: hidden; z-index: 2; opacity: 0.85; }
 .confetti i { position: absolute; top: -12px; width: 9px; height: 14px; border-radius: 2px; animation: fall linear forwards; }
 @keyframes fall { to { transform: translateY(104vh) rotate(620deg); opacity: .9; } }
 

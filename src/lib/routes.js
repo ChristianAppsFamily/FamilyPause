@@ -10,7 +10,8 @@ export function syncPath(view = "agenda") {
   return `/app/sync/${view}`;
 }
 
-export function cardsPath() {
+export function cardsPath(view = "draw") {
+  if (view === "library" || view === "unlock") return `/app/cards?view=${view}`;
   return "/app/cards";
 }
 
@@ -50,7 +51,11 @@ export function parseAppLocation(pathname, search = "") {
   }
 
   if (pathname === "/app/settings") return { area: "overlay", overlay: "settings" };
-  if (pathname === "/app/cards") return { area: "overlay", overlay: "decks" };
+  if (pathname === "/app/cards") {
+    const view = params.get("view");
+    const cardsView = view === "library" || view === "unlock" ? view : "draw";
+    return { area: "overlay", overlay: "decks", cardsView };
+  }
   if (pathname === "/app/paywall") return { area: "overlay", overlay: "paywall" };
 
   const joinMatch = pathname.match(/\/join\/([a-zA-Z0-9-]+)/);

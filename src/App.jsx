@@ -19,7 +19,8 @@ import Settings from "./components/Settings.jsx";
 import CardSystem from "./components/CardSystem.jsx";
 import Paywall from "./components/Paywall.jsx";
 import { paywallReason } from "./lib/subscription";
-import { parseAppLocation, syncPath, SYNC_VIEWS } from "./lib/routes";
+import { parseAppLocation, syncPath, SYNC_VIEWS, cardsPath } from "./lib/routes";
+import { normalizeCardPeople } from "./lib/familyContext";
 import { canRecordAudio, pickRecordingMimeType, transcribeAudioBlob } from "./lib/transcribe";
 import { speechPreviewSupported, startSpeechPreview } from "./lib/speechPreview";
 import {
@@ -924,13 +925,31 @@ function ProcessingView({ done, familyNames = "Everyone" }) {
 
 // ── REVIEW (View 4) ───────────────────────────────────────────────────────────
 function ReviewView({ cards, setCards, roleOf, onBack, onBuild, distillError }) {
-  const decide = (id, status) => setCards((arr) => arr.map((it) => (it.id === id ? { ...it, status } : it)));
+  const [activeCategory, setActiveCategory] = useState("all");
+  const [lastAction, setLastAction] = useState(null);
+
+  const decide = (id, status) => {
+    const item = cards.find((c) => c.id === id);
+    if (item && item.status !== status) setLastAction({ id, previousStatus: item.status });
+    setCards((arr) => arr.map((it) => (it.id === id ? { ...it, status } : it)));
+  };
+
+  const undoLast = () => {
+    if (!lastAction) return;
+    setCards((arr) => arr.map((it) => (it.id === lastAction.id ? { ...it, status: lastAction.previousStatus } : it)));
+    setLastAction(null);
+  };
+
+  const categories = ["all", ...new Set(cards.map((c) => c.category).filter(Boolean))];
+  const visible = activeCategory === "all" ? cards : cards.filter((c) => c.category === activeCategory);
   const total = cards.length;
   const decided = cards.filter((c) => c.status !== STATUS.OPEN).length;
   const kept = cards.filter((c) => c.status === STATUS.KEPT || c.status === STATUS.CALENDARED).length;
+  const openCount = cards.filter((c) => c.status === STATUS.OPEN).length;
   const allDecided = total > 0 && decided === total;
   const pct = total ? Math.round((decided / total) * 100) : 0;
   const keepAll = () => setCards((arr) => arr.map((it) => (it.status === STATUS.OPEN ? { ...it, status: STATUS.KEPT } : it)));
+  const discardAll = () => setCards((arr) => arr.map((it) => (it.status === STATUS.OPEN ? { ...it, status: STATUS.DISCARDED } : it)));
 
   return (
     <div className="view">
@@ -948,8 +967,32 @@ function ReviewView({ cards, setCards, roleOf, onBack, onBuild, distillError }) 
       <div className="revmeta">
         <span className="chip chip-ok"><Ico d={I.check} size={13} /> {total} items extracted</span>
         <span className="chip chip-soft"><Ico d={I.clock} size={13} /> ~2 min to review</span>
-        {total > 0 && <button className="linkish" style={{ marginLeft: "auto" }} onClick={keepAll}>Keep all remaining →</button>}
+        {lastAction && (
+          <button className="linkish" onClick={undoLast}>Undo last</button>
+        )}
+        {openCount > 0 && (
+          <>
+            <button className="linkish" style={{ marginLeft: "auto" }} onClick={keepAll}>Keep all remaining →</button>
+            <button className="linkish" onClick={discardAll}>Discard all remaining</button>
+          </>
+        )}
       </div>
+
+      {categories.length > 2 && (
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 18 }}>
+          {categories.map((cat) => (
+            <button
+              key={cat}
+              type="button"
+              className={"chip " + (activeCategory === cat ? "chip-terra" : "chip-soft")}
+              onClick={() => setActiveCategory(cat)}
+              style={{ cursor: "pointer", border: "none" }}
+            >
+              {cat === "all" ? "All" : cat}
+            </button>
+          ))}
+        </div>
+      )}
 
       {total === 0 ? (
         <div style={{ textAlign: "center", padding: "50px 20px", color: "var(--ink-3)" }}>
@@ -967,7 +1010,7 @@ function ReviewView({ cards, setCards, roleOf, onBack, onBuild, distillError }) 
         </div>
       ) : (
         <div>
-          {cards.map((it) => {
+          {visible.map((it) => {
             const who = roleOf(it.person);
             const isEvent = it.type === "event";
             const when = formatWhen(it.date, it.time);
@@ -1023,7 +1066,7 @@ function Confetti() {
 function PlanView({ keptCards, adults, roleOf, onRestart }) {
   const [added, setAdded] = useState(false);
   const [confetti, setConfetti] = useState(true);
-  useEffect(() => { const t = setTimeout(() => setConfetti(false), 4200); return () => clearTimeout(t); }, []);
+  useEffect(() => { const t = setTimeout(() => setConfetti(false), 2200); return () => clearTimeout(t); }, []);
 
   const isAdult = (p) => adults.some((a) => a.toLowerCase() === (p || "").toLowerCase());
   const byPerson = (name) => keptCards.filter((c) => (c.person || "").toLowerCase() === name.toLowerCase());
@@ -1192,7 +1235,10 @@ export default function App({ user, workspace, onSignOut }) {
     else navigate(syncPath(view));
   };
 
-  const cardDeckInitialView = () => "draw";
+  const cardDeckInitialView = () => {
+    const parsed = parseAppLocation(location.pathname, location.search);
+    return parsed.cardsView || "draw";
+  };
 
   useEffect(() => {
     if (!ws?.id) return;
@@ -1344,7 +1390,7 @@ Each item:
   "type": ("action", "event", "decision", or "note")
 }
 
-Rules: extract everything actionable, use person names when mentioned, return only the JSON array.`;
+Rules: extract everything actionable. For person, use ONLY names from Known people, or "Both", or "Family". Map transcript nicknames to the closest known person. Return only the JSON array.`;
 
     let parsed = [];
     let errorMsg = null;
@@ -1359,7 +1405,10 @@ Rules: extract everything actionable, use person names when mentioned, return on
       parsed = [];
     }
 
-    const newCards = parsed.map((c, i) => ({ ...c, id: c.id ?? i + 1, status: STATUS.OPEN }));
+    const newCards = normalizeCardPeople(
+      parsed.map((c, i) => ({ ...c, id: c.id ?? i + 1, status: STATUS.OPEN })),
+      context
+    );
     setCards(newCards);
     setDistillError(errorMsg);
     setDistillDone(true);
@@ -1435,20 +1484,22 @@ Rules: extract everything actionable, use person names when mentioned, return on
 
   // ── Overlays ─────────────────────────────────────────────────────────────
   if (overlay === "paywall") {
+    const resolvedReason = paywallBlock || paywallReason(subscription, sessionsThisMonth) || "upgrade";
     return (
       <div className="stage" style={{ padding: "48px 24px 80px" }}>
-        <Paywall reason={paywallBlock || "trial"} onClose={() => { closeOverlay(); setPaywallBlock(null); }} />
+        <Paywall reason={resolvedReason} onClose={() => { closeOverlay(); setPaywallBlock(null); }} />
       </div>
     );
   }
   if (overlay === "settings") {
+    const decksUnlocked = ws?.cards_unlocked || (Array.isArray(ws?.unlocked_deck_years) && ws.unlocked_deck_years.length > 0);
     return (
       <Settings
         workspace={ws}
         user={user}
         onSignOut={onSignOut}
         onClose={closeOverlay}
-        onOpenDecks={() => navigate("/app/cards")}
+        onOpenDecks={() => navigate(decksUnlocked ? cardsPath("library") : cardsPath("unlock"))}
         onWorkspaceUpdate={setWs}
       />
     );

@@ -17,6 +17,7 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
+import { STRIPE_LINKS } from "../lib/stripeLinks";
 
 const css = `
   .set-sec { padding: 24px 26px; margin-bottom: 18px; }
@@ -132,6 +133,8 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
 
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [faithMode, setFaithMode] = useState(workspace?.faith_mode ?? false);
+  const [faithSaving, setFaithSaving] = useState(false);
 
   // ── Members who accepted invite ────────────────────────────────────────────
   const [members, setMembers] = useState([]);
@@ -189,6 +192,10 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
     return () => { active = false; };
   }, [workspace?.id]);
 
+  useEffect(() => {
+    setFaithMode(workspace?.faith_mode ?? false);
+  }, [workspace?.faith_mode]);
+
   // ── Save family members ────────────────────────────────────────────────────
   const saveFamily = async () => {
     if (!workspace?.id) { setError("No workspace loaded."); return; }
@@ -214,6 +221,29 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
       setCopied(true);
       setTimeout(() => setCopied(false), 1800);
     } catch { /* clipboard blocked: ignore */ }
+  };
+
+  const sendInviteSms = () => {
+    const code = workspace?.invite_code || "";
+    if (!code) return;
+    const body = encodeURIComponent(`Join our FamilyPause workspace: ${code}\nhttps://familypause.com/join/${code}`);
+    window.location.href = `sms:?&body=${body}`;
+  };
+
+  const toggleFaithMode = async () => {
+    if (!workspace?.id) return;
+    setFaithSaving(true);
+    const next = !faithMode;
+    const { data, error: err } = await supabase
+      .from("workspaces")
+      .update({ faith_mode: next })
+      .eq("id", workspace.id)
+      .select()
+      .single();
+    setFaithSaving(false);
+    if (err) { setError(err.message); return; }
+    setFaithMode(next);
+    if (data && onWorkspaceUpdate) onWorkspaceUpdate(data);
   };
 
   // ── Plan + trial ───────────────────────────────────────────────────────────
@@ -301,9 +331,10 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
           <div className="eyebrow">Bring in your spouse</div>
           <h2>Invite code</h2>
           <p className="set-sub">Share this code so your spouse can join the same family workspace.</p>
-          <div style={{ display: "flex", gap: 10, marginBottom: 22 }}>
+          <div style={{ display: "flex", gap: 10, marginBottom: 22, flexWrap: "wrap" }}>
             <div className="set-codebox">{workspace?.invite_code || "Not set"}</div>
             <button className="btn btn-soft" onClick={copyInvite}>{copied ? "Copied ✓" : "Copy"}</button>
+            <button className="btn btn-soft" type="button" onClick={sendInviteSms}>Send via Text</button>
           </div>
 
           {/* Members who have joined */}
@@ -347,6 +378,23 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
           )}
         </section>
 
+        {/* ── FAITH MODE ─────────────────────────────────────────────── */}
+        <section className="panel set-sec rise">
+          <div className="eyebrow">AI distillation</div>
+          <h2>Faith mode</h2>
+          <p className="set-sub">
+            When on, meeting distillation uses faith-aware language for families who want Scripture-grounded framing in summaries.
+          </p>
+          <button
+            type="button"
+            className={"btn " + (faithMode ? "btn-primary" : "btn-soft")}
+            onClick={toggleFaithMode}
+            disabled={faithSaving}
+          >
+            {faithSaving ? "Saving…" : faithMode ? "Faith mode on" : "Faith mode off"}
+          </button>
+        </section>
+
         {/* ── CARD DECKS ─────────────────────────────────────────────── */}
         <section className="panel set-sec rise">
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, marginBottom: 18 }}>
@@ -381,7 +429,7 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
             </div>
             <a
               className="btn btn-primary"
-              href="https://buy.stripe.com/PLACEHOLDER_pro"
+              href={STRIPE_LINKS.pro || "#"}
               target="_blank"
               rel="noreferrer"
               style={{ flexShrink: 0, marginTop: 4, textDecoration: "none" }}
