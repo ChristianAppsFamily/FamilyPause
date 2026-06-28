@@ -277,7 +277,8 @@ per user on `workspace_members` (each spouse connects their own Google account).
 ### B — Supabase secrets
 
 ```bash
-supabase secrets set GOOGLE_CLIENT_ID=....apps.googleusercontent.com
+# Client ID is ONLY the string ending in .apps.googleusercontent.com — no http:// prefix
+supabase secrets set GOOGLE_CLIENT_ID=1049901506309-xxxx.apps.googleusercontent.com
 supabase secrets set GOOGLE_CLIENT_SECRET=GOCSPX-...
 supabase secrets set GOOGLE_OAUTH_STATE_SECRET=$(openssl rand -hex 32)
 supabase secrets set GOOGLE_APP_ORIGIN=https://familypause.com
@@ -307,6 +308,11 @@ OAuth consent screen must be in **Testing** or **Production** with your Google a
 
 **Account picker:** The connect flow uses `prompt=select_account` so Google always shows the account chooser — your FamilyPause login and Google Calendar account can be different Gmail addresses.
 
-**`invalid_client` error:** This means the Google OAuth client ID in Supabase secrets does not match a valid client in Google Cloud Console (or the client was deleted). Fix `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`, not the account picker.
+**`invalid_client` error:** Google rejected the OAuth client ID. Common causes:
+- `GOOGLE_CLIENT_ID` was pasted with `http://` or a trailing `/` — use only the bare ID string
+- Client ID / secret don't match the OAuth client in Google Cloud Console
+- The authorized redirect URI is missing: `https://<PROJECT_REF>.supabase.co/functions/v1/google-calendar-callback`
+
+Re-set secrets (no `http://`), then retry connect from Settings.
 
 After connecting, re-run the **Google Calendar** SQL block in `supabase_setup.sql` if you have not yet added `google_calendar_email` (stores which Google account was linked).

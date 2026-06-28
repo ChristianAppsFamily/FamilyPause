@@ -1,5 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { appOrigin, signOAuthState } from "../_shared/googleOAuth.ts";
+import { appOrigin, googleClientId, signOAuthState } from "../_shared/googleOAuth.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -39,7 +39,7 @@ Deno.serve(async (req) => {
       .maybeSingle();
     if (!member) return json({ error: "Not a workspace member" }, 403);
 
-    const clientId = Deno.env.get("GOOGLE_CLIENT_ID");
+    const clientId = googleClientId();
     const stateSecret = Deno.env.get("GOOGLE_OAUTH_STATE_SECRET");
     if (!clientId || !stateSecret) return json({ error: "Google OAuth not configured" }, 500);
 

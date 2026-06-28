@@ -60,8 +60,8 @@ export async function verifyOAuthState(state: string, secret: string): Promise<O
 }
 
 export async function exchangeGoogleCode(code: string, redirectUri: string) {
-  const clientId = Deno.env.get("GOOGLE_CLIENT_ID");
-  const clientSecret = Deno.env.get("GOOGLE_CLIENT_SECRET");
+  const clientId = googleClientId();
+  const clientSecret = googleClientSecret();
   if (!clientId || !clientSecret) throw new Error("Google OAuth not configured");
 
   const res = await fetch("https://oauth2.googleapis.com/token", {
@@ -85,8 +85,8 @@ export async function exchangeGoogleCode(code: string, redirectUri: string) {
 }
 
 export async function refreshGoogleAccessToken(refreshToken: string) {
-  const clientId = Deno.env.get("GOOGLE_CLIENT_ID");
-  const clientSecret = Deno.env.get("GOOGLE_CLIENT_SECRET");
+  const clientId = googleClientId();
+  const clientSecret = googleClientSecret();
   if (!clientId || !clientSecret) throw new Error("Google OAuth not configured");
 
   const res = await fetch("https://oauth2.googleapis.com/token", {
@@ -112,6 +112,17 @@ export function googleCallbackRedirectUri(): string {
 
 export function appOrigin(): string {
   return (Deno.env.get("GOOGLE_APP_ORIGIN") || "https://familypause.com").replace(/\/$/, "");
+}
+
+/** Strip accidental http:// prefix or trailing slash from pasted client IDs. */
+export function googleClientId(): string | undefined {
+  const raw = Deno.env.get("GOOGLE_CLIENT_ID")?.trim();
+  if (!raw) return undefined;
+  return raw.replace(/^https?:\/\//i, "").replace(/\/+$/, "");
+}
+
+export function googleClientSecret(): string | undefined {
+  return Deno.env.get("GOOGLE_CLIENT_SECRET")?.trim();
 }
 
 /** Fetch the Google account email for a freshly issued access token. */
