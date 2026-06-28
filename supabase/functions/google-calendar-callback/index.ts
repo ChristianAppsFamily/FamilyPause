@@ -2,6 +2,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import {
   appOrigin,
   exchangeGoogleCode,
+  fetchGoogleUserEmail,
   googleCallbackRedirectUri,
   verifyOAuthState,
 } from "../_shared/googleOAuth.ts";
@@ -16,7 +17,12 @@ Deno.serve(async (req) => {
   const redirectFail = (msg: string) =>
     Response.redirect(`${origin}/app/settings?calendar=error&msg=${encodeURIComponent(msg)}`, 302);
 
-  if (oauthError) return redirectFail(oauthError);
+  if (oauthError) {
+    const msg = oauthError === "access_denied"
+      ? "Google account connection was cancelled"
+      : oauthError;
+    return redirectFail(msg);
+  }
   if (!code || !state) return redirectFail("Missing authorization code");
 
   try {
@@ -28,6 +34,7 @@ Deno.serve(async (req) => {
 
     const redirectUri = googleCallbackRedirectUri();
     const tokens = await exchangeGoogleCode(code, redirectUri);
+    const googleEmail = await fetchGoogleUserEmail(tokens.access_token);
 
     const admin = createClient(
       Deno.env.get("SUPABASE_URL")!,
@@ -37,6 +44,7 @@ Deno.serve(async (req) => {
     const update: Record<string, string | null> = {
       google_calendar_token: tokens.access_token,
       google_calendar_connected_at: new Date().toISOString(),
+      google_calendar_email: googleEmail,
     };
     if (tokens.refresh_token) {
       update.google_calendar_refresh_token = tokens.refresh_token;

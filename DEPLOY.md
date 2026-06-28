@@ -44,7 +44,37 @@ a GitHub account, and a Vercel account.
 > `\`${window.location.origin}/reset-password\`` for password reset — so localhost works
 > in dev and `familypause.com` in production with no hardcoded redirect in code.
 
----
+### Troubleshooting — Google OAuth lands on `localhost:3000` (connection refused)
+
+If Google sign-in succeeds but the browser opens **`localhost:3000/#access_token=...`**
+with **ERR_CONNECTION_REFUSED**, the app code is fine — **Supabase Auth URL Configuration**
+is wrong.
+
+Supabase only honors `redirectTo` when that exact URL is in **Redirect URLs**. If it is
+missing, Supabase falls back to **Site URL** (often still set to `http://localhost:3000`
+from an old dev setup).
+
+**Fix (2 min):** Supabase Dashboard → **Authentication** → **URL Configuration**
+([direct link for this project](https://supabase.com/dashboard/project/cftzaeoqkepvvnfavphw/auth/url-configuration))
+
+1. **Site URL** — set to your live app (not localhost):
+   `https://www.familypause.com/app`
+2. **Redirect URLs** — add every origin you use (one per line):
+   ```
+   https://www.familypause.com/app
+   https://familypause.com/app
+   http://localhost:5173/app
+   http://localhost:5173/reset-password
+   https://www.familypause.com/reset-password
+   https://familypause.com/reset-password
+   ```
+3. **Remove** `http://localhost:3000` and any other stale localhost entries.
+4. Save, then try **Continue with Google** again from the same domain you added
+   (if you sign in on `www`, that exact origin must be in the list).
+
+The `#access_token` in the URL means Google auth worked; fixing the allow list sends
+users back to your running app instead of a dead localhost port.
+
 
 ## 2 — Anthropic API key (AI distillation) ~2 min
 
@@ -274,3 +304,9 @@ Re-run the **Google Calendar** block in **`supabase_setup.sql`** (adds token col
 4. Verify events appear in Google Calendar (primary calendar).
 
 OAuth consent screen must be in **Testing** or **Production** with your Google account added as a test user until the app is verified.
+
+**Account picker:** The connect flow uses `prompt=select_account` so Google always shows the account chooser — your FamilyPause login and Google Calendar account can be different Gmail addresses.
+
+**`invalid_client` error:** This means the Google OAuth client ID in Supabase secrets does not match a valid client in Google Cloud Console (or the client was deleted). Fix `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`, not the account picker.
+
+After connecting, re-run the **Google Calendar** SQL block in `supabase_setup.sql` if you have not yet added `google_calendar_email` (stores which Google account was linked).

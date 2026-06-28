@@ -234,7 +234,8 @@ create index if not exists sessions_workspace_id_idx on sessions(workspace_id);
 alter table workspace_members
   add column if not exists google_calendar_token text,
   add column if not exists google_calendar_refresh_token text,
-  add column if not exists google_calendar_connected_at timestamptz;
+  add column if not exists google_calendar_connected_at timestamptz,
+  add column if not exists google_calendar_email text;
 
 drop policy if exists "members_update" on workspace_members;
 create policy "members_update" on workspace_members

@@ -24,6 +24,7 @@ import {
   startGoogleCalendarConnect,
   disconnectGoogleCalendar,
 } from "../lib/googleCalendar";
+import CalendarAccountChooser from "./CalendarAccountChooser";
 
 const css = `
   .set-sec { padding: 24px 26px; margin-bottom: 18px; }
@@ -139,10 +140,14 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
   const [subscription, setSubscription] = useState(null);
   const [subLoading, setSubLoading] = useState(true);
   const [checkoutNotice, setCheckoutNotice] = useState(false);
-  const [calendarConn, setCalendarConn] = useState({ connected: false, connectedAt: null, memberId: null });
+  const [calendarConn, setCalendarConn] = useState({
+    connected: false, connectedAt: null, memberId: null, googleEmail: null,
+  });
   const [calendarLoading, setCalendarLoading] = useState(true);
   const [calendarDisconnecting, setCalendarDisconnecting] = useState(false);
   const [calendarNotice, setCalendarNotice] = useState("");
+  const [calendarChooserOpen, setCalendarChooserOpen] = useState(false);
+  const [calendarConnecting, setCalendarConnecting] = useState(false);
 
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -246,7 +251,12 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
       next.delete("calendar");
       setSearchParams(next, { replace: true });
     } else if (cal === "error") {
-      setCalendarNotice(searchParams.get("msg") || "Could not connect Google Calendar.");
+      const raw = searchParams.get("msg") || "Could not connect Google Calendar.";
+      const friendly = /invalid_client/i.test(raw)
+        ? "Google Calendar is not configured yet. Ask the workspace owner to finish Google Cloud OAuth setup in Supabase."
+        : raw;
+      setCalendarNotice(friendly);
+      setCalendarChooserOpen(false);
       const next = new URLSearchParams(searchParams);
       next.delete("calendar");
       next.delete("msg");
@@ -254,16 +264,29 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
     }
   }, [searchParams.get("calendar")]);
 
-  const connectCalendar = () => {
+  const connectCalendar = async () => {
     if (!workspace?.id) return;
-    startGoogleCalendarConnect(workspace.id, "/app/settings?calendar=connected");
+    setCalendarConnecting(true);
+    setCalendarNotice("");
+    try {
+      await startGoogleCalendarConnect(workspace.id, "/app/settings?calendar=connected");
+    } catch (e) {
+      setCalendarNotice(e.message || "Could not start Google Calendar connect.");
+      setCalendarConnecting(false);
+    }
   };
 
   const disconnectCalendar = async () => {
     if (!calendarConn.memberId) return;
     setCalendarDisconnecting(true);
     await disconnectGoogleCalendar(calendarConn.memberId);
-    setCalendarConn({ connected: false, connectedAt: null, memberId: calendarConn.memberId });
+    setCalendarConn({
+      connected: false,
+      connectedAt: null,
+      memberId: calendarConn.memberId,
+      googleEmail: null,
+    });
+    setCalendarChooserOpen(false);
     setCalendarDisconnecting(false);
   };
 
@@ -471,24 +494,39 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
           <div className="eyebrow">Integrations</div>
           <h2>Google Calendar</h2>
           <p className="set-sub">
-            Connect your Google account to add dated items from your weekly plan directly to your calendar.
+            Connect a Google account to add dated items from your weekly plan directly to your calendar.
+            Your FamilyPause login and your Google account can be different — you&apos;ll choose which
+            Google account to link.
           </p>
           {calendarNotice && (
-            <p className="set-sub" style={{ margin: "0 0 12px", color: "var(--olive-d)" }}>{calendarNotice}</p>
+            <p className="set-sub" style={{
+              margin: "0 0 12px",
+              color: /connected/i.test(calendarNotice) ? "var(--olive-d)" : "var(--red)",
+            }}>
+              {calendarNotice}
+            </p>
           )}
           {calendarLoading ? (
             <div className="set-spin" />
           ) : calendarConn.connected ? (
             <div>
               <div className="set-plan" style={{ marginBottom: 12 }}>
-                <span className="name">Connected</span>
+                <span className="name">
+                  {calendarConn.googleEmail || "Google Calendar"}
+                </span>
                 <span className="tag tag-amanda">Active</span>
               </div>
               {calendarConn.connectedAt && (
-                <p className="set-sub" style={{ margin: "0 0 16px" }}>
+                <p className="set-sub" style={{ margin: "0 0 8px" }}>
                   Linked {new Date(calendarConn.connectedAt).toLocaleDateString("en-US", {
                     month: "long", day: "numeric", year: "numeric",
                   })}
+                </p>
+              )}
+              {user?.email && calendarConn.googleEmail
+                && user.email.toLowerCase() !== calendarConn.googleEmail.toLowerCase() && (
+                <p className="set-sub" style={{ margin: "0 0 16px", fontSize: 13 }}>
+                  FamilyPause: {user.email}
                 </p>
               )}
               <button
@@ -500,8 +538,19 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
                 {calendarDisconnecting ? "Disconnecting…" : "Disconnect"}
               </button>
             </div>
+          ) : calendarChooserOpen ? (
+            <CalendarAccountChooser
+              familyPauseEmail={user?.email}
+              onConfirm={connectCalendar}
+              onCancel={() => setCalendarChooserOpen(false)}
+              busy={calendarConnecting}
+            />
           ) : (
-            <button type="button" className="btn btn-primary" onClick={connectCalendar}>
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={() => { setCalendarNotice(""); setCalendarChooserOpen(true); }}
+            >
               Connect Google Calendar
             </button>
           )}

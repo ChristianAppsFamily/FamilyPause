@@ -646,6 +646,33 @@
 .cal-sync-summary-inner h2 { font-family: var(--display); font-size: 28px; margin: 0 0 8px; }
 .cal-sync-summary-inner p { font-family: var(--mono); font-size: 13px; color: var(--ink-2); margin: 0 0 24px; }
 
+.cal-acct-chooser {
+  background: var(--paper-card);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  padding: 20px 22px;
+}
+.cal-acct-chooser--compact { padding: 18px 20px; }
+.cal-acct-chooser__lead {
+  font-family: var(--body);
+  font-size: 15px;
+  color: var(--ink);
+  margin: 0 0 10px;
+  line-height: 1.5;
+}
+.cal-acct-chooser__body {
+  font-family: var(--body);
+  font-size: 14px;
+  color: var(--ink-2);
+  margin: 0 0 18px;
+  line-height: 1.55;
+}
+.cal-acct-chooser__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
 /* confetti */
 .confetti { position: fixed; top: 0; left: 0; right: 0; height: 100px; pointer-events: none; overflow: hidden; z-index: 2; opacity: 0.85; }
 .confetti i { position: absolute; top: -12px; width: 9px; height: 14px; border-radius: 2px; animation: fall linear forwards; }

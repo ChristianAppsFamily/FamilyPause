@@ -1,6 +1,6 @@
 import { supabase } from "./supabase";
 
-/** @typedef {{ connected: boolean, connectedAt: string|null, memberId: string|null }} CalendarConnection */
+/** @typedef {{ connected: boolean, connectedAt: string|null, memberId: string|null, googleEmail: string|null }} CalendarConnection */
 
 /**
  * Start Google Calendar OAuth — redirects browser to Google consent.
@@ -19,15 +19,15 @@ export async function startGoogleCalendarConnect(workspaceId, returnTo = "/app/s
 /**
  * @param {string} workspaceId
  * @param {string} userId
- * @returns {Promise<{ connected: boolean, connectedAt: string|null, memberId: string|null }>}
+ * @returns {Promise<{ connected: boolean, connectedAt: string|null, memberId: string|null, googleEmail: string|null }>}
  */
 export async function getCalendarConnection(workspaceId, userId) {
   if (!workspaceId || !userId) {
-    return { connected: false, connectedAt: null, memberId: null };
+    return { connected: false, connectedAt: null, memberId: null, googleEmail: null };
   }
   const { data } = await supabase
     .from("workspace_members")
-    .select("id, google_calendar_refresh_token, google_calendar_connected_at")
+    .select("id, google_calendar_refresh_token, google_calendar_connected_at, google_calendar_email")
     .eq("workspace_id", workspaceId)
     .eq("user_id", userId)
     .maybeSingle();
@@ -36,6 +36,7 @@ export async function getCalendarConnection(workspaceId, userId) {
     connected: !!data?.google_calendar_refresh_token,
     connectedAt: data?.google_calendar_connected_at ?? null,
     memberId: data?.id ?? null,
+    googleEmail: data?.google_calendar_email ?? null,
   };
 }
 
@@ -46,6 +47,7 @@ export async function disconnectGoogleCalendar(memberId) {
     google_calendar_token: null,
     google_calendar_refresh_token: null,
     google_calendar_connected_at: null,
+    google_calendar_email: null,
   }).eq("id", memberId);
 }
 

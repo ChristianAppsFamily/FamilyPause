@@ -19,6 +19,7 @@ import Settings from "./components/Settings.jsx";
 import CardSystem from "./components/CardSystem.jsx";
 import Paywall from "./components/Paywall.jsx";
 import CalendarSync from "./components/CalendarSync.jsx";
+import CalendarAccountChooser from "./components/CalendarAccountChooser.jsx";
 import { paywallReason } from "./lib/subscription";
 import { parseAppLocation, syncPath, SYNC_VIEWS, cardsPath, calendarSyncPath } from "./lib/routes";
 import { normalizeCardPeople } from "./lib/familyContext";
@@ -1057,7 +1058,10 @@ function Confetti() {
   );
 }
 
-function PlanView({ keptCards, adults, roleOf, onRestart, onAddToCalendar, calendarBusy }) {
+function PlanView({
+  keptCards, adults, roleOf, onRestart, onAddToCalendar, calendarBusy,
+  showCalendarConnect, onConfirmCalendarConnect, onCancelCalendarConnect, familyPauseEmail,
+}) {
   const [confetti, setConfetti] = useState(true);
   useEffect(() => { const t = setTimeout(() => setConfetti(false), 2200); return () => clearTimeout(t); }, []);
 
@@ -1090,7 +1094,19 @@ function PlanView({ keptCards, adults, roleOf, onRestart, onAddToCalendar, calen
         <p>A clean plan, organized by person. {keptCards.length} items routed where they belong: appointments timed, actions owned, nothing forgotten.</p>
       </div>
 
-      {syncableCount > 0 && (
+      {showCalendarConnect && (
+        <div className="plan-cal-cta" style={{ marginBottom: 8 }}>
+          <CalendarAccountChooser
+            familyPauseEmail={familyPauseEmail}
+            onConfirm={onConfirmCalendarConnect}
+            onCancel={onCancelCalendarConnect}
+            busy={calendarBusy}
+            compact
+          />
+        </div>
+      )}
+
+      {syncableCount > 0 && !showCalendarConnect && (
         <div className="plan-cal-cta">
           <button
             type="button"
@@ -1162,6 +1178,7 @@ export default function App({ user, workspace, onSignOut }) {
   const [subscription, setSubscription] = useState(null);
   const [sessionsThisMonth, setSessionsThisMonth] = useState(0);
   const [calendarBusy, setCalendarBusy] = useState(false);
+  const [calendarConnectPrompt, setCalendarConnectPrompt] = useState(false);
   const [inputMode, setInputMode] = useState("paste");
   const [cards, setCards] = useState([]);
   const [distillError, setDistillError] = useState(null);
@@ -1496,12 +1513,25 @@ Rules: extract everything actionable. For person, use ONLY names from Known peop
     try {
       const conn = await getCalendarConnection(ws.id, user.id);
       if (!conn.connected) {
-        await startGoogleCalendarConnect(ws.id, "/app/sync/plan?calendar=connect");
+        setCalendarConnectPrompt(true);
         return;
       }
       openOverlay("calendar-sync");
     } catch (e) {
       console.error("[Plan] calendar connect", e);
+    } finally {
+      setCalendarBusy(false);
+    }
+  };
+
+  const confirmCalendarConnect = async () => {
+    if (!ws?.id) return;
+    setCalendarBusy(true);
+    try {
+      await startGoogleCalendarConnect(ws.id, "/app/sync/plan?calendar=connect");
+    } catch (e) {
+      console.error("[Plan] calendar connect", e);
+      setCalendarConnectPrompt(false);
     } finally {
       setCalendarBusy(false);
     }
@@ -1519,6 +1549,7 @@ Rules: extract everything actionable. For person, use ONLY names from Known peop
         (c) => (c.status === STATUS.KEPT || c.status === STATUS.CALENDARED) && c.date,
       );
       if (conn.connected && dated.length > 0) {
+        setCalendarConnectPrompt(false);
         navigate(calendarSyncPath());
       }
     })();
@@ -1632,6 +1663,10 @@ Rules: extract everything actionable. For person, use ONLY names from Known peop
           onRestart={restart}
           onAddToCalendar={handleAddToCalendar}
           calendarBusy={calendarBusy}
+          showCalendarConnect={calendarConnectPrompt}
+          onConfirmCalendarConnect={confirmCalendarConnect}
+          onCancelCalendarConnect={() => setCalendarConnectPrompt(false)}
+          familyPauseEmail={user?.email}
         />
       )}
     </div>
