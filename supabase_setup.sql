@@ -230,11 +230,34 @@ alter table workspaces
 create index if not exists workspace_members_user_id_idx on workspace_members(user_id);
 create index if not exists sessions_workspace_id_idx on sessions(workspace_id);
 
+-- ── Google Calendar OAuth (per member) ─────────────────────────
+alter table workspace_members
+  add column if not exists google_calendar_token text,
+  add column if not exists google_calendar_refresh_token text,
+  add column if not exists google_calendar_connected_at timestamptz;
+
+drop policy if exists "members_update" on workspace_members;
+create policy "members_update" on workspace_members
+  for update using (user_id = auth.uid())
+  with check (user_id = auth.uid());
+
 -- ── updated_at trigger on subscriptions ──────────────────────
 drop trigger if exists subscriptions_updated_at on subscriptions;
 create trigger subscriptions_updated_at
   before update on subscriptions
   for each row execute function update_updated_at();
+
+-- ── Stripe webhook idempotency ───────────────────────────────
+create table if not exists stripe_webhook_events (
+  id          text primary key,
+  event_type  text not null,
+  processed_at timestamptz default now()
+);
+alter table stripe_webhook_events enable row level security;
+-- No client policies — service role only (edge function).
+
+-- One subscription row per workspace (webhook upserts by workspace_id).
+create unique index if not exists subscriptions_workspace_id_unique on subscriptions(workspace_id);
 
 -- ── DEV: test deck-unlock code ────────────────────────────────
 insert into deck_codes (code, deck_year, batch)

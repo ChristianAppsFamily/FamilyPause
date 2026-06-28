@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { STRIPE_LINKS } from "../lib/stripeLinks";
+import { cardsPath } from "../lib/routes";
 
 const css = `
 .cards-product {
@@ -59,10 +59,6 @@ const css = `
 `;
 
 export default function CardsProductPage() {
-  const buyDigital = () => {
-    if (STRIPE_LINKS.cardDigital) window.open(STRIPE_LINKS.cardDigital, "_blank");
-  };
-
   return (
     <div className="cards-product">
       <style>{css}</style>
@@ -98,9 +94,9 @@ export default function CardsProductPage() {
               <li>Both spouses get access instantly</li>
             </ul>
             <div className="btn-row">
-              <button type="button" className="btn btn-primary" onClick={buyDigital}>
+              <Link className="btn btn-primary" to={cardsPath("unlock")} style={{ textDecoration: "none" }}>
                 Purchase digital access
-              </button>
+              </Link>
               <Link className="btn btn-soft" to="/app" style={{ textDecoration: "none" }}>
                 I have a code
               </Link>

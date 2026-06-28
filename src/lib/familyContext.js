@@ -36,5 +36,9 @@ export function normalizeCardPeople(cards, context) {
   return cards.map((c) => ({
     ...c,
     person: normalizePersonField(c.person, context),
+    recurring: !!c.recurring,
+    duration_minutes: c.duration_minutes ?? (c.date ? 60 : null),
+    calendar_synced: !!c.calendar_synced,
+    google_event_id: c.google_event_id ?? null,
   }));
 }

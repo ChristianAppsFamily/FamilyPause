@@ -18,7 +18,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "../lib/supabase";
-import { STRIPE_LINKS } from "../lib/stripeLinks";
+import { openStripeCheckout } from "../lib/stripeCheckout";
 import "../styles/cards.css";
 
 function formatSyncDate(dateStr) {
@@ -689,8 +689,12 @@ function UnlockDeck({ workspace, onSuccess, onClose }) {
     setTimeout(() => onSuccess(deckYear), 2000);
   };
 
-  const handleDigitalPurchase = () => {
-    if (STRIPE_LINKS.cardDigital) window.open(STRIPE_LINKS.cardDigital, "_blank");
+  const handleDigitalPurchase = async () => {
+    try {
+      await openStripeCheckout("digital", { successPath: "/app/cards?checkout=success" });
+    } catch (e) {
+      console.error("[CardSystem] checkout failed", e);
+    }
   };
 
   if (success) {

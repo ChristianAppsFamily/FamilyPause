@@ -135,8 +135,125 @@ On Brave desktop, live words while speaking are not available (browser blocks sp
 You will see a recording timer and reactive waveform; text appears in the box after you tap **✓**.
 
 ## Known caveats for this test build
-- **AI key is public** in the bundle (see §2) — rotate before launch.
 - **Google sign-in** needs provider setup in Supabase — use email/password for now.
 - **Email confirmation is off** for testing — turn it back on before launch.
-- **Stripe** buttons (Paywall) use placeholder links — payments aren't wired yet.
-- The AI call should later move to a **Supabase Edge Function** (TODO noted in `App.jsx`).
+- **Stripe** uses Checkout Sessions + webhooks — see §6 below (required for paid plans to unlock in-app).
+
+---
+
+## 6 — Stripe (Checkout + Webhooks) ~15 min
+
+Payments now run through **Stripe Checkout** (edge function `stripe-checkout`) so each
+purchase carries your `workspace_id`. A **webhook** (`stripe-webhook`) updates
+`subscriptions` and unlocks digital decks automatically.
+
+### A — Create products & prices in Stripe
+
+In **Stripe Dashboard → Product catalog**, create:
+
+| Product | Type | Price | Secret name |
+|---------|------|-------|-------------|
+| Family Plan | Recurring, yearly | $59/yr | `STRIPE_PRICE_FAMILY` |
+| Family Pro | Recurring, yearly | $99/yr | `STRIPE_PRICE_PRO` |
+| Digital deck | One-time | $12 | `STRIPE_PRICE_DIGITAL` |
+
+Copy each **Price ID** (`price_...`) — you will set them as Supabase secrets.
+
+### B — Deploy edge functions & secrets
+
+```bash
+cd ~/Desktop/familypause
+supabase functions deploy stripe-checkout
+supabase functions deploy stripe-webhook --no-verify-jwt
+
+supabase secrets set STRIPE_SECRET_KEY=sk_live_...          # or sk_test_... for testing
+supabase secrets set STRIPE_PRICE_FAMILY=price_...
+supabase secrets set STRIPE_PRICE_PRO=price_...
+supabase secrets set STRIPE_PRICE_DIGITAL=price_...
+```
+
+### C — Register the webhook in Stripe
+
+1. Stripe Dashboard → **Developers → Webhooks → Add endpoint**
+2. Endpoint URL:
+   `https://<YOUR_PROJECT_REF>.supabase.co/functions/v1/stripe-webhook`
+3. Events to listen for:
+   - `checkout.session.completed`
+   - `customer.subscription.updated`
+   - `customer.subscription.deleted`
+4. Copy the **Signing secret** (`whsec_...`) and run:
+   ```bash
+   supabase secrets set STRIPE_WEBHOOK_SECRET=whsec_...
+   ```
+
+### D — Run SQL migration (idempotency table)
+
+Re-run the bottom of **`supabase_setup.sql`** in the SQL Editor (adds
+`stripe_webhook_events` + unique index on `subscriptions.workspace_id`). Safe to re-run.
+
+### E — Optional Payment Link fallbacks (Vercel)
+
+If checkout is misconfigured, the app falls back to static Payment Links. Set in Vercel:
+
+- `VITE_STRIPE_FAMILY_ANNUAL`
+- `VITE_STRIPE_FAMILY_PRO`
+- `VITE_STRIPE_CARD_DIGITAL`
+
+> Payment Links **without** checkout metadata will **not** auto-unlock the workspace.
+> Prefer Checkout Sessions for production.
+
+### F — Test the flow
+
+1. Sign in → Settings → **Upgrade to Pro** (or hit Paywall → Family $59).
+2. Complete Stripe test checkout (`4242 4242 4242 4242`).
+3. Return to Settings — plan should show **Family** or **Family Pro**.
+4. Digital deck: Cards → unlock → **Purchase digital** → after payment,
+   `cards_unlocked` should flip true (check Settings → Card decks).
+
+Use **Stripe test mode** until you are ready to go live, then swap secrets to live keys.
+
+---
+
+## 7 — Google Calendar OAuth ~10 min
+
+Connect Google Calendar from **Settings** or **Plan → Add to Calendar**. Tokens are stored
+per user on `workspace_members` (each spouse connects their own Google account).
+
+### A — Google Cloud Console
+
+1. Create a project (or use existing) → **APIs & Services → Enable APIs** → enable **Google Calendar API**.
+2. **Credentials → Create credentials → OAuth client ID → Web application**.
+3. Authorized redirect URI:
+   `https://<YOUR_PROJECT_REF>.supabase.co/functions/v1/google-calendar-callback`
+4. Copy **Client ID** and **Client secret**.
+
+### B — Supabase secrets
+
+```bash
+supabase secrets set GOOGLE_CLIENT_ID=....apps.googleusercontent.com
+supabase secrets set GOOGLE_CLIENT_SECRET=GOCSPX-...
+supabase secrets set GOOGLE_OAUTH_STATE_SECRET=$(openssl rand -hex 32)
+supabase secrets set GOOGLE_APP_ORIGIN=https://familypause.com
+```
+
+### C — Deploy edge functions
+
+```bash
+supabase functions deploy google-calendar-auth
+supabase functions deploy google-calendar-callback --no-verify-jwt
+supabase functions deploy calendar-sync
+```
+
+### D — Run SQL migration
+
+Re-run the **Google Calendar** block in **`supabase_setup.sql`** (adds token columns +
+`members_update` RLS policy). Safe to re-run.
+
+### E — Test the flow
+
+1. Settings → **Connect Google Calendar** → grant `calendar.events` access.
+2. Complete a weekly sync with dated kept items → Plan → **Add to Calendar**.
+3. Sync modal: add 2 events, skip 1 → summary shows counts; Plan rows show **Synced** badges.
+4. Verify events appear in Google Calendar (primary calendar).
+
+OAuth consent screen must be in **Testing** or **Production** with your Google account added as a test user until the app is verified.

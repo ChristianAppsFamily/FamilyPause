@@ -18,9 +18,11 @@ import { callFamilyPauseAI, buildSystemPrompt } from "./lib/ai";
 import Settings from "./components/Settings.jsx";
 import CardSystem from "./components/CardSystem.jsx";
 import Paywall from "./components/Paywall.jsx";
+import CalendarSync from "./components/CalendarSync.jsx";
 import { paywallReason } from "./lib/subscription";
-import { parseAppLocation, syncPath, SYNC_VIEWS, cardsPath } from "./lib/routes";
+import { parseAppLocation, syncPath, SYNC_VIEWS, cardsPath, calendarSyncPath } from "./lib/routes";
 import { normalizeCardPeople } from "./lib/familyContext";
+import { getCalendarConnection, startGoogleCalendarConnect } from "./lib/googleCalendar";
 import { canRecordAudio, pickRecordingMimeType, transcribeAudioBlob } from "./lib/transcribe";
 import { speechPreviewSupported, startSpeechPreview } from "./lib/speechPreview";
 import {
@@ -79,14 +81,6 @@ function formatWhen(date, time) {
   if (!time) return day;
   const t = dt.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
   return `${day} · ${t}`;
-}
-function gcalLink(title, date, time) {
-  const base = date ? `${date}T${time || "10:00"}:00` : null;
-  const dt = base ? new Date(base) : new Date();
-  const pad = (n) => String(n).padStart(2, "0");
-  const fmt = (d) => `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}T${pad(d.getHours())}${pad(d.getMinutes())}00`;
-  const end = new Date(dt.getTime() + 60 * 60 * 1000);
-  return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${fmt(dt)}%2F${fmt(end)}`;
 }
 
 const STATUS = { OPEN: "pending", KEPT: "kept", DISCARDED: "discarded", CALENDARED: "calendared" };
@@ -1063,33 +1057,28 @@ function Confetti() {
   );
 }
 
-function PlanView({ keptCards, adults, roleOf, onRestart }) {
-  const [added, setAdded] = useState(false);
+function PlanView({ keptCards, adults, roleOf, onRestart, onAddToCalendar, calendarBusy }) {
   const [confetti, setConfetti] = useState(true);
   useEffect(() => { const t = setTimeout(() => setConfetti(false), 2200); return () => clearTimeout(t); }, []);
 
   const isAdult = (p) => adults.some((a) => a.toLowerCase() === (p || "").toLowerCase());
   const byPerson = (name) => keptCards.filter((c) => (c.person || "").toLowerCase() === name.toLowerCase());
   const shared = keptCards.filter((c) => !isAdult(c.person));
+  const syncableCount = keptCards.filter((c) => c.date).length;
 
   const Item = ({ it }) => (
-    <div className="planitem">
+    <div className={`planitem ${it.calendar_synced ? "synced" : ""}`}>
       <span className="pmark"><Ico d={I.check} size={11} /></span>
       <div className="pbody">
         <div className="pt">{it.task}</div>
         <div className="pmeta">
           <span className="ct">{it.category}</span>
           {formatWhen(it.date, it.time) && <span>· {formatWhen(it.date, it.time)}</span>}
+          {it.calendar_synced && <span className="synced-badge">Synced</span>}
         </div>
       </div>
     </div>
   );
-
-  const openCalendar = () => {
-    setAdded(true);
-    const events = keptCards.filter((c) => c.type === "event" || c.status === STATUS.CALENDARED);
-    if (events[0]) window.open(gcalLink(events[0].task, events[0].date, events[0].time), "_blank");
-  };
 
   return (
     <div className="view">
@@ -1100,6 +1089,20 @@ function PlanView({ keptCards, adults, roleOf, onRestart }) {
         <h1>Your week, <em>planned before Sunday ends.</em></h1>
         <p>A clean plan, organized by person. {keptCards.length} items routed where they belong: appointments timed, actions owned, nothing forgotten.</p>
       </div>
+
+      {syncableCount > 0 && (
+        <div className="plan-cal-cta">
+          <button
+            type="button"
+            className="btn btn-primary btn-lg btn-block"
+            disabled={calendarBusy}
+            onClick={onAddToCalendar}
+          >
+            <Ico d={I.cal} size={17} />
+            {calendarBusy ? "Connecting…" : "Add to Calendar"}
+          </button>
+        </div>
+      )}
 
       <div className="plangrid">
         {adults.slice(0, 2).map((name, i) => {
@@ -1132,12 +1135,6 @@ function PlanView({ keptCards, adults, roleOf, onRestart }) {
         </div>
       )}
 
-      <button className={"gcalbar " + (added ? "added" : "")} onClick={openCalendar}>
-        <Ico d={added ? I.check : I.cal} size={17} />
-        {added ? "Synced to Google Calendar" : "Add this week + recurring sync to Google Calendar"}
-      </button>
-      <div className="gcalnote">Appointments drop in at their times · A repeating weekly pause is set for Sunday</div>
-
       <div className="planfoot"><button className="linkish" onClick={onRestart}>↺ Start a new sync</button></div>
     </div>
   );
@@ -1164,6 +1161,7 @@ export default function App({ user, workspace, onSignOut }) {
   const [paywallBlock, setPaywallBlock] = useState(null);
   const [subscription, setSubscription] = useState(null);
   const [sessionsThisMonth, setSessionsThisMonth] = useState(0);
+  const [calendarBusy, setCalendarBusy] = useState(false);
   const [inputMode, setInputMode] = useState("paste");
   const [cards, setCards] = useState([]);
   const [distillError, setDistillError] = useState(null);
@@ -1215,6 +1213,7 @@ export default function App({ user, workspace, onSignOut }) {
       settings: "/app/settings",
       decks: "/app/cards",
       paywall: "/app/paywall",
+      "calendar-sync": calendarSyncPath(),
     };
     navigate(paths[name] || syncPath(view));
   };
@@ -1387,7 +1386,9 @@ Each item:
   "source": (exact phrase from transcript, under 15 words),
   "date": (YYYY-MM-DD if mentioned, else null),
   "time": (HH:MM 24h if mentioned, else null),
-  "type": ("action", "event", "decision", or "note")
+  "type": ("action", "event", "decision", or "note"),
+  "recurring": (true if weekly or recurring commitment mentioned, else false),
+  "duration_minutes": (integer if duration mentioned, else null)
 }
 
 Rules: extract everything actionable. For person, use ONLY names from Known people, or "Both", or "Family". Map transcript nicknames to the closest known person. Return only the JSON array.`;
@@ -1481,6 +1482,48 @@ Rules: extract everything actionable. For person, use ONLY names from Known peop
 
   const keptCards = cards.filter((c) => c.status === STATUS.KEPT || c.status === STATUS.CALENDARED);
   const keptActions = keptCards.filter((c) => c.type === "action");
+  const syncableEvents = keptCards.filter((c) => c.date);
+
+  const markCardSynced = useCallback((cardId, googleEventId) => {
+    setCards((prev) => prev.map((c) => (
+      c.id === cardId ? { ...c, calendar_synced: true, google_event_id: googleEventId } : c
+    )));
+  }, []);
+
+  const handleAddToCalendar = async () => {
+    if (!ws?.id || !user?.id) return;
+    setCalendarBusy(true);
+    try {
+      const conn = await getCalendarConnection(ws.id, user.id);
+      if (!conn.connected) {
+        await startGoogleCalendarConnect(ws.id, "/app/sync/plan?calendar=connect");
+        return;
+      }
+      openOverlay("calendar-sync");
+    } catch (e) {
+      console.error("[Plan] calendar connect", e);
+    } finally {
+      setCalendarBusy(false);
+    }
+  };
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get("calendar") !== "connect" || !ws?.id || !user?.id) return;
+    let active = true;
+    (async () => {
+      const conn = await getCalendarConnection(ws.id, user.id);
+      if (!active) return;
+      navigate(syncPath("plan"), { replace: true });
+      const dated = cards.filter(
+        (c) => (c.status === STATUS.KEPT || c.status === STATUS.CALENDARED) && c.date,
+      );
+      if (conn.connected && dated.length > 0) {
+        navigate(calendarSyncPath());
+      }
+    })();
+    return () => { active = false; };
+  }, [location.search, ws?.id, user?.id, cards, navigate]);
 
   // ── Overlays ─────────────────────────────────────────────────────────────
   if (overlay === "paywall") {
@@ -1488,6 +1531,19 @@ Rules: extract everything actionable. For person, use ONLY names from Known peop
     return (
       <div className="stage" style={{ padding: "48px 24px 80px" }}>
         <Paywall reason={resolvedReason} onClose={() => { closeOverlay(); setPaywallBlock(null); }} />
+      </div>
+    );
+  }
+  if (overlay === "calendar-sync") {
+    return (
+      <div className="stage" style={{ padding: "24px 24px 80px" }}>
+        <CalendarSync
+          workspaceId={ws?.id}
+          events={syncableEvents}
+          roleOf={roleOf}
+          onClose={closeOverlay}
+          onCardSynced={markCardSynced}
+        />
       </div>
     );
   }
@@ -1568,7 +1624,16 @@ Rules: extract everything actionable. For person, use ONLY names from Known peop
       )}
       {view === "processing" && <ProcessingView done={distillDone} familyNames={processingFamilyLabel} />}
       {view === "review" && <ReviewView cards={cards} setCards={setCards} roleOf={roleOf} onBack={() => go("capture")} onBuild={buildWeek} distillError={distillError} />}
-      {view === "plan" && <PlanView keptCards={keptCards} adults={adults} roleOf={roleOf} onRestart={restart} />}
+      {view === "plan" && (
+        <PlanView
+          keptCards={keptCards}
+          adults={adults}
+          roleOf={roleOf}
+          onRestart={restart}
+          onAddToCalendar={handleAddToCalendar}
+          calendarBusy={calendarBusy}
+        />
+      )}
     </div>
   );
 }

@@ -15,6 +15,10 @@ export function cardsPath(view = "draw") {
   return "/app/cards";
 }
 
+export function calendarSyncPath() {
+  return "/app/calendar-sync";
+}
+
 export function authPathForScreen(screen, inviteCode = "") {
   switch (screen) {
     case "signup":
@@ -57,6 +61,7 @@ export function parseAppLocation(pathname, search = "") {
     return { area: "overlay", overlay: "decks", cardsView };
   }
   if (pathname === "/app/paywall") return { area: "overlay", overlay: "paywall" };
+  if (pathname === "/app/calendar-sync") return { area: "overlay", overlay: "calendar-sync" };
 
   const joinMatch = pathname.match(/\/join\/([a-zA-Z0-9-]+)/);
   if (joinMatch) return { area: "auth", screen: "join", inviteCode: joinMatch[1] };

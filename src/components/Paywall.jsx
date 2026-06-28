@@ -8,10 +8,10 @@
 //   reason     "trial" | "limit"  (tailors the headline/subcopy, default "trial")
 //   onClose()  optional (dismiss / go back)
 //
-// Stripe links: VITE_STRIPE_* in .env.local / Vercel (see src/lib/stripeLinks.js).
+// Stripe: checkout via stripe-checkout edge function (see src/lib/stripeCheckout.js).
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { STRIPE_LINKS } from "../lib/stripeLinks";
+import { openStripeCheckout } from "../lib/stripeCheckout";
 
 const css = `
   .pw-wrap { max-width: 760px; margin: 0 auto; }
@@ -84,7 +84,13 @@ export default function Paywall({ reason = "trial", onClose }) {
       ? "You're on a free trial with full access. Upgrade anytime for unlimited AI sessions, spouse sync, and session history after your trial ends."
       : "We hope the last 7 days brought a little more calm to your week. Keep the rhythm going with unlimited AI sessions, spouse sync, and full session history.";
 
-  const go = (url) => { if (url) window.location.href = url; };
+  const goCheckout = async (product) => {
+    try {
+      await openStripeCheckout(product, { successPath: "/app/settings?checkout=success" });
+    } catch (e) {
+      console.error("[Paywall] checkout failed", e);
+    }
+  };
 
   return (
     <div className="stage view">
@@ -125,7 +131,7 @@ export default function Paywall({ reason = "trial", onClose }) {
               <li><Check /> Kids name routing</li>
             </ul>
             <div className="pw-cta">
-              <button className="btn btn-primary btn-lg btn-block" onClick={() => go(STRIPE_LINKS.family)}>
+              <button className="btn btn-primary btn-lg btn-block" onClick={() => goCheckout("family")}>
                 Upgrade to Family, $59
               </button>
             </div>
@@ -154,9 +160,9 @@ export default function Paywall({ reason = "trial", onClose }) {
 
         <div className="pw-foot">
           <div className="note">No credit card required for your trial.</div>
-          <a className="pro" href={STRIPE_LINKS.pro} onClick={(e) => { e.preventDefault(); go(STRIPE_LINKS.pro); }}>
+          <button type="button" className="pro" onClick={() => goCheckout("pro")}>
             Need recurring-item memory + kids profiles? See Family Pro, $99/yr
-          </a>
+          </button>
         </div>
       </div>
     </div>

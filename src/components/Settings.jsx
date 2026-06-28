@@ -16,8 +16,14 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { supabase } from "../lib/supabase";
-import { STRIPE_LINKS } from "../lib/stripeLinks";
+import { openStripeCheckout } from "../lib/stripeCheckout";
+import {
+  getCalendarConnection,
+  startGoogleCalendarConnect,
+  disconnectGoogleCalendar,
+} from "../lib/googleCalendar";
 
 const css = `
   .set-sec { padding: 24px 26px; margin-bottom: 18px; }
@@ -114,6 +120,8 @@ function NameList({ label, items, tone, onAdd, onRemove, placeholder, emptyNote 
 
 // ── MAIN ──────────────────────────────────────────────────────────────────────
 export default function Settings({ workspace, user, onSignOut, onClose, onOpenDecks, onWorkspaceUpdate }) {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const checkoutSuccess = searchParams.get("checkout") === "success";
   const fc = workspace?.family_context || {};
   const initialKids = Array.isArray(fc.kids) ? fc.kids : [];
   // "people" stores adults + kids together; derive adults by removing kids.
@@ -130,6 +138,11 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
 
   const [subscription, setSubscription] = useState(null);
   const [subLoading, setSubLoading] = useState(true);
+  const [checkoutNotice, setCheckoutNotice] = useState(false);
+  const [calendarConn, setCalendarConn] = useState({ connected: false, connectedAt: null, memberId: null });
+  const [calendarLoading, setCalendarLoading] = useState(true);
+  const [calendarDisconnecting, setCalendarDisconnecting] = useState(false);
+  const [calendarNotice, setCalendarNotice] = useState("");
 
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -172,29 +185,87 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
   };
 
   // ── Load subscription ──────────────────────────────────────────────────────
+  const loadSubscription = async () => {
+    if (!workspace?.id) { setSubLoading(false); return; }
+    setSubLoading(true);
+    try {
+      const { data } = await supabase
+        .from("subscriptions")
+        .select("*")
+        .eq("workspace_id", workspace.id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      setSubscription(data || null);
+    } catch { /* offline / no subscription row: fall back to free plan */ }
+    finally { setSubLoading(false); }
+  };
+
   useEffect(() => {
-    let active = true;
-    const load = async () => {
-      if (!workspace?.id) { setSubLoading(false); return; }
-      try {
-        const { data } = await supabase
-          .from("subscriptions")
-          .select("*")
-          .eq("workspace_id", workspace.id)
-          .order("created_at", { ascending: false })
-          .limit(1)
-          .maybeSingle();
-        if (active) setSubscription(data || null);
-      } catch { /* offline / no subscription row: fall back to free plan */ }
-      finally { if (active) setSubLoading(false); }
-    };
-    load();
-    return () => { active = false; };
+    loadSubscription();
   }, [workspace?.id]);
+
+  useEffect(() => {
+    if (!checkoutSuccess) return;
+    setCheckoutNotice(true);
+    loadSubscription();
+    if (onWorkspaceUpdate && workspace?.id) {
+      supabase.from("workspaces").select("*").eq("id", workspace.id).single()
+        .then(({ data }) => { if (data) onWorkspaceUpdate(data); });
+    }
+    const next = new URLSearchParams(searchParams);
+    next.delete("checkout");
+    setSearchParams(next, { replace: true });
+  }, [checkoutSuccess]);
 
   useEffect(() => {
     setFaithMode(workspace?.faith_mode ?? false);
   }, [workspace?.faith_mode]);
+
+  const loadCalendarConnection = async () => {
+    if (!workspace?.id || !user?.id) {
+      setCalendarLoading(false);
+      return;
+    }
+    setCalendarLoading(true);
+    const conn = await getCalendarConnection(workspace.id, user.id);
+    setCalendarConn(conn);
+    setCalendarLoading(false);
+  };
+
+  useEffect(() => {
+    loadCalendarConnection();
+  }, [workspace?.id, user?.id]);
+
+  useEffect(() => {
+    const cal = searchParams.get("calendar");
+    if (cal === "connected") {
+      setCalendarNotice("Google Calendar connected.");
+      loadCalendarConnection();
+      const next = new URLSearchParams(searchParams);
+      next.delete("calendar");
+      setSearchParams(next, { replace: true });
+    } else if (cal === "error") {
+      setCalendarNotice(searchParams.get("msg") || "Could not connect Google Calendar.");
+      const next = new URLSearchParams(searchParams);
+      next.delete("calendar");
+      next.delete("msg");
+      setSearchParams(next, { replace: true });
+    }
+  }, [searchParams.get("calendar")]);
+
+  const connectCalendar = () => {
+    if (!workspace?.id) return;
+    startGoogleCalendarConnect(workspace.id, "/app/settings?calendar=connected");
+  };
+
+  const disconnectCalendar = async () => {
+    if (!calendarConn.memberId) return;
+    setCalendarDisconnecting(true);
+    await disconnectGoogleCalendar(calendarConn.memberId);
+    setCalendarConn({ connected: false, connectedAt: null, memberId: calendarConn.memberId });
+    setCalendarDisconnecting(false);
+  };
 
   // ── Save family members ────────────────────────────────────────────────────
   const saveFamily = async () => {
@@ -395,6 +466,47 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
           </button>
         </section>
 
+        {/* ── GOOGLE CALENDAR ─────────────────────────────────────────── */}
+        <section className="panel set-sec rise">
+          <div className="eyebrow">Integrations</div>
+          <h2>Google Calendar</h2>
+          <p className="set-sub">
+            Connect your Google account to add dated items from your weekly plan directly to your calendar.
+          </p>
+          {calendarNotice && (
+            <p className="set-sub" style={{ margin: "0 0 12px", color: "var(--olive-d)" }}>{calendarNotice}</p>
+          )}
+          {calendarLoading ? (
+            <div className="set-spin" />
+          ) : calendarConn.connected ? (
+            <div>
+              <div className="set-plan" style={{ marginBottom: 12 }}>
+                <span className="name">Connected</span>
+                <span className="tag tag-amanda">Active</span>
+              </div>
+              {calendarConn.connectedAt && (
+                <p className="set-sub" style={{ margin: "0 0 16px" }}>
+                  Linked {new Date(calendarConn.connectedAt).toLocaleDateString("en-US", {
+                    month: "long", day: "numeric", year: "numeric",
+                  })}
+                </p>
+              )}
+              <button
+                type="button"
+                className="btn btn-ghost"
+                disabled={calendarDisconnecting}
+                onClick={disconnectCalendar}
+              >
+                {calendarDisconnecting ? "Disconnecting…" : "Disconnect"}
+              </button>
+            </div>
+          ) : (
+            <button type="button" className="btn btn-primary" onClick={connectCalendar}>
+              Connect Google Calendar
+            </button>
+          )}
+        </section>
+
         {/* ── CARD DECKS ─────────────────────────────────────────────── */}
         <section className="panel set-sec rise">
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, marginBottom: 18 }}>
@@ -427,15 +539,14 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
               <div className="eyebrow" style={{ marginBottom: 9 }}>Your plan</div>
               <h2 style={{ margin: 0 }}>Subscription</h2>
             </div>
-            <a
+            <button
+              type="button"
               className="btn btn-primary"
-              href={STRIPE_LINKS.pro || "#"}
-              target="_blank"
-              rel="noreferrer"
-              style={{ flexShrink: 0, marginTop: 4, textDecoration: "none" }}
+              style={{ flexShrink: 0, marginTop: 4 }}
+              onClick={() => openStripeCheckout("pro", { successPath: "/app/settings?checkout=success" })}
             >
               Upgrade to Pro
-            </a>
+            </button>
           </div>
           {subLoading ? (
             <div className="set-spin" />
@@ -445,6 +556,11 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
                 <span className="name">{planLabel}</span>
                 {subscription?.active && <span className="tag tag-amanda">Active</span>}
               </div>
+              {checkoutNotice && (
+                <p className="set-sub" style={{ margin: "0 0 12px", color: "var(--olive-d)" }}>
+                  Thanks — your plan should update shortly.
+                </p>
+              )}
               {(subscription?.plan === "free" || !subscription) && trialDaysRemaining !== null && (
                 <p className="set-sub" style={{ margin: 0 }}>
                   {trialDaysRemaining > 0
