@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FamilyPause — Auth Flow</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@1,400;1,500&family=Lora:wght@400;500&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --cream:        #FAF7F2;
+      --surface:      #F0EAE0;
+      --surface2:     #E8E0D0;
+      --border:       #D8CFC0;
+      --ink:          #2E2820;
+      --mid:          #6A5A40;
+      --muted:        #A09070;
+      --terra:        #B85C38;
+      --terra-light:  #F5D8CC;
+      --terra-dark:   #7A2E14;
+      --olive:        #4A6741;
+      --olive-light:  #D8E8D4;
+      --red:          #C04030;
+      --red-light:    #FAE0DA;
+    }
+
+    html, body { height: 100%; background: var(--cream); }
+    body { font-family: 'Lora', serif; }
+
+    /* ─── Tab bar ─────────────────────────────────────────────── */
+    .tab-bar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 200;
+      height: 40px;
+      background: rgba(46,40,32,0.97);
+      backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      padding: 0 16px;
+    }
+
+    .tab-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      font-weight: 300;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(250,247,242,0.28);
+      margin-right: 10px;
+    }
+
+    .tab-btn {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      font-weight: 400;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: rgba(250,247,242,0.42);
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 4px;
+      padding: 4px 11px;
+      cursor: pointer;
+      transition: color 0.12s, background 0.12s, border-color 0.12s;
+    }
+
+    .tab-btn:hover { color: rgba(250,247,242,0.78); }
+
+    .tab-btn.active {
+      color: #FAF7F2;
+      border-color: rgba(250,247,242,0.18);
+      background: rgba(250,247,242,0.09);
+    }
+
+    /* ─── Screen shell ────────────────────────────────────────── */
+    .screen-wrap { height: 100vh; padding-top: 40px; }
+
+    .screen {
+      display: none;
+      height: calc(100vh - 40px);
+    }
+
+    .screen.active { display: flex; }
+
+    /* ─── Left panel ──────────────────────────────────────────── */
+    .lp {
+      width: 380px;
+      flex: none;
+      background: var(--terra);
+      display: flex;
+      flex-direction: column;
+      padding: 44px 44px 52px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .lp-logo { display: flex; align-items: center; gap: 11px; }
+
+    .lp-wm {
+      font-family: 'Playfair Display', serif;
+      font-style: italic;
+      font-weight: 400;
+      font-size: 22px;
+      line-height: 1;
+      letter-spacing: -0.01em;
+    }
+
+    .lp-wm .wf { color: #FAF7F2; }
+    .lp-wm .wp { color: rgba(250,247,242,0.72); }
+
+    .lp-editorial { margin-top: 60px; flex: 1; }
+
+    .lp-hl {
+      font-family: 'Playfair Display', serif;
+      font-style: italic;
+      font-weight: 400;
+      font-size: 32px;
+      line-height: 1.25;
+      color: #FAF7F2;
+      text-wrap: pretty;
+    }
+
+    .lp-rule {
+      width: 40px;
+      height: 1px;
+      background: rgba(250,247,242,0.25);
+      margin: 26px 0;
+    }
+
+    .lp-body {
+      font-family: 'Lora', serif;
+      font-size: 15px;
+      line-height: 1.68;
+      color: rgba(250,247,242,0.70);
+    }
+
+    .lp-testimonial { margin-top: auto; padding-top: 40px; }
+
+    .lp-quote {
+      font-family: 'Playfair Display', serif;
+      font-style: italic;
+      font-weight: 400;
+      font-size: 17px;
+      line-height: 1.52;
+      color: rgba(250,247,242,0.85);
+    }
+
+    .lp-attr {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      font-weight: 400;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: rgba(250,247,242,0.42);
+      margin-top: 14px;
+    }
+
+    .lp-deco {
+      position: absolute;
+      bottom: -28px;
+      right: -22px;
+      opacity: 0.06;
+      pointer-events: none;
+    }
+
+    /* ─── Right panel ─────────────────────────────────────────── */
+    .rp {
+      flex: 1;
+      background: var(--cream);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 52px 48px;
+      overflow-y: auto;
+    }
+
+    .fc { width: 100%; max-width: 400px; }
+    .fc.wide { max-width: 460px; }
+
+    /* ─── Right panel logo ────────────────────────────────────── */
+    .rp-logo { display: flex; align-items: center; gap: 9px; margin-bottom: 36px; }
+
+    .rp-wm {
+      font-family: 'Playfair Display', serif;
+      font-style: italic;
+      font-weight: 400;
+      font-size: 18px;
+      line-height: 1;
+      letter-spacing: -0.01em;
+    }
+
+    .rp-wm .wf { color: var(--ink); }
+    .rp-wm .wp { color: var(--terra); }
+
+    /* ─── Form chrome ─────────────────────────────────────────── */
+    .eyebrow {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 400;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--terra);
+      margin-bottom: 9px;
+    }
+
+    .form-hl {
+      font-family: 'Playfair Display', serif;
+      font-style: italic;
+      font-weight: 400;
+      font-size: 36px;
+      line-height: 1.08;
+      color: var(--ink);
+      margin-bottom: 10px;
+    }
+
+    .form-sub {
+      font-family: 'Lora', serif;
+      font-size: 15px;
+      line-height: 1.55;
+      color: var(--mid);
+      margin-bottom: 32px;
+    }
+
+    /* ─── Fields ──────────────────────────────────────────────── */
+    .fields { display: flex; flex-direction: column; gap: 16px; margin-bottom: 20px; }
+
+    .field { display: flex; flex-direction: column; gap: 6px; }
+
+    .field-hdr {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .field label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 400;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--mid);
+    }
+
+    .field-link {
+      font-family: 'Lora', serif;
+      font-size: 12px;
+      color: var(--terra);
+      text-decoration: underline;
+      text-underline-offset: 2px;
+      cursor: pointer;
+      background: none;
+      border: none;
+      padding: 0;
+    }
+
+    input {
+      font-family: 'Lora', serif;
+      font-size: 15px;
+      color: var(--ink);
+      background: var(--cream);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 13px 16px;
+      width: 100%;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      -webkit-appearance: none;
+    }
+
+    input::placeholder { color: var(--muted); }
+
+    input:focus {
+      border-color: var(--terra);
+      box-shadow: 0 0 0 3px var(--terra-light);
+    }
+
+    input.mono {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 14px;
+      font-weight: 400;
+      letter-spacing: 0.1em;
+    }
+
+    .field-note {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      font-weight: 300;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    /* ─── Primary button ──────────────────────────────────────── */
+    .btn {
+      display: block;
+      width: 100%;
+      font-family: 'Lora', serif;
+      font-weight: 500;
+      font-size: 16px;
+      color: var(--cream);
+      background: var(--terra);
+      border: none;
+      border-radius: 8px;
+      padding: 14px;
+      box-shadow: 0 4px 16px rgba(184,92,56,0.25);
+      cursor: pointer;
+      transition: transform 0.12s ease, box-shadow 0.12s ease;
+      margin-bottom: 20px;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 7px 24px rgba(184,92,56,0.32);
+    }
+
+    .btn:active { transform: translateY(0); box-shadow: 0 4px 16px rgba(184,92,56,0.25); }
+
+    /* ─── OR divider ──────────────────────────────────────────── */
+    .or-div {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .or-div::before,
+    .or-div::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .or-div span {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      font-weight: 400;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    /* ─── Link rows ───────────────────────────────────────────── */
+    .link-row {
+      text-align: center;
+      font-family: 'Lora', serif;
+      font-size: 14px;
+      color: var(--mid);
+      margin-bottom: 8px;
+      line-height: 1.5;
+    }
+
+    .link-row.sm { font-size: 13px; color: var(--muted); }
+
+    .link-row a {
+      color: var(--terra);
+      text-decoration: underline;
+      text-underline-offset: 2px;
+      cursor: pointer;
+    }
+
+    .fine-print {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 300;
+      letter-spacing: 0.04em;
+      color: var(--muted);
+      text-align: center;
+      line-height: 1.85;
+      margin-bottom: 20px;
+    }
+
+    /* ─── Banners ─────────────────────────────────────────────── */
+    .banner {
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      font-weight: 400;
+      line-height: 1.55;
+      margin-bottom: 20px;
+    }
+
+    .banner.ok {
+      background: var(--olive-light);
+      border: 1px solid rgba(74,103,65,0.22);
+      color: var(--olive);
+    }
+
+    .banner.err {
+      background: var(--red-light);
+      border: 1px solid rgba(192,64,48,0.22);
+      color: var(--red);
+    }
+
+    /* ─── Back link ───────────────────────────────────────────── */
+    .back-link {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      font-family: 'Lora', serif;
+      font-size: 14px;
+      color: var(--terra);
+      text-decoration: underline;
+      text-underline-offset: 2px;
+      cursor: pointer;
+      background: none;
+      border: none;
+      width: 100%;
+      padding: 0;
+    }
+
+    /* ─── Google button ────────────────────────────────────────── */
+    .btn-google {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      font-family: 'Lora', serif;
+      font-weight: 400;
+      font-size: 15px;
+      color: var(--ink);
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 13px 16px;
+      cursor: pointer;
+      box-shadow: 0 1px 4px rgba(46,40,32,0.07);
+      transition: transform 0.12s ease, box-shadow 0.12s ease;
+      margin-bottom: 20px;
+    }
+
+    .btn-google:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 14px rgba(46,40,32,0.10);
+    }
+
+    /* ─── Mobile ──────────────────────────────────────────────── */
+    @media (max-width: 768px) {
+      .lp { display: none; }
+      .rp { padding: 44px 24px; align-items: flex-start; }
+      .rp-logo { justify-content: center; }
+      .fc, .fc.wide { max-width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Preview tab bar -->
+<div class="tab-bar">
+  <span class="tab-label">Screen</span>
+  <button class="tab-btn active" data-screen="signin" onclick="switchScreen('signin')">01 — Sign In</button>
+  <button class="tab-btn" data-screen="signup" onclick="switchScreen('signup')">02 — Sign Up</button>
+  <button class="tab-btn" data-screen="forgot" onclick="switchScreen('forgot')">03 — Forgot Password</button>
+  <button class="tab-btn" data-screen="join" onclick="switchScreen('join')">04 — Join Workspace</button>
+</div>
+
+<div class="screen-wrap">
+
+  <!-- ══════════════════════════════════════════════
+       SCREEN 1 — SIGN IN
+  ══════════════════════════════════════════════ -->
+  <div id="screen-signin" class="screen active" data-screen-label="01 — Sign In">
+
+    <div class="lp">
+      <div class="lp-logo">
+        <svg viewBox="0 0 22 28" width="17" height="28" fill="#FAF7F2" aria-hidden="true">
+          <circle cx="5.5" cy="4.5" r="3.5"></circle>
+          <rect x="1" y="10" width="9" height="17" rx="4.5"></rect>
+          <circle cx="16.5" cy="4.5" r="3.5"></circle>
+          <rect x="12" y="10" width="9" height="17" rx="4.5"></rect>
+        </svg>
+        <div class="lp-wm"><span class="wf">Family</span><span class="wp">Pause</span></div>
+      </div>
+      <div class="lp-editorial">
+        <h2 class="lp-hl">The weekly reset every family needs</h2>
+        <div class="lp-rule"></div>
+        <p class="lp-body">Record your family meeting. AI extracts every action and appointment. Review together in minutes.</p>
+      </div>
+      <div class="lp-testimonial">
+        <p class="lp-quote">"We did a FamilyPause this weekend and got back on track."</p>
+        <div class="lp-attr">Spence, Founder</div>
+      </div>
+      <div class="lp-deco" aria-hidden="true">
+        <svg viewBox="0 0 22 28" width="141" height="180" fill="#FAF7F2">
+          <circle cx="5.5" cy="4.5" r="3.5"></circle>
+          <rect x="1" y="10" width="9" height="17" rx="4.5"></rect>
+          <circle cx="16.5" cy="4.5" r="3.5"></circle>
+          <rect x="12" y="10" width="9" height="17" rx="4.5"></rect>
+        </svg>
+      </div>
+    </div>
+
+    <div class="rp">
+      <div class="fc">
+        <div class="rp-logo">
+          <svg viewBox="0 0 22 28" width="14" height="22" fill="#B85C38" aria-hidden="true">
+            <circle cx="5.5" cy="4.5" r="3.5"></circle>
+            <rect x="1" y="10" width="9" height="17" rx="4.5"></rect>
+            <circle cx="16.5" cy="4.5" r="3.5"></circle>
+            <rect x="12" y="10" width="9" height="17" rx="4.5"></rect>
+          </svg>
+          <div class="rp-wm"><span class="wf">Family</span><span class="wp">Pause</span></div>
+        </div>
+        <div class="eyebrow">Welcome Back</div>
+        <h1 class="form-hl">Sign in</h1>
+        <p class="form-sub">Continue your family's weekly rhythm.</p>
+        <button class="btn-google">
+          <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
+            <path fill="#4285F4" d="M17.64 9.205c0-.639-.057-1.252-.164-1.841H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"></path>
+            <path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"></path>
+            <path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"></path>
+            <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z"></path>
+          </svg>
+          Continue with Google
+        </button>
+        <div class="or-div"><span>or</span></div>
+        <div class="fields">
+          <div class="field">
+            <label for="si-email">Email</label>
+            <input type="email" id="si-email" placeholder="you@family.com" />
+          </div>
+          <div class="field">
+            <div class="field-hdr">
+              <label for="si-pw">Password</label>
+              <button class="field-link" onclick="switchScreen('forgot')">Forgot password</button>
+            </div>
+            <input type="password" id="si-pw" placeholder="••••••••" />
+          </div>
+        </div>
+        <button class="btn">Sign In</button>
+        <p class="link-row">Don't have an account? <a href="#" onclick="switchScreen('signup');return false;">Create one free</a></p>
+        <p class="link-row sm">Joining via invite? <a href="#" onclick="switchScreen('join');return false;">Enter invite code</a></p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       SCREEN 2 — SIGN UP
+  ══════════════════════════════════════════════ -->
+  <div id="screen-signup" class="screen" data-screen-label="02 — Sign Up">
+
+    <div class="lp">
+      <div class="lp-logo">
+        <svg viewBox="0 0 22 28" width="17" height="28" fill="#FAF7F2" aria-hidden="true">
+          <circle cx="5.5" cy="4.5" r="3.5"></circle>
+          <rect x="1" y="10" width="9" height="17" rx="4.5"></rect>
+          <circle cx="16.5" cy="4.5" r="3.5"></circle>
+          <rect x="12" y="10" width="9" height="17" rx="4.5"></rect>
+        </svg>
+        <div class="lp-wm"><span class="wf">Family</span><span class="wp">Pause</span></div>
+      </div>
+      <div class="lp-editorial">
+        <h2 class="lp-hl">The weekly reset every family needs</h2>
+        <div class="lp-rule"></div>
+        <p class="lp-body">Record your family meeting. AI extracts every action and appointment. Review together in minutes.</p>
+      </div>
+      <div class="lp-testimonial">
+        <p class="lp-quote">"We did a FamilyPause this weekend and got back on track."</p>
+        <div class="lp-attr">Spence, Founder</div>
+      </div>
+      <div class="lp-deco" aria-hidden="true">
+        <svg viewBox="0 0 22 28" width="141" height="180" fill="#FAF7F2">
+          <circle cx="5.5" cy="4.5" r="3.5"></circle>
+          <rect x="1" y="10" width="9" height="17" rx="4.5"></rect>
+          <circle cx="16.5" cy="4.5" r="3.5"></circle>
+          <rect x="12" y="10" width="9" height="17" rx="4.5"></rect>
+        </svg>
+      </div>
+    </div>
+
+    <div class="rp">
+      <div class="fc wide">
+        <div class="rp-logo">
+          <svg viewBox="0 0 22 28" width="14" height="22" fill="#B85C38" aria-hidden="true">
+            <circle cx="5.5" cy="4.5" r="3.5"></circle>
+            <rect x="1" y="10" width="9" height="17" rx="4.5"></rect>
+            <circle cx="16.5" cy="4.5" r="3.5"></circle>
+            <rect x="12" y="10" width="9" height="17" rx="4.5"></rect>
+          </svg>
+          <div class="rp-wm"><span class="wf">Family</span><span class="wp">Pause</span></div>
+        </div>
+        <div class="eyebrow">7-Day Free Trial</div>
+        <h1 class="form-hl">Create your account</h1>
+        <p class="form-sub">No credit card required. Cancel anytime.</p>
+        <button class="btn-google">
+          <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
+            <path fill="#4285F4" d="M17.64 9.205c0-.639-.057-1.252-.164-1.841H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"></path>
+            <path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"></path>
+            <path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"></path>
+            <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z"></path>
+          </svg>
+          Continue with Google
+        </button>
+        <div class="or-div"><span>or</span></div>
+        <div class="fields">
+          <div class="field">
+            <label for="su-name">Your First Name</label>
+            <input type="text" id="su-name" placeholder="Sarah" />
+          </div>
+          <div class="field">
+            <label for="su-email">Email</label>
+            <input type="email" id="su-email" placeholder="you@family.com" />
+          </div>
+          <div class="field">
+            <label for="su-pw">Password</label>
+            <input type="password" id="su-pw" placeholder="Min. 8 characters" />
+          </div>
+          <div class="field">
+            <label for="su-confirm">Confirm Password</label>
+            <input type="password" id="su-confirm" placeholder="Repeat your password" />
+          </div>
+        </div>
+        <button class="btn">Create Account and Start Free Trial</button>
+        <p class="fine-print">By signing up you agree to our Terms of Service<br>Ad-free forever. Your conversations are private.</p>
+        <p class="link-row">Already have an account? <a href="#" onclick="switchScreen('signin');return false;">Sign in</a></p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       SCREEN 3 — FORGOT PASSWORD
+  ══════════════════════════════════════════════ -->
+  <div id="screen-forgot" class="screen" data-screen-label="03 — Forgot Password">
+
+    <div class="lp">
+      <div class="lp-logo">
+        <svg viewBox="0 0 22 28" width="17" height="28" fill="#FAF7F2" aria-hidden="true">
+          <circle cx="5.5" cy="4.5" r="3.5"></circle>
+          <rect x="1" y="10" width="9" height="17" rx="4.5"></rect>
+          <circle cx="16.5" cy="4.5" r="3.5"></circle>
+          <rect x="12" y="10" width="9" height="17" rx="4.5"></rect>
+        </svg>
+        <div class="lp-wm"><span class="wf">Family</span><span class="wp">Pause</span></div>
+      </div>
+      <div class="lp-editorial">
+        <h2 class="lp-hl">The weekly reset every family needs</h2>
+        <div class="lp-rule"></div>
+        <p class="lp-body">Record your family meeting. AI extracts every action and appointment. Review together in minutes.</p>
+      </div>
+      <div class="lp-testimonial">
+        <p class="lp-quote">"We did a FamilyPause this weekend and got back on track."</p>
+        <div class="lp-attr">Spence, Founder</div>
+      </div>
+      <div class="lp-deco" aria-hidden="true">
+        <svg viewBox="0 0 22 28" width="141" height="180" fill="#FAF7F2">
+          <circle cx="5.5" cy="4.5" r="3.5"></circle>
+          <rect x="1" y="10" width="9" height="17" rx="4.5"></rect>
+          <circle cx="16.5" cy="4.5" r="3.5"></circle>
+          <rect x="12" y="10" width="9" height="17" rx="4.5"></rect>
+        </svg>
+      </div>
+    </div>
+
+    <div class="rp">
+      <div class="fc">
+        <div class="rp-logo">
+          <svg viewBox="0 0 22 28" width="14" height="22" fill="#B85C38" aria-hidden="true">
+            <circle cx="5.5" cy="4.5" r="3.5"></circle>
+            <rect x="1" y="10" width="9" height="17" rx="4.5"></rect>
+            <circle cx="16.5" cy="4.5" r="3.5"></circle>
+            <rect x="12" y="10" width="9" height="17" rx="4.5"></rect>
+          </svg>
+          <div class="rp-wm"><span class="wf">Family</span><span class="wp">Pause</span></div>
+        </div>
+        <div class="eyebrow">Reset Password</div>
+        <h1 class="form-hl">Forgot your<br>password</h1>
+        <p class="form-sub">No problem. Enter your email and we'll send a reset link.</p>
+        <div class="fields">
+          <div class="field">
+            <label for="fp-email">Email</label>
+            <input type="email" id="fp-email" placeholder="you@family.com" />
+          </div>
+        </div>
+        <button class="btn">Send Reset Link</button>
+        <div class="banner ok">Reset link sent to your email. Check your inbox — it may take a minute.</div>
+        <button class="back-link" onclick="switchScreen('signin')">← Back to sign in</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       SCREEN 4 — JOIN WORKSPACE
+  ══════════════════════════════════════════════ -->
+  <div id="screen-join" class="screen" data-screen-label="04 — Join Workspace">
+
+    <div class="lp">
+      <div class="lp-logo">
+        <svg viewBox="0 0 22 28" width="17" height="28" fill="#FAF7F2" aria-hidden="true">
+          <circle cx="5.5" cy="4.5" r="3.5"></circle>
+          <rect x="1" y="10" width="9" height="17" rx="4.5"></rect>
+          <circle cx="16.5" cy="4.5" r="3.5"></circle>
+          <rect x="12" y="10" width="9" height="17" rx="4.5"></rect>
+        </svg>
+        <div class="lp-wm"><span class="wf">Family</span><span class="wp">Pause</span></div>
+      </div>
+      <div class="lp-editorial">
+        <h2 class="lp-hl">The weekly reset every family needs</h2>
+        <div class="lp-rule"></div>
+        <p class="lp-body">Record your family meeting. AI extracts every action and appointment. Review together in minutes.</p>
+      </div>
+      <div class="lp-testimonial">
+        <p class="lp-quote">"We did a FamilyPause this weekend and got back on track."</p>
+        <div class="lp-attr">Spence, Founder</div>
+      </div>
+      <div class="lp-deco" aria-hidden="true">
+        <svg viewBox="0 0 22 28" width="141" height="180" fill="#FAF7F2">
+          <circle cx="5.5" cy="4.5" r="3.5"></circle>
+          <rect x="1" y="10" width="9" height="17" rx="4.5"></rect>
+          <circle cx="16.5" cy="4.5" r="3.5"></circle>
+          <rect x="12" y="10" width="9" height="17" rx="4.5"></rect>
+        </svg>
+      </div>
+    </div>
+
+    <div class="rp">
+      <div class="fc wide">
+        <div class="rp-logo">
+          <svg viewBox="0 0 22 28" width="14" height="22" fill="#B85C38" aria-hidden="true">
+            <circle cx="5.5" cy="4.5" r="3.5"></circle>
+            <rect x="1" y="10" width="9" height="17" rx="4.5"></rect>
+            <circle cx="16.5" cy="4.5" r="3.5"></circle>
+            <rect x="12" y="10" width="9" height="17" rx="4.5"></rect>
+          </svg>
+          <div class="rp-wm"><span class="wf">Family</span><span class="wp">Pause</span></div>
+        </div>
+        <div class="eyebrow">You're Invited</div>
+        <h1 class="form-hl">Join your family workspace</h1>
+        <p class="form-sub">Create your account to join. You'll share the same sessions, plans, and history in real time.</p>
+        <div class="fields">
+          <div class="field">
+            <label for="jw-name">Your First Name</label>
+            <input type="text" id="jw-name" placeholder="Alex" />
+          </div>
+          <div class="field">
+            <label for="jw-email">Email</label>
+            <input type="email" id="jw-email" placeholder="you@family.com" />
+          </div>
+          <div class="field">
+            <label for="jw-pw">Create a Password</label>
+            <input type="password" id="jw-pw" placeholder="Min. 8 characters" />
+          </div>
+          <div class="field">
+            <label for="jw-code">Invite Code</label>
+            <input type="text" id="jw-code" class="mono" placeholder="FP-XXXX" autocomplete="off" spellcheck="false" />
+            <p class="field-note">Find this in the invite link your spouse sent you</p>
+          </div>
+        </div>
+        <button class="btn">Join Family Workspace</button>
+        <p class="link-row">Already have an account? <a href="#" onclick="switchScreen('signin');return false;">Sign in</a></p>
+      </div>
+    </div>
+
+  </div>
+
+</div><!-- /screen-wrap -->
+
+<script>
+  function switchScreen(id) {
+    document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); });
+    document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
+    document.getElementById('screen-' + id).classList.add('active');
+    var btn = document.querySelector('[data-screen="' + id + '"]');
+    if (btn) btn.classList.add('active');
+  }
+</script>
+
+</body>
+</html>

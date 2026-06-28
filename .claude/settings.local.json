@@ -48,7 +48,12 @@
       "mcp__Claude_Preview__preview_logs",
       "mcp__Claude_Preview__preview_resize",
       "mcp__Claude_Preview__preview_list",
-      "mcp__Claude_Preview__preview_stop"
+      "mcp__Claude_Preview__preview_stop",
+      "Bash(/Users/longmorebiz/.claude/skills/gstack/browse/dist/browse goto *)",
+      "Bash(/Users/longmorebiz/.claude/skills/gstack/browse/dist/browse js *)",
+      "Bash(/Users/longmorebiz/.claude/skills/gstack/browse/dist/browse url *)",
+      "Bash(/Users/longmorebiz/.claude/skills/gstack/browse/dist/browse console *)",
+      "Bash(~/.claude/skills/gstack/bin/gstack-timeline-log '{\"skill\":\"design-review\",\"event\":\"completed\",\"branch\":\"main\",\"outcome\":\"DONE_WITH_CONCERNS\"}')"
     ]
   }
 }

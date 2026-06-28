@@ -1,0 +1,1137 @@
+{
+  "url": "https://familypause.com/",
+  "browser": "Chromium (Chrome engine)",
+  "testedAt": "2026-06-23T10:15:16.216Z",
+  "viewports": {
+    "390": {
+      "title": "FamilyPause",
+      "heroH1": "We did a FamilyPauseand got back on track.",
+      "heroSub": "Record your weekly family meeting. AI extracts every action, appointment, and decision. Review in minutes. Your week, planned before Sunday ends.",
+      "heroH1Rect": {
+        "w": 346,
+        "h": 171.3125,
+        "x": 22,
+        "y": 175.046875,
+        "visible": true,
+        "fontSize": "42px",
+        "overflow": "visible"
+      },
+      "heroCTA": {
+        "w": 251.609375,
+        "h": 52,
+        "x": 22,
+        "y": 523.921875,
+        "visible": true,
+        "fontSize": "14px",
+        "overflow": "visible"
+      },
+      "heroOverlapBad": false,
+      "navVisible": {
+        "w": 390,
+        "h": 65,
+        "x": 0,
+        "y": 0,
+        "visible": true,
+        "fontSize": "17px",
+        "overflow": "visible"
+      },
+      "navLinksDisplay": "none",
+      "logo": {
+        "src": "https://www.familypause.com/uploads/Logo_4.png",
+        "naturalW": 1254,
+        "naturalH": 1254,
+        "displayW": 36,
+        "displayH": 36
+      },
+      "navLinks": [
+        {
+          "text": "How it works",
+          "href": "#how",
+          "targetId": "how",
+          "targetExists": true
+        },
+        {
+          "text": "Try It Now",
+          "href": "#try",
+          "targetId": "try",
+          "targetExists": true
+        },
+        {
+          "text": "Who it's for",
+          "href": "#who",
+          "targetId": "who",
+          "targetExists": true
+        },
+        {
+          "text": "Pricing",
+          "href": "#pricing",
+          "targetId": "pricing",
+          "targetExists": true
+        }
+      ],
+      "steps": [
+        {
+          "index": 1,
+          "title": "Have your meeting",
+          "visible": true,
+          "snum": "01",
+          "hasIcon": true
+        },
+        {
+          "index": 2,
+          "title": "AI distills it",
+          "visible": true,
+          "snum": "02",
+          "hasIcon": true
+        },
+        {
+          "index": 3,
+          "title": "Keep or discard",
+          "visible": true,
+          "snum": "03",
+          "hasIcon": true
+        },
+        {
+          "index": 4,
+          "title": "Your week is built",
+          "visible": true,
+          "snum": "04",
+          "hasIcon": true
+        }
+      ],
+      "aud": [
+        {
+          "index": 1,
+          "title": "Married couples",
+          "rect": {
+            "x": 22,
+            "y": 4693.125,
+            "width": 346,
+            "height": 322.78125,
+            "top": 4693.125,
+            "right": 368,
+            "bottom": 5015.90625,
+            "left": 22
+          }
+        },
+        {
+          "index": 2,
+          "title": "Entrepreneur households",
+          "rect": {
+            "x": 22,
+            "y": 5037.90625,
+            "width": 346,
+            "height": 364.03125,
+            "top": 5037.90625,
+            "right": 368,
+            "bottom": 5401.9375,
+            "left": 22
+          }
+        },
+        {
+          "index": 3,
+          "title": "Faith-driven families",
+          "rect": {
+            "x": 22,
+            "y": 5423.9375,
+            "width": 346,
+            "height": 322.78125,
+            "top": 5423.9375,
+            "right": 368,
+            "bottom": 5746.71875,
+            "left": 22
+          }
+        },
+        {
+          "index": 4,
+          "title": "Homeschool families",
+          "rect": {
+            "x": 22,
+            "y": 5768.71875,
+            "width": 346,
+            "height": 322.78125,
+            "top": 5768.71875,
+            "right": 368,
+            "bottom": 6091.5,
+            "left": 22
+          }
+        }
+      ],
+      "tiers": [
+        {
+          "label": "Free",
+          "price": "$0",
+          "subprice": "Always free",
+          "cta": "Get Started Free"
+        },
+        {
+          "label": "Family Plan",
+          "price": "$59",
+          "cta": "Start 7-Day Trial"
+        },
+        {
+          "label": "Church & Ministry",
+          "price": "$39",
+          "subprice": "For teams & congregations",
+          "cta": "Start 7-Day Trial"
+        }
+      ],
+      "billingToggle": true,
+      "billingAnnual": "Annual · Best Value",
+      "demo": {
+        "present": true,
+        "input": true,
+        "counter": true,
+        "distillBtn": true,
+        "distillDisabled": true
+      },
+      "noads": "FamilyPause is ad-free and will always be ad-free. Your family's conversations are not data. They never will be.",
+      "noadsVisible": true,
+      "contractsNote": true,
+      "footerLinks": [
+        {
+          "text": "How it works",
+          "href": "#how",
+          "tag": "A"
+        },
+        {
+          "text": "Who it's for",
+          "href": "#who",
+          "tag": "A"
+        },
+        {
+          "text": "Pricing",
+          "href": "#pricing",
+          "tag": "A"
+        },
+        {
+          "text": "Privacy",
+          "href": "/privacy.html",
+          "tag": "A"
+        },
+        {
+          "text": "Terms",
+          "href": "/terms.html",
+          "tag": "A"
+        },
+        {
+          "text": "Contact",
+          "href": "mailto:hello@familypause.com",
+          "tag": "A"
+        },
+        {
+          "text": "Sign in",
+          "href": "",
+          "tag": "BUTTON"
+        },
+        {
+          "text": "Start free week",
+          "href": "",
+          "tag": "BUTTON"
+        },
+        {
+          "text": "Ecclesiastes 4:9",
+          "href": "https://www.biblegateway.com/passage/?search=Ecclesiastes%204%3A9-12&version=NASB",
+          "tag": "A"
+        }
+      ],
+      "copyright": true,
+      "external": [
+        {
+          "text": "Ecclesiastes 4:9",
+          "href": "https://www.biblegateway.com/passage/?search=Ecclesiastes%204%3A9-12&version=NASB"
+        }
+      ],
+      "sectionIds": [
+        {
+          "id": "how",
+          "exists": true
+        },
+        {
+          "id": "who",
+          "exists": true
+        },
+        {
+          "id": "pricing",
+          "exists": true
+        },
+        {
+          "id": "try",
+          "exists": true
+        }
+      ]
+    },
+    "768": {
+      "title": "FamilyPause",
+      "heroH1": "We did a FamilyPauseand got back on track.",
+      "heroSub": "Record your weekly family meeting. AI extracts every action, appointment, and decision. Review in minutes. Your week, planned before Sunday ends.",
+      "heroH1Rect": {
+        "w": 688,
+        "h": 106.0625,
+        "x": 40,
+        "y": 185.046875,
+        "visible": true,
+        "fontSize": "52px",
+        "overflow": "visible"
+      },
+      "heroCTA": {
+        "w": 251.609375,
+        "h": 52,
+        "x": 40,
+        "y": 438.28125,
+        "visible": true,
+        "fontSize": "14px",
+        "overflow": "visible"
+      },
+      "heroOverlapBad": false,
+      "navVisible": {
+        "w": 768,
+        "h": 75,
+        "x": 0,
+        "y": 0,
+        "visible": true,
+        "fontSize": "17px",
+        "overflow": "visible"
+      },
+      "navLinksDisplay": "none",
+      "logo": {
+        "src": "https://www.familypause.com/uploads/Logo_4.png",
+        "naturalW": 1254,
+        "naturalH": 1254,
+        "displayW": 36,
+        "displayH": 36
+      },
+      "navLinks": [
+        {
+          "text": "How it works",
+          "href": "#how",
+          "targetId": "how",
+          "targetExists": true
+        },
+        {
+          "text": "Try It Now",
+          "href": "#try",
+          "targetId": "try",
+          "targetExists": true
+        },
+        {
+          "text": "Who it's for",
+          "href": "#who",
+          "targetId": "who",
+          "targetExists": true
+        },
+        {
+          "text": "Pricing",
+          "href": "#pricing",
+          "targetId": "pricing",
+          "targetExists": true
+        }
+      ],
+      "steps": [
+        {
+          "index": 1,
+          "title": "Have your meeting",
+          "visible": true,
+          "snum": "01",
+          "hasIcon": true
+        },
+        {
+          "index": 2,
+          "title": "AI distills it",
+          "visible": true,
+          "snum": "02",
+          "hasIcon": true
+        },
+        {
+          "index": 3,
+          "title": "Keep or discard",
+          "visible": true,
+          "snum": "03",
+          "hasIcon": true
+        },
+        {
+          "index": 4,
+          "title": "Your week is built",
+          "visible": true,
+          "snum": "04",
+          "hasIcon": true
+        }
+      ],
+      "aud": [
+        {
+          "index": 1,
+          "title": "Married couples",
+          "rect": {
+            "x": 40,
+            "y": 3756.359375,
+            "width": 688,
+            "height": 245.0625,
+            "top": 3756.359375,
+            "right": 728,
+            "bottom": 4001.421875,
+            "left": 40
+          }
+        },
+        {
+          "index": 2,
+          "title": "Entrepreneur households",
+          "rect": {
+            "x": 40,
+            "y": 4023.421875,
+            "width": 688,
+            "height": 245.0625,
+            "top": 4023.421875,
+            "right": 728,
+            "bottom": 4268.484375,
+            "left": 40
+          }
+        },
+        {
+          "index": 3,
+          "title": "Faith-driven families",
+          "rect": {
+            "x": 40,
+            "y": 4290.484375,
+            "width": 688,
+            "height": 245.0625,
+            "top": 4290.484375,
+            "right": 728,
+            "bottom": 4535.546875,
+            "left": 40
+          }
+        },
+        {
+          "index": 4,
+          "title": "Homeschool families",
+          "rect": {
+            "x": 40,
+            "y": 4557.546875,
+            "width": 688,
+            "height": 245.0625,
+            "top": 4557.546875,
+            "right": 728,
+            "bottom": 4802.609375,
+            "left": 40
+          }
+        }
+      ],
+      "tiers": [
+        {
+          "label": "Free",
+          "price": "$0",
+          "subprice": "Always free",
+          "cta": "Get Started Free"
+        },
+        {
+          "label": "Family Plan",
+          "price": "$59",
+          "cta": "Start 7-Day Trial"
+        },
+        {
+          "label": "Church & Ministry",
+          "price": "$39",
+          "subprice": "For teams & congregations",
+          "cta": "Start 7-Day Trial"
+        }
+      ],
+      "billingToggle": true,
+      "billingAnnual": "Annual · Best Value",
+      "demo": {
+        "present": true,
+        "input": true,
+        "counter": true,
+        "distillBtn": true,
+        "distillDisabled": true
+      },
+      "noads": "FamilyPause is ad-free and will always be ad-free. Your family's conversations are not data. They never will be.",
+      "noadsVisible": true,
+      "contractsNote": true,
+      "footerLinks": [
+        {
+          "text": "How it works",
+          "href": "#how",
+          "tag": "A"
+        },
+        {
+          "text": "Who it's for",
+          "href": "#who",
+          "tag": "A"
+        },
+        {
+          "text": "Pricing",
+          "href": "#pricing",
+          "tag": "A"
+        },
+        {
+          "text": "Privacy",
+          "href": "/privacy.html",
+          "tag": "A"
+        },
+        {
+          "text": "Terms",
+          "href": "/terms.html",
+          "tag": "A"
+        },
+        {
+          "text": "Contact",
+          "href": "mailto:hello@familypause.com",
+          "tag": "A"
+        },
+        {
+          "text": "Sign in",
+          "href": "",
+          "tag": "BUTTON"
+        },
+        {
+          "text": "Start free week",
+          "href": "",
+          "tag": "BUTTON"
+        },
+        {
+          "text": "Ecclesiastes 4:9",
+          "href": "https://www.biblegateway.com/passage/?search=Ecclesiastes%204%3A9-12&version=NASB",
+          "tag": "A"
+        }
+      ],
+      "copyright": true,
+      "external": [
+        {
+          "text": "Ecclesiastes 4:9",
+          "href": "https://www.biblegateway.com/passage/?search=Ecclesiastes%204%3A9-12&version=NASB"
+        }
+      ],
+      "sectionIds": [
+        {
+          "id": "how",
+          "exists": true
+        },
+        {
+          "id": "who",
+          "exists": true
+        },
+        {
+          "id": "pricing",
+          "exists": true
+        },
+        {
+          "id": "try",
+          "exists": true
+        }
+      ]
+    },
+    "1280": {
+      "title": "FamilyPause",
+      "heroH1": "We did a FamilyPauseand got back on track.",
+      "heroSub": "Record your weekly family meeting. AI extracts every action, appointment, and decision. Review in minutes. Your week, planned before Sunday ends.",
+      "heroH1Rect": {
+        "w": 532.46875,
+        "h": 269.25,
+        "x": 100,
+        "y": 260,
+        "visible": true,
+        "fontSize": "66px",
+        "overflow": "visible"
+      },
+      "heroCTA": {
+        "w": 251.609375,
+        "h": 52,
+        "x": 100,
+        "y": 676.421875,
+        "visible": true,
+        "fontSize": "14px",
+        "overflow": "visible"
+      },
+      "heroOverlapBad": false,
+      "navVisible": {
+        "w": 1280,
+        "h": 75,
+        "x": 0,
+        "y": 0,
+        "visible": true,
+        "fontSize": "17px",
+        "overflow": "visible"
+      },
+      "navLinksDisplay": "flex",
+      "logo": {
+        "src": "https://www.familypause.com/uploads/Logo_4.png",
+        "naturalW": 1254,
+        "naturalH": 1254,
+        "displayW": 36,
+        "displayH": 36
+      },
+      "navLinks": [
+        {
+          "text": "How it works",
+          "href": "#how",
+          "targetId": "how",
+          "targetExists": true
+        },
+        {
+          "text": "Try It Now",
+          "href": "#try",
+          "targetId": "try",
+          "targetExists": true
+        },
+        {
+          "text": "Who it's for",
+          "href": "#who",
+          "targetId": "who",
+          "targetExists": true
+        },
+        {
+          "text": "Pricing",
+          "href": "#pricing",
+          "targetId": "pricing",
+          "targetExists": true
+        }
+      ],
+      "steps": [
+        {
+          "index": 1,
+          "title": "Have your meeting",
+          "visible": true,
+          "snum": "01",
+          "hasIcon": true
+        },
+        {
+          "index": 2,
+          "title": "AI distills it",
+          "visible": true,
+          "snum": "02",
+          "hasIcon": true
+        },
+        {
+          "index": 3,
+          "title": "Keep or discard",
+          "visible": true,
+          "snum": "03",
+          "hasIcon": true
+        },
+        {
+          "index": 4,
+          "title": "Your week is built",
+          "visible": true,
+          "snum": "04",
+          "hasIcon": true
+        }
+      ],
+      "aud": [
+        {
+          "index": 1,
+          "title": "Married couples",
+          "rect": {
+            "x": 100,
+            "y": 3164.921875,
+            "width": 529,
+            "height": 270.96875,
+            "top": 3164.921875,
+            "right": 629,
+            "bottom": 3435.890625,
+            "left": 100
+          }
+        },
+        {
+          "index": 2,
+          "title": "Entrepreneur households",
+          "rect": {
+            "x": 651,
+            "y": 3164.921875,
+            "width": 529,
+            "height": 270.96875,
+            "top": 3164.921875,
+            "right": 1180,
+            "bottom": 3435.890625,
+            "left": 651
+          }
+        },
+        {
+          "index": 3,
+          "title": "Faith-driven families",
+          "rect": {
+            "x": 100,
+            "y": 3457.890625,
+            "width": 529,
+            "height": 270.96875,
+            "top": 3457.890625,
+            "right": 629,
+            "bottom": 3728.859375,
+            "left": 100
+          }
+        },
+        {
+          "index": 4,
+          "title": "Homeschool families",
+          "rect": {
+            "x": 651,
+            "y": 3457.890625,
+            "width": 529,
+            "height": 270.96875,
+            "top": 3457.890625,
+            "right": 1180,
+            "bottom": 3728.859375,
+            "left": 651
+          }
+        }
+      ],
+      "tiers": [
+        {
+          "label": "Free",
+          "price": "$0",
+          "subprice": "Always free",
+          "cta": "Get Started Free"
+        },
+        {
+          "label": "Family Plan",
+          "price": "$59",
+          "cta": "Start 7-Day Trial"
+        },
+        {
+          "label": "Church & Ministry",
+          "price": "$39",
+          "subprice": "For teams & congregations",
+          "cta": "Start 7-Day Trial"
+        }
+      ],
+      "billingToggle": true,
+      "billingAnnual": "Annual · Best Value",
+      "demo": {
+        "present": true,
+        "input": true,
+        "counter": true,
+        "distillBtn": true,
+        "distillDisabled": true
+      },
+      "noads": "FamilyPause is ad-free and will always be ad-free. Your family's conversations are not data. They never will be.",
+      "noadsVisible": true,
+      "contractsNote": true,
+      "footerLinks": [
+        {
+          "text": "How it works",
+          "href": "#how",
+          "tag": "A"
+        },
+        {
+          "text": "Who it's for",
+          "href": "#who",
+          "tag": "A"
+        },
+        {
+          "text": "Pricing",
+          "href": "#pricing",
+          "tag": "A"
+        },
+        {
+          "text": "Privacy",
+          "href": "/privacy.html",
+          "tag": "A"
+        },
+        {
+          "text": "Terms",
+          "href": "/terms.html",
+          "tag": "A"
+        },
+        {
+          "text": "Contact",
+          "href": "mailto:hello@familypause.com",
+          "tag": "A"
+        },
+        {
+          "text": "Sign in",
+          "href": "",
+          "tag": "BUTTON"
+        },
+        {
+          "text": "Start free week",
+          "href": "",
+          "tag": "BUTTON"
+        },
+        {
+          "text": "Ecclesiastes 4:9",
+          "href": "https://www.biblegateway.com/passage/?search=Ecclesiastes%204%3A9-12&version=NASB",
+          "tag": "A"
+        }
+      ],
+      "copyright": true,
+      "external": [
+        {
+          "text": "Ecclesiastes 4:9",
+          "href": "https://www.biblegateway.com/passage/?search=Ecclesiastes%204%3A9-12&version=NASB"
+        }
+      ],
+      "sectionIds": [
+        {
+          "id": "how",
+          "exists": true
+        },
+        {
+          "id": "who",
+          "exists": true
+        },
+        {
+          "id": "pricing",
+          "exists": true
+        },
+        {
+          "id": "try",
+          "exists": true
+        }
+      ]
+    },
+    "1440": {
+      "title": "FamilyPause",
+      "heroH1": "We did a FamilyPauseand got back on track.",
+      "heroSub": "Record your weekly family meeting. AI extracts every action, appointment, and decision. Review in minutes. Your week, planned before Sunday ends.",
+      "heroH1Rect": {
+        "w": 532.46875,
+        "h": 269.25,
+        "x": 180,
+        "y": 260,
+        "visible": true,
+        "fontSize": "66px",
+        "overflow": "visible"
+      },
+      "heroCTA": {
+        "w": 251.609375,
+        "h": 52,
+        "x": 180,
+        "y": 676.421875,
+        "visible": true,
+        "fontSize": "14px",
+        "overflow": "visible"
+      },
+      "heroOverlapBad": false,
+      "navVisible": {
+        "w": 1440,
+        "h": 75,
+        "x": 0,
+        "y": 0,
+        "visible": true,
+        "fontSize": "17px",
+        "overflow": "visible"
+      },
+      "navLinksDisplay": "flex",
+      "logo": {
+        "src": "https://www.familypause.com/uploads/Logo_4.png",
+        "naturalW": 1254,
+        "naturalH": 1254,
+        "displayW": 36,
+        "displayH": 36
+      },
+      "navLinks": [
+        {
+          "text": "How it works",
+          "href": "#how",
+          "targetId": "how",
+          "targetExists": true
+        },
+        {
+          "text": "Try It Now",
+          "href": "#try",
+          "targetId": "try",
+          "targetExists": true
+        },
+        {
+          "text": "Who it's for",
+          "href": "#who",
+          "targetId": "who",
+          "targetExists": true
+        },
+        {
+          "text": "Pricing",
+          "href": "#pricing",
+          "targetId": "pricing",
+          "targetExists": true
+        }
+      ],
+      "steps": [
+        {
+          "index": 1,
+          "title": "Have your meeting",
+          "visible": true,
+          "snum": "01",
+          "hasIcon": true
+        },
+        {
+          "index": 2,
+          "title": "AI distills it",
+          "visible": true,
+          "snum": "02",
+          "hasIcon": true
+        },
+        {
+          "index": 3,
+          "title": "Keep or discard",
+          "visible": true,
+          "snum": "03",
+          "hasIcon": true
+        },
+        {
+          "index": 4,
+          "title": "Your week is built",
+          "visible": true,
+          "snum": "04",
+          "hasIcon": true
+        }
+      ],
+      "aud": [
+        {
+          "index": 1,
+          "title": "Married couples",
+          "rect": {
+            "x": 180,
+            "y": 3164.921875,
+            "width": 529,
+            "height": 270.96875,
+            "top": 3164.921875,
+            "right": 709,
+            "bottom": 3435.890625,
+            "left": 180
+          }
+        },
+        {
+          "index": 2,
+          "title": "Entrepreneur households",
+          "rect": {
+            "x": 731,
+            "y": 3164.921875,
+            "width": 529,
+            "height": 270.96875,
+            "top": 3164.921875,
+            "right": 1260,
+            "bottom": 3435.890625,
+            "left": 731
+          }
+        },
+        {
+          "index": 3,
+          "title": "Faith-driven families",
+          "rect": {
+            "x": 180,
+            "y": 3457.890625,
+            "width": 529,
+            "height": 270.96875,
+            "top": 3457.890625,
+            "right": 709,
+            "bottom": 3728.859375,
+            "left": 180
+          }
+        },
+        {
+          "index": 4,
+          "title": "Homeschool families",
+          "rect": {
+            "x": 731,
+            "y": 3457.890625,
+            "width": 529,
+            "height": 270.96875,
+            "top": 3457.890625,
+            "right": 1260,
+            "bottom": 3728.859375,
+            "left": 731
+          }
+        }
+      ],
+      "tiers": [
+        {
+          "label": "Free",
+          "price": "$0",
+          "subprice": "Always free",
+          "cta": "Get Started Free"
+        },
+        {
+          "label": "Family Plan",
+          "price": "$59",
+          "cta": "Start 7-Day Trial"
+        },
+        {
+          "label": "Church & Ministry",
+          "price": "$39",
+          "subprice": "For teams & congregations",
+          "cta": "Start 7-Day Trial"
+        }
+      ],
+      "billingToggle": true,
+      "billingAnnual": "Annual · Best Value",
+      "demo": {
+        "present": true,
+        "input": true,
+        "counter": true,
+        "distillBtn": true,
+        "distillDisabled": true
+      },
+      "noads": "FamilyPause is ad-free and will always be ad-free. Your family's conversations are not data. They never will be.",
+      "noadsVisible": true,
+      "contractsNote": true,
+      "footerLinks": [
+        {
+          "text": "How it works",
+          "href": "#how",
+          "tag": "A"
+        },
+        {
+          "text": "Who it's for",
+          "href": "#who",
+          "tag": "A"
+        },
+        {
+          "text": "Pricing",
+          "href": "#pricing",
+          "tag": "A"
+        },
+        {
+          "text": "Privacy",
+          "href": "/privacy.html",
+          "tag": "A"
+        },
+        {
+          "text": "Terms",
+          "href": "/terms.html",
+          "tag": "A"
+        },
+        {
+          "text": "Contact",
+          "href": "mailto:hello@familypause.com",
+          "tag": "A"
+        },
+        {
+          "text": "Sign in",
+          "href": "",
+          "tag": "BUTTON"
+        },
+        {
+          "text": "Start free week",
+          "href": "",
+          "tag": "BUTTON"
+        },
+        {
+          "text": "Ecclesiastes 4:9",
+          "href": "https://www.biblegateway.com/passage/?search=Ecclesiastes%204%3A9-12&version=NASB",
+          "tag": "A"
+        }
+      ],
+      "copyright": true,
+      "external": [
+        {
+          "text": "Ecclesiastes 4:9",
+          "href": "https://www.biblegateway.com/passage/?search=Ecclesiastes%204%3A9-12&version=NASB"
+        }
+      ],
+      "sectionIds": [
+        {
+          "id": "how",
+          "exists": true
+        },
+        {
+          "id": "who",
+          "exists": true
+        },
+        {
+          "id": "pricing",
+          "exists": true
+        },
+        {
+          "id": "try",
+          "exists": true
+        }
+      ]
+    }
+  },
+  "consoleErrors": [],
+  "networkTiming": {
+    "loadMs": 807,
+    "status": 200,
+    "finalUrl": "https://www.familypause.com/"
+  },
+  "navTests": {
+    "#how": {
+      "top": 0.171875,
+      "inView": true
+    },
+    "#try": {
+      "top": 0.015625,
+      "inView": true
+    },
+    "#who": {
+      "top": -0.125,
+      "inView": true
+    },
+    "#pricing": {
+      "top": 0.234375,
+      "inView": true
+    }
+  },
+  "ctaTests": {
+    "navStartFree": {
+      "url": "https://www.familypause.com/app?signup=1",
+      "hasSignup": true
+    },
+    "heroStartFree": {
+      "url": "https://www.familypause.com/app?signup=1",
+      "hasSignup": true
+    },
+    "signIn": {
+      "url": "https://www.familypause.com/app",
+      "hasSignup": false
+    }
+  },
+  "demoTest": {
+    "typed": true,
+    "counterText": "103 / 500",
+    "distillActive": true,
+    "resultsVisible": true,
+    "convVisible": true
+  },
+  "footerLinks": [
+    {
+      "text": "How it works",
+      "href": "https://www.familypause.com/#how",
+      "status": 200,
+      "error": null
+    },
+    {
+      "text": "Who it's for",
+      "href": "https://www.familypause.com/#who",
+      "status": 200,
+      "error": null
+    },
+    {
+      "text": "Pricing",
+      "href": "https://www.familypause.com/#pricing",
+      "status": 200,
+      "error": null
+    },
+    {
+      "text": "Privacy",
+      "href": "https://www.familypause.com/privacy.html",
+      "status": 200,
+      "error": null
+    },
+    {
+      "text": "Terms",
+      "href": "https://www.familypause.com/terms.html",
+      "status": 200,
+      "error": null
+    },
+    {
+      "text": "Contact",
+      "href": "mailto:hello@familypause.com",
+      "status": null,
+      "error": "apiRequestContext.get: Protocol \"mailto:\" not supported. Expected \"http:\""
+    },
+    {
+      "text": "Ecclesiastes 4:9",
+      "href": "https://www.biblegateway.com/passage/?search=Ecclesiastes%204%3A9-12&version=NASB",
+      "status": 200,
+      "error": null
+    }
+  ],
+  "externalLinks": [
+    {
+      "href": "https://www.biblegateway.com/passage/?search=Ecclesiastes%204%3A9-12&version=NASB",
+      "status": 200,
+      "error": null
+    }
+  ],
+  "https": true,
+  "redirect": "https://www.familypause.com/"
+}

@@ -1,0 +1,12 @@
+{
+  "name": "qa-screenshots",
+  "version": "1.0.0",
+  "description": "",
+  "main": "bundle-head.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
