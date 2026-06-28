@@ -1094,32 +1094,6 @@ function PlanView({
         <p>A clean plan, organized by person. {keptCards.length} items routed where they belong: appointments timed, actions owned, nothing forgotten.</p>
       </div>
 
-      {showCalendarConnect && (
-        <div className="plan-cal-cta" style={{ marginBottom: 8 }}>
-          <CalendarAccountChooser
-            familyPauseEmail={familyPauseEmail}
-            onConfirm={onConfirmCalendarConnect}
-            onCancel={onCancelCalendarConnect}
-            busy={calendarBusy}
-            compact
-          />
-        </div>
-      )}
-
-      {syncableCount > 0 && !showCalendarConnect && (
-        <div className="plan-cal-cta">
-          <button
-            type="button"
-            className="btn btn-primary btn-lg btn-block"
-            disabled={calendarBusy}
-            onClick={onAddToCalendar}
-          >
-            <Ico d={I.cal} size={17} />
-            {calendarBusy ? "Connecting…" : "Add to Calendar"}
-          </button>
-        </div>
-      )}
-
       <div className="plangrid">
         {adults.slice(0, 2).map((name, i) => {
           const list = byPerson(name);
@@ -1149,6 +1123,37 @@ function PlanView({
             {shared.map((it) => <Item key={it.id} it={it} />)}
           </div>
         </div>
+      )}
+
+      {keptCards.length > 0 && (
+        showCalendarConnect ? (
+          <div style={{ marginTop: 6 }}>
+            <CalendarAccountChooser
+              familyPauseEmail={familyPauseEmail}
+              onConfirm={onConfirmCalendarConnect}
+              onCancel={onCancelCalendarConnect}
+              busy={calendarBusy}
+              compact
+            />
+          </div>
+        ) : (
+          <>
+            <button
+              type="button"
+              className="gcalbar"
+              disabled={calendarBusy}
+              onClick={onAddToCalendar}
+            >
+              <Ico d={I.cal} size={17} />
+              {calendarBusy ? "Connecting…" : "Sync to Calendar"}
+            </button>
+            <div className="gcalnote">
+              {syncableCount > 0
+                ? `${syncableCount} timed ${syncableCount === 1 ? "item" : "items"} ready to sync`
+                : "Add dates during review to sync specific appointments"}
+            </div>
+          </>
+        )
       )}
 
       <div className="planfoot"><button className="linkish" onClick={onRestart}>↺ Start a new sync</button></div>
