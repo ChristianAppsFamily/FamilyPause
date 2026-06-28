@@ -465,7 +465,7 @@ function SignIn({ onSwitch, onSuccess }) {
     setError("");
     const { error: err } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: "https://familypause.com/app" },
+      options: { redirectTo: `${window.location.origin}/app` },
     });
     if (err) setError(friendlyAuthError(err));
   };
@@ -573,7 +573,7 @@ function SignUp({ onSwitch, onSuccess }) {
     setError("");
     const { error: err } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: "https://familypause.com/app" },
+      options: { redirectTo: `${window.location.origin}/app` },
     });
     if (err) setError(friendlyAuthError(err));
   };

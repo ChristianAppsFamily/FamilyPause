@@ -23,9 +23,26 @@ a GitHub account, and a Vercel account.
    - Copy the **anon / public** key → this is `VITE_SUPABASE_ANON_KEY`
    - (Do NOT use the `service_role` key — that one is secret.)
 
-> **Google sign-in** is optional. The "Continue with Google" button only works once you
-> configure the Google provider in Authentication ▸ Providers. For now, just use
-> **email + password** to test. (Clicking Google before it's set up shows an error — expected.)
+> **Google sign-in** — enable in Authentication ▸ Providers ▸ **Google** (Client ID + secret
+> from Google Cloud Console). Then set **Authentication ▸ URL Configuration**:
+>
+> | Setting | Value |
+> |---------|-------|
+> | **Site URL** | `https://familypause.com/app` |
+> | **Redirect URLs** | Add each origin your app runs on (Supabase must allow the exact URL the client sends): |
+>
+> ```
+> http://localhost:5173/app
+> http://localhost:5173/reset-password
+> https://familypause.com/app
+> https://familypause.com/reset-password
+> https://www.familypause.com/app
+> https://www.familypause.com/reset-password
+> ```
+>
+> The app uses `redirectTo: \`${window.location.origin}/app\`` for Google OAuth and
+> `\`${window.location.origin}/reset-password\`` for password reset — so localhost works
+> in dev and `familypause.com` in production with no hardcoded redirect in code.
 
 ---
 
