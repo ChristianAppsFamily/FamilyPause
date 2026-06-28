@@ -131,7 +131,7 @@ const css = `
     background: #ffffff;
     border: 1px solid ${T.border};
     border-radius: 8px;
-    color: ${T.text};
+    color: #2E2820;
     padding: 13px 16px;
     font-size: 15px;
     font-family: 'Lora', serif;
@@ -465,7 +465,7 @@ function SignIn({ onSwitch, onSuccess }) {
     setError("");
     const { error: err } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: `${window.location.origin}/app/cards` },
+      options: { redirectTo: "https://familypause.com/app" },
     });
     if (err) setError(friendlyAuthError(err));
   };
@@ -487,14 +487,6 @@ function SignIn({ onSwitch, onSuccess }) {
       </div>
 
       <ErrorBanner message={error} />
-
-      <div className="fp-fade-1" style={{ marginBottom: 4 }}>
-        <button className="fp-btn-google" onClick={handleGoogle}>
-          <GoogleIcon /> Continue with Google
-        </button>
-      </div>
-
-      <div className="fp-divider fp-fade-1"><span>OR</span></div>
 
       <div className="fp-fade-1 fp-field">
         <label className="fp-label">Email</label>
@@ -518,6 +510,14 @@ function SignIn({ onSwitch, onSuccess }) {
       <div className="fp-fade-3" style={{ marginBottom: 20 }}>
         <button className="fp-btn-primary" onClick={handleSignIn} disabled={loading}>
           {loading ? <Spinner /> : "Sign In"}
+        </button>
+      </div>
+
+      <div className="fp-divider fp-fade-4"><span>OR</span></div>
+
+      <div className="fp-fade-4" style={{ marginBottom: 4 }}>
+        <button className="fp-btn-google" onClick={handleGoogle}>
+          <GoogleIcon /> Continue with Google
         </button>
       </div>
 
@@ -573,7 +573,7 @@ function SignUp({ onSwitch, onSuccess }) {
     setError("");
     const { error: err } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: `${window.location.origin}/app/cards` },
+      options: { redirectTo: "https://familypause.com/app" },
     });
     if (err) setError(friendlyAuthError(err));
   };
@@ -595,13 +595,6 @@ function SignUp({ onSwitch, onSuccess }) {
       </div>
 
       <ErrorBanner message={error} />
-
-      <div className="fp-fade-1" style={{ marginBottom: 4 }}>
-        <button className="fp-btn-google" onClick={handleGoogle}>
-          <GoogleIcon /> Continue with Google
-        </button>
-      </div>
-      <div className="fp-divider fp-fade-1"><span>OR</span></div>
 
       <div className="fp-fade-1 fp-field">
         <label className="fp-label">Your first name</label>
@@ -646,6 +639,12 @@ function SignUp({ onSwitch, onSuccess }) {
       </p>
 
       <div className="fp-divider fp-fade-5"><span>OR</span></div>
+
+      <div className="fp-fade-5" style={{ marginBottom: 24 }}>
+        <button className="fp-btn-google" onClick={handleGoogle}>
+          <GoogleIcon /> Continue with Google
+        </button>
+      </div>
 
       <div style={{ textAlign: "center" }} className="fp-fade-5">
         <span style={{ fontSize: 14, color: T.mid }}>Already have an account? </span>
