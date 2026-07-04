@@ -2,6 +2,22 @@ import { supabase } from "./supabase";
 
 /** @typedef {{ connected: boolean, connectedAt: string|null, memberId: string|null, googleEmail: string|null }} CalendarConnection */
 
+/** Calendar-relevant card missing date or time — needs Resolve times step. */
+export function needsDateTime(card) {
+  const calendarRelevant =
+    card.type === "event"
+    || (card.type === "action" && card.recurring)
+    || card.date
+    || card.time;
+  if (!calendarRelevant) return false;
+  return !card.date || !card.time;
+}
+
+/** Both date and time required for Google Calendar sync. */
+export function isSyncEligible(card) {
+  return !!(card.date && card.time);
+}
+
 /**
  * Start Google Calendar OAuth — redirects browser to Google consent.
  * @param {string} workspaceId
@@ -65,15 +81,48 @@ export async function syncCalendarEvents(workspaceId, events) {
   return data;
 }
 
-/** Map a kept card to calendar-sync API payload. */
+/** Map a kept card to calendar-sync API payload (requires date and time). */
 export function cardToCalendarEvent(card) {
+  if (!card.date || !card.time) {
+    throw new Error("Card missing date or time");
+  }
   return {
     id: card.id,
     title: card.task,
     date: card.date,
-    time: card.time || null,
+    time: card.time,
     duration_minutes: card.duration_minutes ?? 60,
     description: card.source || card.task,
     recurrence: !!card.recurring,
   };
+}
+
+/** Apply calendar-sync edge function results onto card list. */
+export function applySyncResults(cards, results) {
+  const byId = Object.fromEntries(results.map((r) => [String(r.id), r]));
+  return cards.map((c) => {
+    const r = byId[String(c.id)];
+    if (!r) return c;
+    if (r.success) {
+      return {
+        ...c,
+        calendar_synced: true,
+        google_event_id: r.googleEventId,
+        calendar_sync_failed: false,
+      };
+    }
+    return { ...c, calendar_sync_failed: true };
+  });
+}
+
+/**
+ * Batch-sync eligible kept cards that are not already synced.
+ * @returns {Promise<{ results: object[], updatedCards: object[] }>}
+ */
+export async function syncCardsToCalendar(workspaceId, cards) {
+  const toSync = cards.filter((c) => isSyncEligible(c) && !c.calendar_synced);
+  if (!toSync.length) return { results: [], updatedCards: cards };
+  const events = toSync.map(cardToCalendarEvent);
+  const { results } = await syncCalendarEvents(workspaceId, events);
+  return { results, updatedCards: applySyncResults(cards, results) };
 }

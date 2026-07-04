@@ -300,9 +300,10 @@ Re-run the **Google Calendar** block in **`supabase_setup.sql`** (adds token col
 ### E — Test the flow
 
 1. Settings → **Connect Google Calendar** → grant `calendar.events` access.
-2. Complete a weekly sync with dated kept items → Plan → **Add to Calendar**.
-3. Sync modal: add 2 events, skip 1 → summary shows counts; Plan rows show **Synced** badges.
-4. Verify events appear in Google Calendar (primary calendar).
+2. Complete a weekly sync. After distill, items missing date or time land on **Times** (resolve) before Review — fill both fields to continue.
+3. **Connected users:** Review → **Build my week** batch-syncs eligible items silently (spinner on button), then Plan shows green **Synced** badges per row.
+4. **Not connected:** Plan shows **Add to Cal** on eligible rows; first tap runs OAuth, then auto-syncs pending items.
+5. Failed syncs show **Retry** on the Plan row; verify events in Google Calendar (primary calendar).
 
 OAuth consent screen must be in **Testing** or **Production** with your Google account added as a test user until the app is verified.
 

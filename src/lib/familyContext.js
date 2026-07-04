@@ -39,6 +39,7 @@ export function normalizeCardPeople(cards, context) {
     recurring: !!c.recurring,
     duration_minutes: c.duration_minutes ?? (c.date ? 60 : null),
     calendar_synced: !!c.calendar_synced,
+    calendar_sync_failed: !!c.calendar_sync_failed,
     google_event_id: c.google_event_id ?? null,
   }));
 }

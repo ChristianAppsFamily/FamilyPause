@@ -7,7 +7,7 @@
 //   • Live speech capture (MediaRecorder + Whisper, ChatGPT-style)
 //   • workspace.family_context for people / categories / person routing
 //
-// Flow (StepRail): Agenda → Capture → Distill(processing) → Review → Plan
+// Flow (StepRail): Agenda → Capture → Distill → Resolve → Review → Plan
 // Styling comes from src/styles/tokens.css + src/styles/screens.css.
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -18,12 +18,20 @@ import { callFamilyPauseAI, buildSystemPrompt } from "./lib/ai";
 import Settings from "./components/Settings.jsx";
 import CardSystem from "./components/CardSystem.jsx";
 import Paywall from "./components/Paywall.jsx";
-import CalendarSync from "./components/CalendarSync.jsx";
 import CalendarAccountChooser from "./components/CalendarAccountChooser.jsx";
 import { paywallReason } from "./lib/subscription";
-import { parseAppLocation, syncPath, SYNC_VIEWS, cardsPath, calendarSyncPath } from "./lib/routes";
+import { parseAppLocation, syncPath, SYNC_VIEWS, cardsPath } from "./lib/routes";
 import { normalizeCardPeople } from "./lib/familyContext";
-import { getCalendarConnection, startGoogleCalendarConnect } from "./lib/googleCalendar";
+import {
+  applySyncResults,
+  getCalendarConnection,
+  isSyncEligible,
+  needsDateTime,
+  startGoogleCalendarConnect,
+  syncCalendarEvents,
+  syncCardsToCalendar,
+  cardToCalendarEvent,
+} from "./lib/googleCalendar";
 import { canRecordAudio, pickRecordingMimeType, transcribeAudioBlob } from "./lib/transcribe";
 import { speechPreviewSupported, startSpeechPreview } from "./lib/speechPreview";
 import {
@@ -125,6 +133,7 @@ const STEPS = [
   { key: "agenda", label: "Agenda" },
   { key: "capture", label: "Capture" },
   { key: "processing", label: "Distill" },
+  { key: "resolve", label: "Times" },
   { key: "review", label: "Review" },
   { key: "plan", label: "Plan" },
 ];
@@ -918,8 +927,76 @@ function ProcessingView({ done, familyNames = "Everyone" }) {
   );
 }
 
+// ── RESOLVE TIMES (between Distill and Review) ───────────────────────────────
+function ResolveTimesView({ cards, setCards, onBack, onContinue }) {
+  const incomplete = cards.filter(needsDateTime);
+  const allComplete = incomplete.every((c) => c.date && c.time);
+
+  const patchCard = (id, patch) => {
+    setCards((arr) => arr.map((c) => (c.id === id ? { ...c, ...patch } : c)));
+  };
+
+  return (
+    <div className="view resolve-view">
+      <div className="resolve-intro">
+        <div className="eyebrow" style={{ marginBottom: 9 }}>Step 3b · Fill in the times</div>
+        <h1>A few items need a <em>date and time</em> before they can land on your calendar.</h1>
+        <p style={{ color: "var(--ink-2)", marginTop: 10 }}>
+          {incomplete.length} {incomplete.length === 1 ? "item needs" : "items need"} scheduling details. Both fields are required for calendar sync.
+        </p>
+      </div>
+
+      <div className="resolve-list">
+        {incomplete.map((c) => (
+          <div className="resolve-row" key={c.id}>
+            <div className="resolve-row-head">
+              <p className="resolve-row-task">{c.task}</p>
+              <div className="resolve-row-meta">
+                <span>{c.person}</span>
+                {c.category && <span>· {c.category}</span>}
+              </div>
+            </div>
+            <div className="resolve-row-fields">
+              <div className="resolve-field">
+                <label htmlFor={`resolve-date-${c.id}`}>Date</label>
+                <input
+                  id={`resolve-date-${c.id}`}
+                  type="date"
+                  value={c.date || ""}
+                  onChange={(e) => patchCard(c.id, { date: e.target.value || null })}
+                />
+              </div>
+              <div className="resolve-field">
+                <label htmlFor={`resolve-time-${c.id}`}>Time</label>
+                <input
+                  id={`resolve-time-${c.id}`}
+                  type="time"
+                  value={c.time || ""}
+                  onChange={(e) => patchCard(c.id, { time: e.target.value || null })}
+                />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="resolve-foot">
+        <button type="button" className="linkish" onClick={onBack}>← Back to capture</button>
+        <button
+          type="button"
+          className="btn btn-primary btn-lg"
+          disabled={!allComplete}
+          onClick={onContinue}
+        >
+          Continue to review
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ── REVIEW (View 4) ───────────────────────────────────────────────────────────
-function ReviewView({ cards, setCards, roleOf, onBack, onBuild, distillError }) {
+function ReviewView({ cards, setCards, roleOf, onBack, onBuild, distillError, calendarSyncing }) {
   const [activeCategory, setActiveCategory] = useState("all");
   const [lastAction, setLastAction] = useState(null);
 
@@ -1038,7 +1115,21 @@ function ReviewView({ cards, setCards, roleOf, onBack, onBuild, distillError }) 
         <button className="linkish" onClick={onBack}>← Re-distill</button>
         <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
           <span className="summ">{allDecided ? <span><b>{kept} kept</b> · {total - kept} discarded</span> : `${total - decided} left to review`}</span>
-          <button className="btn btn-primary btn-lg" disabled={!allDecided} onClick={onBuild}><Ico d={I.arrow} size={16} /> Build my week</button>
+          <button
+            type="button"
+            className={"btn btn-primary btn-lg" + (calendarSyncing ? " btn-syncing" : "")}
+            disabled={!allDecided || calendarSyncing}
+            onClick={onBuild}
+          >
+            {calendarSyncing ? (
+              <>
+                <span className="btn-spinner" aria-hidden="true" />
+                Syncing your calendar…
+              </>
+            ) : (
+              <><Ico d={I.arrow} size={16} /> Build my week</>
+            )}
+          </button>
         </div>
       </div>
     </div>
@@ -1059,8 +1150,10 @@ function Confetti() {
 }
 
 function PlanView({
-  keptCards, adults, roleOf, onRestart, onAddToCalendar, calendarBusy,
+  keptCards, adults, roleOf, onRestart,
+  calendarConnected, calendarBusy,
   showCalendarConnect, onConfirmCalendarConnect, onCancelCalendarConnect, familyPauseEmail,
+  onRetrySync, onAddToCal,
 }) {
   const [confetti, setConfetti] = useState(true);
   useEffect(() => { const t = setTimeout(() => setConfetti(false), 2200); return () => clearTimeout(t); }, []);
@@ -1068,7 +1161,6 @@ function PlanView({
   const isAdult = (p) => adults.some((a) => a.toLowerCase() === (p || "").toLowerCase());
   const byPerson = (name) => keptCards.filter((c) => (c.person || "").toLowerCase() === name.toLowerCase());
   const shared = keptCards.filter((c) => !isAdult(c.person));
-  const syncableCount = keptCards.filter((c) => c.date).length;
 
   const Item = ({ it }) => (
     <div className={`planitem ${it.calendar_synced ? "synced" : ""}`}>
@@ -1079,6 +1171,19 @@ function PlanView({
           <span className="ct">{it.category}</span>
           {formatWhen(it.date, it.time) && <span>· {formatWhen(it.date, it.time)}</span>}
           {it.calendar_synced && <span className="synced-badge">Synced</span>}
+          {!it.calendar_synced && it.calendar_sync_failed && isSyncEligible(it) && (
+            <button type="button" className="plan-cal-retry" disabled={calendarBusy} onClick={() => onRetrySync(it.id)}>
+              Retry
+            </button>
+          )}
+          {!calendarConnected && !it.calendar_synced && isSyncEligible(it) && (
+            <button type="button" className="plan-cal-add" disabled={calendarBusy} onClick={() => onAddToCal(it.id)}>
+              Add to Cal
+            </button>
+          )}
+          {!isSyncEligible(it) && (it.date || it.time || it.type === "event" || it.recurring) && (
+            <span className="plan-cal-hint">Add date &amp; time to sync</span>
+          )}
         </div>
       </div>
     </div>
@@ -1087,12 +1192,30 @@ function PlanView({
   return (
     <div className="view">
       {confetti && <Confetti />}
+      {calendarConnected && (
+        <div className="plan-cal-status">
+          <span className="plan-cal-dot" aria-hidden="true" />
+          Google Calendar connected
+        </div>
+      )}
       <div className="planhero">
         <div className="seal"><Ico d={I.check} size={28} /></div>
         <div className="eyebrow" style={{ marginBottom: 12 }}>Step 5 · Your week is built</div>
         <h1>Your week, <em>planned before Sunday ends.</em></h1>
         <p>A clean plan, organized by person. {keptCards.length} items routed where they belong: appointments timed, actions owned, nothing forgotten.</p>
       </div>
+
+      {showCalendarConnect && (
+        <div style={{ marginBottom: 20 }}>
+          <CalendarAccountChooser
+            familyPauseEmail={familyPauseEmail}
+            onConfirm={onConfirmCalendarConnect}
+            onCancel={onCancelCalendarConnect}
+            busy={calendarBusy}
+            compact
+          />
+        </div>
+      )}
 
       <div className="plangrid">
         {adults.slice(0, 2).map((name, i) => {
@@ -1125,37 +1248,6 @@ function PlanView({
         </div>
       )}
 
-      {keptCards.length > 0 && (
-        showCalendarConnect ? (
-          <div style={{ marginTop: 6 }}>
-            <CalendarAccountChooser
-              familyPauseEmail={familyPauseEmail}
-              onConfirm={onConfirmCalendarConnect}
-              onCancel={onCancelCalendarConnect}
-              busy={calendarBusy}
-              compact
-            />
-          </div>
-        ) : (
-          <>
-            <button
-              type="button"
-              className="gcalbar"
-              disabled={calendarBusy}
-              onClick={onAddToCalendar}
-            >
-              <Ico d={I.cal} size={17} />
-              {calendarBusy ? "Connecting…" : "Sync to Calendar"}
-            </button>
-            <div className="gcalnote">
-              {syncableCount > 0
-                ? `${syncableCount} timed ${syncableCount === 1 ? "item" : "items"} ready to sync`
-                : "Add dates during review to sync specific appointments"}
-            </div>
-          </>
-        )
-      )}
-
       <div className="planfoot"><button className="linkish" onClick={onRestart}>↺ Start a new sync</button></div>
     </div>
   );
@@ -1183,6 +1275,8 @@ export default function App({ user, workspace, onSignOut }) {
   const [subscription, setSubscription] = useState(null);
   const [sessionsThisMonth, setSessionsThisMonth] = useState(0);
   const [calendarBusy, setCalendarBusy] = useState(false);
+  const [calendarSyncing, setCalendarSyncing] = useState(false);
+  const [calendarConnected, setCalendarConnected] = useState(false);
   const [calendarConnectPrompt, setCalendarConnectPrompt] = useState(false);
   const [inputMode, setInputMode] = useState("paste");
   const [cards, setCards] = useState([]);
@@ -1197,6 +1291,9 @@ export default function App({ user, workspace, onSignOut }) {
 
   const sessionIdRef = useRef(null);
   const savedRef = useRef(false);
+  const postConnectSyncRef = useRef(false);
+  const cardsRef = useRef(cards);
+  useEffect(() => { cardsRef.current = cards; }, [cards]);
 
   useEffect(() => { setWs(workspace); }, [workspace]);
 
@@ -1235,7 +1332,6 @@ export default function App({ user, workspace, onSignOut }) {
       settings: "/app/settings",
       decks: "/app/cards",
       paywall: "/app/paywall",
-      "calendar-sync": calendarSyncPath(),
     };
     navigate(paths[name] || syncPath(view));
   };
@@ -1285,6 +1381,19 @@ export default function App({ user, workspace, onSignOut }) {
     })();
     return () => { active = false; };
   }, [ws?.id]);
+
+  useEffect(() => {
+    if (!ws?.id || !user?.id) {
+      setCalendarConnected(false);
+      return;
+    }
+    let active = true;
+    getCalendarConnection(ws.id, user.id).then((conn) => {
+      if (!active) return;
+      setCalendarConnected(conn.connected);
+    });
+    return () => { active = false; };
+  }, [ws?.id, user?.id, overlay, location.search]);
 
   const context = ws?.family_context || DEFAULT_CONTEXT;
   const kids = Array.isArray(context.kids) ? context.kids : [];
@@ -1465,30 +1574,54 @@ Rules: extract everything actionable. For person, use ONLY names from Known peop
       } catch { /* session update is best-effort */ }
     }
 
-    setTimeout(() => go("review", { replace: true }), 650); // let the orb finish
+    const nextView = newCards.some(needsDateTime) ? "resolve" : "review";
+    setTimeout(() => go(nextView, { replace: true }), 650); // let the orb finish
   };
 
-  // Persist review decisions for spouse realtime sync
+  // Persist review / resolve card edits for spouse realtime sync
   useEffect(() => {
-    if (!sessionIdRef.current || view !== "review") return;
+    if (!sessionIdRef.current || (view !== "review" && view !== "resolve")) return;
     const t = setTimeout(() => {
       supabase.from("sessions").update({ cards }).eq("id", sessionIdRef.current);
     }, 400);
     return () => clearTimeout(t);
   }, [cards, view]);
 
-  // ── Build my week → save session (Step 11) ───────────────────────────────
-  const buildWeek = () => {
-    go("plan");
+  const finishBuildSession = async () => {
     if (!ws?.id || savedRef.current) return;
     savedRef.current = true;
-    (async () => {
-      try {
-        await clearActiveSession();
-      } catch {
-        savedRef.current = false;
+    try {
+      await clearActiveSession();
+    } catch {
+      savedRef.current = false;
+    }
+  };
+
+  const buildWeek = async () => {
+    if (calendarConnected && ws?.id) {
+      const kept = cards.filter((c) => c.status === STATUS.KEPT || c.status === STATUS.CALENDARED);
+      const syncable = kept.filter((c) => isSyncEligible(c) && !c.calendar_synced);
+      if (syncable.length > 0) {
+        setCalendarSyncing(true);
+        try {
+          const { updatedCards } = await syncCardsToCalendar(ws.id, cards);
+          setCards(updatedCards);
+        } catch (e) {
+          console.error("[Build week] calendar sync", e);
+          setCards((prev) => prev.map((c) => (
+            isSyncEligible(c)
+            && (c.status === STATUS.KEPT || c.status === STATUS.CALENDARED)
+            && !c.calendar_synced
+              ? { ...c, calendar_sync_failed: true }
+              : c
+          )));
+        } finally {
+          setCalendarSyncing(false);
+        }
       }
-    })();
+    }
+    go("plan");
+    await finishBuildSession();
   };
 
   const restart = async () => {
@@ -1503,30 +1636,28 @@ Rules: extract everything actionable. For person, use ONLY names from Known peop
   };
 
   const keptCards = cards.filter((c) => c.status === STATUS.KEPT || c.status === STATUS.CALENDARED);
-  const keptActions = keptCards.filter((c) => c.type === "action");
-  const syncableEvents = keptCards.filter((c) => c.date);
 
-  const markCardSynced = useCallback((cardId, googleEventId) => {
-    setCards((prev) => prev.map((c) => (
-      c.id === cardId ? { ...c, calendar_synced: true, google_event_id: googleEventId } : c
-    )));
-  }, []);
-
-  const handleAddToCalendar = async () => {
-    if (!ws?.id || !user?.id) return;
+  const retryCardSync = async (cardId) => {
+    if (!ws?.id) return;
+    const card = cards.find((c) => c.id === cardId);
+    if (!card || !isSyncEligible(card)) return;
     setCalendarBusy(true);
     try {
-      const conn = await getCalendarConnection(ws.id, user.id);
-      if (!conn.connected) {
-        setCalendarConnectPrompt(true);
-        return;
-      }
-      openOverlay("calendar-sync");
+      const { results } = await syncCalendarEvents(ws.id, [cardToCalendarEvent(card)]);
+      setCards((prev) => applySyncResults(prev, results));
     } catch (e) {
-      console.error("[Plan] calendar connect", e);
+      console.error("[Plan] retry sync", e);
+      setCards((prev) => prev.map((c) => (
+        c.id === cardId ? { ...c, calendar_sync_failed: true } : c
+      )));
     } finally {
       setCalendarBusy(false);
     }
+  };
+
+  const handlePlanAddToCal = () => {
+    if (!ws?.id) return;
+    setCalendarConnectPrompt(true);
   };
 
   const confirmCalendarConnect = async () => {
@@ -1544,22 +1675,36 @@ Rules: extract everything actionable. For person, use ONLY names from Known peop
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
-    if (params.get("calendar") !== "connect" || !ws?.id || !user?.id) return;
+    if (params.get("calendar") !== "connect") {
+      postConnectSyncRef.current = false;
+      return;
+    }
+    if (!ws?.id || !user?.id || postConnectSyncRef.current) return;
+    postConnectSyncRef.current = true;
     let active = true;
     (async () => {
-      const conn = await getCalendarConnection(ws.id, user.id);
-      if (!active) return;
       navigate(syncPath("plan"), { replace: true });
-      const dated = cards.filter(
-        (c) => (c.status === STATUS.KEPT || c.status === STATUS.CALENDARED) && c.date,
+      const conn = await getCalendarConnection(ws.id, user.id);
+      if (!active || !conn.connected) return;
+      setCalendarConnected(true);
+      setCalendarConnectPrompt(false);
+      const snapshot = cardsRef.current;
+      const pending = snapshot.filter(
+        (c) => (c.status === STATUS.KEPT || c.status === STATUS.CALENDARED) && isSyncEligible(c) && !c.calendar_synced,
       );
-      if (conn.connected && dated.length > 0) {
-        setCalendarConnectPrompt(false);
-        navigate(calendarSyncPath());
+      if (!pending.length) return;
+      setCalendarBusy(true);
+      try {
+        const { updatedCards } = await syncCardsToCalendar(ws.id, snapshot);
+        if (active) setCards(updatedCards);
+      } catch (e) {
+        console.error("[Plan] post-connect sync", e);
+      } finally {
+        if (active) setCalendarBusy(false);
       }
     })();
     return () => { active = false; };
-  }, [location.search, ws?.id, user?.id, cards, navigate]);
+  }, [location.search, ws?.id, user?.id, navigate]);
 
   // ── Overlays ─────────────────────────────────────────────────────────────
   if (overlay === "paywall") {
@@ -1567,19 +1712,6 @@ Rules: extract everything actionable. For person, use ONLY names from Known peop
     return (
       <div className="stage" style={{ padding: "48px 24px 80px" }}>
         <Paywall reason={resolvedReason} onClose={() => { closeOverlay(); setPaywallBlock(null); }} />
-      </div>
-    );
-  }
-  if (overlay === "calendar-sync") {
-    return (
-      <div className="stage" style={{ padding: "24px 24px 80px" }}>
-        <CalendarSync
-          workspaceId={ws?.id}
-          events={syncableEvents}
-          roleOf={roleOf}
-          onClose={closeOverlay}
-          onCardSynced={markCardSynced}
-        />
       </div>
     );
   }
@@ -1627,7 +1759,7 @@ Rules: extract everything actionable. For person, use ONLY names from Known peop
         onSignOut={onSignOut}
       />
 
-      {captureDraft && view !== "capture" && view !== "processing" && view !== "review" && view !== "plan" && (
+      {captureDraft && view !== "capture" && view !== "processing" && view !== "resolve" && view !== "review" && view !== "plan" && (
         <ResumeBanner draft={captureDraft} onResume={resumeCaptureDraft} onDiscard={discardCaptureDraft} />
       )}
 
@@ -1659,19 +1791,39 @@ Rules: extract everything actionable. For person, use ONLY names from Known peop
         />
       )}
       {view === "processing" && <ProcessingView done={distillDone} familyNames={processingFamilyLabel} />}
-      {view === "review" && <ReviewView cards={cards} setCards={setCards} roleOf={roleOf} onBack={() => go("capture")} onBuild={buildWeek} distillError={distillError} />}
+      {view === "resolve" && (
+        <ResolveTimesView
+          cards={cards}
+          setCards={setCards}
+          onBack={() => go("capture")}
+          onContinue={() => go("review")}
+        />
+      )}
+      {view === "review" && (
+        <ReviewView
+          cards={cards}
+          setCards={setCards}
+          roleOf={roleOf}
+          onBack={() => go("capture")}
+          onBuild={buildWeek}
+          distillError={distillError}
+          calendarSyncing={calendarSyncing}
+        />
+      )}
       {view === "plan" && (
         <PlanView
           keptCards={keptCards}
           adults={adults}
           roleOf={roleOf}
           onRestart={restart}
-          onAddToCalendar={handleAddToCalendar}
+          calendarConnected={calendarConnected}
           calendarBusy={calendarBusy}
           showCalendarConnect={calendarConnectPrompt}
           onConfirmCalendarConnect={confirmCalendarConnect}
           onCancelCalendarConnect={() => setCalendarConnectPrompt(false)}
           familyPauseEmail={user?.email}
+          onRetrySync={retryCardSync}
+          onAddToCal={handlePlanAddToCal}
         />
       )}
     </div>

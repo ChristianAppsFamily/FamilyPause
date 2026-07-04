@@ -587,8 +587,25 @@
 .planitem .pbody .pmeta .ct { color: var(--terra-d); }
 .planitem.synced .pmark { background: var(--olive-soft); border-color: var(--olive); color: var(--olive-d); }
 .planitem .synced-badge {
-  font-family: var(--mono); font-size: 9px; letter-spacing: .12em; text-transform: uppercase;
+  font-family: var(--mono); font-size: 8px; letter-spacing: .12em; text-transform: uppercase;
   color: var(--olive-d); background: var(--olive-soft); padding: 2px 7px; border-radius: 999px;
+}
+.plan-cal-retry, .plan-cal-add {
+  font-family: var(--mono); font-size: 9px; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--terra); background: none; border: none; padding: 0; cursor: pointer;
+  text-decoration: underline; text-underline-offset: 2px;
+}
+.plan-cal-retry:hover, .plan-cal-add:hover { color: var(--terra-d); }
+.plan-cal-hint {
+  font-family: var(--mono); font-size: 9px; letter-spacing: .04em; color: var(--ink-3); font-style: italic;
+}
+.plan-cal-status {
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+  font-family: var(--mono); font-size: 9px; letter-spacing: .06em; color: var(--ink-3);
+  margin-bottom: 18px;
+}
+.plan-cal-dot {
+  width: 6px; height: 6px; border-radius: 50%; background: var(--olive); flex-shrink: 0;
 }
 
 .plan-cal-cta {
@@ -609,6 +626,42 @@
 .gcalnote { text-align: center; font-family: var(--mono); font-size: 11px; color: var(--ink-3); letter-spacing: .03em; margin-top: 10px; }
 
 .planfoot { display: flex; align-items: center; justify-content: center; gap: 14px; margin-top: 34px; }
+
+/* resolve times (post-distill) */
+.resolve-view { max-width: 720px; margin: 0 auto; }
+.resolve-intro { margin-bottom: 28px; }
+.resolve-list { display: flex; flex-direction: column; gap: 14px; margin-bottom: 28px; }
+.resolve-row {
+  background: var(--paper-card); border: 1px solid var(--line); border-radius: var(--r);
+  padding: 18px 20px; box-shadow: var(--shadow-sm);
+}
+.resolve-row-head { margin-bottom: 14px; }
+.resolve-row-task { font-size: 16px; line-height: 1.35; color: var(--ink); margin: 0 0 6px; }
+.resolve-row-meta { font-family: var(--mono); font-size: 11px; color: var(--ink-3); display: flex; gap: 10px; flex-wrap: wrap; }
+.resolve-row-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 520px) { .resolve-row-fields { grid-template-columns: 1fr; } }
+.resolve-field label {
+  display: block; font-family: var(--mono); font-size: 10px; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--ink-3); margin-bottom: 6px;
+}
+.resolve-field input {
+  width: 100%; font-family: var(--lora); font-size: 15px; padding: 10px 12px;
+  border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--paper);
+  color: var(--ink);
+}
+.resolve-field input:focus { outline: none; border-color: var(--terra); box-shadow: 0 0 0 3px var(--terra-tint); }
+.resolve-foot { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+
+/* build my week — calendar sync loading */
+.revdone .btn.btn-syncing {
+  font-family: var(--lora); font-style: italic; text-transform: none; letter-spacing: 0;
+  font-size: 16px; display: inline-flex; align-items: center; gap: 10px;
+}
+.btn-spinner {
+  width: 14px; height: 14px; border: 2px solid rgba(255,255,255,.35);
+  border-top-color: #fff; border-radius: 50%; animation: btn-spin .7s linear infinite;
+}
+@keyframes btn-spin { to { transform: rotate(360deg); } }
 
 /* calendar sync modal */
 .cal-sync { max-width: 520px; margin: 0 auto; padding: 24px 24px 48px; min-height: 70vh; display: flex; flex-direction: column; }
