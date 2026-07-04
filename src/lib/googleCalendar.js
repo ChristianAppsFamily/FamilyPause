@@ -4,13 +4,18 @@ import { supabase } from "./supabase";
 
 /** Calendar-relevant card missing date or time — needs Resolve times step. */
 export function needsDateTime(card) {
-  const calendarRelevant =
+  if (card.type === "note") return false;
+  if (card.date && card.time) return false;
+  if (
     card.type === "event"
-    || (card.type === "action" && card.recurring)
+    || card.recurring
     || card.date
-    || card.time;
-  if (!calendarRelevant) return false;
-  return !card.date || !card.time;
+    || card.time
+  ) {
+    return !card.date || !card.time;
+  }
+  // Open actions/decisions with no schedule — optional date/time in Resolve
+  return card.type === "action" || card.type === "decision";
 }
 
 /** Both date and time required for Google Calendar sync. */

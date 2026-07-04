@@ -14,7 +14,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "./lib/supabase";
-import { callFamilyPauseAI, buildSystemPrompt } from "./lib/ai";
+import { callDistillExtraction, callFamilyPauseAI, buildSystemPrompt } from "./lib/ai";
 import Settings from "./components/Settings.jsx";
 import CardSystem from "./components/CardSystem.jsx";
 import Paywall from "./components/Paywall.jsx";
@@ -76,7 +76,25 @@ async function callAI(prompt, systemOverride, { faithMode = false, familyName = 
   return callFamilyPauseAI({ prompt, systemOverride, faithMode, familyName });
 }
 
+async function callDistillAI(prompt, extraction) {
+  return callDistillExtraction({ prompt, extraction });
+}
+
 // ── UTILITIES ─────────────────────────────────────────────────────────────────
+function formatWeekdayReference(meetingDate) {
+  const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  const start = new Date(`${meetingDate}T12:00:00`);
+  const parts = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(start);
+    d.setDate(start.getDate() + i);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    parts.push(`${WEEKDAYS[d.getDay()]}=${y}-${m}-${day}`);
+  }
+  return parts.join(", ");
+}
 function todayStr() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -1598,35 +1616,24 @@ export default function App({ user, workspace, onSignOut }) {
       ? `\nFocus topics for this sync: ${agendaTopics.join(", ")}. Prioritize items related to these topics when present in the transcript.`
       : "";
 
-    const system = `You are FamilyPause, a family meeting intelligence assistant.
-Known people: ${(context.people || []).join(", ")}
-Known businesses: ${(context.businesses || []).join(", ")}
-Categories: ${(context.categories || []).join(", ")}${topicHint}
-
-Extract EVERY actionable item, appointment, decision, task, or commitment. Return ONLY a valid JSON array, no markdown, no backticks.
-
-Each item:
-{
-  "id": (unique number from 1),
-  "category": (from categories above or create one),
-  "person": (specific person name, "Both", or "Family"),
-  "task": (clear one-sentence description),
-  "source": (exact phrase from transcript, under 15 words),
-  "date": (YYYY-MM-DD if mentioned, else null),
-  "time": (HH:MM 24h if mentioned, else null),
-  "type": ("action", "event", "decision", or "note"),
-  "recurring": (true if weekly or recurring commitment mentioned, else false),
-  "duration_minutes": (integer if duration mentioned, else null)
-}
-
-Rules: extract everything actionable. For person, use ONLY names from Known people, or "Both", or "Family". Map transcript nicknames to the closest known person. Return only the JSON array.`;
-
     let parsed = [];
     let errorMsg = null;
     try {
-      const faithMode = ws?.faith_mode ?? false;
-      const familyName = ws?.family_name ?? null;
-      const raw = await callAI(`Extract all action items from this family meeting transcript:\n\n${text}`, system, { faithMode, familyName });
+      const userPrompt = `Extract all action items from this family meeting transcript.
+
+Meeting date (anchor for relative days): ${meetingDate}
+Weekday dates this planning week: ${formatWeekdayReference(meetingDate)}
+
+Transcript:
+${text}`;
+
+      const raw = await callDistillAI(userPrompt, {
+        meeting_date: meetingDate,
+        people: context.people || [],
+        businesses: context.businesses || [],
+        categories: context.categories || [],
+        topic_hint: topicHint,
+      });
       try { parsed = JSON.parse(raw.replace(/```json|```/g, "").trim()); }
       catch { const m = raw.match(/\[[\s\S]*\]/); if (m) parsed = JSON.parse(m[0]); }
     } catch (err) {

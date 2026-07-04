@@ -7,8 +7,8 @@
 //   supabase secrets set ANTHROPIC_API_KEY=sk-ant-...
 // (SUPABASE_URL and SUPABASE_ANON_KEY are injected automatically.)
 //
-// The browser calls this via supabase.functions.invoke("distill", { body: { prompt, system, cacheSystem? } }),
-// which forwards the signed-in user's JWT. We verify it so only logged-in users can spend tokens.
+// Extraction mode: pass `extraction` with meeting_date + family context; the
+// function builds the system prompt here (source of truth for date/time rules).
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -19,15 +19,94 @@ const cors = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
+const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+type ExtractionContext = {
+  meeting_date?: string;
+  people?: string[];
+  businesses?: string[];
+  categories?: string[];
+  topic_hint?: string;
+};
+
+function buildDistillExtractionPrompt(ctx: ExtractionContext): string {
+  const people = ctx.people ?? [];
+  const businesses = ctx.businesses ?? [];
+  const categories = ctx.categories ?? [];
+  const topicHint = ctx.topic_hint ?? "";
+  const meetingDate = ctx.meeting_date ?? "unknown";
+  const meetingDay =
+    ctx.meeting_date && /^\d{4}-\d{2}-\d{2}$/.test(ctx.meeting_date)
+      ? WEEKDAYS[new Date(`${ctx.meeting_date}T12:00:00`).getDay()]
+      : "unknown";
+
+  return `You are FamilyPause, a family meeting intelligence assistant.
+Known people: ${people.join(", ") || "none listed"}
+Known businesses: ${businesses.join(", ") || "none listed"}
+Categories: ${categories.join(", ") || "Family, Kids, Business, Finance, Home, Faith, Health"}${topicHint}
+
+MEETING DATE ANCHOR: ${meetingDate} (${meetingDay})
+Use this date to resolve every relative day mentioned in the transcript.
+
+YOUR JOB: Extract EVERY actionable item, appointment, errand, decision, task, or commitment — exhaustively. Do not skip, merge, or summarize away distinct items. If the transcript mentions 7 separate commitments, return 7 cards.
+
+Return ONLY a valid JSON array. No markdown, no backticks, no commentary.
+
+Each item object:
+{
+  "id": (unique integer starting at 1),
+  "category": (from Categories above, or create one),
+  "person": (specific name from Known people, or "Both", or "Family"),
+  "task": (clear one-sentence description),
+  "source": (exact phrase from transcript, under 15 words),
+  "date": "YYYY-MM-DD" or null,
+  "time": "HH:MM" 24-hour or null,
+  "type": "action" | "event" | "decision" | "note",
+  "recurring": true | false,
+  "duration_minutes": integer or null
+}
+
+DATE & TIME EXTRACTION (critical):
+- ALWAYS parse spoken dates and times into date and time fields when the transcript specifies them.
+- Resolve weekday names (Monday, Wednesday, Sunday, Thursday, etc.) to YYYY-MM-DD using MEETING DATE ANCHOR: find that weekday in the 7-day window starting on the meeting date (meeting day = day 0, next days follow). If the transcript names the same weekday as the meeting date, use the meeting date. Example: meeting on Sunday 2026-06-08 → Monday=2026-06-09, Wednesday=2026-06-11, Saturday=2026-06-14, Sunday=2026-06-08.
+- Resolve "the 19th", "March 5", "next Tuesday" to concrete YYYY-MM-DD relative to the meeting date (use the month of the meeting date unless another month is stated).
+- Parse times into 24h HH:MM: "6:30pm"→18:30, "1pm"→13:00, "8pm"→20:00, "4:15"→16:15 (assume PM for bare afternoon hours 1–6 without am/pm).
+- Vague periods without a clock time leave time null: "Saturday morning", "Sunday afternoon", "evening" without a number.
+- Set recurring:true when the transcript says "every", "weekly", "each week", "recurring", or similar for a repeating commitment.
+- Set type:"event" for appointments with a date/time; type:"action" for tasks and errands without a fixed appointment time.
+- ONLY leave date null when no day/date is mentioned at all. ONLY leave time null when no specific clock time is mentioned.
+
+EXHAUSTIVE EXTRACTION RULES:
+- Include errands ("oil change on the van"), kid tasks ("pick the summer camp"), scheduling items, and follow-ups — even if brief.
+- One card per distinct commitment. Do not combine unrelated items.
+- Map nicknames to the closest Known person. Use "Both" for shared couple tasks, "Family" for whole-household items.
+
+Return only the JSON array.`;
+}
+
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { ...cors, "Content-Type": "application/json" } });
+
+function logRawResponse(rawText: string, stopReason: string | undefined, outputTokens: number, meetingDate?: string) {
+  console.log("[distill] meeting_date:", meetingDate ?? "n/a");
+  console.log("[distill] stop_reason:", stopReason ?? "unknown", "output_tokens:", outputTokens);
+  console.log("[distill] raw response length:", rawText.length);
+  if (stopReason === "max_tokens") {
+    console.warn("[distill] TRUNCATED — response hit max_tokens; JSON may be incomplete");
+  }
+  if (rawText.length <= 8000) {
+    console.log("[distill] raw response:", rawText);
+  } else {
+    console.log("[distill] raw response (head):", rawText.slice(0, 4000));
+    console.log("[distill] raw response (tail):", rawText.slice(-1000));
+  }
+}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
 
   try {
-    // Require a valid signed-in Supabase user.
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) return json({ error: "Unauthorized" }, 401);
     const supabase = createClient(
@@ -38,22 +117,20 @@ Deno.serve(async (req) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return json({ error: "Unauthorized" }, 401);
 
-    const { prompt, system, cacheSystem = false } = await req.json();
+    const { prompt, system, cacheSystem = false, extraction } = await req.json();
     if (!prompt) return json({ error: "Missing prompt" }, 400);
 
     const apiKey = Deno.env.get("ANTHROPIC_API_KEY");
     if (!apiKey) return json({ error: "ANTHROPIC_API_KEY not configured" }, 500);
 
-    // Build system block — wrap in cache_control when caller requests it.
-    // Prompt caching: cache_control on the system block tells Anthropic to cache
-    // the prefix up to and including that block. Prompt caching is now GA —
-    // no beta header required. Note: Haiku 4.5 requires ≥4096 tokens to cache;
-    // shorter prompts are processed normally with no error and no cache hit.
-    const systemBlock = cacheSystem && system
-      ? [{ type: "text", text: system, cache_control: { type: "ephemeral" } }]
+    const systemText = extraction
+      ? buildDistillExtractionPrompt(extraction as ExtractionContext)
       : system;
 
-    // Retry once on transient upstream errors.
+    const systemBlock = cacheSystem && systemText
+      ? [{ type: "text", text: systemText, cache_control: { type: "ephemeral" } }]
+      : systemText;
+
     let res: Response | null = null;
     for (let attempt = 0; attempt < 2; attempt++) {
       res = await fetch("https://api.anthropic.com/v1/messages", {
@@ -64,9 +141,8 @@ Deno.serve(async (req) => {
           "anthropic-version": "2023-06-01",
         },
         body: JSON.stringify({
-          // claude-haiku-4-5-20251001: latest Haiku 4.5, ~3x cheaper than Sonnet
           model: "claude-haiku-4-5-20251001",
-          max_tokens: 4096,
+          max_tokens: 8192,
           system: systemBlock,
           messages: [{ role: "user", content: prompt }],
         }),
@@ -78,13 +154,20 @@ Deno.serve(async (req) => {
     const data = await res!.json();
     if (!res!.ok) return json({ error: data?.error?.message || "Anthropic error", text: "" }, 502);
 
-    // Forward cache usage stats to the client for debugging
+    const rawText = data?.content?.[0]?.text || "";
+    const stopReason = data?.stop_reason as string | undefined;
     const u = data.usage ?? {};
+    const outputTokens = u.output_tokens ?? 0;
+
+    logRawResponse(rawText, stopReason, outputTokens, extraction?.meeting_date);
+
     return json({
-      text: data?.content?.[0]?.text || "",
+      text: rawText,
+      stopReason: stopReason ?? null,
+      truncated: stopReason === "max_tokens",
       usage: {
         input: u.input_tokens ?? 0,
-        output: u.output_tokens ?? 0,
+        output: outputTokens,
         cacheWrite: u.cache_creation_input_tokens ?? 0,
         cacheRead: u.cache_read_input_tokens ?? 0,
       },

@@ -2,10 +2,7 @@
 // src/lib/ai.js — FamilyPause AI service
 //
 // All Anthropic calls go through the `distill` Supabase Edge Function so the
-// API key stays server-side. This module:
-//   1. Builds the system prompt (with optional Faith Mode and family name)
-//   2. Invokes the edge function with prompt caching enabled
-//   3. Logs cache hit/miss stats to the console for debugging
+// API key stays server-side. Extraction prompts are built in the edge function.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { supabase } from './supabase';
@@ -34,49 +31,27 @@ Faith Mode is ON:
 - You can open or close meeting summaries with a short blessing or scripture
 - Frame challenges through a lens of grace, growth, and God's faithfulness` : ''}`;
 
-/**
- * callFamilyPauseAI — invoke the distill edge function with prompt caching.
- *
- * @param {object} opts
- * @param {string} opts.prompt          - the user message / transcript
- * @param {string} [opts.systemOverride] - optional full system prompt override
- * @param {boolean} [opts.faithMode]    - faith-mode flag from user profile
- * @param {string|null} [opts.familyName] - family name from user profile
- * @returns {Promise<string>} the AI response text
- */
-export async function callFamilyPauseAI({
-  prompt,
-  systemOverride = null,
-  faithMode = false,
-  familyName = null,
-}) {
-  const system = systemOverride ?? buildSystemPrompt(faithMode, familyName);
-
-  const { data, error } = await supabase.functions.invoke('distill', {
-    body: { prompt, system, cacheSystem: true },
-  });
+async function invokeDistill(body) {
+  const { data, error } = await supabase.functions.invoke('distill', { body });
 
   if (error) {
-    // Extract the real error from the edge function response for better debugging.
-    // supabase.functions.invoke wraps non-2xx bodies in error.context.
     let detail = error?.message || String(error);
     try {
       const ctx = error?.context;
       if (ctx) {
-        let body = null;
-        if (typeof ctx.json === 'function') body = await ctx.json().catch(() => null);
-        if (!body && ctx.body && typeof ctx.body === 'string') {
-          try { body = JSON.parse(ctx.body); } catch (_) { body = ctx.body; }
+        let parsed = null;
+        if (typeof ctx.json === 'function') parsed = await ctx.json().catch(() => null);
+        if (!parsed && ctx.body && typeof ctx.body === 'string') {
+          try { parsed = JSON.parse(ctx.body); } catch (_) { parsed = ctx.body; }
         }
-        if (body?.error) detail = body.error;
-        else if (typeof body === 'string' && body) detail = body;
+        if (parsed?.error) detail = parsed.error;
+        else if (typeof parsed === 'string' && parsed) detail = parsed;
       }
     } catch (_) { /* ignore */ }
     console.error('[FamilyPause AI] Edge function error:', error?.context?.status, detail, error);
     throw new Error(`AI unavailable: ${detail}`);
   }
 
-  // Log cache stats forwarded from the edge function
   const usage = data?.usage;
   if (usage) {
     const cacheRead = usage.cacheRead ?? 0;
@@ -86,8 +61,31 @@ export async function callFamilyPauseAI({
       cacheWrite: usage.cacheWrite ?? 0,
       cacheRead,
       cached: cacheRead > 0 ? '✅ Cache HIT' : '⚠️ Cache MISS (first call or expired)',
+      stopReason: data?.stopReason ?? 'unknown',
+      truncated: data?.truncated ?? false,
     });
+  }
+  if (data?.truncated) {
+    console.warn('[FamilyPause AI] Response was truncated — increase max_tokens or shorten transcript.');
   }
 
   return data?.text || '';
+}
+
+/**
+ * Weekly-sync transcript extraction — system prompt built server-side.
+ */
+export async function callDistillExtraction({ prompt, extraction }) {
+  return invokeDistill({ prompt, cacheSystem: true, extraction });
+}
+
+/** General AI call with optional system override (non-extraction). */
+export async function callFamilyPauseAI({
+  prompt,
+  systemOverride = null,
+  faithMode = false,
+  familyName = null,
+}) {
+  const system = systemOverride ?? buildSystemPrompt(faithMode, familyName);
+  return invokeDistill({ prompt, system, cacheSystem: true });
 }
