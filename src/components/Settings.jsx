@@ -67,6 +67,27 @@ const css = `
   }
   .set-plan { display: flex; align-items: baseline; gap: 12px; margin-bottom: 8px; }
   .set-plan .name { font-family: var(--display); font-size: 26px; color: var(--ink); }
+  .set-cal-label {
+    font-family: var(--mono); font-size: 9px; letter-spacing: .14em; text-transform: uppercase;
+    color: var(--ink-3); margin-bottom: 8px;
+  }
+  .set-cal-account {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 16px;
+  }
+  .set-cal-dot {
+    width: 7px; height: 7px; border-radius: 50%; background: var(--olive); flex-shrink: 0;
+  }
+  .set-cal-email {
+    font-family: var(--mono); font-size: 12px; letter-spacing: .02em; color: #6A5A40;
+  }
+  .set-cal-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  .set-btn-ghost-warm {
+    font-family: var(--lora); font-size: 14px; padding: 10px 18px; border-radius: 8px;
+    background: transparent; border: 1px solid #D8CFC0; color: #6A5A40; cursor: pointer;
+    transition: color .15s, border-color .15s;
+  }
+  .set-btn-ghost-warm:hover:not(:disabled) { color: var(--terra); border-color: var(--terra); }
+  .set-btn-ghost-warm:disabled { opacity: .55; cursor: not-allowed; }
   .set-spin {
     width: 24px; height: 24px; border: 2px solid var(--line);
     border-top-color: var(--terra); border-radius: 50%; animation: fpspin .8s linear infinite;
@@ -510,14 +531,15 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
             <div className="set-spin" />
           ) : calendarConn.connected ? (
             <div>
-              <div className="set-plan" style={{ marginBottom: 12 }}>
-                <span className="name">
-                  {calendarConn.googleEmail || "Google Calendar"}
+              <div className="set-cal-label">Connected account</div>
+              <div className="set-cal-account">
+                <span className="set-cal-dot" aria-hidden="true" />
+                <span className="set-cal-email">
+                  {calendarConn.googleEmail || "Google account linked"}
                 </span>
-                <span className="tag tag-amanda">Active</span>
               </div>
               {calendarConn.connectedAt && (
-                <p className="set-sub" style={{ margin: "0 0 8px" }}>
+                <p className="set-sub" style={{ margin: "0 0 12px", fontSize: 13 }}>
                   Linked {new Date(calendarConn.connectedAt).toLocaleDateString("en-US", {
                     month: "long", day: "numeric", year: "numeric",
                   })}
@@ -525,18 +547,27 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
               )}
               {user?.email && calendarConn.googleEmail
                 && user.email.toLowerCase() !== calendarConn.googleEmail.toLowerCase() && (
-                <p className="set-sub" style={{ margin: "0 0 16px", fontSize: 13 }}>
+                <p className="set-sub" style={{ margin: "0 0 12px", fontSize: 13 }}>
                   FamilyPause: {user.email}
                 </p>
               )}
-              <button
-                type="button"
-                className="btn btn-ghost"
-                disabled={calendarDisconnecting}
-                onClick={disconnectCalendar}
-              >
-                {calendarDisconnecting ? "Disconnecting…" : "Disconnect"}
-              </button>
+              <div className="set-cal-actions">
+                <button
+                  type="button"
+                  className="set-btn-ghost-warm"
+                  onClick={() => window.open("https://calendar.google.com", "_blank", "noopener,noreferrer")}
+                >
+                  Open Google Calendar
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-ghost"
+                  disabled={calendarDisconnecting}
+                  onClick={disconnectCalendar}
+                >
+                  {calendarDisconnecting ? "Disconnecting…" : "Disconnect"}
+                </button>
+              </div>
             </div>
           ) : calendarChooserOpen ? (
             <CalendarAccountChooser

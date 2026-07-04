@@ -586,10 +586,19 @@
 .planitem .pbody .pmeta { font-family: var(--mono); font-size: 11px; letter-spacing: .03em; color: var(--ink-3); margin-top: 4px; display: flex; gap: 8px; align-items: center; }
 .planitem .pbody .pmeta .ct { color: var(--terra-d); }
 .planitem.synced .pmark { background: var(--olive-soft); border-color: var(--olive); color: var(--olive-d); }
+.synced-badge-wrap { display: inline-flex; align-items: center; gap: 3px; }
 .planitem .synced-badge {
   font-family: var(--mono); font-size: 8px; letter-spacing: .12em; text-transform: uppercase;
   color: var(--olive-d); background: var(--olive-soft); padding: 2px 7px; border-radius: 999px;
 }
+.synced-badge--busy { opacity: 0.65; }
+.plan-cal-unsync {
+  font-family: var(--mono); font-size: 11px; line-height: 1; color: var(--ink-3);
+  background: none; border: none; padding: 0 2px; cursor: pointer; border-radius: 3px;
+  transition: color .15s;
+}
+.plan-cal-unsync:hover:not(:disabled) { color: var(--terra); }
+.plan-cal-unsync:disabled { opacity: 0.45; cursor: not-allowed; }
 .plan-cal-retry, .plan-cal-add {
   font-family: var(--mono); font-size: 9px; letter-spacing: .08em; text-transform: uppercase;
   color: var(--terra); background: none; border: none; padding: 0; cursor: pointer;
@@ -626,19 +635,58 @@
 .gcalnote { text-align: center; font-family: var(--mono); font-size: 11px; color: var(--ink-3); letter-spacing: .03em; margin-top: 10px; }
 
 .planfoot { display: flex; align-items: center; justify-content: center; gap: 14px; margin-top: 34px; }
+.planfoot-actions {
+  display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; width: 100%;
+}
+.plan-btn-ghost {
+  font-family: var(--lora); font-size: 15px; padding: 12px 24px; border-radius: 8px;
+  background: transparent; border: 1px solid #D8CFC0; color: #6A5A40; cursor: pointer;
+  transition: color .15s, border-color .15s;
+}
+.plan-btn-ghost:hover { color: var(--terra); border-color: var(--terra); }
+.plan-btn-primary {
+  font-family: var(--lora); font-size: 15px; padding: 12px 24px; border-radius: 8px;
+  background: #B85C38; border: 1px solid #B85C38; color: #FAF7F2; cursor: pointer;
+  transition: filter .15s;
+}
+.plan-btn-primary:hover { filter: brightness(0.96); }
+@media (max-width: 520px) {
+  .planfoot-actions { flex-direction: column-reverse; }
+  .plan-btn-ghost, .plan-btn-primary { width: 100%; text-align: center; }
+}
 
 /* resolve times (post-distill) */
 .resolve-view { max-width: 720px; margin: 0 auto; }
 .resolve-intro { margin-bottom: 28px; }
+.resolve-progress {
+  font-family: var(--mono); font-size: 11px; letter-spacing: .06em; color: var(--ink-3);
+  margin-top: 14px;
+}
 .resolve-list { display: flex; flex-direction: column; gap: 14px; margin-bottom: 28px; }
 .resolve-row {
   background: var(--paper-card); border: 1px solid var(--line); border-radius: var(--r);
-  padding: 18px 20px; box-shadow: var(--shadow-sm);
+  padding: 18px 20px; box-shadow: var(--shadow-sm); transition: opacity .2s;
 }
-.resolve-row-head { margin-bottom: 14px; }
+.resolve-row--done {
+  opacity: 0.72; border-color: var(--olive-soft); background: var(--olive-tint);
+}
+.resolve-row-head { margin-bottom: 14px; display: flex; align-items: flex-start; gap: 12px; }
+.resolve-done-mark {
+  width: 22px; height: 22px; border-radius: 50%; background: var(--olive-soft);
+  color: var(--olive-d); display: grid; place-items: center; flex-shrink: 0; margin-top: 2px;
+}
 .resolve-row-task { font-size: 16px; line-height: 1.35; color: var(--ink); margin: 0 0 6px; }
 .resolve-row-meta { font-family: var(--mono); font-size: 11px; color: var(--ink-3); display: flex; gap: 10px; flex-wrap: wrap; }
-.resolve-row-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.resolve-row-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+.resolve-confirm { margin-top: 4px; }
+.resolve-confirmed-label {
+  font-family: var(--mono); font-size: 10px; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--olive-d); margin: 4px 0 0; display: flex; align-items: center; gap: 6px;
+}
+.resolve-foot .btn.btn-disabled,
+.resolve-foot .btn:disabled {
+  opacity: 0.5; cursor: not-allowed;
+}
 @media (max-width: 520px) { .resolve-row-fields { grid-template-columns: 1fr; } }
 .resolve-field label {
   display: block; font-family: var(--mono); font-size: 10px; letter-spacing: .1em;

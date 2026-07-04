@@ -24,12 +24,14 @@ import { parseAppLocation, syncPath, SYNC_VIEWS, cardsPath } from "./lib/routes"
 import { normalizeCardPeople } from "./lib/familyContext";
 import {
   applySyncResults,
+  clearCardCalendarSync,
   getCalendarConnection,
   isSyncEligible,
   needsDateTime,
   startGoogleCalendarConnect,
   syncCalendarEvents,
   syncCardsToCalendar,
+  unsyncCalendarEvent,
   cardToCalendarEvent,
 } from "./lib/googleCalendar";
 import { canRecordAudio, pickRecordingMimeType, transcribeAudioBlob } from "./lib/transcribe";
@@ -929,11 +931,38 @@ function ProcessingView({ done, familyNames = "Everyone" }) {
 
 // ── RESOLVE TIMES (between Distill and Review) ───────────────────────────────
 function ResolveTimesView({ cards, setCards, onBack, onContinue }) {
-  const incomplete = cards.filter(needsDateTime);
-  const allComplete = incomplete.every((c) => c.date && c.time);
+  const [snapshot] = useState(() =>
+    cards.filter(needsDateTime).map((c) => ({
+      id: c.id,
+      task: c.task,
+      person: c.person,
+      category: c.category,
+    })),
+  );
+  const [drafts, setDrafts] = useState(() => {
+    const initial = {};
+    cards.filter(needsDateTime).forEach((c) => {
+      initial[c.id] = { date: c.date || "", time: c.time || "" };
+    });
+    return initial;
+  });
+  const [confirmedIds, setConfirmedIds] = useState(() => new Set());
 
-  const patchCard = (id, patch) => {
-    setCards((arr) => arr.map((c) => (c.id === id ? { ...c, ...patch } : c)));
+  const total = snapshot.length;
+  const resolvedCount = confirmedIds.size;
+  const allResolved = total > 0 && resolvedCount === total;
+
+  const patchDraft = (id, patch) => {
+    setDrafts((prev) => ({ ...prev, [id]: { ...prev[id], ...patch } }));
+  };
+
+  const confirmItem = (id) => {
+    const draft = drafts[id];
+    if (!draft?.date || !draft?.time) return;
+    setCards((arr) => arr.map((c) => (
+      c.id === id ? { ...c, date: draft.date, time: draft.time, datetime_confirmed: true } : c
+    )));
+    setConfirmedIds((prev) => new Set(prev).add(id));
   };
 
   return (
@@ -942,53 +971,83 @@ function ResolveTimesView({ cards, setCards, onBack, onContinue }) {
         <div className="eyebrow" style={{ marginBottom: 9 }}>Step 3b · Fill in the times</div>
         <h1>A few items need a <em>date and time</em> before they can land on your calendar.</h1>
         <p style={{ color: "var(--ink-2)", marginTop: 10 }}>
-          {incomplete.length} {incomplete.length === 1 ? "item needs" : "items need"} scheduling details. Both fields are required for calendar sync.
+          {total} {total === 1 ? "item needs" : "items need"} scheduling details. Enter both fields, then confirm each item.
         </p>
+        <p className="resolve-progress">{resolvedCount} of {total} resolved</p>
       </div>
 
       <div className="resolve-list">
-        {incomplete.map((c) => (
-          <div className="resolve-row" key={c.id}>
-            <div className="resolve-row-head">
-              <p className="resolve-row-task">{c.task}</p>
-              <div className="resolve-row-meta">
-                <span>{c.person}</span>
-                {c.category && <span>· {c.category}</span>}
+        {snapshot.map((item) => {
+          const draft = drafts[item.id] || { date: "", time: "" };
+          const done = confirmedIds.has(item.id);
+          const canConfirm = !!draft.date && !!draft.time;
+          return (
+            <div className={"resolve-row" + (done ? " resolve-row--done" : "")} key={item.id}>
+              <div className="resolve-row-head">
+                {done && (
+                  <span className="resolve-done-mark" aria-hidden="true">
+                    <Ico d={I.check} size={12} />
+                  </span>
+                )}
+                <div>
+                  <p className="resolve-row-task">{item.task}</p>
+                  <div className="resolve-row-meta">
+                    <span>{item.person}</span>
+                    {item.category && <span>· {item.category}</span>}
+                  </div>
+                </div>
               </div>
+              <div className="resolve-row-fields">
+                <div className="resolve-field">
+                  <label htmlFor={`resolve-date-${item.id}`}>Date</label>
+                  <input
+                    id={`resolve-date-${item.id}`}
+                    type="date"
+                    value={draft.date}
+                    disabled={done}
+                    onChange={(e) => patchDraft(item.id, { date: e.target.value })}
+                  />
+                </div>
+                <div className="resolve-field">
+                  <label htmlFor={`resolve-time-${item.id}`}>Time</label>
+                  <input
+                    id={`resolve-time-${item.id}`}
+                    type="time"
+                    value={draft.time}
+                    disabled={done}
+                    onChange={(e) => patchDraft(item.id, { time: e.target.value })}
+                  />
+                </div>
+              </div>
+              {!done && (
+                <button
+                  type="button"
+                  className="btn btn-soft resolve-confirm"
+                  disabled={!canConfirm}
+                  onClick={() => confirmItem(item.id)}
+                >
+                  Confirm
+                </button>
+              )}
+              {done && (
+                <p className="resolve-confirmed-label">
+                  <Ico d={I.check} size={12} /> Confirmed · {formatWhen(draft.date, draft.time)}
+                </p>
+              )}
             </div>
-            <div className="resolve-row-fields">
-              <div className="resolve-field">
-                <label htmlFor={`resolve-date-${c.id}`}>Date</label>
-                <input
-                  id={`resolve-date-${c.id}`}
-                  type="date"
-                  value={c.date || ""}
-                  onChange={(e) => patchCard(c.id, { date: e.target.value || null })}
-                />
-              </div>
-              <div className="resolve-field">
-                <label htmlFor={`resolve-time-${c.id}`}>Time</label>
-                <input
-                  id={`resolve-time-${c.id}`}
-                  type="time"
-                  value={c.time || ""}
-                  onChange={(e) => patchCard(c.id, { time: e.target.value || null })}
-                />
-              </div>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       <div className="resolve-foot">
         <button type="button" className="linkish" onClick={onBack}>← Back to capture</button>
         <button
           type="button"
-          className="btn btn-primary btn-lg"
-          disabled={!allComplete}
+          className={"btn btn-primary btn-lg" + (!allResolved ? " btn-disabled" : "")}
+          disabled={!allResolved}
           onClick={onContinue}
         >
-          Continue to review
+          {allResolved ? "Continue to review" : "Resolve all items to continue"}
         </button>
       </div>
     </div>
@@ -1151,9 +1210,9 @@ function Confetti() {
 
 function PlanView({
   keptCards, adults, roleOf, onRestart,
-  calendarConnected, calendarBusy,
+  calendarConnected, calendarBusy, unsyncingCardId,
   showCalendarConnect, onConfirmCalendarConnect, onCancelCalendarConnect, familyPauseEmail,
-  onRetrySync, onAddToCal,
+  onRetrySync, onAddToCal, onUnsync,
 }) {
   const [confetti, setConfetti] = useState(true);
   useEffect(() => { const t = setTimeout(() => setConfetti(false), 2200); return () => clearTimeout(t); }, []);
@@ -1170,14 +1229,34 @@ function PlanView({
         <div className="pmeta">
           <span className="ct">{it.category}</span>
           {formatWhen(it.date, it.time) && <span>· {formatWhen(it.date, it.time)}</span>}
-          {it.calendar_synced && <span className="synced-badge">Synced</span>}
+          {it.calendar_synced && (
+            <span className="synced-badge-wrap">
+              <span className={"synced-badge" + (unsyncingCardId === it.id ? " synced-badge--busy" : "")}>
+                {unsyncingCardId === it.id ? "Removing…" : "Synced"}
+              </span>
+              <button
+                type="button"
+                className="plan-cal-unsync"
+                disabled={unsyncingCardId === it.id || calendarBusy}
+                onClick={() => onUnsync(it.id)}
+                aria-label="Unsync from Google Calendar"
+              >
+                ×
+              </button>
+            </span>
+          )}
           {!it.calendar_synced && it.calendar_sync_failed && isSyncEligible(it) && (
             <button type="button" className="plan-cal-retry" disabled={calendarBusy} onClick={() => onRetrySync(it.id)}>
               Retry
             </button>
           )}
-          {!calendarConnected && !it.calendar_synced && isSyncEligible(it) && (
-            <button type="button" className="plan-cal-add" disabled={calendarBusy} onClick={() => onAddToCal(it.id)}>
+          {!it.calendar_synced && !it.calendar_sync_failed && isSyncEligible(it) && (
+            <button
+              type="button"
+              className="plan-cal-add"
+              disabled={calendarBusy || unsyncingCardId === it.id}
+              onClick={() => (calendarConnected ? onRetrySync(it.id) : onAddToCal(it.id))}
+            >
               Add to Cal
             </button>
           )}
@@ -1248,7 +1327,24 @@ function PlanView({
         </div>
       )}
 
-      <div className="planfoot"><button className="linkish" onClick={onRestart}>↺ Start a new sync</button></div>
+      <div className="planfoot">
+        <div className="planfoot-actions">
+          <button
+            type="button"
+            className="plan-btn-ghost"
+            onClick={onRestart}
+          >
+            Start New Sync
+          </button>
+          <button
+            type="button"
+            className="plan-btn-primary"
+            onClick={() => window.open("https://calendar.google.com", "_blank", "noopener,noreferrer")}
+          >
+            Open Calendar
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -1276,6 +1372,7 @@ export default function App({ user, workspace, onSignOut }) {
   const [sessionsThisMonth, setSessionsThisMonth] = useState(0);
   const [calendarBusy, setCalendarBusy] = useState(false);
   const [calendarSyncing, setCalendarSyncing] = useState(false);
+  const [unsyncingCardId, setUnsyncingCardId] = useState(null);
   const [calendarConnected, setCalendarConnected] = useState(false);
   const [calendarConnectPrompt, setCalendarConnectPrompt] = useState(false);
   const [inputMode, setInputMode] = useState("paste");
@@ -1604,7 +1701,9 @@ Rules: extract everything actionable. For person, use ONLY names from Known peop
       if (syncable.length > 0) {
         setCalendarSyncing(true);
         try {
-          const { updatedCards } = await syncCardsToCalendar(ws.id, cards);
+          const { updatedCards } = await syncCardsToCalendar(ws.id, cards, {
+            sessionId: sessionIdRef.current ?? undefined,
+          });
           setCards(updatedCards);
         } catch (e) {
           console.error("[Build week] calendar sync", e);
@@ -1643,7 +1742,9 @@ Rules: extract everything actionable. For person, use ONLY names from Known peop
     if (!card || !isSyncEligible(card)) return;
     setCalendarBusy(true);
     try {
-      const { results } = await syncCalendarEvents(ws.id, [cardToCalendarEvent(card)]);
+      const { results } = await syncCalendarEvents(ws.id, [cardToCalendarEvent(card)], {
+        sessionId: sessionIdRef.current ?? undefined,
+      });
       setCards((prev) => applySyncResults(prev, results));
     } catch (e) {
       console.error("[Plan] retry sync", e);
@@ -1658,6 +1759,29 @@ Rules: extract everything actionable. For person, use ONLY names from Known peop
   const handlePlanAddToCal = () => {
     if (!ws?.id) return;
     setCalendarConnectPrompt(true);
+  };
+
+  const unsyncCard = async (cardId) => {
+    if (!ws?.id) return;
+    const card = cards.find((c) => c.id === cardId);
+    if (!card?.calendar_synced) return;
+    setUnsyncingCardId(cardId);
+    try {
+      if (card.google_event_id) {
+        await unsyncCalendarEvent(ws.id, card.google_event_id, {
+          sessionId: sessionIdRef.current ?? undefined,
+          cardId,
+        });
+      }
+      setCards((prev) => clearCardCalendarSync(prev, cardId));
+    } catch (e) {
+      console.error("[Plan] unsync", e);
+      if (/404|not found|notFound/i.test(e?.message || "")) {
+        setCards((prev) => clearCardCalendarSync(prev, cardId));
+      }
+    } finally {
+      setUnsyncingCardId(null);
+    }
   };
 
   const confirmCalendarConnect = async () => {
@@ -1695,7 +1819,9 @@ Rules: extract everything actionable. For person, use ONLY names from Known peop
       if (!pending.length) return;
       setCalendarBusy(true);
       try {
-        const { updatedCards } = await syncCardsToCalendar(ws.id, snapshot);
+        const { updatedCards } = await syncCardsToCalendar(ws.id, snapshot, {
+          sessionId: sessionIdRef.current ?? undefined,
+        });
         if (active) setCards(updatedCards);
       } catch (e) {
         console.error("[Plan] post-connect sync", e);
@@ -1818,12 +1944,14 @@ Rules: extract everything actionable. For person, use ONLY names from Known peop
           onRestart={restart}
           calendarConnected={calendarConnected}
           calendarBusy={calendarBusy}
+          unsyncingCardId={unsyncingCardId}
           showCalendarConnect={calendarConnectPrompt}
           onConfirmCalendarConnect={confirmCalendarConnect}
           onCancelCalendarConnect={() => setCalendarConnectPrompt(false)}
           familyPauseEmail={user?.email}
           onRetrySync={retryCardSync}
           onAddToCal={handlePlanAddToCal}
+          onUnsync={unsyncCard}
         />
       )}
     </div>

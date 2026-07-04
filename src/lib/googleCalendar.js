@@ -18,6 +18,16 @@ export function isSyncEligible(card) {
   return !!(card.date && card.time);
 }
 
+/** Item may belong on a calendar (used for sync guard warnings). */
+export function isCalendarRelevant(card) {
+  return (
+    card.type === "event"
+    || (card.type === "action" && card.recurring)
+    || !!card.date
+    || !!card.time
+  );
+}
+
 /**
  * Start Google Calendar OAuth — redirects browser to Google consent.
  * @param {string} workspaceId
@@ -70,15 +80,47 @@ export async function disconnectGoogleCalendar(memberId) {
 /**
  * @param {string} workspaceId
  * @param {object[]} events
- * @returns {Promise<{ results: Array<{ id: number|string, success: boolean, googleEventId?: string, error?: string }> }>}
+ * @param {{ sessionId?: string }} [opts]
  */
-export async function syncCalendarEvents(workspaceId, events) {
+export async function syncCalendarEvents(workspaceId, events, opts = {}) {
+  const payload = { workspace_id: workspaceId, events };
+  if (opts.sessionId) payload.session_id = opts.sessionId;
   const { data, error } = await supabase.functions.invoke("calendar-sync", {
-    body: { workspace_id: workspaceId, events },
+    body: payload,
   });
   if (error) throw new Error(error.message || "Calendar sync failed");
   if (data?.error) throw new Error(data.error);
   return data;
+}
+
+/**
+ * Remove a synced event from Google Calendar and optionally clear session card state.
+ * @param {string} workspaceId
+ * @param {string} eventId
+ * @param {{ sessionId?: string, cardId?: number|string }} [opts]
+ * @returns {Promise<{ success: boolean, notFound?: boolean }>}
+ */
+export async function unsyncCalendarEvent(workspaceId, eventId, opts = {}) {
+  const payload = {
+    action: "delete",
+    workspace_id: workspaceId,
+    event_id: eventId,
+  };
+  if (opts.sessionId) payload.session_id = opts.sessionId;
+  if (opts.cardId != null) payload.card_id = opts.cardId;
+  const { data, error } = await supabase.functions.invoke("calendar-sync", { body: payload });
+  if (error) throw new Error(error.message || "Calendar unsync failed");
+  if (data?.error) throw new Error(data.error);
+  return data;
+}
+
+/** Clear calendar sync fields on a single card (client state). */
+export function clearCardCalendarSync(cards, cardId) {
+  return cards.map((c) => (
+    c.id === cardId
+      ? { ...c, calendar_synced: false, google_event_id: null, calendar_sync_failed: false }
+      : c
+  ));
 }
 
 /** Map a kept card to calendar-sync API payload (requires date and time). */
@@ -117,12 +159,24 @@ export function applySyncResults(cards, results) {
 
 /**
  * Batch-sync eligible kept cards that are not already synced.
+ * @param {string} workspaceId
+ * @param {object[]} cards
+ * @param {{ sessionId?: string }} [opts]
  * @returns {Promise<{ results: object[], updatedCards: object[] }>}
  */
-export async function syncCardsToCalendar(workspaceId, cards) {
-  const toSync = cards.filter((c) => isSyncEligible(c) && !c.calendar_synced);
+export async function syncCardsToCalendar(workspaceId, cards, opts = {}) {
+  const kept = cards.filter((c) => c.status === "kept" || c.status === "calendared");
+  const unsyncedRelevant = kept.filter((c) => !c.calendar_synced && isCalendarRelevant(c));
+  const skipped = unsyncedRelevant.filter((c) => !isSyncEligible(c));
+  if (skipped.length) {
+    console.warn(
+      "[calendar-sync] Skipped items missing date or time:",
+      skipped.map((c) => ({ id: c.id, task: c.task, date: c.date, time: c.time })),
+    );
+  }
+  const toSync = kept.filter((c) => isSyncEligible(c) && !c.calendar_synced);
   if (!toSync.length) return { results: [], updatedCards: cards };
   const events = toSync.map(cardToCalendarEvent);
-  const { results } = await syncCalendarEvents(workspaceId, events);
+  const { results } = await syncCalendarEvents(workspaceId, events, opts);
   return { results, updatedCards: applySyncResults(cards, results) };
 }
