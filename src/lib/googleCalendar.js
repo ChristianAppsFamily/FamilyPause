@@ -82,13 +82,27 @@ export async function disconnectGoogleCalendar(memberId) {
   }).eq("id", memberId);
 }
 
+/** IANA timezone from the browser (e.g. America/Los_Angeles). */
+export function getUserTimeZone() {
+  try {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    return tz && typeof tz === "string" ? tz : "America/Los_Angeles";
+  } catch {
+    return "America/Los_Angeles";
+  }
+}
+
 /**
  * @param {string} workspaceId
  * @param {object[]} events
- * @param {{ sessionId?: string }} [opts]
+ * @param {{ sessionId?: string, timeZone?: string }} [opts]
  */
 export async function syncCalendarEvents(workspaceId, events, opts = {}) {
-  const payload = { workspace_id: workspaceId, events };
+  const payload = {
+    workspace_id: workspaceId,
+    events,
+    time_zone: opts.timeZone ?? getUserTimeZone(),
+  };
   if (opts.sessionId) payload.session_id = opts.sessionId;
   const { data, error } = await supabase.functions.invoke("calendar-sync", {
     body: payload,

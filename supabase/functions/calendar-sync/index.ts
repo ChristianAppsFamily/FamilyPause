@@ -10,6 +10,8 @@ const cors = {
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { ...cors, "Content-Type": "application/json" } });
 
+const DEFAULT_TIME_ZONE = "America/Los_Angeles";
+
 type CalendarEventInput = {
   id: number | string;
   title: string;
@@ -22,25 +24,48 @@ type CalendarEventInput = {
 
 type SessionCard = Record<string, unknown> & { id: number | string };
 
-function buildEventBody(ev: CalendarEventInput) {
-  const time = ev.time || "10:00";
-  const duration = ev.duration_minutes ?? 60;
-  const startLocal = `${ev.date}T${time}:00`;
-  const start = new Date(startLocal);
-  const end = new Date(start.getTime() + duration * 60 * 1000);
+function normalizeTime(time: string): string {
+  const [h, m = "00"] = time.split(":");
+  return `${h.padStart(2, "0")}:${m.padStart(2, "0")}`;
+}
 
-  const fmt = (d: Date) => {
-    const pad = (n: number) => String(n).padStart(2, "0");
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:00`;
+/** Wall-clock end date/time without timezone conversion (same calendar semantics as start). */
+function addDurationToLocal(
+  date: string,
+  time: string,
+  durationMinutes: number,
+): { date: string; time: string } {
+  const [y, mo, d] = date.split("-").map(Number);
+  const [h, mi] = normalizeTime(time).split(":").map(Number);
+  let totalMinutes = h * 60 + mi + durationMinutes;
+  let dayOffset = Math.floor(totalMinutes / (24 * 60));
+  totalMinutes = ((totalMinutes % (24 * 60)) + 24 * 60) % (24 * 60);
+  const endH = Math.floor(totalMinutes / 60);
+  const endM = totalMinutes % 60;
+  const dt = new Date(Date.UTC(y, mo - 1, d + dayOffset));
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return {
+    date: `${dt.getUTCFullYear()}-${pad(dt.getUTCMonth() + 1)}-${pad(dt.getUTCDate())}`,
+    time: `${pad(endH)}:${pad(endM)}`,
   };
+}
+
+function buildEventBody(ev: CalendarEventInput, userTimeZone: string) {
+  const time = normalizeTime(ev.time || "10:00");
+  const duration = ev.duration_minutes ?? 60;
+  const startDateTime = `${ev.date}T${time}:00`;
+  const endLocal = addDurationToLocal(ev.date, time, duration);
+  const endDateTime = `${endLocal.date}T${endLocal.time}:00`;
 
   const body: Record<string, unknown> = {
     summary: ev.title,
     description: ev.description || "",
-    start: { dateTime: fmt(start), timeZone: "America/New_York" },
-    end: { dateTime: fmt(end), timeZone: "America/New_York" },
+    start: { dateTime: startDateTime, timeZone: userTimeZone },
+    end: { dateTime: endDateTime, timeZone: userTimeZone },
   };
-  if (ev.recurrence) body.recurrence = ["RRULE:FREQ=WEEKLY"];
+  if (ev.recurrence) {
+    body.recurrence = [`RRULE:FREQ=WEEKLY;TZID=${userTimeZone}`];
+  }
   return body;
 }
 
@@ -128,6 +153,7 @@ Deno.serve(async (req) => {
       event_id?: string;
       session_id?: string;
       card_id?: number | string;
+      time_zone?: string;
       events?: CalendarEventInput[];
     };
 
@@ -198,16 +224,25 @@ Deno.serve(async (req) => {
       return json({ success: true, notFound: gone });
     }
 
-    const { events, session_id } = body;
+    const { events, session_id, time_zone: timeZoneRaw } = body;
     if (!Array.isArray(events) || !events.length) {
       return json({ error: "Missing events" }, 400);
     }
+
+    const userTimeZone =
+      typeof timeZoneRaw === "string" && timeZoneRaw.trim()
+        ? timeZoneRaw.trim()
+        : DEFAULT_TIME_ZONE;
 
     const results: { id: number | string; success: boolean; googleEventId?: string; error?: string }[] = [];
     const sessionPatches: Array<{ cardId: number | string; googleEventId: string }> = [];
 
     for (const ev of events) {
-      const eventBody = buildEventBody(ev);
+      const eventBody = buildEventBody(ev, userTimeZone);
+      console.log("[calendar-sync] Google event start:", JSON.stringify(eventBody.start));
+      if (eventBody.recurrence) {
+        console.log("[calendar-sync] recurrence:", JSON.stringify(eventBody.recurrence));
+      }
       let attempt = await createGoogleEvent(accessToken, eventBody);
 
       if (attempt.status === 401) {
