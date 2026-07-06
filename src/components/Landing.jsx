@@ -920,25 +920,6 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
           </div>
         </section>
 
-        <section className="section" id="deck">
-          <div className="wrap">
-            <div className="shead reveal" style={{ textAlign: "center", marginBottom: 32 }}>
-              <span className="eyebrow">The card deck</span>
-              <h2>One card. One week. <em>One conversation.</em></h2>
-              <p style={{ maxWidth: 520, margin: "12px auto 0" }}>
-                Before you record, pull a card. 52 questions across finances, marriage, kids, faith, dreams, and home. Each one opens a conversation your to-do list never will.
-              </p>
-            </div>
-            <div className="reveal" style={{ marginBottom: 32 }}>
-              <SampleCardCarousel />
-            </div>
-            <div className="reveal" style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-              <a href="/cards" className="btn btn-primary">{`Get the Physical Deck, $${PHYSICAL_DECK_PRICE}`}</a>
-              <a href="/cards" className="btn btn-ghost">Buy Digital, {formatDigitalPrice()}</a>
-            </div>
-          </div>
-        </section>
-
         <LandingDemo onStart={onStart} />
 
         {/* WHO IT'S FOR */}
@@ -977,6 +958,25 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
         <section className="band band-olive">
           <div className="wrap privacy reveal">
             <p>FamilyPause is <em>ad-free and will always be ad-free.</em> Your family's conversations are not data. They never will be.</p>
+          </div>
+        </section>
+
+        <section className="section" id="deck">
+          <div className="wrap">
+            <div className="shead reveal" style={{ textAlign: "center", marginBottom: 32 }}>
+              <span className="eyebrow">The card deck</span>
+              <h2>One card. One week. <em>One conversation.</em></h2>
+              <p style={{ maxWidth: 520, margin: "12px auto 0" }}>
+                Before you record, pull a card. 52 questions across finances, marriage, kids, faith, dreams, and home. Each one opens a conversation your to-do list never will.
+              </p>
+            </div>
+            <div className="reveal" style={{ marginBottom: 32 }}>
+              <SampleCardCarousel />
+            </div>
+            <div className="reveal" style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
+              <a href="/cards" className="btn btn-primary">{`Get the Physical Deck, $${PHYSICAL_DECK_PRICE}`}</a>
+              <a href="/cards" className="btn btn-ghost">Buy Digital, {formatDigitalPrice()}</a>
+            </div>
           </div>
         </section>
 

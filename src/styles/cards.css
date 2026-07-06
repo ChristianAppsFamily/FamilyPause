@@ -136,6 +136,67 @@
   margin-bottom: 14px;
 }
 
+.cs-preview-pair--interactive {
+  align-items: center;
+}
+
+.cs-pv-face-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sample-carousel-arrow {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: var(--paper-card);
+  color: var(--ink-2);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+  padding: 0;
+}
+
+.sample-carousel-arrow:hover {
+  color: var(--terra);
+  border-color: var(--terra);
+  background: var(--terra-tint);
+}
+
+.sample-carousel-arrow:focus-visible {
+  outline: 2px solid var(--terra);
+  outline-offset: 2px;
+}
+
+.sample-carousel-counter {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  color: var(--ink-3);
+  text-align: center;
+  margin-top: 4px;
+}
+
+.sample-card-carousel .cs-pv-cap {
+  margin-bottom: 8px;
+}
+
+.cs-cardfront-v2.is-transitioning .cs-cf-pill,
+.cs-cardfront-v2.is-transitioning .cs-cf-question {
+  opacity: 0;
+}
+
+.cs-cf-pill,
+.cs-cf-question {
+  transition: opacity 350ms ease;
+}
+
 .cs-pv-card {
   zoom: 0.62;
 }
@@ -163,8 +224,18 @@
   .cs-pv-card {
     zoom: 0.46;
   }
+  .cs-preview-pair--interactive .cs-pv-card {
+    zoom: 0.36;
+  }
   .cs-preview-pair {
     gap: 10px;
+  }
+  .sample-carousel-arrow {
+    width: 36px;
+    height: 36px;
+  }
+  .cs-pv-face-wrap {
+    gap: 6px;
   }
 }
 
@@ -332,6 +403,31 @@
   color: var(--terra-d);
 }
 
+.cs-cf-pill--marriage {
+  background: var(--terra-soft);
+  color: var(--terra-d);
+}
+
+.cs-cf-pill--finances {
+  background: var(--gold-soft);
+  color: #8a6a16;
+}
+
+.cs-cf-pill--kids {
+  background: var(--olive-soft);
+  color: var(--olive-d);
+}
+
+.cs-cf-pill--dreams {
+  background: #e8e0f0;
+  color: #3a1a60;
+}
+
+.cs-cf-pill--home {
+  background: var(--paper-2);
+  color: var(--ink-2);
+}
+
 .cs-cf-question {
   flex: 1;
   display: flex;
@@ -394,9 +490,15 @@
   font-family: var(--serif);
 }
 
+.sample-card-carousel {
+  width: 100%;
+  max-width: 580px;
+  margin: 0 auto;
+}
+
 .cs-unlock-inner {
   width: 100%;
-  max-width: 440px;
+  max-width: 560px;
 }
 
 .cs-unlock-back {

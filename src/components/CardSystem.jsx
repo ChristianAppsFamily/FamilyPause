@@ -371,76 +371,6 @@ function CardFace({ card, deckYear, flipped = true, style = {} }) {
   );
 }
 
-// ── CARD PREVIEW (locked screen — design bundle v2) ───────────────────────────
-function PauseLogo({ width = 250, height = 362, fill = "#FAF3EC" }) {
-  return (
-    <svg viewBox="0 0 18 26" width={width} height={height} fill={fill} aria-hidden="true">
-      <circle cx="4" cy="3.8" r="3.4" />
-      <rect x="0.6" y="8.8" width="6.8" height="16.6" rx="3.4" />
-      <circle cx="14" cy="3.8" r="3.4" />
-      <rect x="10.6" y="8.8" width="6.8" height="16.6" rx="3.4" />
-    </svg>
-  );
-}
-
-function CardBackV2({ year = 2026 }) {
-  return (
-    <div className="cs-cardback-v2 cs-grain">
-      <span className="cs-cb-corner tl" aria-hidden="true" />
-      <span className="cs-cb-corner tr" aria-hidden="true" />
-      <span className="cs-cb-corner bl" aria-hidden="true" />
-      <span className="cs-cb-corner br" aria-hidden="true" />
-      <div className="cs-cb-ghost">
-        <PauseLogo />
-      </div>
-      <div className="cs-cb-center">
-        <div className="cs-cb-wordmark">FamilyPause</div>
-        <div className="cs-cb-rule" />
-        <div className="cs-cb-meta">Card Deck · {year}</div>
-      </div>
-    </div>
-  );
-}
-
-function CardFrontV2({ card, year = 2026 }) {
-  return (
-    <div className="cs-cardfront-v2 cs-grain">
-      <div className="cs-cf-stripe" />
-      <div className="cs-cf-inner">
-        <div className="cs-cf-rule-d" />
-        <div className="cs-cf-head">
-          <span className="cs-cf-wordmark">FamilyPause</span>
-          <span className="cs-cf-num">{String(card?.id).padStart(2, "0")} / 52</span>
-        </div>
-        <div className="cs-cf-pill">{card?.category}</div>
-        <div className="cs-cf-question">{card?.question}</div>
-        <div className="cs-cf-foot">
-          <div className="cs-cf-foot-rule" />
-          <div className="cs-cf-ii">
-            <PauseLogo width={21} height={30} fill="#BE5A37" />
-          </div>
-          <div className="cs-cf-tag">One Card · One Week · One Conversation</div>
-          <div className="cs-cf-year">{year}</div>
-          <div className="cs-cf-rule-d" />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function DeckPreviewPair({ year = 2026, sampleCard }) {
-  return (
-    <div className="cs-preview-pair">
-      <div className="cs-pv-card cs-pv-a">
-        <CardBackV2 year={year} />
-      </div>
-      <div className="cs-pv-card cs-pv-b">
-        <CardFrontV2 card={sampleCard} year={year} />
-      </div>
-    </div>
-  );
-}
-
 function CardBack({ style = {}, year = 2026 }) {
   return (
     <div className="cs-cardback grain" style={style}>
@@ -498,18 +428,15 @@ function CardDraw({ workspace, meetingDate, onStartSession, onSkip, onUnlock }) 
   if (!hasUnlockedDeck || phase === "intro") {
     if (!hasUnlockedDeck) {
       const previewYear = 2026;
-      const previewCard = DECKS[previewYear].cards.find((c) => c.id === 21) || DECKS[previewYear].cards[0];
 
       return (
         <div style={{ background: T.bg, fontFamily: "'Lora', serif" }}>
           <style>{css}</style>
 
           <div className="cs-locked-screen">
-            <div className="cs-fade">
-              <DeckPreviewPair year={previewYear} sampleCard={previewCard} />
+            <div className="cs-fade" style={{ width: "100%", maxWidth: 520 }}>
+              <SampleCardCarousel year={previewYear} showCaption />
             </div>
-
-            <div className="cs-pv-cap cs-fade-1">Front &amp; back · 52 cards in the deck</div>
 
             <div className="cs-fade-2" style={{ marginBottom: 30, width: "100%", maxWidth: 420 }}>
               <SyncDatePill meetingDate={meetingDate} />
@@ -520,10 +447,6 @@ function CardDraw({ workspace, meetingDate, onStartSession, onSkip, onUnlock }) 
               <p className="cs-sub">
                 Each card opens one honest conversation. 52 of them, one per week, that go deeper than the to-do list.
               </p>
-            </div>
-
-            <div className="cs-fade-2" style={{ marginBottom: 24, width: "100%", maxWidth: 420 }}>
-              <SampleCardCarousel />
             </div>
 
             <div className="cs-btn-stack cs-fade-3">
@@ -745,15 +668,15 @@ function UnlockDeck({ workspace, onSuccess, onClose }) {
 
         <button type="button" className="cs-unlock-back cs-fade" onClick={onClose}>← Back</button>
 
+        <div className="cs-fade" style={{ marginBottom: 28 }}>
+          <SampleCardCarousel showCaption />
+        </div>
+
         <div className="cs-unlock-eyebrow cs-fade">Unlock cards</div>
         <h1 className="cs-unlock-hl cs-fade-1">Add your <em>card deck</em></h1>
         <p className="cs-unlock-sub cs-fade-2">
           Unlock the weekly card draw feature with a physical deck code, or purchase digital access directly.
         </p>
-
-        <div className="cs-fade-2" style={{ marginBottom: 24 }}>
-          <SampleCardCarousel />
-        </div>
 
         <div className="cs-tab-sw cs-fade-2">
           {[
