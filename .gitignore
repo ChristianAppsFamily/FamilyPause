@@ -31,3 +31,5 @@ Screenshots-App/
 *.sln
 *.sw?
 .gstack/
+.vercel
+.env*

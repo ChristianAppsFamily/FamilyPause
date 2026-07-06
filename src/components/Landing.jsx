@@ -250,8 +250,12 @@ const css = `
 .fp-landing .mbtn.disc { background: var(--terra-tint); color: var(--terra-d); }
 .fp-landing .mbtn.cal  { background: var(--gold-soft); color: #8a6a16; }
 
-/* sections */
+/* sections — each band gets its own surface so blocks don't blend */
 .fp-landing .section { padding: 96px 0; }
+.fp-landing .section-paper { background: var(--paper); }
+.fp-landing .section-alt { background: var(--paper-2); }
+.fp-landing .section-cream { background: var(--cream); }
+.fp-landing .section-deep { background: var(--paper-3); }
 .fp-landing .shead { max-width: 720px; margin-bottom: 56px; }
 .fp-landing .shead h2 { font-size: 50px; line-height: 1.04; margin: 16px 0 18px; }
 .fp-landing .shead h2 em { color: var(--terra); }
@@ -294,9 +298,10 @@ const css = `
 
 /* card deck section */
 .fp-landing .deck-section {
-  border-top: 1px solid var(--line);
-  background: var(--paper);
-  padding: 96px 0 104px;
+  border-top: 1px solid var(--line-2);
+  border-bottom: 1px solid var(--line-2);
+  background: var(--paper-2);
+  padding: 96px 0 88px;
 }
 .fp-landing .deck-section .shead {
   max-width: 640px;
@@ -319,7 +324,11 @@ const css = `
 }
 
 /* pricing */
-.fp-landing .pricewrap { background: var(--cream); border: 1px solid var(--line); border-radius: var(--r-xl); padding: 18px; box-shadow: var(--shadow); margin-top: 8px; }
+.fp-landing .section-pricing {
+  background: var(--cream);
+  padding: 88px 0 96px;
+}
+.fp-landing .pricewrap { background: var(--paper-card); border: 1px solid var(--line); border-radius: var(--r-xl); padding: 18px; box-shadow: var(--shadow); margin-top: 8px; }
 .fp-landing .pricegrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
 .fp-landing .tier { background: var(--paper-card); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 34px 30px; display: flex; flex-direction: column; position: relative; }
 .fp-landing .tier.pop { background: linear-gradient(160deg, var(--terra), #B0502C); color: #fff; border: none; box-shadow: var(--shadow-lg); transform: translateY(-10px); }
@@ -712,7 +721,11 @@ const css = `
 }
 
 /* final cta */
-.fp-landing .finalcta { text-align: center; position: relative; overflow: hidden; }
+.fp-landing .finalcta {
+  text-align: center; position: relative; overflow: hidden;
+  background: var(--paper);
+  border-top: 1px solid var(--line-2);
+}
 .fp-landing .finalcta::before { content: ""; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(700px 380px at 50% 0%, var(--terra-tint), transparent 65%); }
 .fp-landing .finalcta .wrap { position: relative; }
 .fp-landing .finalcta h2 { font-size: 64px; line-height: 1.04; letter-spacing: -.02em; max-width: 880px; margin: 0 auto 24px; }
@@ -721,7 +734,11 @@ const css = `
 .fp-landing .finalcta .fineprint { margin-top: 22px; }
 
 /* footer */
-.fp-landing .foot { border-top: 1px solid var(--line); padding: 54px 0 60px; }
+.fp-landing .foot {
+  border-top: 1px solid var(--line-2);
+  background: var(--paper-2);
+  padding: 54px 0 60px;
+}
 .fp-landing .foot .row { display: flex; align-items: flex-start; justify-content: space-between; gap: 30px; flex-wrap: wrap; }
 .fp-landing .foot .word { font-family: var(--display); font-size: 26px; font-weight: 600; }
 .fp-landing .foot .word b { color: var(--terra); }
@@ -977,7 +994,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
         </section>
 
         {/* HOW IT WORKS */}
-        <section className="section" id="how">
+        <section className="section section-alt" id="how">
           <div className="wrap">
             <div className="shead reveal">
               <span className="eyebrow">How it works</span>
@@ -1016,7 +1033,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
         <LandingDemo onStart={onStart} />
 
         {/* WHO IT'S FOR */}
-        <section className="section" id="who" style={{ paddingTop: 30 }}>
+        <section className="section section-paper" id="who" style={{ paddingTop: 30 }}>
           <div className="wrap">
             <div className="shead reveal">
               <span className="eyebrow">Who it's for</span>
@@ -1074,7 +1091,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
         </section>
 
         {/* PRICING */}
-        <section className="section" id="pricing">
+        <section className="section section-pricing" id="pricing">
           <div className="wrap">
             <div className="shead reveal">
               <span className="eyebrow">Pricing</span>
