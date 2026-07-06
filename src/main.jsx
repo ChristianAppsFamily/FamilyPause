@@ -7,6 +7,7 @@ import Landing from './components/Landing.jsx'
 import AppRouter from './AppRouter.jsx'
 import ResetPassword from './components/ResetPassword.jsx'
 import CardsProductPage from './components/CardsProductPage.jsx'
+import BlogComingSoon from './components/BlogComingSoon.jsx'
 
 // Marketing landing at "/". Its CTAs route into the auth + app flow at /app.
 function LandingRoute() {
@@ -25,6 +26,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
       <Routes>
         <Route path="/" element={<LandingRoute />} />
         <Route path="/cards" element={<CardsProductPage />} />
+        <Route path="/blog" element={<BlogComingSoon />} />
         <Route path="/app/*" element={<AppRouter />} />
         <Route path="/join/*" element={<AppRouter />} />
         <Route path="/reset-password" element={<ResetPassword />} />

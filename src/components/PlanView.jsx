@@ -339,7 +339,7 @@ export default function PlanView({
             {keptCards.length === 1 ? "item" : "items"} routed for your family
           </h1>
           <p className="plan-summary-sub">
-            A clean plan, organized by person — appointments timed, actions owned, nothing forgotten.
+            A clean plan, organized by person. Appointments timed, actions owned, nothing forgotten.
           </p>
         </div>
 

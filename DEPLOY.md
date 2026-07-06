@@ -202,7 +202,7 @@ In **Stripe Dashboard → Product catalog**, create:
 |---------|------|-------|-------------|
 | Family Plan | Recurring, yearly | $59/yr | `STRIPE_PRICE_FAMILY` |
 | Family Pro | Recurring, yearly | $99/yr | `STRIPE_PRICE_PRO` |
-| Digital deck | One-time | $12 | `STRIPE_PRICE_DIGITAL` |
+| Digital deck | One-time | $9.97 | `STRIPE_PRICE_DIGITAL` |
 
 Copy each **Price ID** (`price_...`) — you will set them as Supabase secrets.
 

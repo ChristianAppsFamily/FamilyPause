@@ -18,7 +18,7 @@ export default function CalendarAccountChooser({
       </p>
       <p className="cal-acct-chooser__body">
         Next, Google will ask you to <em>choose which Google account</em> to link.
-        It does not have to match your FamilyPause email — pick the calendar where
+        It does not have to match your FamilyPause email. Pick the calendar where
         you want family events to appear.
       </p>
       <div className="cal-acct-chooser__actions">

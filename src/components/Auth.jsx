@@ -10,6 +10,8 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { ensureTrialSubscription } from "../lib/subscription";
 import { authPathForScreen, resolveAuthScreen } from "../lib/routes";
+import { isExistingAccountSignup } from "../lib/authSignup";
+import { triggerWelcomeEmail } from "../lib/welcomeEmail";
 
 // Map raw Supabase / browser errors to human copy.
 // Network failures surface as "Failed to fetch" / "NetworkError" — never show
@@ -316,6 +318,27 @@ function AuthShell({ children, wide = false }) {
 }
 
 // ── ERROR BANNER ──────────────────────────────────────────────────────────────
+function ExistingAccountNotice({ email, onSignIn }) {
+  return (
+    <div style={{
+      background: T.redL,
+      border: `1px solid ${T.red}44`,
+      borderRadius: 8,
+      padding: "12px 16px",
+      marginBottom: 20,
+      fontSize: 14,
+      color: T.red,
+      fontFamily: "'Lora', serif",
+      lineHeight: 1.5,
+    }}>
+      An account with this email already exists.{" "}
+      <button type="button" className="fp-link" onClick={() => onSignIn(email)} style={{ fontSize: 14 }}>
+        Sign in instead
+      </button>
+    </div>
+  );
+}
+
 function ErrorBanner({ message }) {
   if (!message) return null;
   return (
@@ -440,8 +463,8 @@ function PasswordInput({ value, onChange, onKeyDown, placeholder, autoFocus }) {
 }
 
 // ── SIGN IN ───────────────────────────────────────────────────────────────────
-function SignIn({ onSwitch, onSuccess }) {
-  const [email, setEmail] = useState("");
+function SignIn({ onSwitch, onSuccess, initialEmail = "" }) {
+  const [email, setEmail] = useState(initialEmail);
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -542,6 +565,7 @@ function SignUp({ onSwitch, onSuccess }) {
   const [confirm, setConfirm] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [existingAccount, setExistingAccount] = useState(false);
 
   const handleSignUp = async () => {
     if (!name || !email || !password || !confirm) { setError("Please fill in all fields."); return; }
@@ -550,10 +574,18 @@ function SignUp({ onSwitch, onSuccess }) {
 
     setLoading(true);
     setError("");
+    setExistingAccount(false);
 
     // Create auth user (Supabase email confirmation is off in production for low-friction signup)
     const { data, error: authErr } = await supabase.auth.signUp({ email, password });
     if (authErr) { setError(friendlyAuthError(authErr)); setLoading(false); return; }
+
+    if (isExistingAccountSignup(data)) {
+      await supabase.auth.signOut();
+      setExistingAccount(true);
+      setLoading(false);
+      return;
+    }
 
     const userId = data.user?.id;
     if (!userId) { setError("Something went wrong. Please try again."); setLoading(false); return; }
@@ -563,6 +595,7 @@ function SignUp({ onSwitch, onSuccess }) {
     const workspace = Array.isArray(ws) ? ws[0] : ws;
 
     await ensureTrialSubscription(workspace.id);
+    triggerWelcomeEmail({ email, firstName: name, enrollDrip: true });
 
     onSuccess({ workspaceId: workspace.id, inviteCode: workspace.invite_code, displayName: name });
   };
@@ -573,7 +606,7 @@ function SignUp({ onSwitch, onSuccess }) {
     setError("");
     const { error: err } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: `${window.location.origin}/app` },
+      options: { redirectTo: `${window.location.origin}/app?signup=1&oauth=1` },
     });
     if (err) setError(friendlyAuthError(err));
   };
@@ -594,7 +627,11 @@ function SignUp({ onSwitch, onSuccess }) {
         </p>
       </div>
 
-      <ErrorBanner message={error} />
+      {existingAccount ? (
+        <ExistingAccountNotice email={email} onSignIn={(em) => onSwitch("signin", em)} />
+      ) : (
+        <ErrorBanner message={error} />
+      )}
 
       <div className="fp-fade-1 fp-field">
         <label className="fp-label">Your first name</label>
@@ -720,6 +757,7 @@ function JoinWorkspace({ onSwitch, onSuccess, initialCode = "" }) {
   const [inviteCode, setInviteCode] = useState(initialCode);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [existingAccount, setExistingAccount] = useState(false);
 
   // Pre-fill invite code from URL if present (e.g. familypause.com/join/xK9m2p)
   useEffect(() => {
@@ -734,10 +772,18 @@ function JoinWorkspace({ onSwitch, onSuccess, initialCode = "" }) {
 
     setLoading(true);
     setError("");
+    setExistingAccount(false);
 
     // Create auth user
     const { data, error: authErr } = await supabase.auth.signUp({ email, password });
     if (authErr) { setError(friendlyAuthError(authErr)); setLoading(false); return; }
+
+    if (isExistingAccountSignup(data)) {
+      await supabase.auth.signOut();
+      setExistingAccount(true);
+      setLoading(false);
+      return;
+    }
 
     const userId = data.user?.id;
     if (!userId) { setError("Something went wrong. Please try again."); setLoading(false); return; }
@@ -754,6 +800,8 @@ function JoinWorkspace({ onSwitch, onSuccess, initialCode = "" }) {
       return;
     }
 
+    triggerWelcomeEmail({ email, firstName: name, enrollDrip: false });
+
     onSuccess({ workspaceId: wsId, displayName: name, joined: true });
   };
 
@@ -769,7 +817,11 @@ function JoinWorkspace({ onSwitch, onSuccess, initialCode = "" }) {
         </p>
       </div>
 
-      <ErrorBanner message={error} />
+      {existingAccount ? (
+        <ExistingAccountNotice email={email} onSignIn={(em) => onSwitch("signin", em)} />
+      ) : (
+        <ErrorBanner message={error} />
+      )}
 
       <div className="fp-fade-1 fp-field">
         <label className="fp-label">Your first name</label>
@@ -824,8 +876,8 @@ export default function Auth({ onAuthenticated, inviteCode = "" }) {
   const [searchParams] = useSearchParams();
   const screen = resolveAuthScreen(searchParams, inviteCode);
 
-  const onSwitch = (target) => {
-    navigate(authPathForScreen(target, inviteCode));
+  const onSwitch = (target, email = "") => {
+    navigate(authPathForScreen(target, inviteCode, email));
   };
 
   const handleSignInSuccess = async () => {
@@ -848,7 +900,7 @@ export default function Auth({ onAuthenticated, inviteCode = "" }) {
     onAuthenticated({ newUser: true, joined: true, displayName, workspaceId });
   };
 
-  if (screen === "signin")  return <SignIn  onSwitch={onSwitch} onSuccess={handleSignInSuccess} />;
+  if (screen === "signin")  return <SignIn  onSwitch={onSwitch} onSuccess={handleSignInSuccess} initialEmail={searchParams.get("email") || ""} />;
   if (screen === "signup")  return <SignUp  onSwitch={onSwitch} onSuccess={handleSignUpSuccess} />;
   if (screen === "forgot")  return <ForgotPassword onSwitch={onSwitch} />;
   if (screen === "join")    return <JoinWorkspace  onSwitch={onSwitch} onSuccess={handleJoinSuccess} initialCode={inviteCode} />;

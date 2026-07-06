@@ -11,6 +11,7 @@ import { useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "./lib/supabase";
 import { ensureTrialSubscription } from "./lib/subscription";
+import { triggerWelcomeEmail } from "./lib/welcomeEmail";
 import {
   parseAppLocation,
   inviteCodeFromPath,
@@ -117,6 +118,11 @@ export default function AppRouter() {
       }
       const newWorkspace = Array.isArray(ws) ? ws[0] : ws;
       await ensureTrialSubscription(newWorkspace.id);
+      triggerWelcomeEmail({
+        email: session.user.email,
+        firstName: name,
+        enrollDrip: true,
+      });
       setUser(session.user);
       setOnboardingData({
         workspaceId: newWorkspace.id,

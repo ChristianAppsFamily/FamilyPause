@@ -20,6 +20,8 @@ import { useState, useEffect, useRef } from "react";
 import { supabase } from "../lib/supabase";
 import { playCardFlip, soundsEnabledForWorkspace } from "../lib/sounds";
 import { openStripeCheckout } from "../lib/stripeCheckout";
+import { DIGITAL_DECK_PRICE, formatDigitalPrice, PHYSICAL_DECK_PRICE } from "../lib/deckPricing";
+import SampleCardCarousel from "./SampleCardCarousel";
 import "../styles/cards.css";
 
 function formatSyncDate(dateStr) {
@@ -82,8 +84,8 @@ const DECKS = {
     theme: "Foundations",
     tagline: "52 questions that go deeper than the to-do list.",
     available: true,
-    physicalPrice: 24,
-    digitalPrice: 12,
+    physicalPrice: PHYSICAL_DECK_PRICE,
+    digitalPrice: DIGITAL_DECK_PRICE,
     cards: [
       // FINANCES
       { id: 1,  category: "Finances",  question: "If our income doubled tomorrow, what's the first thing we'd change, and what would we keep exactly the same?" },
@@ -150,8 +152,8 @@ const DECKS = {
     theme: "Legacy & Vision",
     tagline: "52 questions about where you're going and who you're becoming.",
     available: true,
-    physicalPrice: 24,
-    digitalPrice: 12,
+    physicalPrice: PHYSICAL_DECK_PRICE,
+    digitalPrice: DIGITAL_DECK_PRICE,
     cards: [], // populate when ready
   },
 };
@@ -516,13 +518,17 @@ function CardDraw({ workspace, meetingDate, onStartSession, onSkip, onUnlock }) 
                 A question to sit with <em>before you record</em>
               </h1>
               <p className="cs-sub">
-                Each card opens one honest conversation. 52 of them — one per week — that go deeper than the to-do list.
+                Each card opens one honest conversation. 52 of them, one per week, that go deeper than the to-do list.
               </p>
+            </div>
+
+            <div className="cs-fade-2" style={{ marginBottom: 24, width: "100%", maxWidth: 420 }}>
+              <SampleCardCarousel />
             </div>
 
             <div className="cs-btn-stack cs-fade-3">
               <button type="button" className="cs-btn-primary" onClick={onUnlock}>
-                I have the deck — enter my code
+                I have the deck, enter my code
               </button>
               <a
                 href="https://familypause.com/cards"
@@ -530,10 +536,10 @@ function CardDraw({ workspace, meetingDate, onStartSession, onSkip, onUnlock }) 
                 rel="noreferrer"
                 className="cs-btn-gold"
               >
-                Get the card deck — $24 →
+                {`Get the card deck, $${PHYSICAL_DECK_PRICE} →`}
               </a>
               <button type="button" className="cs-btn-ghost-lora" onClick={onSkip}>
-                Skip — start session without a card
+                Skip, start session without a card
               </button>
             </div>
           </div>
@@ -745,10 +751,14 @@ function UnlockDeck({ workspace, onSuccess, onClose }) {
           Unlock the weekly card draw feature with a physical deck code, or purchase digital access directly.
         </p>
 
+        <div className="cs-fade-2" style={{ marginBottom: 24 }}>
+          <SampleCardCarousel />
+        </div>
+
         <div className="cs-tab-sw cs-fade-2">
           {[
             { id: "code", label: "I have the deck" },
-            { id: "digital", label: "Buy digital ($12)" },
+            { id: "digital", label: `Buy digital (${formatDigitalPrice()})` },
           ].map((t) => (
             <button
               key={t.id}
@@ -795,7 +805,7 @@ function UnlockDeck({ workspace, onSuccess, onClose }) {
             <div className="cs-info-gold">
               <div className="cs-info-gold-title">Don&apos;t have the deck yet?</div>
               <p>
-                Get the physical deck at <a href="https://familypause.com/cards" target="_blank" rel="noreferrer" style={{ color: T.terra }}>familypause.com/cards</a> for $24. Includes 52 cards, a beautiful tuck box, and your digital unlock code.
+                Get the physical deck at <a href="https://familypause.com/cards" target="_blank" rel="noreferrer" style={{ color: T.terra }}>familypause.com/cards</a> for {`$${PHYSICAL_DECK_PRICE}`}. Includes 52 cards, a beautiful tuck box, and your digital unlock code.
               </p>
             </div>
           </div>
@@ -809,7 +819,7 @@ function UnlockDeck({ workspace, onSuccess, onClose }) {
                   <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 22, color: T.text, marginBottom: 6 }}>2026 Digital Card Set</div>
                   <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, color: T.muted, letterSpacing: "0.05em" }}>52 cards · Permanent access · No expiration</div>
                 </div>
-                <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 32, color: T.terra }}>$12</div>
+                <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 32, color: T.terra }}>{formatDigitalPrice()}</div>
               </div>
               {["52 weekly conversation prompts", "Organized across 6 categories", "Card draw feature unlocked permanently", "Both spouses get access instantly"].map((f) => (
                 <div key={f} style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 8 }}>
@@ -820,7 +830,7 @@ function UnlockDeck({ workspace, onSuccess, onClose }) {
             </div>
 
             <button type="button" className="cs-btn-primary" style={{ padding: "16px", fontSize: 17 }} onClick={handleDigitalPurchase}>
-              Purchase Digital Access — $12
+              Purchase Digital Access, {formatDigitalPrice()}
             </button>
             <div style={{ textAlign: "center", marginTop: 12, fontSize: 12, color: T.muted, fontFamily: "'JetBrains Mono', monospace" }}>
               Secure payment via Stripe · Instant access

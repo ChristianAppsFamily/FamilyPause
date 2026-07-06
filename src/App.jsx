@@ -20,6 +20,7 @@ import CardSystem from "./components/CardSystem.jsx";
 import Paywall from "./components/Paywall.jsx";
 import PlanView from "./components/PlanView.jsx";
 import { paywallReason } from "./lib/subscription";
+import { loadDistillsToday, recordDistillUsage } from "./lib/distillUsage";
 import { parseAppLocation, syncPath, SYNC_VIEWS, cardsPath } from "./lib/routes";
 import { normalizeCardPeople } from "./lib/familyContext";
 import {
@@ -53,19 +54,19 @@ const DEFAULT_CONTEXT = {
   categories: ["Family", "Kids", "Business", "Finance", "Home", "Faith", "Health"],
 };
 
-const SAMPLE_TRANSCRIPT = `Amanda: Okay, before the week runs away from us again — let's actually do this.
+const SAMPLE_TRANSCRIPT = `Amanda: Okay, before the week runs away from us again, let's actually do this.
 Spence: Agreed. Start with money? The accountant emailed about Q2.
 Amanda: Yeah, we need to call the accountant before month end, it's getting tight.
-Spence: I'll own that. And we still haven't looked at the Q2 household budget together — can we block 30 minutes Tuesday night?
+Spence: I'll own that. And we still haven't looked at the Q2 household budget together. Can we block 30 minutes Tuesday night?
 Amanda: Tuesday works. Put it on the shared calendar.
-Spence: Done. Kids — Jordan has the dentist, right?
+Spence: Done. Kids: Jordan has the dentist, right?
 Amanda: Take Jordan to the dentist, Thursday at 3pm. I can do the pickup.
 Spence: And Maya's swim lessons start back up. First one is Saturday morning, 9am at the rec center.
 Amanda: Got it. I'll handle Maya's swim.
-Spence: On the business — launch week. I think we're blocked on the new payment links.
+Spence: On the business side, launch week. I think we're blocked on the new payment links.
 Amanda: Right, you need to replace the placeholder Stripe links in the app before Friday.
 Spence: Yep, that's on me. Friday at the latest.
-Amanda: One more — let's protect a real Sabbath this week. No screens after dinner Saturday, just us and the kids.
+Amanda: One more thing. Let's protect a real Sabbath this week. No screens after dinner Saturday, just us and the kids.
 Spence: Love that. Let's make it the default, not the exception.
 Amanda: Good sync. That felt like ten minutes.`;
 
@@ -510,7 +511,7 @@ function AgendaBuilder({ family, workspaceId, initialTopics = [], onDistill, onB
               <div style={{ fontFamily: "var(--display)", fontSize: 22, fontStyle: "italic", color: "var(--ink-2)", marginBottom: 8 }}>
                 No open actions yet.
               </div>
-              <div style={{ fontSize: 15 }}>Distill your conversation and your actions appear here — sorted by person.</div>
+              <div style={{ fontSize: 15 }}>Distill your conversation and your actions appear here, sorted by person.</div>
             </div>
           )}
 
@@ -519,7 +520,7 @@ function AgendaBuilder({ family, workspaceId, initialTopics = [], onDistill, onB
               <div style={{ fontFamily: "var(--display)", fontSize: 22, fontStyle: "italic", color: "var(--ink-2)", marginBottom: 8 }}>
                 No meeting log yet.
               </div>
-              <div style={{ fontSize: 15 }}>FamilyPause organizes this week — it does not keep a searchable history of past syncs.</div>
+              <div style={{ fontSize: 15 }}>FamilyPause organizes this week. It does not keep a searchable history of past syncs.</div>
             </div>
           )}
 
@@ -527,7 +528,7 @@ function AgendaBuilder({ family, workspaceId, initialTopics = [], onDistill, onB
             <div className="ctabar">
               <div className="copy">
                 <h3>Ready when you are.</h3>
-                <p>Record live or paste your conversation — FamilyPause turns it into a plan in about ten seconds.</p>
+                <p>Record live or paste your conversation. FamilyPause turns it into a plan in about ten seconds.</p>
               </div>
               <button
                 type="button"
@@ -556,7 +557,7 @@ function AgendaBuilder({ family, workspaceId, initialTopics = [], onDistill, onB
               </div>
             </div>
             <div className="assbubble">
-              Hi — I&apos;m here while you talk. I can add notes, draft action items, and tell you what you&apos;re forgetting.
+              Hi, I&apos;m here while you talk. I can add notes, draft action items, and tell you what you&apos;re forgetting.
             </div>
             <div className="suggs">
               <span className="sugg">Summarize our agenda</span>
@@ -710,7 +711,7 @@ function CaptureView({ text, setText, mode, setMode, onBack, onProcess }) {
       stopMeter();
       setDictating(false);
       if (!blob || blob.size < 200) {
-        setDictNotice("Recording too short. Speak for at least 2–3 seconds, then tap the check mark.");
+        setDictNotice("Recording too short. Speak for at least 2-3 seconds, then tap the check mark.");
         return baseRef.current;
       }
       const spoken = await transcribeAudioBlob(blob, mimeRef.current, {
@@ -792,7 +793,7 @@ function CaptureView({ text, setText, mode, setMode, onBack, onProcess }) {
       setDictating(true);
       setDictStatus(speechPreviewSupported()
         ? "Listening… words appear below as you speak"
-        : "Recording… tap ✓ when done — words appear after save");
+        : "Recording… tap ✓ when done. Words appear after save");
     } catch {
       stopPreview();
       stopMeter();
@@ -820,7 +821,7 @@ function CaptureView({ text, setText, mode, setMode, onBack, onProcess }) {
       <div className="lead">
         <div className="eyebrow" style={{ marginBottom: 12 }}>Step 2 · Have your meeting</div>
         <h1>Talk like humans.<br /><em>We&apos;ll handle the structure.</em></h1>
-        <p>Type or paste a transcript, or dictate with speech-to-text. Kids, money, work, the week ahead — whatever needs talking about.</p>
+        <p>Type or paste a transcript, or dictate with speech-to-text. Kids, money, work, the week ahead: whatever needs talking about.</p>
       </div>
 
       <div className="panel capcard">
@@ -829,12 +830,15 @@ function CaptureView({ text, setText, mode, setMode, onBack, onProcess }) {
             <Ico d={I.doc} size={15} /> Write or paste
           </button>
           <button type="button" className={"seg " + (mode === "dictate" ? "on" : "")} onClick={() => pickMode("dictate")} disabled={transcribing}>
-            <Ico d={I.wave} size={15} /> Speech to text
+            <Ico d={I.wave} size={15} /> Speech to text to transcribe your meeting
           </button>
         </div>
 
         {mode === "paste" && (
           <div style={{ padding: "4px 10px 10px" }}>
+            <p className="caphint" style={{ margin: "0 0 8px", padding: "0 4px" }}>
+              Paste transcript from your written notes or other apps
+            </p>
             <textarea className="capta" placeholder="Write or paste your conversation here…" value={text} onChange={(e) => setText(e.target.value)} />
             <div className="caprow">
               <span className="caphint">{wordCount || "Nothing entered yet"}</span>
@@ -867,7 +871,7 @@ function CaptureView({ text, setText, mode, setMode, onBack, onProcess }) {
                       <span className="dictlive-hint">
                         {speechPreviewSupported()
                           ? "Start speaking…"
-                          : `Recording ${Math.floor(recordSecs / 60)}:${String(recordSecs % 60).padStart(2, "0")} — tap ✓ when done`}
+                          : `Recording ${Math.floor(recordSecs / 60)}:${String(recordSecs % 60).padStart(2, "0")}. Tap ✓ when done`}
                       </span>
                     )}
                 </div>
@@ -917,7 +921,7 @@ function ProcessingView({ done, familyNames = "Everyone" }) {
   const stepLabels = ["Reading your conversation", "Finding actions & appointments", "Sorting by person and category", "Building this week's review"];
   const subs = [
     "Listening to every voice in the room…",
-    `${familyNames} — nobody gets dropped.`,
+    `${familyNames}: nobody gets dropped.`,
     "Finance, Kids, Business, Family.",
     "Almost there.",
   ];
@@ -1232,7 +1236,7 @@ export default function App({ user, workspace, onSignOut }) {
   const [overlay, setOverlay] = useState(overlayFromLocation);
   const [paywallBlock, setPaywallBlock] = useState(null);
   const [subscription, setSubscription] = useState(null);
-  const [sessionsThisMonth, setSessionsThisMonth] = useState(0);
+  const [distillsToday, setDistillsToday] = useState(0);
   const [calendarBusy, setCalendarBusy] = useState(false);
   const [calendarSyncing, setCalendarSyncing] = useState(false);
   const [unsyncingCardId, setUnsyncingCardId] = useState(null);
@@ -1347,16 +1351,8 @@ export default function App({ user, workspace, onSignOut }) {
         .maybeSingle();
       if (active) setSubscription(sub);
 
-      const startOfMonth = new Date();
-      startOfMonth.setDate(1);
-      startOfMonth.setHours(0, 0, 0, 0);
-      const { count } = await supabase
-        .from("sessions")
-        .select("*", { count: "exact", head: true })
-        .eq("workspace_id", ws.id)
-        .neq("status", "input")
-        .gte("created_at", startOfMonth.toISOString());
-      if (active) setSessionsThisMonth(count || 0);
+      const todayCount = await loadDistillsToday(ws.id);
+      if (active) setDistillsToday(todayCount);
     })();
     return () => { active = false; };
   }, [ws?.id]);
@@ -1460,7 +1456,7 @@ export default function App({ user, workspace, onSignOut }) {
 
   // ── Distill (real AI) ────────────────────────────────────────────────────
   const runDistill = async (text, mode = "paste") => {
-    const block = paywallReason(subscription, sessionsThisMonth);
+    const block = paywallReason(subscription, { distillsToday });
     if (block) {
       setPaywallBlock(block);
       openOverlay("paywall");
@@ -1515,6 +1511,8 @@ ${text}`;
 
     if (!errorMsg && ws?.id && newCards.length > 0) {
       try {
+        await recordDistillUsage(ws.id);
+        setDistillsToday((n) => n + 1);
         const reviewPayload = {
           transcript: text,
           input_mode: mode === "dictate" ? "record" : "paste",
@@ -1526,7 +1524,7 @@ ${text}`;
             .from("sessions")
             .update(reviewPayload)
             .eq("id", sessionIdRef.current);
-          if (!error) setSessionsThisMonth((n) => n + 1);
+          if (!error) { /* session updated */ }
         } else {
           const { data, error } = await supabase.from("sessions").insert({
             workspace_id: ws.id,
@@ -1536,7 +1534,6 @@ ${text}`;
           }).select().single();
           if (!error && data) {
             sessionIdRef.current = data.id;
-            setSessionsThisMonth((n) => n + 1);
           }
         }
       } catch { /* session update is best-effort */ }
@@ -1729,7 +1726,7 @@ ${text}`;
 
   // ── Overlays ─────────────────────────────────────────────────────────────
   if (overlay === "paywall") {
-    const resolvedReason = paywallBlock || paywallReason(subscription, sessionsThisMonth) || "upgrade";
+    const resolvedReason = paywallBlock || paywallReason(subscription, { distillsToday }) || "upgrade";
     return (
       <div className="stage" style={{ padding: "48px 24px 80px" }}>
         <Paywall reason={resolvedReason} onClose={() => { closeOverlay(); setPaywallBlock(null); }} />

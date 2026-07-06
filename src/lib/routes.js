@@ -15,7 +15,7 @@ export function cardsPath(view = "draw") {
   return "/app/cards";
 }
 
-export function authPathForScreen(screen, inviteCode = "") {
+export function authPathForScreen(screen, inviteCode = "", email = "") {
   switch (screen) {
     case "signup":
       return "/app?signup=1";
@@ -25,7 +25,7 @@ export function authPathForScreen(screen, inviteCode = "") {
       return inviteCode ? `/join/${inviteCode}` : "/app?join=1";
     case "signin":
     default:
-      return "/app";
+      return email ? `/app?email=${encodeURIComponent(email)}` : "/app";
   }
 }
 

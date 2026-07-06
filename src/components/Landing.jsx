@@ -11,6 +11,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import LandingDemo from "./LandingDemo.jsx";
+import SampleCardCarousel from "./SampleCardCarousel.jsx";
+import { formatDigitalPrice, PHYSICAL_DECK_PRICE } from "../lib/deckPricing";
 
 const css = `
 .fp-landing {
@@ -773,7 +775,8 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
             <a href="#try">Try It Now</a>
             <a href="#who">Who it's for</a>
             <a href="#pricing">Pricing</a>
-            <a href="/cards">Card deck</a>
+            <a href="#deck">Card deck</a>
+            <a href="/blog">Blog</a>
           </nav>
           <div className="navcta">
             <button className="signin" onClick={onSignIn}>Sign in</button>
@@ -800,7 +803,8 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
             <a href="#try" onClick={() => setMobileNavOpen(false)}>Try It Now</a>
             <a href="#who" onClick={() => setMobileNavOpen(false)}>Who it's for</a>
             <a href="#pricing" onClick={() => setMobileNavOpen(false)}>Pricing</a>
-            <a href="/cards" onClick={() => setMobileNavOpen(false)}>Card deck</a>
+            <a href="#deck" onClick={() => setMobileNavOpen(false)}>Card deck</a>
+            <a href="/blog" onClick={() => setMobileNavOpen(false)}>Blog</a>
           </nav>
         </div>
       </header>
@@ -875,7 +879,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
           <div className="wrap quote reveal">
             <span className="qmark">&ldquo;</span>
             <blockquote>We did a FamilyPause this weekend and it got us back on track with everything.</blockquote>
-            <div className="qby">— Spence, Founder &amp; First User</div>
+            <div className="qby">Spence, Founder &amp; First User</div>
           </div>
         </section>
 
@@ -912,6 +916,25 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                 <h3>Your week is built</h3>
                 <p>A clean weekly plan organized by person: Spence's actions, Amanda's actions, shared items, kids by name. Ready before Sunday ends.</p>
               </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="section" id="deck">
+          <div className="wrap">
+            <div className="shead reveal" style={{ textAlign: "center", marginBottom: 32 }}>
+              <span className="eyebrow">The card deck</span>
+              <h2>One card. One week. <em>One conversation.</em></h2>
+              <p style={{ maxWidth: 520, margin: "12px auto 0" }}>
+                Before you record, pull a card. 52 questions across finances, marriage, kids, faith, dreams, and home. Each one opens a conversation your to-do list never will.
+              </p>
+            </div>
+            <div className="reveal" style={{ marginBottom: 32 }}>
+              <SampleCardCarousel />
+            </div>
+            <div className="reveal" style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
+              <a href="/cards" className="btn btn-primary">{`Get the Physical Deck, $${PHYSICAL_DECK_PRICE}`}</a>
+              <a href="/cards" className="btn btn-ghost">Buy Digital, {formatDigitalPrice()}</a>
             </div>
           </div>
         </section>
@@ -973,10 +996,10 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                   <div className="subprice">Always free</div>
                   <ul className="feats">
                     <li><span className="far">→</span> 7-day full trial on signup</li>
+                    <li><span className="far">→</span> 1 free AI session per day during trial</li>
                     <li><span className="far">→</span> Unlimited manual card review</li>
                     <li><span className="far">→</span> Record and paste transcripts</li>
                     <li><span className="far">→</span> Keep / Discard / Calendar flow</li>
-                    <li><span className="far">→</span> 1 free AI session per month</li>
                   </ul>
                   <button className="btn btn-ghost btn-block" onClick={onStart}>Get Started Free</button>
                 </div>

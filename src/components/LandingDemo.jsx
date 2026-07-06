@@ -72,7 +72,7 @@ function ConversionBand({ onStart, onSeePricing }) {
         The full app records your conversation live, extracts everything, and lets you review together. Your week planned in minutes.
       </p>
       <div className="convbtns">
-        <button type="button" className="btn btn-primary" onClick={onStart}>Start Free — 7 Days</button>
+        <button type="button" className="btn btn-primary" onClick={onStart}>Start Free, 7 Days</button>
         <button type="button" className="btn btn-ghost" onClick={onSeePricing}>See Pricing</button>
       </div>
       <p className="convnote">No credit card required. Takes 60 seconds to set up.</p>
@@ -173,7 +173,7 @@ export default function LandingDemo({ onStart = () => {}, onSeePricing }) {
     try {
       apiCards = await callLandingDemoAI(text);
     } catch (err) {
-      apiError = err?.message || 'Distill unavailable — try again in a moment.';
+      apiError = err?.message || 'Distill unavailable. Try again in a moment.';
     }
 
     const wait = Math.max(0, DEMO_MIN_LOADING_MS - (Date.now() - loadStart));
@@ -185,7 +185,7 @@ export default function LandingDemo({ onStart = () => {}, onSeePricing }) {
       setPhase('input');
       setProgress(0);
       setLoadingMsg(0);
-      setError(apiError || 'No items found — try pasting a bit more detail.');
+      setError(apiError || 'No items found. Try pasting a bit more detail.');
       return;
     }
 
@@ -202,7 +202,7 @@ export default function LandingDemo({ onStart = () => {}, onSeePricing }) {
           <span className="eyebrow demo-eyebrow">Try It Now!</span>
           <h2>See what FamilyPause<br /><em>does</em>.</h2>
           <p className="lead">
-            Paste a few sentences from a real family conversation — anything you have talked about recently. Hit Distill and watch the AI organize it in seconds.
+            Paste a few sentences from a real family conversation, anything you have talked about recently. Hit Distill and watch the AI organize it in seconds.
           </p>
           <p className="note">No account needed. One free try per day.</p>
         </div>
@@ -213,7 +213,7 @@ export default function LandingDemo({ onStart = () => {}, onSeePricing }) {
               <div className="llabel">One demo per day</div>
               <p className="lbody">You have already tried FamilyPause today. Ready to see the full experience?</p>
               <div className="convbtns">
-                <button type="button" className="btn btn-primary" onClick={onStart}>Start Free — 7 Days</button>
+                <button type="button" className="btn btn-primary" onClick={onStart}>Start Free, 7 Days</button>
                 <button type="button" className="btn btn-ghost" onClick={scrollToPricing}>See Pricing</button>
               </div>
             </div>

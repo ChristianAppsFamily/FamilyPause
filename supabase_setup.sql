@@ -81,6 +81,14 @@ create table if not exists subscriptions (
   updated_at         timestamptz default now()
 );
 
+-- ── AI DISTILL USAGE (daily trial limit tracking) ─────────────
+create table if not exists ai_distill_usage (
+  workspace_id uuid references workspaces(id) on delete cascade,
+  usage_date   date not null,
+  count        integer not null default 1,
+  primary key (workspace_id, usage_date)
+);
+
 -- ── DECK CODES (physical/digital card-deck unlock) ────────────
 create table if not exists deck_codes (
   id           uuid primary key default gen_random_uuid(),
@@ -111,6 +119,7 @@ alter table workspace_members enable row level security;
 alter table sessions          enable row level security;
 alter table subscriptions     enable row level security;
 alter table deck_codes        enable row level security;
+alter table ai_distill_usage  enable row level security;
 
 -- Workspaces
 drop policy if exists "workspace_select" on workspaces;
@@ -170,6 +179,20 @@ drop policy if exists "deck_update" on deck_codes;
 create policy "deck_update" on deck_codes for update
   using (auth.role() = 'authenticated')
   with check (redeemed_by is null or redeemed_by = auth.uid());
+
+-- AI distill usage: workspace members can read/insert/update their workspace
+drop policy if exists "distill_usage_select" on ai_distill_usage;
+create policy "distill_usage_select" on ai_distill_usage for select using (
+  workspace_id in (select workspace_id from workspace_members where user_id = auth.uid())
+);
+drop policy if exists "distill_usage_insert" on ai_distill_usage;
+create policy "distill_usage_insert" on ai_distill_usage for insert with check (
+  workspace_id in (select workspace_id from workspace_members where user_id = auth.uid())
+);
+drop policy if exists "distill_usage_update" on ai_distill_usage;
+create policy "distill_usage_update" on ai_distill_usage for update using (
+  workspace_id in (select workspace_id from workspace_members where user_id = auth.uid())
+);
 
 -- ── REALTIME on sessions (live spouse sync) ───────────────────
 do $$ begin

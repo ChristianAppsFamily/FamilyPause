@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { onboardingPath } from "../lib/routes";
 import { openStripeCheckout } from "../lib/stripeCheckout";
+import { DIGITAL_DECK_PRICE, formatDigitalPrice, PHYSICAL_DECK_PRICE } from "../lib/deckPricing";
 import "../styles/onboarding.css";
 const PHYSICAL_DECK_URL = "https://familypause.com/cards";
 const TOTAL = 5;
@@ -33,8 +34,7 @@ function StepWelcome({ displayName, onNext }) {
         <div className="ob-eyebrow-mut">Your 7-Day Trial Includes</div>
         <div className="ob-feat-list">
           {[
-            "Unlimited AI meeting sessions",
-            "Full session history",
+            "1 free AI session per day",
             "Invite your spouse to your workspace",
             "Keep / Discard calendar review flow",
             "Google Calendar integration",
@@ -90,7 +90,7 @@ function StepFamilySetup({ workspaceId, displayName, onNext }) {
       <div className="ob-anim" style={{ "--d": "0ms" }}><div className="ob-eyebrow">Step 2 of 5</div></div>
       <h1 className="ob-anim ob-hl" style={{ "--d": "70ms" }}>Tell us about <em>your family</em></h1>
       <p className="ob-anim ob-body" style={{ "--d": "140ms" }}>
-        FamilyPause uses these names to route action items and appointments to the right person — automatically.
+        FamilyPause uses these names to route action items and appointments to the right person, automatically.
       </p>
 
       <div className="ob-anim ob-field-block" style={{ "--d": "210ms", marginTop: 28 }}>
@@ -189,7 +189,7 @@ function StepInvite({ workspaceId, spouseName, inviteCode: initialInviteCode, on
         Invite {spouseName || "your spouse"} <em>to your workspace</em>
       </h1>
       <p className="ob-anim ob-body" style={{ "--d": "140ms" }}>
-        You'll share the same sessions, plans, and history — updated in real time, on both your phones.
+        You'll share the same sessions, plans, and history, updated in real time on both your phones.
       </p>
 
       {loading ? (
@@ -217,7 +217,7 @@ function StepInvite({ workspaceId, spouseName, inviteCode: initialInviteCode, on
 
       <div className="ob-anim" style={{ "--d": "420ms" }}>
         <button type="button" className="ob-btn-primary" onClick={onNext}>Continue</button>
-        <button type="button" className="ob-btn-ghost" onClick={onNext}>Skip for now — invite later from Settings</button>
+        <button type="button" className="ob-btn-ghost" onClick={onNext}>Skip for now, invite later from Settings</button>
       </div>
     </div>
   );
@@ -239,9 +239,9 @@ function StepReady({ onNext }) {
       <p className="ob-anim ob-body" style={{ "--d": "300ms" }}>Here's how a session works. Sit down together, and let the app handle the rest.</p>
       <div className="ob-anim ob-how-card" style={{ "--d": "370ms" }}>
         {[
-          ["🎙️", "Record your conversation live"],
+          ["🎙️", "Speech to text to transcribe your meeting"],
           ["📋", "Or paste a transcript from Otter"],
-          ["✅", "Review cards together — Keep or Discard"],
+          ["✅", "Review cards together, Keep or Discard"],
           ["📅", "Send appointments to Google Calendar"],
         ].map(([emoji, text]) => (
           <div key={text} className="ob-how-row"><span className="ob-how-emoji">{emoji}</span><span>{text}</span></div>
@@ -295,7 +295,7 @@ function StepCardDeck({ workspaceId, onComplete }) {
       <div className="ob-anim" style={{ "--d": "0ms" }}><div className="ob-eyebrow">Step 5 of 5 · Conversation Starter</div></div>
       <h1 className="ob-anim ob-hl" style={{ "--d": "70ms" }}>Add your <em>card deck</em></h1>
       <p className="ob-anim ob-body" style={{ "--d": "140ms", marginBottom: 28 }}>
-        52 weekly questions that go deeper than the to-do list — a conversation starter for couples before every sync.
+        52 weekly questions that go deeper than the to-do list. A conversation starter for couples before every sync.
       </p>
 
       {unlocked ? (
@@ -307,7 +307,7 @@ function StepCardDeck({ workspaceId, onComplete }) {
         <>
           <div className="ob-anim ob-tab-sw" style={{ "--d": "210ms" }}>
             <button type="button" className={tab === "code" ? "active" : ""} onClick={() => setTab("code")}>I have the deck</button>
-            <button type="button" className={tab === "dig" ? "active" : ""} onClick={() => setTab("dig")}>Buy digital $12</button>
+            <button type="button" className={tab === "dig" ? "active" : ""} onClick={() => setTab("dig")}>Buy digital {formatDigitalPrice()}</button>
           </div>
 
           {tab === "code" ? (
@@ -329,7 +329,7 @@ function StepCardDeck({ workspaceId, onComplete }) {
               <div className="ob-info-gold">
                 <div className="ob-deck-callout">Don't Have the Deck Yet?</div>
                 <p className="ob-body" style={{ fontSize: 14 }}>
-                  Get the physical card deck at <strong>familypause.com/cards</strong> for $24 — includes all 52 cards and unlocks this digital feature.
+                  Get the physical card deck at <strong>familypause.com/cards</strong> for {`$${PHYSICAL_DECK_PRICE}`}. Includes all 52 cards and unlocks this digital feature.
                 </p>
               </div>
               <a
@@ -339,7 +339,7 @@ function StepCardDeck({ workspaceId, onComplete }) {
                 className="ob-btn-primary"
                 style={{ marginTop: 16, textDecoration: "none" }}
               >
-                Purchase Physical Deck — $24
+                {`Purchase Physical Deck, $${PHYSICAL_DECK_PRICE}`}
               </a>
             </div>
           ) : (
@@ -350,7 +350,7 @@ function StepCardDeck({ workspaceId, onComplete }) {
                     <div style={{ fontFamily: "var(--display)", fontSize: 20, marginBottom: 5 }}>2026 Digital Card Set</div>
                     <div className="ob-eyebrow-mut">52 cards · Permanent access · No expiration</div>
                   </div>
-                  <div style={{ fontFamily: "var(--display)", fontSize: 28, color: "var(--terra)", flex: "none" }}>$12</div>
+                  <div style={{ fontFamily: "var(--display)", fontSize: 28, color: "var(--terra)", flex: "none" }}>{formatDigitalPrice()}</div>
                 </div>
               </div>
               <div className="ob-feat-list" style={{ marginBottom: 20 }}>
@@ -369,12 +369,12 @@ function StepCardDeck({ workspaceId, onComplete }) {
                 style={{ marginBottom: 12, width: "100%" }}
                 onClick={() => openStripeCheckout("digital", { successPath: "/app?checkout=success" })}
               >
-                Purchase Digital Access — $12
+                Purchase Digital Access, {formatDigitalPrice()}
               </button>
               <p className="ob-field-note ob-center" style={{ marginBottom: 16 }}>Secure payment via Stripe · Instant access</p>
               <div className="ob-info-terra">
                 <p className="ob-body" style={{ fontSize: 13, color: "var(--terra-d)" }}>
-                  The physical deck at $24 includes this digital unlock — plus 52 beautifully printed cards for your table.
+                  {`The physical deck at $${PHYSICAL_DECK_PRICE} includes this digital unlock, plus 52 beautifully printed cards for your table.`}
                 </p>
               </div>
             </div>
@@ -388,7 +388,7 @@ function StepCardDeck({ workspaceId, onComplete }) {
             ? "Opening FamilyPause…"
             : unlocked
               ? "Start My First FamilyPause →"
-              : "Skip for now — unlock later in Settings"}
+              : "Skip for now, unlock later in Settings"}
         </button>
       </div>
     </div>

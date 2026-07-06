@@ -41,7 +41,7 @@ function normalizeAmplitude(samples) {
   let peak = 0;
   for (let i = 0; i < samples.length; i++) peak = Math.max(peak, Math.abs(samples[i]));
   if (peak < 0.0005) {
-    throw new Error("No speech detected — check mic input and try again.");
+    throw new Error("No speech detected. Check mic input and try again.");
   }
   if (peak >= 0.15) return samples;
   const scale = 0.85 / peak;
@@ -54,7 +54,7 @@ function normalizeAmplitude(samples) {
 async function decodeAudioBlob(blob) {
   const arrayBuffer = await blob.arrayBuffer();
   if (arrayBuffer.byteLength < 200) {
-    throw new Error("Recording too short — speak for at least 2 seconds.");
+    throw new Error("Recording too short. Speak for at least 2 seconds.");
   }
 
   // Resample during decode — manual resample alone often yields empty Whisper output.
@@ -68,7 +68,7 @@ async function decodeAudioBlob(blob) {
       samples = Float32Array.from(samples);
     }
     if (samples.length < MIN_SAMPLES) {
-      throw new Error("Recording too short — speak for at least 2 seconds.");
+      throw new Error("Recording too short. Speak for at least 2 seconds.");
     }
     return normalizeAmplitude(samples);
   } catch (err) {
@@ -78,7 +78,7 @@ async function decodeAudioBlob(blob) {
       const { read_audio } = await import("@xenova/transformers");
       const audio = await read_audio(url, SAMPLE_RATE);
       if (!audio?.length || audio.length < MIN_SAMPLES) {
-        throw new Error("Recording too short — speak for at least 2 seconds.");
+        throw new Error("Recording too short. Speak for at least 2 seconds.");
       }
       return normalizeAmplitude(audio);
     } finally {
@@ -149,6 +149,6 @@ export async function transcribeLocally(blob, { onProgress, onStatus } = {}) {
 
   const audio = await decodeAudioBlob(blob);
   const fromPcm = cleanTranscript(extractText(await runTranscriber(transcriber, audio)));
-  if (!fromPcm) throw new Error("No speech detected — check mic input and try again.");
+  if (!fromPcm) throw new Error("No speech detected. Check mic input and try again.");
   return fromPcm;
 }

@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { cardsPath } from "../lib/routes";
+import { formatDigitalPrice, PHYSICAL_DECK_PRICE } from "../lib/deckPricing";
 
 const css = `
 .cards-product {
@@ -67,30 +68,30 @@ export default function CardsProductPage() {
         <div className="eyebrow">2026 Conversation Deck</div>
         <h1>52 questions for your <em>weekly pause</em></h1>
         <p className="lead">
-          One deck per year. Six categories — Connection, Kids, Money, Calendar, Faith, and Fun.
+          One deck per year. Six categories: Connection, Kids, Money, Calendar, Faith, and Fun.
           Unlock the in-app card draw with a code from the physical box or buy digital-only access.
         </p>
 
         <div className="grid">
           <div className="card feat">
             <h2>Physical deck</h2>
-            <div className="price">$24</div>
+            <div className="price">{`$${PHYSICAL_DECK_PRICE}`}</div>
             <ul>
               <li>52 printed conversation cards in a tuck box</li>
               <li>Unlock code inside the box lid (FP-2026-XXXX-0000)</li>
               <li>Digital access included for your whole workspace</li>
             </ul>
             <p style={{ color: "var(--ink-2)", fontSize: 14.5, margin: 0 }}>
-              Available at launch — order through FamilyPause when inventory is live.
+              Available at launch. Order through FamilyPause when inventory is live.
             </p>
           </div>
 
           <div className="card">
             <h2>Digital only</h2>
-            <div className="price">$12</div>
+            <div className="price">{formatDigitalPrice()}</div>
             <ul>
               <li>All 52 prompts in the app</li>
-              <li>Permanent access — no expiration</li>
+              <li>Permanent access, no expiration</li>
               <li>Both spouses get access instantly</li>
             </ul>
             <div className="btn-row">

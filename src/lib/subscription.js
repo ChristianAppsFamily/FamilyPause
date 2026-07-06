@@ -9,10 +9,17 @@ export async function ensureTrialSubscription(workspaceId) {
     .eq("workspace_id", workspaceId)
     .maybeSingle();
   if (existing) return;
+
+  const now = new Date();
+  const trialEnd = new Date(now);
+  trialEnd.setDate(trialEnd.getDate() + 7);
+
   await supabase.from("subscriptions").insert({
     workspace_id: workspaceId,
     plan: "free",
     active: true,
+    trial_started_at: now.toISOString(),
+    trial_ends_at: trialEnd.toISOString(),
   });
 }
 
@@ -32,10 +39,16 @@ export function isTrialActive(subscription) {
   return new Date(subscription.trial_ends_at) > new Date();
 }
 
-/** Returns null if allowed, or paywall reason string. */
-export function paywallReason(subscription, sessionsThisMonth = 0) {
+/**
+ * Returns null if distill allowed, or paywall reason: "daily" | "trial".
+ * @param {object} subscription
+ * @param {{ distillsToday?: number }} opts
+ */
+export function paywallReason(subscription, { distillsToday = 0 } = {}) {
   if (isPaidPlan(subscription)) return null;
-  if (isTrialActive(subscription)) return null;
-  if (sessionsThisMonth >= 1) return "limit";
-  return null;
+  if (isTrialActive(subscription)) {
+    if (distillsToday >= 1) return "daily";
+    return null;
+  }
+  return "trial";
 }

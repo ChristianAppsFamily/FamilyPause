@@ -1,14 +1,11 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // Paywall.jsx: FamilyPause
 // Visual source of truth: project/app design bundle (src/styles/tokens.css).
-// Shown when the 7-day trial expires, or a free user hits the 1-AI-session/month
-// limit and tries to run AI distillation.
+// Shown when the 7-day trial expires, trial daily limit hit, or user opens upgrade.
 //
 // Props:
-//   reason     "trial" | "limit"  (tailors the headline/subcopy, default "trial")
+//   reason     "trial" | "daily" | "upgrade"  (tailors headline/subcopy)
 //   onClose()  optional (dismiss / go back)
-//
-// Stripe: checkout via stripe-checkout edge function (see src/lib/stripeCheckout.js).
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { openStripeCheckout } from "../lib/stripeCheckout";
@@ -73,13 +70,14 @@ function Check() {
 }
 
 export default function Paywall({ reason = "trial", onClose }) {
-  const headline = reason === "limit"
-    ? <>You've used <em>this month's</em> free session</>
+  const headline = reason === "daily"
+    ? <>You&apos;ve used <em>today&apos;s</em> free session</>
     : reason === "upgrade"
-      ? <>Upgrade when <em>you're ready</em></>
+      ? <>Upgrade when <em>you&apos;re ready</em></>
       : <>Your <em>free trial</em> has ended</>;
-  const sub = reason === "limit"
-    ? "The free plan includes one AI session a month. Upgrade to FamilyPause Family for unlimited weekly syncs, and keep your whole family on the same page."
+
+  const sub = reason === "daily"
+    ? "You've used today's free session. Come back tomorrow, or upgrade for unlimited sessions."
     : reason === "upgrade"
       ? "You're on a free trial with full access. Upgrade anytime for unlimited AI sessions, spouse sync, and session history after your trial ends."
       : "We hope the last 7 days brought a little more calm to your week. Keep the rhythm going with unlimited AI sessions, spouse sync, and full session history.";
@@ -115,7 +113,6 @@ export default function Paywall({ reason = "trial", onClose }) {
         </div>
 
         <div className="pw-grid">
-          {/* ── FAMILY PLAN, featured ─────────────────────────────────── */}
           <div className="pw-card feat">
             <span className="pw-badge">Most families pick this</span>
             <div className="pw-name">Family Plan</div>
@@ -137,22 +134,21 @@ export default function Paywall({ reason = "trial", onClose }) {
             </div>
           </div>
 
-          {/* ── FREE TIER ─────────────────────────────────────────────── */}
           <div className="pw-card">
             <div className="pw-name">Free</div>
             <div className="pw-price">
               <span className="amt">$0</span>
               <span className="per">/ forever</span>
             </div>
-            <p className="pw-tagline">For the occasional reset: one AI session a month.</p>
+            <p className="pw-tagline">Manual use after trial. Upgrade anytime for unlimited AI.</p>
             <ul className="pw-feats">
-              <li><Check /> 1 AI session per month</li>
               <li><Check /> Manual card review anytime</li>
+              <li><Check /> Record and paste transcripts</li>
               <li><Check /> Your week organized by person</li>
             </ul>
             <div className="pw-cta">
               <button className="btn btn-ghost btn-block" onClick={() => onClose?.()}>
-                {reason === "limit" ? "Wait until next month" : "Stay on Free"}
+                {reason === "daily" ? "Come back tomorrow" : "Stay on Free"}
               </button>
             </div>
           </div>

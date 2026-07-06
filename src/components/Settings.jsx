@@ -19,6 +19,7 @@ import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { openStripeCheckout } from "../lib/stripeCheckout";
+import { trialDaysRemaining as getTrialDaysRemaining, isPaidPlan } from "../lib/subscription";
 import {
   getCalendarConnection,
   startGoogleCalendarConnect,
@@ -386,11 +387,7 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
     return { free: "Free", family: "Family Plan", pro: "Family Pro", ministry: "Church / Ministry" }[p] || p;
   })();
 
-  const trialDaysRemaining = (() => {
-    if (!subscription?.trial_ends_at) return null;
-    const ms = new Date(subscription.trial_ends_at).getTime() - Date.now();
-    return Math.max(0, Math.ceil(ms / (1000 * 60 * 60 * 24)));
-  })();
+  const trialDaysRemaining = getTrialDaysRemaining(subscription);
 
   const unlockedDecks = Array.isArray(workspace?.unlocked_deck_years) ? workspace.unlocked_deck_years : [];
 
@@ -553,7 +550,7 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
           <h2>Google Calendar</h2>
           <p className="set-sub">
             Connect a Google account to add dated items from your weekly plan directly to your calendar.
-            Your FamilyPause login and your Google account can be different — you&apos;ll choose which
+            Your FamilyPause login and your Google account can be different. You&apos;ll choose which
             Google account to link.
           </p>
           {calendarNotice && (
@@ -675,18 +672,18 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
               </div>
               {checkoutNotice && (
                 <p className="set-sub" style={{ margin: "0 0 12px", color: "var(--olive-d)" }}>
-                  Thanks — your plan should update shortly.
+                  Thanks, your plan should update shortly.
                 </p>
               )}
-              {(subscription?.plan === "free" || !subscription) && trialDaysRemaining !== null && (
+              {(subscription?.plan === "free" || !subscription) && !isPaidPlan(subscription) && trialDaysRemaining !== null && (
                 <p className="set-sub" style={{ margin: 0 }}>
                   {trialDaysRemaining > 0
-                    ? `${trialDaysRemaining} day${trialDaysRemaining === 1 ? "" : "s"} left in your free trial.`
-                    : "Your free trial has ended. Upgrade for unlimited AI sessions."}
+                    ? `${trialDaysRemaining} trial day${trialDaysRemaining === 1 ? "" : "s"} remaining.`
+                    : "Your free trial has ended. Upgrade for unlimited AI sessions, or use manual review."}
                 </p>
               )}
               {!subscription && trialDaysRemaining === null && (
-                <p className="set-sub" style={{ margin: 0 }}>You're on the free plan, with 1 AI session per month.</p>
+                <p className="set-sub" style={{ margin: 0 }}>You&apos;re on the free plan. Upgrade for unlimited AI sessions.</p>
               )}
             </div>
           )}
@@ -710,11 +707,11 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
           {/* Change password */}
           <div style={{ borderBottom: "1px solid var(--red-soft)", paddingBottom: 22, marginBottom: 22 }}>
             <p className="set-sub" style={{ color: "var(--ink)", marginBottom: 12 }}>
-              Change password — we'll send a reset link to {user?.email || "your email"}.
+              Change password. We&apos;ll send a reset link to {user?.email || "your email"}.
             </p>
             {pwSent ? (
               <p style={{ fontFamily: "var(--mono)", fontSize: 11.5, letterSpacing: ".06em", textTransform: "uppercase", color: "var(--olive-d)" }}>
-                ✓ Reset link sent — check your inbox
+                ✓ Reset link sent. Check your inbox
               </p>
             ) : (
               <button className="btn btn-ghost" onClick={sendPasswordReset} disabled={pwSending}>
@@ -725,7 +722,7 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
 
           {/* Delete workspace */}
           <p className="set-sub" style={{ color: "var(--ink)" }}>
-            Delete workspace — permanently removes your family workspace, every saved session, and all
+            Delete workspace. Permanently removes your family workspace, every saved session, and all
             members. This cannot be undone.
           </p>
           {!confirmDelete ? (
