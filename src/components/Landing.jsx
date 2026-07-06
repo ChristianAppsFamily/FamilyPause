@@ -73,44 +73,97 @@ const css = `
   transition: border-color .3s, box-shadow .3s;
 }
 .fp-landing .nav.scrolled { border-color: var(--line); box-shadow: 0 6px 20px rgba(70,45,20,.05); }
-.fp-landing .nav .row { display: flex; align-items: center; justify-content: space-between; height: 74px; }
-.fp-landing .logo { display: flex; align-items: center; gap: 11px; }
-.fp-landing .logo .word { font-family: var(--display); font-size: 21px; font-weight: 600; }
+.fp-landing .nav .row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  height: 74px;
+  gap: 20px;
+}
+.fp-landing .logo { display: flex; align-items: center; gap: 11px; flex-shrink: 0; line-height: 1; }
+.fp-landing .logo .word { font-family: var(--display); font-size: 21px; font-weight: 600; line-height: 1; }
 .fp-landing .logo .word b { color: var(--terra); font-weight: 600; }
-  .fp-landing .navlinks { display: flex; align-items: center; gap: 34px; }
-  .fp-landing .navmenu-btn {
-    display: none;
-    background: none; border: 1px solid var(--line); border-radius: 8px;
-    width: 42px; height: 42px; align-items: center; justify-content: center;
-    cursor: pointer; color: var(--ink); padding: 0;
-  }
-  .fp-landing .navmenu-btn svg { display: block; }
-  .fp-landing .navmobile {
-    display: none;
-    position: fixed; inset: 64px 0 0 0; z-index: 90;
-    background: rgba(42, 37, 29, 0.35);
-    backdrop-filter: blur(2px);
-  }
-  .fp-landing .navmobile.open { display: block; }
-  .fp-landing .navmobile-panel {
-    background: var(--paper-card);
-    border-bottom: 1px solid var(--line);
-    padding: 20px 22px 24px;
-    display: flex; flex-direction: column; gap: 18px;
-    box-shadow: var(--shadow);
-  }
-  .fp-landing .navmobile-panel a {
-    font-family: var(--mono); font-size: 12.5px; letter-spacing: .08em; text-transform: uppercase;
-    color: var(--ink-2); text-decoration: none;
-  }
-  .fp-landing .navmobile-panel a:hover { color: var(--terra); }
-.fp-landing .navlinks a { font-family: var(--mono); font-size: 12.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-2); transition: color .18s; }
+.fp-landing .navlinks {
+  display: flex; align-items: center; justify-content: center;
+  gap: 28px; min-width: 0;
+}
+.fp-landing .navlinks a {
+  font-family: var(--mono); font-size: 12px; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--ink-2); transition: color .18s; white-space: nowrap; line-height: 1;
+}
 .fp-landing .navlinks a:hover { color: var(--terra); }
-.fp-landing .navcta { display: flex; align-items: center; gap: 18px; }
-.fp-landing .navcta .signin { font-family: var(--mono); font-size: 12.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-2); cursor: pointer; background: none; border: none; padding: 0; }
+.fp-landing .navcta {
+  display: flex; align-items: center; gap: 16px; flex-shrink: 0;
+}
+.fp-landing .navcta .signin {
+  font-family: var(--mono); font-size: 12px; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--ink-2); cursor: pointer; background: none; border: none; padding: 0;
+  line-height: 1; white-space: nowrap;
+}
 .fp-landing .navcta .signin:hover { color: var(--terra); }
+.fp-landing .navcta .btn { line-height: 1; }
 .fp-landing .navcta .btn .short-label { display: none; }
 .fp-landing .navcta .btn .long-label { display: inline; }
+.fp-landing .navmenu-btn {
+  display: none;
+  background: none; border: none;
+  width: 44px; height: 44px; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--ink); padding: 0; flex-shrink: 0;
+}
+.fp-landing .navmenu-btn svg { display: block; }
+.fp-landing .navmobile {
+  display: none;
+  position: fixed; inset: 74px 0 0 0; z-index: 90;
+  background: rgba(42, 37, 29, 0.28);
+  backdrop-filter: blur(2px);
+}
+.fp-landing .navmobile.open { display: block; }
+.fp-landing .navmobile-panel {
+  background: var(--paper);
+  width: 100%;
+  min-height: 100%;
+  padding: 8px 0 32px;
+  display: flex; flex-direction: column;
+  border-bottom: 1px solid var(--line);
+  box-shadow: var(--shadow);
+}
+.fp-landing .navmobile-links {
+  display: flex; flex-direction: column;
+}
+.fp-landing .navmobile-links a {
+  font-family: var(--serif);
+  font-size: 18px;
+  line-height: 1.35;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--ink);
+  text-decoration: none;
+  padding: 18px 32px;
+  border-bottom: 1px solid var(--line);
+  transition: color .15s, background .15s;
+}
+.fp-landing .navmobile-links a:hover,
+.fp-landing .navmobile-links a:focus-visible {
+  color: var(--terra);
+  background: var(--paper-2);
+}
+.fp-landing .navmobile-actions {
+  margin-top: auto;
+  padding: 28px 32px 0;
+  display: flex; flex-direction: column; gap: 12px;
+}
+.fp-landing .navmobile-actions .signin {
+  font-family: var(--serif);
+  font-size: 18px;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--ink-2);
+  background: none; border: none;
+  padding: 14px 0;
+  cursor: pointer;
+  text-align: left;
+}
+.fp-landing .navmobile-actions .signin:hover { color: var(--terra); }
 
 /* hero */
 .fp-landing .hero { position: relative; overflow: hidden; }
@@ -238,6 +291,32 @@ const css = `
 .fp-landing .privacy { text-align: center; max-width: 880px; margin: 0 auto; }
 .fp-landing .privacy p { font-family: var(--display); font-size: 32px; line-height: 1.35; margin: 0; font-weight: 500; }
 .fp-landing .privacy em { font-style: italic; color: #F2E7C9; }
+
+/* card deck section */
+.fp-landing .deck-section {
+  border-top: 1px solid var(--line);
+  background: var(--paper);
+  padding: 96px 0 104px;
+}
+.fp-landing .deck-section .shead {
+  max-width: 640px;
+  margin: 0 auto 52px;
+  text-align: center;
+}
+.fp-landing .deck-section .shead p {
+  max-width: 520px;
+  margin: 14px auto 0;
+}
+.fp-landing .deck-carousel-wrap {
+  margin: 0 auto 40px;
+  max-width: 640px;
+}
+.fp-landing .deck-actions {
+  display: flex;
+  gap: 14px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
 
 /* pricing */
 .fp-landing .pricewrap { background: var(--cream); border: 1px solid var(--line); border-radius: var(--r-xl); padding: 18px; box-shadow: var(--shadow); margin-top: 8px; }
@@ -665,6 +744,12 @@ const css = `
   .fp-landing .mock .mfoot { animation: none; opacity: 1; transform: none; }
 }
 
+@media (max-width: 1280px) {
+  .fp-landing .navlinks { gap: 20px; }
+  .fp-landing .navlinks a { font-size: 11px; letter-spacing: .05em; }
+  .fp-landing .navcta { gap: 14px; }
+  .fp-landing .navcta .btn { padding: 13px 20px; font-size: 12px; }
+}
 @media (max-width: 960px) {
   .fp-landing .herogrid { grid-template-columns: 1fr; gap: 48px; padding: 60px 0 72px; }
   .fp-landing .hero h1 { font-size: 52px; }
@@ -675,11 +760,17 @@ const css = `
   .fp-landing .audgrid { grid-template-columns: 1fr; }
   .fp-landing .pricegrid { grid-template-columns: 1fr; }
   .fp-landing .tier.pop { transform: none; }
-  .fp-landing .navlinks { display: none; }
-  .fp-landing .navmenu-btn { display: inline-flex; }
   .fp-landing .shead h2, .fp-landing .finalcta h2 { font-size: 40px; }
   .fp-landing .quote blockquote { font-size: 30px; }
   .fp-landing .privacy p { font-size: 26px; }
+}
+@media (max-width: 768px) {
+  .fp-landing .navlinks { display: none; }
+  .fp-landing .navcta .signin,
+  .fp-landing .navcta .btn:not(.navmenu-btn) { display: none; }
+  .fp-landing .navmenu-btn { display: inline-flex; }
+  .fp-landing .navmobile { inset: 64px 0 0 0; }
+  .fp-landing .nav .row { height: 64px; }
 }
 @media (max-width: 720px) {
   .fp-landing .trywrap { padding: 0 16px; }
@@ -696,22 +787,7 @@ const css = `
   .fp-landing .foot .fcols { gap: 36px; flex-wrap: wrap; }
 }
 @media (max-width: 480px) {
-  /* Nav: give Sign in its own breathing room, shrink CTA label */
-  .fp-landing .nav .row { height: 64px; }
-  .fp-landing .navcta { gap: 10px; }
-  .fp-landing .navcta .signin {
-    white-space: nowrap;
-    padding: 8px 10px;
-    flex-shrink: 0;
-  }
-  .fp-landing .navcta .btn {
-    padding: 10px 14px;
-    font-size: 11px;
-    white-space: nowrap;
-    flex-shrink: 0;
-  }
-  .fp-landing .navcta .btn .long-label { display: none; }
-  .fp-landing .navcta .btn .short-label { display: inline; }
+  .fp-landing .navcta .btn:not(.navmenu-btn) { display: none; }
 }
 `;
 
@@ -776,7 +852,6 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
             <a href="#who">Who it's for</a>
             <a href="#pricing">Pricing</a>
             <a href="#deck">Card deck</a>
-            <a href="/blog">Blog</a>
           </nav>
           <div className="navcta">
             <button className="signin" onClick={onSignIn}>Sign in</button>
@@ -799,12 +874,30 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
         </div>
         <div className={"navmobile" + (mobileNavOpen ? " open" : "")} onClick={() => setMobileNavOpen(false)}>
           <nav className="navmobile-panel" onClick={(e) => e.stopPropagation()}>
-            <a href="#how" onClick={() => setMobileNavOpen(false)}>How it works</a>
-            <a href="#try" onClick={() => setMobileNavOpen(false)}>Try It Now</a>
-            <a href="#who" onClick={() => setMobileNavOpen(false)}>Who it's for</a>
-            <a href="#pricing" onClick={() => setMobileNavOpen(false)}>Pricing</a>
-            <a href="#deck" onClick={() => setMobileNavOpen(false)}>Card deck</a>
-            <a href="/blog" onClick={() => setMobileNavOpen(false)}>Blog</a>
+            <div className="navmobile-links">
+              <a href="#how" onClick={() => setMobileNavOpen(false)}>How it works</a>
+              <a href="#try" onClick={() => setMobileNavOpen(false)}>Try It Now</a>
+              <a href="#who" onClick={() => setMobileNavOpen(false)}>Who it&apos;s for</a>
+              <a href="#pricing" onClick={() => setMobileNavOpen(false)}>Pricing</a>
+              <a href="#deck" onClick={() => setMobileNavOpen(false)}>Card deck</a>
+              <a href="/blog" onClick={() => setMobileNavOpen(false)}>Blog</a>
+            </div>
+            <div className="navmobile-actions">
+              <button
+                type="button"
+                className="signin"
+                onClick={() => { setMobileNavOpen(false); onSignIn(); }}
+              >
+                Sign in
+              </button>
+              <button
+                type="button"
+                className="btn btn-primary btn-block"
+                onClick={() => { setMobileNavOpen(false); onStart(); }}
+              >
+                Start Free Week
+              </button>
+            </div>
           </nav>
         </div>
       </header>
@@ -961,19 +1054,19 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
           </div>
         </section>
 
-        <section className="section" id="deck">
+        <section className="deck-section" id="deck">
           <div className="wrap">
-            <div className="shead reveal" style={{ textAlign: "center", marginBottom: 32 }}>
+            <div className="shead reveal">
               <span className="eyebrow">The card deck</span>
               <h2>One card. One week. <em>One conversation.</em></h2>
-              <p style={{ maxWidth: 520, margin: "12px auto 0" }}>
+              <p>
                 Before you record, pull a card. 52 questions across finances, marriage, kids, faith, dreams, and home. Each one opens a conversation your to-do list never will.
               </p>
             </div>
-            <div className="reveal" style={{ marginBottom: 32 }}>
+            <div className="deck-carousel-wrap reveal">
               <SampleCardCarousel />
             </div>
-            <div className="reveal" style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
+            <div className="deck-actions reveal">
               <a href="/cards" className="btn btn-primary">{`Get the Physical Deck, $${PHYSICAL_DECK_PRICE}`}</a>
               <a href="/cards" className="btn btn-ghost">Buy Digital, {formatDigitalPrice()}</a>
             </div>
@@ -1098,11 +1191,12 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
               <div className="fcol">
                 <h4>Product</h4>
                 <a href="#how">How it works</a>
-                <a href="#who">Who it's for</a>
+                <a href="#who">Who it&apos;s for</a>
                 <a href="#pricing">Pricing</a>
               </div>
               <div className="fcol">
                 <h4>Company</h4>
+                <a href="/blog">Blog</a>
                 <a href="/privacy.html">Privacy</a>
                 <a href="/terms.html">Terms</a>
                 <a href="mailto:hello@familypause.com">Contact</a>
