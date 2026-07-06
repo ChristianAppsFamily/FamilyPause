@@ -224,7 +224,9 @@ $$ language plpgsql security definer;
 -- Run once. Safe to re-run — IF NOT EXISTS guards are implicit via add column if not exists.
 alter table workspaces
   add column if not exists faith_mode  boolean default false,
-  add column if not exists family_name text;
+  add column if not exists family_name text,
+  add column if not exists first_session_completed boolean default false,
+  add column if not exists sounds_enabled boolean default true;
 
 -- ── Performance indexes ───────────────────────────────────────
 create index if not exists workspace_members_user_id_idx on workspace_members(user_id);

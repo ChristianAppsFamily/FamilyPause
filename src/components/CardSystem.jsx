@@ -18,6 +18,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "../lib/supabase";
+import { playCardFlip, soundsEnabledForWorkspace } from "../lib/sounds";
 import { openStripeCheckout } from "../lib/stripeCheckout";
 import "../styles/cards.css";
 
@@ -479,6 +480,17 @@ function CardDraw({ workspace, meetingDate, onStartSession, onSkip, onUnlock }) 
     setPhase("drawing");
     setTimeout(() => setPhase("revealed"), 800);
   };
+
+  const soundsOn = soundsEnabledForWorkspace(workspace);
+  const flipPlayedRef = useRef(false);
+  useEffect(() => {
+    if (phase !== "revealed" || flipPlayedRef.current) return;
+    flipPlayedRef.current = true;
+    playCardFlip(soundsOn);
+  }, [phase, soundsOn]);
+  useEffect(() => {
+    if (phase !== "revealed") flipPlayedRef.current = false;
+  }, [phase]);
 
   // LOCKED STATE
   if (!hasUnlockedDeck || phase === "intro") {

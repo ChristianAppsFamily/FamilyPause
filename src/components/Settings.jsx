@@ -174,6 +174,8 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
   const [deleting, setDeleting] = useState(false);
   const [faithMode, setFaithMode] = useState(workspace?.faith_mode ?? false);
   const [faithSaving, setFaithSaving] = useState(false);
+  const [soundsEnabled, setSoundsEnabled] = useState(workspace?.sounds_enabled !== false);
+  const [soundsSaving, setSoundsSaving] = useState(false);
 
   // ── Members who accepted invite ────────────────────────────────────────────
   const [members, setMembers] = useState([]);
@@ -246,7 +248,8 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
 
   useEffect(() => {
     setFaithMode(workspace?.faith_mode ?? false);
-  }, [workspace?.faith_mode]);
+    setSoundsEnabled(workspace?.sounds_enabled !== false);
+  }, [workspace?.faith_mode, workspace?.sounds_enabled]);
 
   const loadCalendarConnection = async () => {
     if (!workspace?.id || !user?.id) {
@@ -358,6 +361,22 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
     setFaithSaving(false);
     if (err) { setError(err.message); return; }
     setFaithMode(next);
+    if (data && onWorkspaceUpdate) onWorkspaceUpdate(data);
+  };
+
+  const toggleSounds = async () => {
+    if (!workspace?.id) return;
+    setSoundsSaving(true);
+    const next = !soundsEnabled;
+    const { data, error: err } = await supabase
+      .from("workspaces")
+      .update({ sounds_enabled: next })
+      .eq("id", workspace.id)
+      .select()
+      .single();
+    setSoundsSaving(false);
+    if (err) { setError(err.message); return; }
+    setSoundsEnabled(next);
     if (data && onWorkspaceUpdate) onWorkspaceUpdate(data);
   };
 
@@ -507,6 +526,24 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
             disabled={faithSaving}
           >
             {faithSaving ? "Saving…" : faithMode ? "Faith mode on" : "Faith mode off"}
+          </button>
+        </section>
+
+        {/* ── SOUNDS ─────────────────────────────────────────────────── */}
+        <section className="panel set-sec rise">
+          <div className="eyebrow">Experience</div>
+          <h2>Sounds</h2>
+          <p className="set-sub">
+            Gentle completion chime when your week is built, and a paper flip when you draw a conversation card.
+            Respects your device mute switch and accessibility motion settings.
+          </p>
+          <button
+            type="button"
+            className={"btn " + (soundsEnabled ? "btn-primary" : "btn-soft")}
+            onClick={toggleSounds}
+            disabled={soundsSaving}
+          >
+            {soundsSaving ? "Saving…" : soundsEnabled ? "Sounds on" : "Sounds off"}
           </button>
         </section>
 

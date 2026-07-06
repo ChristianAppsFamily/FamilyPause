@@ -650,6 +650,164 @@
   transition: filter .15s;
 }
 .plan-btn-primary:hover { filter: brightness(0.96); }
+
+/* ── Plan arrival: interstitial, week strip, staged reveal ── */
+.plan-interstitial {
+  position: fixed; inset: 0; z-index: 200;
+  background: #FAF7F2;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px;
+  opacity: 1; transition: opacity 400ms ease;
+  pointer-events: none;
+}
+.plan-interstitial--exit { opacity: 0; }
+.plan-interstitial-mark {
+  width: 72px; height: 72px; border-radius: 14px;
+  background: linear-gradient(145deg, var(--terra-tint), var(--paper-card));
+  display: grid; place-items: center; box-shadow: var(--shadow);
+  animation: plan-mark-in .55s cubic-bezier(.22,1,.36,1) both;
+}
+.plan-interstitial-mark img { border-radius: 10px; }
+.plan-interstitial-line {
+  font-family: var(--display); font-size: 28px; font-style: italic; font-weight: 500;
+  color: #2E2820; margin: 0;
+  animation: plan-line-up .7s cubic-bezier(.22,1,.36,1) .12s both;
+}
+@keyframes plan-mark-in {
+  from { opacity: 0; transform: scale(.92); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes plan-line-up {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.plan-view { opacity: 0; transition: opacity 400ms ease; }
+.plan-view--visible { opacity: 1; }
+.plan-view--crossfade.plan-view--visible { transition: opacity 400ms ease; }
+
+.plan-week-strip {
+  display: flex; justify-content: space-between; gap: 4px;
+  max-width: 280px; margin: 0 auto 20px; padding: 0 4px;
+}
+.plan-week-day {
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px;
+}
+.plan-week-label {
+  font-family: var(--mono); font-size: 9px; letter-spacing: .06em; color: var(--ink-3);
+}
+.plan-week-dot {
+  width: 5px; height: 5px; border-radius: 50%; background: transparent;
+}
+.plan-week-dot--on { background: var(--terra); }
+.plan-week-dot--pop {
+  animation: week-dot-pop .35s cubic-bezier(.34,1.4,.5,1) both;
+}
+@keyframes week-dot-pop {
+  from { opacity: 0; transform: scale(0); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.plan-summary-card {
+  text-align: center; margin-bottom: 28px; padding: 8px 12px 4px;
+  opacity: 0; transform: translateY(16px);
+}
+.plan-summary-card--in {
+  animation: plan-summary-in .55s cubic-bezier(.22,1,.36,1) both;
+}
+@keyframes plan-summary-in {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.plan-summary-seal {
+  width: 52px; height: 52px; border-radius: 50%; margin: 0 auto 14px;
+  display: grid; place-items: center; background: var(--olive); color: #fff;
+  box-shadow: 0 8px 20px rgba(94,107,55,.28);
+}
+.plan-summary-eyebrow {
+  font-family: var(--mono); font-size: 10px; letter-spacing: .18em; text-transform: uppercase;
+  color: var(--terra); margin: 0 0 8px;
+}
+.plan-summary-title {
+  font-family: var(--display); font-size: 34px; line-height: 1.08; margin: 0 0 10px; color: var(--ink);
+}
+.plan-summary-count { color: var(--terra); font-weight: 600; }
+.plan-summary-sub {
+  color: var(--ink-2); font-size: 16px; max-width: 520px; margin: 0 auto; line-height: 1.45;
+}
+
+.plancol { opacity: 1; transform: none; }
+.plancol:not(.plancol--in) {
+  opacity: 0; transform: translateY(18px);
+}
+.plan-view--static .plancol { opacity: 1; transform: none; }
+.plancol--in {
+  animation: plancol-in .5s cubic-bezier(.22,1,.36,1) both;
+}
+@keyframes plancol-in {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.planitem:not(.planitem--static) {
+  opacity: 0; transform: translateY(10px);
+}
+.planitem--in, .planitem--static {
+  animation: planitem-in .42s cubic-bezier(.22,1,.36,1) both;
+}
+@keyframes planitem-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.synced-badge-wrap--pop { animation: synced-pop .3s cubic-bezier(.34,1.4,.5,1) both; }
+@keyframes synced-pop {
+  from { transform: scale(.85); }
+  to { transform: scale(1); }
+}
+.synced-check-icon path {
+  stroke-dasharray: 12;
+  stroke-dashoffset: 12;
+}
+.synced-check-icon--draw path {
+  animation: synced-stroke .3s ease forwards;
+}
+@keyframes synced-stroke {
+  to { stroke-dashoffset: 0; }
+}
+
+.plan-leaf-confetti {
+  position: fixed; inset: 0; z-index: 150; pointer-events: none; overflow: hidden;
+}
+.plan-leaf-confetti i {
+  position: absolute; top: -16px; border-radius: 2px 50% 2px 50%;
+  opacity: 0.85;
+  animation-name: leaf-fall;
+  animation-timing-function: ease-in;
+  animation-fill-mode: forwards;
+  animation-duration: 1.5s;
+}
+@keyframes leaf-fall {
+  0% { transform: translateY(0) rotate(0deg); opacity: 0.9; }
+  100% { transform: translateY(105vh) translateX(var(--leaf-drift, 0)) rotate(280deg); opacity: 0; }
+}
+
+.plan-view--static .plan-summary-card,
+.plan-view--static .plancol,
+.plan-view--static .planitem {
+  opacity: 1; transform: none; animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .plan-interstitial, .plan-interstitial-line, .plan-interstitial-mark,
+  .plan-summary-card--in, .plancol--in, .planitem--in,
+  .plan-week-dot--pop, .synced-badge-wrap--pop, .synced-check-icon--draw path,
+  .plan-leaf-confetti i, .revdone .btn.btn-breathing {
+    animation: none !important;
+  }
+  .plan-view, .plan-interstitial { transition: none; }
+  .planitem, .plancol, .plan-summary-card { opacity: 1; transform: none; }
+}
+
 @media (max-width: 520px) {
   .planfoot-actions { flex-direction: column-reverse; }
   .plan-btn-ghost, .plan-btn-primary { width: 100%; text-align: center; }
@@ -700,7 +858,21 @@
 .resolve-field input:focus { outline: none; border-color: var(--terra); box-shadow: 0 0 0 3px var(--terra-tint); }
 .resolve-foot { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
 
-/* build my week — calendar sync loading */
+/* build my week — breathing pulse while calendar sync runs */
+.revdone .btn.btn-breathing {
+  font-family: var(--lora); font-style: italic; text-transform: none; letter-spacing: 0;
+  font-size: 16px; animation: btn-breathe 2s ease-in-out infinite;
+}
+.revdone .btn.btn-breathing em { font-style: italic; }
+@keyframes btn-breathe {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.75; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .revdone .btn.btn-breathing { animation: none; opacity: 1; }
+}
+
+/* legacy spinner (unused) */
 .revdone .btn.btn-syncing {
   font-family: var(--lora); font-style: italic; text-transform: none; letter-spacing: 0;
   font-size: 16px; display: inline-flex; align-items: center; gap: 10px;

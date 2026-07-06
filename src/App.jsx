@@ -18,7 +18,7 @@ import { callDistillExtraction, callFamilyPauseAI, buildSystemPrompt } from "./l
 import Settings from "./components/Settings.jsx";
 import CardSystem from "./components/CardSystem.jsx";
 import Paywall from "./components/Paywall.jsx";
-import CalendarAccountChooser from "./components/CalendarAccountChooser.jsx";
+import PlanView from "./components/PlanView.jsx";
 import { paywallReason } from "./lib/subscription";
 import { parseAppLocation, syncPath, SYNC_VIEWS, cardsPath } from "./lib/routes";
 import { normalizeCardPeople } from "./lib/familyContext";
@@ -42,6 +42,8 @@ import {
   saveCaptureDraft,
 } from "./lib/captureDraftLocal";
 import { deleteSessionRow, uiInputMode } from "./lib/sessionDraft";
+import { prefersReducedMotion } from "./lib/motion";
+import { playPlanChime, soundsEnabledForWorkspace } from "./lib/sounds";
 
 // ── DEFAULT CONTEXT (fallback when workspace has none) ───────────────────────
 const DEFAULT_CONTEXT = {
@@ -1194,172 +1196,15 @@ function ReviewView({ cards, setCards, roleOf, onBack, onBuild, distillError, ca
           <span className="summ">{allDecided ? <span><b>{kept} kept</b> · {total - kept} discarded</span> : `${total - decided} left to review`}</span>
           <button
             type="button"
-            className={"btn btn-primary btn-lg" + (calendarSyncing ? " btn-syncing" : "")}
+            className={"btn btn-primary btn-lg" + (calendarSyncing ? " btn-breathing" : "")}
             disabled={!allDecided || calendarSyncing}
             onClick={onBuild}
           >
             {calendarSyncing ? (
-              <>
-                <span className="btn-spinner" aria-hidden="true" />
-                Syncing your calendar…
-              </>
+              <em>Building your week…</em>
             ) : (
               <><Ico d={I.arrow} size={16} /> Build my week</>
             )}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ── CONFETTI + PLAN (View 5) ──────────────────────────────────────────────────
-function Confetti() {
-  const cols = ["#BE5A37", "#5E6B37", "#C09740", "#D08049", "#7b6cae"];
-  const bits = useRef(Array.from({ length: 70 }).map((_, i) => ({
-    left: (i * 37 % 100), delay: (i % 7) * 0.08, dur: 2.4 + (i % 5) * 0.4, col: cols[i % cols.length], rot: (i * 53) % 360,
-  }))).current;
-  return (
-    <div className="confetti">
-      {bits.map((b, i) => <i key={i} style={{ left: b.left + "%", background: b.col, animationDuration: b.dur + "s", animationDelay: b.delay + "s", transform: `rotate(${b.rot}deg)` }} />)}
-    </div>
-  );
-}
-
-function PlanView({
-  keptCards, adults, roleOf, onRestart,
-  calendarConnected, calendarBusy, unsyncingCardId,
-  showCalendarConnect, onConfirmCalendarConnect, onCancelCalendarConnect, familyPauseEmail,
-  onRetrySync, onAddToCal, onUnsync,
-}) {
-  const [confetti, setConfetti] = useState(true);
-  useEffect(() => { const t = setTimeout(() => setConfetti(false), 2200); return () => clearTimeout(t); }, []);
-
-  const isAdult = (p) => adults.some((a) => a.toLowerCase() === (p || "").toLowerCase());
-  const byPerson = (name) => keptCards.filter((c) => (c.person || "").toLowerCase() === name.toLowerCase());
-  const shared = keptCards.filter((c) => !isAdult(c.person));
-
-  const Item = ({ it }) => (
-    <div className={`planitem ${it.calendar_synced ? "synced" : ""}`}>
-      <span className="pmark"><Ico d={I.check} size={11} /></span>
-      <div className="pbody">
-        <div className="pt">{it.task}</div>
-        <div className="pmeta">
-          <span className="ct">{it.category}</span>
-          {formatWhen(it.date, it.time) && <span>· {formatWhen(it.date, it.time)}</span>}
-          {it.calendar_synced && (
-            <span className="synced-badge-wrap">
-              <span className={"synced-badge" + (unsyncingCardId === it.id ? " synced-badge--busy" : "")}>
-                {unsyncingCardId === it.id ? "Removing…" : "Synced"}
-              </span>
-              <button
-                type="button"
-                className="plan-cal-unsync"
-                disabled={unsyncingCardId === it.id || calendarBusy}
-                onClick={() => onUnsync(it.id)}
-                aria-label="Unsync from Google Calendar"
-              >
-                ×
-              </button>
-            </span>
-          )}
-          {!it.calendar_synced && it.calendar_sync_failed && isSyncEligible(it) && (
-            <button type="button" className="plan-cal-retry" disabled={calendarBusy} onClick={() => onRetrySync(it.id)}>
-              Retry
-            </button>
-          )}
-          {!it.calendar_synced && !it.calendar_sync_failed && isSyncEligible(it) && (
-            <button
-              type="button"
-              className="plan-cal-add"
-              disabled={calendarBusy || unsyncingCardId === it.id}
-              onClick={() => (calendarConnected ? onRetrySync(it.id) : onAddToCal(it.id))}
-            >
-              Add to Cal
-            </button>
-          )}
-          {!isSyncEligible(it) && (it.date || it.time || it.type === "event" || it.recurring) && (
-            <span className="plan-cal-hint">Add date &amp; time to sync</span>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-
-  return (
-    <div className="view">
-      {confetti && <Confetti />}
-      {calendarConnected && (
-        <div className="plan-cal-status">
-          <span className="plan-cal-dot" aria-hidden="true" />
-          Google Calendar connected
-        </div>
-      )}
-      <div className="planhero">
-        <div className="seal"><Ico d={I.check} size={28} /></div>
-        <div className="eyebrow" style={{ marginBottom: 12 }}>Step 5 · Your week is built</div>
-        <h1>Your week, <em>planned before Sunday ends.</em></h1>
-        <p>A clean plan, organized by person. {keptCards.length} items routed where they belong: appointments timed, actions owned, nothing forgotten.</p>
-      </div>
-
-      {showCalendarConnect && (
-        <div style={{ marginBottom: 20 }}>
-          <CalendarAccountChooser
-            familyPauseEmail={familyPauseEmail}
-            onConfirm={onConfirmCalendarConnect}
-            onCancel={onCancelCalendarConnect}
-            busy={calendarBusy}
-            compact
-          />
-        </div>
-      )}
-
-      <div className="plangrid">
-        {adults.slice(0, 2).map((name, i) => {
-          const list = byPerson(name);
-          return (
-            <div className="plancol" key={name}>
-              <div className="pch">
-                <span className={"pdot " + (i === 0 ? "spence" : "amanda")} />
-                <span className="pname">{name}</span>
-                <span className="pcount">{list.length} {list.length === 1 ? "item" : "items"}</span>
-              </div>
-              {list.length ? list.map((it) => <Item key={it.id} it={it} />) : (
-                <div style={{ color: "var(--ink-3)", fontStyle: "italic", fontSize: 14, padding: "8px 0" }}>All clear this week.</div>
-              )}
-            </div>
-          );
-        })}
-      </div>
-
-      {shared.length > 0 && (
-        <div className="plancol" style={{ marginBottom: 16 }}>
-          <div className="pch">
-            <span className="pdot both" />
-            <span className="pname">Shared &amp; Family</span>
-            <span className="pcount">{shared.length} {shared.length === 1 ? "item" : "items"}</span>
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 28px" }}>
-            {shared.map((it) => <Item key={it.id} it={it} />)}
-          </div>
-        </div>
-      )}
-
-      <div className="planfoot">
-        <div className="planfoot-actions">
-          <button
-            type="button"
-            className="plan-btn-ghost"
-            onClick={onRestart}
-          >
-            Start New Sync
-          </button>
-          <button
-            type="button"
-            className="plan-btn-primary"
-            onClick={() => window.open("https://calendar.google.com", "_blank", "noopener,noreferrer")}
-          >
-            Open Calendar
           </button>
         </div>
       </div>
@@ -1392,6 +1237,9 @@ export default function App({ user, workspace, onSignOut }) {
   const [calendarSyncing, setCalendarSyncing] = useState(false);
   const [unsyncingCardId, setUnsyncingCardId] = useState(null);
   const [calendarConnected, setCalendarConnected] = useState(false);
+  const [planArrivalPhase, setPlanArrivalPhase] = useState("done");
+  const [planArrivalMode, setPlanArrivalMode] = useState("static");
+  const [showPlanConfetti, setShowPlanConfetti] = useState(false);
   const [calendarConnectPrompt, setCalendarConnectPrompt] = useState(false);
   const [inputMode, setInputMode] = useState("paste");
   const [cards, setCards] = useState([]);
@@ -1409,6 +1257,22 @@ export default function App({ user, workspace, onSignOut }) {
   const postConnectSyncRef = useRef(false);
   const cardsRef = useRef(cards);
   useEffect(() => { cardsRef.current = cards; }, [cards]);
+
+  useEffect(() => {
+    if (view !== "plan" || planArrivalPhase !== "interstitial") return;
+    const t = setTimeout(() => setPlanArrivalPhase("revealing"), 2000);
+    return () => clearTimeout(t);
+  }, [view, planArrivalPhase]);
+
+  useEffect(() => {
+    if (view !== "plan" || planArrivalPhase !== "revealing") return;
+    const ms = planArrivalMode === "quick" ? 600 : 1000;
+    const t = setTimeout(() => {
+      setPlanArrivalPhase("done");
+      setShowPlanConfetti(false);
+    }, ms);
+    return () => clearTimeout(t);
+  }, [view, planArrivalPhase, planArrivalMode]);
 
   useEffect(() => { setWs(workspace); }, [workspace]);
 
@@ -1691,6 +1555,15 @@ ${text}`;
     return () => clearTimeout(t);
   }, [cards, view]);
 
+  const markFirstSessionComplete = async () => {
+    if (!ws?.id || ws.first_session_completed) return;
+    const { error } = await supabase
+      .from("workspaces")
+      .update({ first_session_completed: true })
+      .eq("id", ws.id);
+    if (!error) setWs((prev) => ({ ...prev, first_session_completed: true }));
+  };
+
   const finishBuildSession = async () => {
     if (!ws?.id || savedRef.current) return;
     savedRef.current = true;
@@ -1702,6 +1575,10 @@ ${text}`;
   };
 
   const buildWeek = async () => {
+    const reduced = prefersReducedMotion();
+    const isFirstCelebration = !ws?.first_session_completed;
+    const arrivalMode = reduced ? "static" : isFirstCelebration ? "full" : "quick";
+
     if (calendarConnected && ws?.id) {
       const kept = cards.filter((c) => c.status === STATUS.KEPT || c.status === STATUS.CALENDARED);
       const syncable = kept.filter((c) => isSyncEligible(c) && !c.calendar_synced);
@@ -1726,7 +1603,15 @@ ${text}`;
         }
       }
     }
+
+    if (!reduced) playPlanChime(soundsEnabledForWorkspace(ws));
+
+    setPlanArrivalMode(arrivalMode);
+    setShowPlanConfetti(isFirstCelebration && !reduced);
+    setPlanArrivalPhase(arrivalMode === "full" ? "interstitial" : arrivalMode === "quick" ? "revealing" : "done");
+
     go("plan");
+    await markFirstSessionComplete();
     await finishBuildSession();
   };
 
@@ -1734,6 +1619,9 @@ ${text}`;
     setCards([]);
     setDistillDone(false);
     savedRef.current = false;
+    setPlanArrivalPhase("done");
+    setPlanArrivalMode("static");
+    setShowPlanConfetti(false);
     await clearActiveSession();
     setCaptureText("");
     setCaptureMode("paste");
@@ -1959,6 +1847,10 @@ ${text}`;
           onRetrySync={retryCardSync}
           onAddToCal={handlePlanAddToCal}
           onUnsync={unsyncCard}
+          meetingDate={meetingDate}
+          arrivalPhase={planArrivalPhase}
+          arrivalMode={planArrivalMode}
+          showFirstConfetti={showPlanConfetti}
         />
       )}
     </div>
