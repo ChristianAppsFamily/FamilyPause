@@ -167,6 +167,12 @@ const css = `
     transition: opacity .15s;
   }
   .fp-logo-link:hover { opacity: .75; }
+  .fp-left-logo-link {
+    display: inline-flex; align-items: center; gap: 11px;
+    text-decoration: none; margin-bottom: 36px;
+    transition: opacity .15s;
+  }
+  .fp-left-logo-link:hover { opacity: .82; }
   .fp-btn-ghost:hover { border-color: ${T.terra}; color: ${T.terra}; }
   .fp-link {
     background: none; border: none; cursor: pointer;
@@ -254,12 +260,12 @@ function AuthShell({ children, wide = false }) {
         </div>
 
         <div>
-          <div style={{ display: "flex", alignItems: "center", gap: 11, marginBottom: 36 }}>
+          <a href="/" className="fp-left-logo-link" aria-label="Back to FamilyPause home">
             <LogoMark width={17} height={28} fill="#FAF7F2" />
             <div style={{ fontFamily: "'Playfair Display', serif", fontStyle: "italic", fontSize: 22, fontWeight: 400, letterSpacing: "-0.01em" }}>
               <span style={{ color: "#FAF7F2" }}>Family</span><span style={{ color: "rgba(250,247,242,0.72)" }}>Pause</span>
             </div>
-          </div>
+          </a>
           <div style={{ fontFamily: "'Playfair Display', serif", fontStyle: "italic", fontSize: 32, fontWeight: 400, color: T.bg, lineHeight: 1.25, marginBottom: 20 }}>
             The weekly reset every family needs
           </div>
