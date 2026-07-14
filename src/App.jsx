@@ -45,14 +45,29 @@ import {
 import { deleteSessionRow, uiInputMode } from "./lib/sessionDraft";
 import { prefersReducedMotion } from "./lib/motion";
 import { playPlanChime, soundsEnabledForWorkspace } from "./lib/sounds";
+import FamilySetupForm from "./parked/onboarding-steps/FamilySetupForm.jsx";
+import InviteSpouseForm from "./parked/onboarding-steps/InviteSpouseForm.jsx";
+import { formatDigitalPrice, PHYSICAL_DECK_PRICE } from "./lib/deckPricing";
 
 // ── DEFAULT CONTEXT (fallback when workspace has none) ───────────────────────
 const DEFAULT_CONTEXT = {
-  people: ["Spence", "Amanda"],
+  people: [],
   kids: [],
   businesses: [],
   categories: ["Family", "Kids", "Business", "Finance", "Home", "Faith", "Health"],
 };
+
+async function patchFamilyContext(workspaceId, prev, patch) {
+  const family_context = { ...(prev && typeof prev === "object" ? prev : {}), ...patch };
+  const { data, error } = await supabase
+    .from("workspaces")
+    .update({ family_context })
+    .eq("id", workspaceId)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
 
 const SAMPLE_TRANSCRIPT = `Amanda: Okay, before the week runs away from us again, let's actually do this.
 Spence: Agreed. Start with money? The accountant emailed about Q2.
@@ -278,7 +293,35 @@ function SyncHeader({ family }) {
   );
 }
 
-function ApproachChoice({ onStartSync, onJump }) {
+function DeckOncePrompt({ onUnlock, onDismiss }) {
+  return (
+    <div className="deck-once rise" style={{
+      background: "var(--paper-card)",
+      border: "1px solid var(--line)",
+      borderRadius: "var(--r-lg)",
+      padding: "22px 24px",
+      marginBottom: 28,
+      boxShadow: "var(--shadow-sm)",
+    }}>
+      <div className="eyebrow" style={{ marginBottom: 8 }}>Card deck · Optional</div>
+      <h3 style={{ fontFamily: "var(--display)", fontSize: 22, margin: "0 0 8px" }}>
+        Want a question before you record?
+      </h3>
+      <p style={{ margin: "0 0 18px", color: "var(--ink-2)", fontSize: 15, lineHeight: 1.55 }}>
+        52 weekly prompts that go deeper than the to-do list. Unlock with a code, buy digital for {formatDigitalPrice()}, or skip and start your sync.
+      </p>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
+        <button type="button" className="btn btn-primary" onClick={onUnlock}>See the deck</button>
+        <button type="button" className="btn btn-ghost" onClick={onDismiss}>Skip for now</button>
+      </div>
+      <p style={{ margin: "14px 0 0", fontFamily: "var(--mono)", fontSize: 11, letterSpacing: ".04em", color: "var(--ink-3)" }}>
+        Physical deck ${PHYSICAL_DECK_PRICE} · We won&apos;t ask again if you skip
+      </p>
+    </div>
+  );
+}
+
+function ApproachChoice({ onStartSync, onJump, showDeckPrompt, onUnlockDeck, onDismissDeck }) {
   const [expanded, setExpanded] = useState(false);
   const [topics, setTopics] = useState(AGENDA_TOPIC_OPTIONS);
   const [selected, setSelected] = useState([]);
@@ -314,6 +357,10 @@ function ApproachChoice({ onStartSync, onJump }) {
         <div className="eyebrow">How would you like to begin</div>
         <h1 className="choicetitle">Choose your approach.</h1>
       </div>
+
+      {showDeckPrompt && (
+        <DeckOncePrompt onUnlock={onUnlockDeck} onDismiss={onDismissDeck} />
+      )}
 
       <div className="choicecards rise">
         <div
@@ -541,13 +588,16 @@ function AgendaBuilder({ family, workspaceId, initialTopics = [], onDistill, onB
   );
 }
 
-function SyncView({ family, workspaceId, onDistill }) {
+function SyncView({ family, workspaceId, onDistill, showDeckPrompt, onUnlockDeck, onDismissDeck }) {
   const [phase, setPhase] = useState("choice");
   const [pickedTopics, setPickedTopics] = useState([]);
 
   if (phase === "choice") {
     return (
       <ApproachChoice
+        showDeckPrompt={showDeckPrompt}
+        onUnlockDeck={onUnlockDeck}
+        onDismissDeck={onDismissDeck}
         onStartSync={(topics) => {
           setPickedTopics(topics);
           setPhase("builder");
@@ -1225,10 +1275,14 @@ export default function App({ user, workspace, onSignOut }) {
   const [captureDraft, setCaptureDraft] = useState(null);
   const [meetingDate] = useState(todayStr());
   const [ws, setWs] = useState(workspace);
+  const [showFamilyNudge, setShowFamilyNudge] = useState(false);
+  const [showInviteNudge, setShowInviteNudge] = useState(false);
 
   const sessionIdRef = useRef(null);
   const savedRef = useRef(false);
   const postConnectSyncRef = useRef(false);
+  const familyNudgeShownRef = useRef(false);
+  const inviteNudgeShownRef = useRef(false);
   const cardsRef = useRef(cards);
   useEffect(() => { cardsRef.current = cards; }, [cards]);
 
@@ -1249,6 +1303,20 @@ export default function App({ user, workspace, onSignOut }) {
   }, [view, planArrivalPhase, planArrivalMode]);
 
   useEffect(() => { setWs(workspace); }, [workspace]);
+
+  // Refresh workspace after digital-offer return to agenda
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get("checkout") !== "digital_ok" || !ws?.id) return;
+    let active = true;
+    (async () => {
+      const { data } = await supabase.from("workspaces").select("*").eq("id", ws.id).maybeSingle();
+      if (active && data) setWs(data);
+      navigate(syncPath(viewFromLocation()), { replace: true });
+    })();
+    return () => { active = false; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.search, ws?.id]);
 
   const loadCaptureDraftState = useCallback(() => {
     if (!ws?.id) return;
@@ -1343,6 +1411,43 @@ export default function App({ user, workspace, onSignOut }) {
   const context = ws?.family_context || DEFAULT_CONTEXT;
   const kids = Array.isArray(context.kids) ? context.kids : [];
   const adults = (Array.isArray(context.people) ? context.people : DEFAULT_CONTEXT.people).filter((p) => !kids.includes(p));
+  const displayName = adults[0] || user?.user_metadata?.full_name?.split(" ")[0] || user?.email?.split("@")[0] || "Friend";
+  const spouseName = adults[1] || "";
+  const showDeckPrompt = Boolean(
+    ws?.id
+    && !ws.cards_unlocked
+    && !(Array.isArray(ws.unlocked_deck_years) && ws.unlocked_deck_years.length > 0)
+    && !context.deck_prompt_dismissed_at
+  );
+
+  useEffect(() => {
+    if (view !== "review") return;
+    if (familyNudgeShownRef.current || showFamilyNudge) return;
+    if (context.family_names_nudge_dismissed_at) return;
+    if (adults.length >= 2) return;
+    familyNudgeShownRef.current = true;
+    setShowFamilyNudge(true);
+  }, [view, adults.length, context.family_names_nudge_dismissed_at, showFamilyNudge]);
+
+  useEffect(() => {
+    if (view !== "plan" || planArrivalPhase !== "done") return;
+    if (inviteNudgeShownRef.current || showInviteNudge) return;
+    if (context.invite_nudge_dismissed_at) return;
+    inviteNudgeShownRef.current = true;
+    setShowInviteNudge(true);
+  }, [view, planArrivalPhase, context.invite_nudge_dismissed_at, showInviteNudge]);
+
+  const dismissDeckPrompt = async () => {
+    if (!ws?.id) return;
+    try {
+      const data = await patchFamilyContext(ws.id, context, {
+        deck_prompt_dismissed_at: new Date().toISOString(),
+      });
+      setWs(data);
+    } catch (e) {
+      console.error("[Deck prompt] dismiss", e);
+    }
+  };
 
   const roleOf = useCallback((person) => {
     const p = (person || "").toLowerCase();
@@ -1731,7 +1836,10 @@ ${text}`;
           initialView={cardDeckInitialView()}
           onClose={leaveCards}
           onStartSession={startWeeklySync}
-          onSkip={startWeeklySync}
+          onSkip={async () => {
+            await dismissDeckPrompt();
+            startWeeklySync();
+          }}
           onWorkspaceUpdate={setWs}
         />
       </div>
@@ -1740,6 +1848,56 @@ ${text}`;
 
   return (
     <div className="stage">
+      {(showFamilyNudge || showInviteNudge) && ws?.id && (
+        <div
+          className="nudge-scrim"
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 80,
+            background: "rgba(42, 37, 29, 0.45)",
+            overflowY: "auto",
+            padding: "24px 16px 48px",
+          }}
+        >
+          <div style={{
+            maxWidth: 520,
+            margin: "32px auto",
+            background: "var(--paper)",
+            borderRadius: "var(--r-lg)",
+            border: "1px solid var(--line)",
+            boxShadow: "var(--shadow-lg)",
+            padding: "8px 20px 28px",
+          }}>
+            {showFamilyNudge && (
+              <FamilySetupForm
+                workspaceId={ws.id}
+                displayName={displayName}
+                onSaved={(data) => {
+                  if (data) setWs((prev) => ({ ...prev, ...data }));
+                  setShowFamilyNudge(false);
+                }}
+                onSkip={(data) => {
+                  if (data) setWs((prev) => ({ ...prev, ...data }));
+                  setShowFamilyNudge(false);
+                }}
+              />
+            )}
+            {!showFamilyNudge && showInviteNudge && (
+              <InviteSpouseForm
+                workspaceId={ws.id}
+                spouseName={spouseName}
+                inviteCode={ws.invite_code}
+                onDone={(data) => {
+                  if (data) setWs((prev) => ({ ...prev, ...data }));
+                  setShowInviteNudge(false);
+                }}
+              />
+            )}
+          </div>
+        </div>
+      )}
+
       <BrandBar
         view={view}
         onOpenCards={openCardDeck}
@@ -1755,6 +1913,9 @@ ${text}`;
         <SyncView
           family={family}
           workspaceId={ws?.id}
+          showDeckPrompt={showDeckPrompt}
+          onUnlockDeck={() => openOverlay("decks")}
+          onDismissDeck={dismissDeckPrompt}
           onDistill={async ({ mode = "paste", topics } = {}) => {
             if (topics?.length) setAgendaTopics(topics);
             else setAgendaTopics([]);

@@ -84,7 +84,8 @@ export default function Paywall({ reason = "trial", onClose }) {
 
   const goCheckout = async (product) => {
     try {
-      await openStripeCheckout(product, { successPath: "/app/settings?checkout=success" });
+      // Family/Pro land on /app/subscribe/success with {CHECKOUT_SESSION_ID} (stripeCheckout default).
+      await openStripeCheckout(product);
     } catch (e) {
       console.error("[Paywall] checkout failed", e);
     }

@@ -15,6 +15,11 @@ export function cardsPath(view = "draw") {
   return "/app/cards";
 }
 
+export function subscribeSuccessPath(sessionId = "") {
+  if (sessionId) return `/app/subscribe/success?session_id=${encodeURIComponent(sessionId)}`;
+  return "/app/subscribe/success";
+}
+
 export function authPathForScreen(screen, inviteCode = "", email = "") {
   switch (screen) {
     case "signup":
@@ -41,8 +46,12 @@ export function parseAppLocation(pathname, search = "") {
 
   const onboardingMatch = pathname.match(/\/app\/onboarding\/(\d+)/);
   if (onboardingMatch) {
-    const step = Math.min(5, Math.max(1, parseInt(onboardingMatch[1], 10) || 1));
+    const step = Math.min(1, Math.max(1, parseInt(onboardingMatch[1], 10) || 1));
     return { area: "onboarding", step };
+  }
+
+  if (pathname === "/app/subscribe/success") {
+    return { area: "subscribeSuccess" };
   }
 
   const syncMatch = pathname.match(/\/app\/sync\/(\w+)/);

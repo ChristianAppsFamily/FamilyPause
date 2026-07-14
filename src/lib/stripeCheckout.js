@@ -5,21 +5,40 @@ import { STRIPE_LINKS } from "./stripeLinks";
  * Start Stripe Checkout for a workspace-scoped purchase.
  * Falls back to static Payment Link URLs if the edge function is unavailable.
  *
- * @param {"family"|"pro"|"digital"} product
- * @param {{ successPath?: string, cancelPath?: string }} [opts]
+ * @param {"family"|"pro"|"digital"|"digital_offer"} product
+ * @param {{ successPath?: string, cancelPath?: string, parentSessionId?: string }} [opts]
  */
-export async function openStripeCheckout(product, { successPath, cancelPath } = {}) {
+export async function openStripeCheckout(product, { successPath, cancelPath, parentSessionId } = {}) {
   const origin = typeof window !== "undefined" ? window.location.origin : "";
-  const successUrl = successPath ? `${origin}${successPath}` : `${origin}/app/settings?checkout=success`;
-  const cancelUrl = cancelPath ? `${origin}${cancelPath}` : `${origin}/app/settings?checkout=cancel`;
 
-  const { data, error } = await supabase.functions.invoke("stripe-checkout", {
-    body: { product, successUrl, cancelUrl },
-  });
+  let successUrl;
+  if (successPath) {
+    successUrl = `${origin}${successPath}`;
+  } else if (product === "family" || product === "pro") {
+    successUrl = `${origin}/app/subscribe/success?session_id={CHECKOUT_SESSION_ID}`;
+  } else {
+    successUrl = `${origin}/app/settings?checkout=success`;
+  }
+
+  const cancelUrl = cancelPath
+    ? `${origin}${cancelPath}`
+    : `${origin}/app/settings?checkout=cancel`;
+
+  const body = { product, successUrl, cancelUrl };
+  if (product === "digital_offer" && parentSessionId) {
+    body.parentSessionId = parentSessionId;
+  }
+
+  const { data, error } = await supabase.functions.invoke("stripe-checkout", { body });
 
   if (!error && data?.url) {
     window.location.href = data.url;
     return;
+  }
+
+  if (product === "digital_offer") {
+    const message = data?.error || error?.message || "This offer is no longer available.";
+    throw new Error(message);
   }
 
   const fallbackMap = {

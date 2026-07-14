@@ -657,7 +657,7 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
               type="button"
               className="btn btn-primary"
               style={{ flexShrink: 0, marginTop: 4 }}
-              onClick={() => openStripeCheckout("pro", { successPath: "/app/settings?checkout=success" })}
+              onClick={() => openStripeCheckout("pro")}
             >
               Upgrade to Pro
             </button>

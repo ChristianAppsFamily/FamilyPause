@@ -5,6 +5,7 @@
 //   - Routing between Auth → Onboarding → App
 //   - Invite link detection (/join/:code)
 //   - Browser back/forward via URL sync
+//   - Post-subscribe success (digital deck bump)
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useState, useEffect, useRef } from "react";
@@ -16,10 +17,11 @@ import {
   parseAppLocation,
   inviteCodeFromPath,
   onboardingPath,
-  cardsPath,
+  syncPath,
 } from "./lib/routes";
 import Auth from "./components/Auth";
 import Onboarding from "./components/Onboarding";
+import SubscribeSuccess from "./components/SubscribeSuccess";
 import App from "./App";
 
 const T = {
@@ -62,7 +64,7 @@ function Loader() {
 export default function AppRouter() {
   const location = useLocation();
   const navigate = useNavigate();
-  const [phase, setPhase] = useState("loading"); // loading | auth | onboarding | app
+  const [phase, setPhase] = useState("loading"); // loading | auth | onboarding | app | subscribeSuccess
   const [user, setUser] = useState(null);
   const [workspace, setWorkspace] = useState(null);
   const [onboardingData, setOnboardingData] = useState(null);
@@ -79,7 +81,7 @@ export default function AppRouter() {
       if (!session) {
         setPhase("auth");
         bootstrapped.current = true;
-        if (parsed.area === "sync" || parsed.area === "overlay" || parsed.area === "onboarding") {
+        if (parsed.area === "sync" || parsed.area === "overlay" || parsed.area === "onboarding" || parsed.area === "subscribeSuccess") {
           navigate("/app", { replace: true });
         }
         return;
@@ -94,13 +96,19 @@ export default function AppRouter() {
       if (membership?.workspaces) {
         setUser(session.user);
         setWorkspace(membership.workspaces);
-        setPhase("app");
         bootstrapped.current = true;
 
+        if (parsed.area === "subscribeSuccess") {
+          setPhase("subscribeSuccess");
+          return;
+        }
+
+        setPhase("app");
+
         if (parsed.area === "onboarding") {
-          navigate(cardsPath(), { replace: true });
+          navigate(syncPath("agenda"), { replace: true });
         } else if (parsed.area === "auth" || parsed.area === "unknown") {
-          navigate(cardsPath(), { replace: true });
+          navigate(syncPath("agenda"), { replace: true });
         }
         return;
       }
@@ -165,13 +173,18 @@ export default function AppRouter() {
 
     const parsed = parseAppLocation(location.pathname, location.search);
 
+    if (user && parsed.area === "subscribeSuccess") {
+      if (phase !== "subscribeSuccess") setPhase("subscribeSuccess");
+      return;
+    }
+
     if (user && parsed.area === "auth") {
       if (onboardingData) {
         if (phase !== "onboarding") setPhase("onboarding");
-        navigate(onboardingPath(onboardingData.joined ? 4 : 1), { replace: true });
+        navigate(onboardingPath(1), { replace: true });
         return;
       }
-      navigate(cardsPath(), { replace: true });
+      navigate(syncPath("agenda"), { replace: true });
       if (phase !== "app") setPhase("app");
       return;
     }
@@ -180,7 +193,7 @@ export default function AppRouter() {
       if (user && onboardingData) {
         if (phase !== "onboarding") setPhase("onboarding");
       } else if (user && !onboardingData) {
-        navigate(cardsPath(), { replace: true });
+        navigate(syncPath("agenda"), { replace: true });
       } else if (!user) {
         setPhase("auth");
         navigate("/app", { replace: true });
@@ -193,7 +206,7 @@ export default function AppRouter() {
       return;
     }
 
-    if (!user && (parsed.area === "sync" || parsed.area === "overlay")) {
+    if (!user && (parsed.area === "sync" || parsed.area === "overlay" || parsed.area === "subscribeSuccess")) {
       setPhase("auth");
       navigate("/app", { replace: true });
       return;
@@ -204,7 +217,7 @@ export default function AppRouter() {
     }
 
     if (user && phase === "app" && parsed.area === "unknown") {
-      navigate(cardsPath(), { replace: true });
+      navigate(syncPath("agenda"), { replace: true });
     }
   }, [location.pathname, location.search, phase, user, onboardingData, navigate]);
 
@@ -220,14 +233,14 @@ export default function AppRouter() {
         joined,
       });
       setPhase("onboarding");
-      navigate(onboardingPath(joined ? 4 : 1), { replace: true });
+      navigate(onboardingPath(1), { replace: true });
       return;
     }
 
     setUser(userData);
     setWorkspace(workspaceData || null);
     setPhase("app");
-    navigate(cardsPath(), { replace: true });
+    navigate(syncPath("agenda"), { replace: true });
   };
 
   const handleOnboardingComplete = async () => {
@@ -259,7 +272,7 @@ export default function AppRouter() {
       setWorkspace(ws);
       setOnboardingData(null);
       setPhase("app");
-      navigate(cardsPath(), { replace: true });
+      navigate(syncPath("agenda"), { replace: true });
     } catch (err) {
       console.error("Onboarding complete failed:", err);
       if (wsId) {
@@ -268,7 +281,7 @@ export default function AppRouter() {
       }
       setOnboardingData(null);
       setPhase("app");
-      navigate(cardsPath(), { replace: true });
+      navigate(syncPath("agenda"), { replace: true });
     }
   };
 
@@ -294,6 +307,19 @@ export default function AppRouter() {
       onComplete={handleOnboardingComplete}
     />
   );
+
+  if (phase === "subscribeSuccess" && user && workspace) {
+    return (
+      <SubscribeSuccess
+        workspace={workspace}
+        onWorkspaceUpdate={setWorkspace}
+        onContinue={() => {
+          setPhase("app");
+          navigate(syncPath("agenda"), { replace: true });
+        }}
+      />
+    );
+  }
 
   if (phase === "app") return (
     <App

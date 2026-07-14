@@ -6,7 +6,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import Stripe from "https://esm.sh/stripe@17.7.0?target=deno";
 
-type Product = "family" | "pro" | "digital";
+type Product = "family" | "pro" | "digital" | "digital_offer";
 
 function adminClient() {
   return createClient(
@@ -20,6 +20,7 @@ function planFromPriceId(priceId: string | undefined): Product | null {
   if (priceId === Deno.env.get("STRIPE_PRICE_FAMILY")) return "family";
   if (priceId === Deno.env.get("STRIPE_PRICE_PRO")) return "pro";
   if (priceId === Deno.env.get("STRIPE_PRICE_DIGITAL")) return "digital";
+  if (priceId === Deno.env.get("STRIPE_PRICE_DIGITAL_OFFER")) return "digital_offer";
   return null;
 }
 
@@ -94,11 +95,19 @@ async function handleCheckoutCompleted(admin: ReturnType<typeof adminClient>, se
     ? session.subscription
     : session.subscription?.id ?? null;
 
-  if (product === "digital" || session.mode === "payment") {
+  if (product === "digital" || product === "digital_offer" || session.mode === "payment") {
     const deckYear = session.metadata?.deck_year
       ? parseInt(session.metadata.deck_year, 10)
       : new Date().getFullYear();
     await unlockDigitalDeck(admin, workspaceId, Number.isFinite(deckYear) ? deckYear : undefined);
+    if (product === "digital_offer" || session.metadata?.parent_session_id) {
+      const parentId = session.metadata?.parent_session_id;
+      if (parentId) {
+        await admin.from("deck_offer_claims").update({
+          redeemed_at: new Date().toISOString(),
+        }).eq("parent_session_id", parentId);
+      }
+    }
     return;
   }
 
