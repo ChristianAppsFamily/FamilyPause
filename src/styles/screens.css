@@ -305,37 +305,8 @@
 .ctabar .copy h3 { font-size: 22px; margin-bottom: 4px; }
 .ctabar .copy p { margin: 0; color: var(--ink-2); font-size: 14.5px; }
 
-/* layout with assistant rail */
+/* agenda / sync main column */
 .worksplit { display: grid; grid-template-columns: 1fr; gap: 26px; align-items: start; }
-.worksplit.with-rail { grid-template-columns: minmax(0,1fr) 318px; }
-
-/* assistant rail */
-.assist {
-  background: var(--paper-card); border: 1px solid var(--line);
-  border-radius: var(--r-lg); padding: 20px; box-shadow: var(--shadow);
-  position: sticky; top: 24px;
-}
-.assist .ahead { display: flex; align-items: center; gap: 11px; margin-bottom: 14px; }
-.assist .aico {
-  width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center;
-  background: var(--olive-tint); color: var(--olive-d); font-size: 17px;
-  border: 1px solid var(--olive-soft);
-}
-.assist .ahead .at { font-size: 16px; font-family: var(--display); }
-.assist .ahead .as { font-family: var(--mono); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
-.assbubble {
-  background: var(--olive-tint); border: 1px solid var(--olive-soft);
-  border-radius: 12px; padding: 13px 15px; font-size: 14.5px; line-height: 1.5; color: var(--ink);
-  margin-bottom: 10px;
-}
-.assbubble.q { background: var(--paper-2); border-color: var(--line); }
-.suggs { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 12px; }
-.sugg {
-  font-family: var(--mono); font-size: 11px; letter-spacing: .03em;
-  background: var(--paper-2); border: 1px solid var(--line); color: var(--ink-2);
-  border-radius: 999px; padding: 7px 12px; cursor: pointer; transition: .15s;
-}
-.sugg:hover { border-color: var(--olive); color: var(--olive-d); background: var(--olive-tint); }
 
 /* resume draft banner */
 .resume-banner {
@@ -953,8 +924,6 @@
 
 /* responsive */
 @media (max-width: 880px) {
-  .worksplit.with-rail { grid-template-columns: 1fr; }
-  .assist { position: static; }
   .plangrid { grid-template-columns: 1fr; }
   .synchead { flex-direction: column; align-items: flex-start; gap: 14px; }
   .synchead .who h1 { font-size: 32px; }

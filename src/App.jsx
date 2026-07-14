@@ -143,7 +143,6 @@ const I = {
   cards: ["M4 5h16a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z", "M8 5V3h8v2", "M8 10h8M8 14h5"],
   menu: ["M4 7h16M4 12h16M4 17h16"],
   grid: ["M4 4h6v6H4z", "M14 4h6v6h-6z", "M4 14h6v6H4z", "M14 14h6v6h-6z"],
-  spark: "M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3z",
 };
 
 const START_TOPICS = [
@@ -264,7 +263,7 @@ function ResumeBanner({ draft, onResume, onDiscard }) {
   );
 }
 
-function SyncHeader({ family, right }) {
+function SyncHeader({ family }) {
   return (
     <div className="synchead">
       <div className="who">
@@ -275,7 +274,6 @@ function SyncHeader({ family, right }) {
           <span className="faded">A good pause, every week.</span>
         </div>
       </div>
-      {right}
     </div>
   );
 }
@@ -417,7 +415,6 @@ function buildAgendaRowsFromTopics(topicNames = []) {
 
 function AgendaBuilder({ family, workspaceId, initialTopics = [], onDistill, onBackToChoice }) {
   const [tab, setTab] = useState("agenda");
-  const [showAssistant, setShowAssistant] = useState(true);
   const rowIdRef = useRef(Math.max(1, initialTopics.length));
   const [rows, setRows] = useState(() => buildAgendaRowsFromTopics(initialTopics));
 
@@ -440,14 +437,7 @@ function AgendaBuilder({ family, workspaceId, initialTopics = [], onDistill, onB
 
   return (
     <div className="view">
-      <SyncHeader
-        family={family}
-        right={
-          <button type="button" className={"btn " + (showAssistant ? "btn-soft" : "btn-ghost")} onClick={() => setShowAssistant((v) => !v)}>
-            <Ico d={I.spark} size={15} /> {showAssistant ? "Hide Assistant" : "AI Assistant"}
-          </button>
-        }
-      />
+      <SyncHeader family={family} />
 
       <div className="tabs">
         <button type="button" className={"tab " + (tab === "agenda" ? "on" : "")} onClick={() => setTab("agenda")}>Agenda</button>
@@ -457,7 +447,7 @@ function AgendaBuilder({ family, workspaceId, initialTopics = [], onDistill, onB
         <button type="button" className={"tab " + (tab === "log" ? "on" : "")} onClick={() => setTab("log")}>Log</button>
       </div>
 
-      <div className={"worksplit " + (showAssistant ? "with-rail" : "")}>
+      <div className="worksplit">
         <div>
           {tab === "agenda" && (
             <div className="rise">
@@ -546,26 +536,6 @@ function AgendaBuilder({ family, workspaceId, initialTopics = [], onDistill, onB
             </p>
           )}
         </div>
-
-        {showAssistant && (
-          <aside className="assist rise">
-            <div className="ahead">
-              <div className="aico"><Ico d={I.spark} size={17} /></div>
-              <div>
-                <div className="at">Meeting Assistant</div>
-                <div className="as">Reads &amp; writes your agenda</div>
-              </div>
-            </div>
-            <div className="assbubble">
-              Hi, I&apos;m here while you talk. I can add notes, draft action items, and tell you what you&apos;re forgetting.
-            </div>
-            <div className="suggs">
-              <span className="sugg">Summarize our agenda</span>
-              <span className="sugg">What are we forgetting?</span>
-              <span className="sugg">Add a note to Finance</span>
-            </div>
-          </aside>
-        )}
       </div>
     </div>
   );
