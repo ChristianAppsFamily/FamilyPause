@@ -304,6 +304,7 @@ function ConversationStartersCard({ workspace, onWorkspaceUpdate, onUnlock }) {
     ? workspace.family_context
     : {};
   const unlocked = deckIsUnlocked(workspace);
+  const today = todayStr();
   const [queue, setQueue] = useState(() => {
     const saved = Array.isArray(ctx.trial_card_queue) ? ctx.trial_card_queue : null;
     if (saved?.length === TRIAL_STARTER_CARDS.length) return saved;
@@ -311,11 +312,22 @@ function ConversationStartersCard({ workspace, onWorkspaceUpdate, onUnlock }) {
   });
   const [drawsUsed, setDrawsUsed] = useState(() => {
     const n = Number(ctx.trial_card_draws_used);
-    return Number.isFinite(n) ? Math.min(TRIAL_STARTER_CARDS.length, Math.max(0, n)) : 0;
+    return Number.isFinite(n) ? Math.max(0, n) : 0;
   });
+  const [lastDrawDate, setLastDrawDate] = useState(() => ctx.trial_card_last_draw_date || "");
   const [showingId, setShowingId] = useState(() => ctx.trial_card_showing_id ?? null);
-  const [face, setFace] = useState(() => (ctx.trial_card_showing_id ? "front" : "back"));
+  const drawnToday = lastDrawDate === today && showingId != null;
+  const [face, setFace] = useState(() => (drawnToday ? "front" : "back"));
   const savingRef = useRef(false);
+
+  // New calendar day: return to the back until they draw today's card
+  useEffect(() => {
+    if (lastDrawDate && lastDrawDate !== today) {
+      setFace("back");
+    } else if (lastDrawDate === today && showingId != null) {
+      setFace("front");
+    }
+  }, [today, lastDrawDate, showingId]);
 
   const cardById = useCallback((id) => TRIAL_STARTER_CARDS.find((c) => c.id === id) || TRIAL_STARTER_CARDS[0], []);
   const showingCard = showingId != null ? cardById(showingId) : null;
@@ -333,7 +345,6 @@ function ConversationStartersCard({ workspace, onWorkspaceUpdate, onUnlock }) {
     }
   }, [workspace?.id, workspace?.family_context, onWorkspaceUpdate]);
 
-  // Ensure queue exists in family_context once
   useEffect(() => {
     if (!workspace?.id) return;
     if (Array.isArray(ctx.trial_card_queue) && ctx.trial_card_queue.length === TRIAL_STARTER_CARDS.length) return;
@@ -341,8 +352,16 @@ function ConversationStartersCard({ workspace, onWorkspaceUpdate, onUnlock }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [workspace?.id]);
 
+  const trialExhausted = !unlocked && drawsUsed >= TRIAL_STARTER_CARDS.length;
+
   const handleTap = async () => {
-    if (!unlocked && drawsUsed >= TRIAL_STARTER_CARDS.length) {
+    // Already sat with today's question — do nothing (or unlock if trial spent)
+    if (drawnToday) {
+      if (trialExhausted) onUnlock?.();
+      return;
+    }
+
+    if (trialExhausted) {
       onUnlock?.();
       return;
     }
@@ -350,57 +369,54 @@ function ConversationStartersCard({ workspace, onWorkspaceUpdate, onUnlock }) {
     let nextQueue = queue;
     let nextDraws = drawsUsed;
 
-    if (unlocked && drawsUsed >= TRIAL_STARTER_CARDS.length) {
+    if (unlocked && nextDraws >= TRIAL_STARTER_CARDS.length) {
       nextQueue = shuffleIds(TRIAL_STARTER_CARDS.map((c) => c.id));
       nextDraws = 0;
       setQueue(nextQueue);
       setDrawsUsed(0);
     }
 
-    const nextId = nextQueue[nextDraws];
+    const nextId = nextQueue[nextDraws % nextQueue.length];
     if (nextId == null) {
       if (!unlocked) onUnlock?.();
       return;
     }
 
     const used = nextDraws + 1;
-    const reveal = () => {
-      setShowingId(nextId);
-      setFace("front");
-      setDrawsUsed(used);
-    };
-
-    if (face === "front") {
-      setFace("back");
-      window.setTimeout(reveal, prefersReducedMotion() ? 0 : 220);
-    } else {
-      reveal();
-    }
+    setShowingId(nextId);
+    setFace("front");
+    setDrawsUsed(used);
+    setLastDrawDate(today);
 
     await persist({
       trial_card_queue: nextQueue,
       trial_card_draws_used: used,
       trial_card_showing_id: nextId,
+      trial_card_last_draw_date: today,
     });
   };
 
-  const trialExhausted = !unlocked && drawsUsed >= TRIAL_STARTER_CARDS.length;
-  const hint = trialExhausted
-    ? "Tap to unlock the full deck"
-    : face === "back"
-      ? "Tap to draw a starter"
-      : unlocked
-        ? `Tap for another · ${drawsUsed} drawn`
-        : `${drawsUsed} / ${TRIAL_STARTER_CARDS.length} free draws`;
+  let hint;
+  if (trialExhausted && !drawnToday) {
+    hint = "Tap to unlock the full deck";
+  } else if (drawnToday) {
+    hint = trialExhausted
+      ? "Sit with today's question · Tap to unlock the full deck"
+      : "Sit with today's question · Come back tomorrow";
+  } else {
+    hint = "Tap to draw today's starter · 1 per day";
+  }
 
   return (
     <div
-      className="choicecard starters rise"
+      className={"choicecard starters rise" + (drawnToday && !trialExhausted ? " is-settled" : "")}
       onClick={handleTap}
       onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); handleTap(); } }}
       role="button"
       tabIndex={0}
-      aria-label="Conversation starters. Tap to flip a card."
+      aria-label={drawnToday
+        ? "Conversation starters. Today's card is ready. Come back tomorrow for a new one."
+        : "Conversation starters. Tap to draw today's card."}
     >
       <div className="starters-label">Conversation starters</div>
       <div className="starters-stage">

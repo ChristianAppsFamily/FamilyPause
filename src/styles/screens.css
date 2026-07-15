@@ -41,9 +41,9 @@
 .choicecards {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 24px;
+  gap: 36px;
   width: 100%;
-  max-width: 860px;
+  max-width: 1290px;
 }
 
 .choicecard {
@@ -54,8 +54,8 @@
   text-align: center;
   background: var(--paper-2);
   border: 1px solid var(--line-2);
-  border-radius: 18px;
-  padding: 44px 40px;
+  border-radius: 22px;
+  padding: 56px 48px;
   cursor: pointer;
   transition: transform .16s ease, box-shadow .22s ease, border-color .2s ease, background .2s ease;
 }
@@ -72,9 +72,17 @@
 
 /* Conversation Starters flip card (left choice) */
 .choicecard.starters {
-  padding: 28px 24px 32px;
+  padding: 40px 32px 44px;
   cursor: pointer;
   background: var(--paper-card);
+}
+.choicecard.starters.is-settled {
+  cursor: default;
+}
+.choicecard.starters.is-settled:hover {
+  transform: none;
+  border-color: var(--line-2);
+  box-shadow: none;
 }
 .choicecard.starters:focus-visible {
   outline: 2px solid var(--terra);
@@ -82,15 +90,15 @@
 }
 .starters-label {
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: 13px;
   letter-spacing: .16em;
   text-transform: uppercase;
   color: var(--terra);
-  margin-bottom: 16px;
+  margin-bottom: 20px;
 }
 .starters-stage {
   width: 100%;
-  max-width: 220px;
+  max-width: 330px;
   aspect-ratio: 2.5 / 3.6;
   perspective: 900px;
   margin: 0 auto;
@@ -117,7 +125,7 @@
   top: 50%;
   width: 344px;
   height: 476px;
-  transform: translate(-50%, -50%) scale(0.58);
+  transform: translate(-50%, -50%) scale(0.87);
   transform-origin: center center;
   pointer-events: none;
 }
@@ -126,9 +134,9 @@
   .starters-flip { transition: none; }
 }
 .starters-hint {
-  margin-top: 16px;
+  margin-top: 20px;
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: 13px;
   letter-spacing: .06em;
   color: var(--ink-3);
 }
@@ -168,29 +176,36 @@
 }
 
 .cico {
-  width: 60px; height: 60px;
+  width: 90px; height: 90px;
   border-radius: 9999px;
   display: grid; place-items: center;
   background: var(--terra-tint);
   color: var(--terra);
-  margin-bottom: 22px;
+  margin-bottom: 28px;
 }
 .choicecard h3 {
   font-family: var(--display);
   font-style: normal;
   font-weight: 600;
-  font-size: 23px;
+  font-size: 32px;
   letter-spacing: .01em;
   text-transform: uppercase;
-  margin-bottom: 14px;
+  margin-bottom: 18px;
 }
 .choicecard p {
   font-family: var(--serif);
-  font-size: 16px;
+  font-size: 20px;
   line-height: 1.65;
   color: var(--ink-2);
   margin: 0;
-  max-width: 32ch;
+  max-width: 30ch;
+}
+.choicecard .choicebtn {
+  font-size: 15px;
+  padding: 16px 26px;
+}
+.choicecard .cardfoot {
+  margin-top: 28px;
 }
 
 .egrow { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 20px; }
@@ -1086,10 +1101,15 @@
   .capwrap .lead h1 { font-size: 28px; }
 
   /* Choose your approach — stack cards on phones */
-  .choicecards { grid-template-columns: 1fr; }
+  .choicecards { grid-template-columns: 1fr; max-width: 480px; gap: 22px; }
   .choicewrap { min-height: auto; padding-top: 8px; }
   .choicehead .choicetitle { white-space: normal; font-size: 28px; }
-  .choicecard { padding: 32px 24px; }
+  .choicecard { padding: 40px 28px; }
+  .choicecard h3 { font-size: 26px; }
+  .choicecard p { font-size: 17px; }
+  .cico { width: 72px; height: 72px; }
+  .starters-stage { max-width: 280px; }
+  .starters-scale { transform: translate(-50%, -50%) scale(0.74); }
 
   /* Agenda topic rows — wrap on narrow screens */
   .agrow { flex-wrap: wrap; gap: 10px; padding: 14px; }
