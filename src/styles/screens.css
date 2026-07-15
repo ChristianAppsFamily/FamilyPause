@@ -70,6 +70,87 @@
 }
 .choicecard.rec:hover { border-color: var(--terra); }
 
+/* Conversation Starters flip card (left choice) */
+.choicecard.starters {
+  padding: 28px 24px 32px;
+  cursor: pointer;
+  background: var(--paper-card);
+}
+.choicecard.starters:focus-visible {
+  outline: 2px solid var(--terra);
+  outline-offset: 3px;
+}
+.starters-label {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--terra);
+  margin-bottom: 16px;
+}
+.starters-stage {
+  width: 100%;
+  max-width: 220px;
+  aspect-ratio: 2.5 / 3.6;
+  perspective: 900px;
+  margin: 0 auto;
+}
+.starters-flip {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform .45s cubic-bezier(.2, .7, .2, 1);
+}
+.starters-flip.is-front { transform: rotateY(180deg); }
+.starters-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border-radius: 14px;
+  overflow: hidden;
+}
+.starters-scale {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 344px;
+  height: 476px;
+  transform: translate(-50%, -50%) scale(0.58);
+  transform-origin: center center;
+  pointer-events: none;
+}
+.starters-face.is-front { transform: rotateY(180deg); }
+@media (prefers-reduced-motion: reduce) {
+  .starters-flip { transition: none; }
+}
+.starters-hint {
+  margin-top: 16px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: .06em;
+  color: var(--ink-3);
+}
+.capture-topics {
+  margin: 0 0 16px;
+  padding: 0 4px;
+}
+.capture-topics .tphead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.capture-topics .tphead .eyebrow { margin: 0; }
+.capture-topics .tpcount {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: .04em;
+  color: var(--ink-3);
+}
+
 .poppop {
   position: absolute;
   top: -12px; left: 50%;

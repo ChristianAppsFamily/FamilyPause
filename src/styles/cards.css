@@ -423,6 +423,11 @@
   color: #3a1a60;
 }
 
+.cs-cf-pill--faith {
+  background: var(--olive-tint);
+  color: var(--olive-d);
+  border-color: var(--olive-soft);
+}
 .cs-cf-pill--home {
   background: var(--paper-2);
   color: var(--ink-2);

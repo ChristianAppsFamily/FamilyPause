@@ -28,7 +28,20 @@ export const SAMPLE_CARDS = [
     category: "Home",
     question: "What routine is quietly draining us?",
   },
+  {
+    id: 18,
+    category: "Faith",
+    question: "Where did you sense God showing up in our family this week?",
+  },
+  {
+    id: 33,
+    category: "Marriage",
+    question: "What is one thing I could do this week that would make you feel more supported?",
+  },
 ];
+
+/** Alias used by Agenda Conversation Starters (7 free trial cards). */
+export const TRIAL_STARTER_CARDS = SAMPLE_CARDS;
 
 const PILL_CLASS = {
   Marriage: "cs-cf-pill--marriage",
@@ -36,6 +49,7 @@ const PILL_CLASS = {
   Kids: "cs-cf-pill--kids",
   Dreams: "cs-cf-pill--dreams",
   Home: "cs-cf-pill--home",
+  Faith: "cs-cf-pill--faith",
 };
 
 function PauseLogo({ width = 250, height = 362, fill = "#FAF3EC" }) {
@@ -49,7 +63,7 @@ function PauseLogo({ width = 250, height = 362, fill = "#FAF3EC" }) {
   );
 }
 
-function CardBackV2({ year = 2026 }) {
+export function CardBackV2({ year = 2026 }) {
   return (
     <div className="cs-cardback-v2 cs-grain">
       <span className="cs-cb-corner tl" aria-hidden="true" />

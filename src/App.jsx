@@ -47,7 +47,12 @@ import { prefersReducedMotion } from "./lib/motion";
 import { playPlanChime, soundsEnabledForWorkspace } from "./lib/sounds";
 import FamilySetupForm from "./parked/onboarding-steps/FamilySetupForm.jsx";
 import InviteSpouseForm from "./parked/onboarding-steps/InviteSpouseForm.jsx";
-import { formatDigitalPrice, PHYSICAL_DECK_PRICE } from "./lib/deckPricing";
+import {
+  CardBackV2,
+  CardFrontV2,
+  TRIAL_STARTER_CARDS,
+} from "./components/SampleCardCarousel.jsx";
+import "./styles/cards.css";
 
 // ── DEFAULT CONTEXT (fallback when workspace has none) ───────────────────────
 const DEFAULT_CONTEXT = {
@@ -278,121 +283,160 @@ function ResumeBanner({ draft, onResume, onDiscard }) {
   );
 }
 
-function SyncHeader({ family }) {
+function shuffleIds(ids) {
+  const arr = [...ids];
+  for (let i = arr.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function deckIsUnlocked(workspace) {
+  return Boolean(
+    workspace?.cards_unlocked
+    || (Array.isArray(workspace?.unlocked_deck_years) && workspace.unlocked_deck_years.length > 0),
+  );
+}
+
+function ConversationStartersCard({ workspace, onWorkspaceUpdate, onUnlock }) {
+  const ctx = workspace?.family_context && typeof workspace.family_context === "object"
+    ? workspace.family_context
+    : {};
+  const unlocked = deckIsUnlocked(workspace);
+  const [queue, setQueue] = useState(() => {
+    const saved = Array.isArray(ctx.trial_card_queue) ? ctx.trial_card_queue : null;
+    if (saved?.length === TRIAL_STARTER_CARDS.length) return saved;
+    return shuffleIds(TRIAL_STARTER_CARDS.map((c) => c.id));
+  });
+  const [drawsUsed, setDrawsUsed] = useState(() => {
+    const n = Number(ctx.trial_card_draws_used);
+    return Number.isFinite(n) ? Math.min(TRIAL_STARTER_CARDS.length, Math.max(0, n)) : 0;
+  });
+  const [showingId, setShowingId] = useState(() => ctx.trial_card_showing_id ?? null);
+  const [face, setFace] = useState(() => (ctx.trial_card_showing_id ? "front" : "back"));
+  const savingRef = useRef(false);
+
+  const cardById = useCallback((id) => TRIAL_STARTER_CARDS.find((c) => c.id === id) || TRIAL_STARTER_CARDS[0], []);
+  const showingCard = showingId != null ? cardById(showingId) : null;
+
+  const persist = useCallback(async (patch) => {
+    if (!workspace?.id || savingRef.current) return;
+    savingRef.current = true;
+    try {
+      const data = await patchFamilyContext(workspace.id, workspace.family_context, patch);
+      onWorkspaceUpdate?.(data);
+    } catch (e) {
+      console.error("[Conversation starters] persist", e);
+    } finally {
+      savingRef.current = false;
+    }
+  }, [workspace?.id, workspace?.family_context, onWorkspaceUpdate]);
+
+  // Ensure queue exists in family_context once
+  useEffect(() => {
+    if (!workspace?.id) return;
+    if (Array.isArray(ctx.trial_card_queue) && ctx.trial_card_queue.length === TRIAL_STARTER_CARDS.length) return;
+    persist({ trial_card_queue: queue, trial_card_draws_used: drawsUsed });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [workspace?.id]);
+
+  const handleTap = async () => {
+    if (!unlocked && drawsUsed >= TRIAL_STARTER_CARDS.length) {
+      onUnlock?.();
+      return;
+    }
+
+    let nextQueue = queue;
+    let nextDraws = drawsUsed;
+
+    if (unlocked && drawsUsed >= TRIAL_STARTER_CARDS.length) {
+      nextQueue = shuffleIds(TRIAL_STARTER_CARDS.map((c) => c.id));
+      nextDraws = 0;
+      setQueue(nextQueue);
+      setDrawsUsed(0);
+    }
+
+    const nextId = nextQueue[nextDraws];
+    if (nextId == null) {
+      if (!unlocked) onUnlock?.();
+      return;
+    }
+
+    const used = nextDraws + 1;
+    const reveal = () => {
+      setShowingId(nextId);
+      setFace("front");
+      setDrawsUsed(used);
+    };
+
+    if (face === "front") {
+      setFace("back");
+      window.setTimeout(reveal, prefersReducedMotion() ? 0 : 220);
+    } else {
+      reveal();
+    }
+
+    await persist({
+      trial_card_queue: nextQueue,
+      trial_card_draws_used: used,
+      trial_card_showing_id: nextId,
+    });
+  };
+
+  const trialExhausted = !unlocked && drawsUsed >= TRIAL_STARTER_CARDS.length;
+  const hint = trialExhausted
+    ? "Tap to unlock the full deck"
+    : face === "back"
+      ? "Tap to draw a starter"
+      : unlocked
+        ? `Tap for another · ${drawsUsed} drawn`
+        : `${drawsUsed} / ${TRIAL_STARTER_CARDS.length} free draws`;
+
   return (
-    <div className="synchead">
-      <div className="who">
-        <div className="eyebrow">Weekly Sync</div>
-        <h1>{family.title}</h1>
-        <div className="when">
-          <span className="datepill"><Ico d={I.cal} size={14} /> {family.date}</span>
-          <span className="faded">A good pause, every week.</span>
+    <div
+      className="choicecard starters rise"
+      onClick={handleTap}
+      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); handleTap(); } }}
+      role="button"
+      tabIndex={0}
+      aria-label="Conversation starters. Tap to flip a card."
+    >
+      <div className="starters-label">Conversation starters</div>
+      <div className="starters-stage">
+        <div className={"starters-flip" + (face === "front" ? " is-front" : "")}>
+          <div className="starters-face is-back" aria-hidden={face === "front"}>
+            <div className="starters-scale"><CardBackV2 year={2026} /></div>
+          </div>
+          <div className="starters-face is-front" aria-hidden={face !== "front"}>
+            <div className="starters-scale">
+              {showingCard ? <CardFrontV2 card={showingCard} year={2026} /> : <CardBackV2 year={2026} />}
+            </div>
+          </div>
         </div>
       </div>
+      <div className="starters-hint">{hint}</div>
     </div>
   );
 }
 
-function DeckOncePrompt({ onUnlock, onDismiss }) {
-  return (
-    <div className="deck-once rise" style={{
-      background: "var(--paper-card)",
-      border: "1px solid var(--line)",
-      borderRadius: "var(--r-lg)",
-      padding: "22px 24px",
-      marginBottom: 28,
-      boxShadow: "var(--shadow-sm)",
-    }}>
-      <div className="eyebrow" style={{ marginBottom: 8 }}>Card deck · Optional</div>
-      <h3 style={{ fontFamily: "var(--display)", fontSize: 22, margin: "0 0 8px" }}>
-        Want a question before you record?
-      </h3>
-      <p style={{ margin: "0 0 18px", color: "var(--ink-2)", fontSize: 15, lineHeight: 1.55 }}>
-        52 weekly prompts that go deeper than the to-do list. Unlock with a code, buy digital for {formatDigitalPrice()}, or skip and start your sync.
-      </p>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
-        <button type="button" className="btn btn-primary" onClick={onUnlock}>See the deck</button>
-        <button type="button" className="btn btn-ghost" onClick={onDismiss}>Skip for now</button>
-      </div>
-      <p style={{ margin: "14px 0 0", fontFamily: "var(--mono)", fontSize: 11, letterSpacing: ".04em", color: "var(--ink-3)" }}>
-        Physical deck ${PHYSICAL_DECK_PRICE} · We won&apos;t ask again if you skip
-      </p>
-    </div>
-  );
-}
-
-function ApproachChoice({ onStartSync, onJump, showDeckPrompt, onUnlockDeck, onDismissDeck }) {
-  const [expanded, setExpanded] = useState(false);
-  const [topics, setTopics] = useState(AGENDA_TOPIC_OPTIONS);
-  const [selected, setSelected] = useState([]);
-  const [draft, setDraft] = useState("");
-  const panelRef = useRef(null);
-
-  const toggle = (name) =>
-    setSelected((s) => (s.includes(name) ? s.filter((x) => x !== name) : [...s, name]));
-
-  const addOwn = () => {
-    const v = draft.trim();
-    if (!v) return;
-    if (!topics.some((t) => t.toLowerCase() === v.toLowerCase())) setTopics((t) => [...t, v]);
-    setSelected((s) => (s.includes(v) ? s : [...s, v]));
-    setDraft("");
-  };
-
-  const openTopics = () => {
-    setExpanded(true);
-    requestAnimationFrame(() =>
-      panelRef.current?.scrollIntoView({ behavior: "smooth", block: "center" })
-    );
-  };
-
-  const startWeeklySync = () => {
-    if (selected.length === 0) return;
-    onStartSync(selected);
-  };
-
+function ApproachChoice({ onJump, workspace, onWorkspaceUpdate, onUnlockDeck }) {
   return (
     <div className="view choicewrap">
-      <div className="choicehead rise">
-        <div className="eyebrow">How would you like to begin</div>
-        <h1 className="choicetitle">Choose your approach.</h1>
-      </div>
-
-      {showDeckPrompt && (
-        <DeckOncePrompt onUnlock={onUnlockDeck} onDismiss={onDismissDeck} />
-      )}
-
-      <div className="choicecards rise">
-        <div
-          className="choicecard"
-          onClick={openTopics}
-          onKeyDown={(e) => e.key === "Enter" && openTopics()}
-          role="button"
-          tabIndex={0}
-        >
-          <div className="cico"><Ico d={I.grid} size={22} /></div>
-          <h3>Guide your conversation.</h3>
-          <p>Choose topics before you record. Helps the AI organize your week more accurately and gives you a structure to follow together.</p>
-          <div className="egrow">
-            <span className="egpill">Kids</span>
-            <span className="egpill">Finances</span>
-            <span className="egpill">Marriage</span>
-          </div>
-          <div className="cardfoot">
-            <button type="button" className="choicebtn outline" onClick={(e) => { e.stopPropagation(); openTopics(); }}>
-              Choose Topics <Ico d={I.arrow} size={15} />
-            </button>
-          </div>
-        </div>
+      <div className="choicecards">
+        <ConversationStartersCard
+          workspace={workspace}
+          onWorkspaceUpdate={onWorkspaceUpdate}
+          onUnlock={onUnlockDeck}
+        />
 
         <div
-          className="choicecard rec"
+          className="choicecard rec rise"
           onClick={onJump}
           onKeyDown={(e) => e.key === "Enter" && onJump()}
           role="button"
           tabIndex={0}
         >
-          <span className="poppop">Most Popular</span>
           <div className="cico"><Ico d={I.mic} size={22} /></div>
           <h3>Jump straight in.</h3>
           <p>Hit record and talk freely. FamilyPause listens to everything and organizes your week automatically when you&apos;re done.</p>
@@ -403,224 +447,27 @@ function ApproachChoice({ onStartSync, onJump, showDeckPrompt, onUnlockDeck, onD
           </div>
         </div>
       </div>
-
-      {expanded && (
-        <div className="topicspanel rise" ref={panelRef}>
-          <div className="tphead">
-            <div className="eyebrow">Pick the topics for this week</div>
-            <span className="tpcount">{selected.length ? `${selected.length} selected` : "None yet"}</span>
-          </div>
-
-          <div className="topicgrid">
-            {topics.map((name) => (
-              <button
-                key={name}
-                type="button"
-                className={"topicpill " + (selected.includes(name) ? "on" : "")}
-                onClick={() => toggle(name)}
-              >
-                {selected.includes(name) && <Ico d={I.check} size={13} />}
-                {name}
-              </button>
-            ))}
-          </div>
-
-          <div className="addown">
-            <input
-              className="addinput"
-              placeholder="Add your own topic…"
-              value={draft}
-              onChange={(e) => setDraft(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addOwn(); } }}
-            />
-            <button type="button" className="btn btn-soft" onClick={addOwn}><Ico d={I.plus} size={14} /> Add</button>
-          </div>
-
-          {selected.length > 0 && (
-            <div className="controw rise">
-              <button type="button" className="btn btn-primary btn-lg btn-block" onClick={startWeeklySync}>
-                <Ico d={I.cal} size={16} /> Start your weekly sync
-              </button>
-            </div>
-          )}
-        </div>
-      )}
     </div>
   );
 }
 
-function buildAgendaRowsFromTopics(topicNames = []) {
-  if (!topicNames.length) {
-    return [{ id: "t1", cat: AGENDA_TOPIC_OPTIONS[0], topic: "" }];
-  }
-  return topicNames.map((cat, i) => ({
-    id: "t" + (i + 1),
-    cat: AGENDA_TOPIC_OPTIONS.includes(cat) ? cat : AGENDA_TOPIC_OPTIONS[0],
-    topic: AGENDA_TOPIC_OPTIONS.includes(cat) ? "" : cat,
-  }));
-}
-
-function AgendaBuilder({ family, workspaceId, initialTopics = [], onDistill, onBackToChoice }) {
-  const [tab, setTab] = useState("agenda");
-  const rowIdRef = useRef(Math.max(1, initialTopics.length));
-  const [rows, setRows] = useState(() => buildAgendaRowsFromTopics(initialTopics));
-
-  const addTopic = () => {
-    rowIdRef.current += 1;
-    setRows((r) => [...r, { id: "t" + rowIdRef.current, cat: AGENDA_TOPIC_OPTIONS[0], topic: "" }]);
-  };
-
-  const updateRow = (id, patch) =>
-    setRows((r) => r.map((row) => (row.id === id ? { ...row, ...patch } : row)));
-
-  const deleteRow = (id) =>
-    setRows((r) => (r.length <= 1 ? r : r.filter((row) => row.id !== id)));
-
-  const agendaTopicsForDistill = () =>
-    rows.map((r) => {
-      const detail = r.topic.trim();
-      return detail ? `${r.cat}: ${detail}` : r.cat;
-    });
-
+function SyncView({ onDistill, workspace, onWorkspaceUpdate, onUnlockDeck }) {
   return (
-    <div className="view">
-      <SyncHeader family={family} />
-
-      <div className="tabs">
-        <button type="button" className={"tab " + (tab === "agenda" ? "on" : "")} onClick={() => setTab("agenda")}>Agenda</button>
-        <button type="button" className={"tab " + (tab === "actions" ? "on" : "")} onClick={() => setTab("actions")}>
-          Actions <span className="count">(0)</span>
-        </button>
-        <button type="button" className={"tab " + (tab === "log" ? "on" : "")} onClick={() => setTab("log")}>Log</button>
-      </div>
-
-      <div className="worksplit">
-        <div>
-          {tab === "agenda" && (
-            <div className="rise">
-              <div className="rowhead">
-                <span className="ct">{rows.length} Topic{rows.length === 1 ? "" : "s"}</span>
-                <button type="button" className="btn btn-soft" onClick={addTopic} style={{ padding: "9px 15px" }}>
-                  <Ico d={I.plus} size={14} /> Add Topic
-                </button>
-              </div>
-              {rows.map((r, i) => (
-                <div className="agrow" key={r.id}>
-                  <span className="idx">{String(i + 1).padStart(2, "0")}</span>
-                  <select
-                    className="agcat"
-                    value={r.cat}
-                    aria-label="Topic category"
-                    onChange={(e) => updateRow(r.id, { cat: e.target.value })}
-                  >
-                    {AGENDA_TOPIC_OPTIONS.map((opt) => (
-                      <option key={opt} value={opt}>{opt}</option>
-                    ))}
-                  </select>
-                  <input
-                    type="text"
-                    className="agtopic"
-                    value={r.topic}
-                    placeholder="What do you want to cover?"
-                    aria-label="Topic detail"
-                    onChange={(e) => updateRow(r.id, { topic: e.target.value })}
-                  />
-                  <button
-                    type="button"
-                    className="agdel"
-                    onClick={() => deleteRow(r.id)}
-                    disabled={rows.length <= 1}
-                    aria-label="Remove topic"
-                    title={rows.length <= 1 ? "Keep at least one topic" : "Remove topic"}
-                  >
-                    <Ico d={I.x} size={16} />
-                  </button>
-                </div>
-              ))}
-              <button type="button" className="addtopic" onClick={addTopic}>
-                <Ico d={I.plus} size={14} /> Add another topic
-              </button>
-            </div>
-          )}
-
-          {tab === "actions" && (
-            <div className="rise" style={{ textAlign: "center", padding: "70px 20px", color: "var(--ink-3)" }}>
-              <div style={{ fontFamily: "var(--display)", fontSize: 22, fontStyle: "italic", color: "var(--ink-2)", marginBottom: 8 }}>
-                No open actions yet.
-              </div>
-              <div style={{ fontSize: 15 }}>Distill your conversation and your actions appear here, sorted by person.</div>
-            </div>
-          )}
-
-          {tab === "log" && (
-            <div className="rise" style={{ textAlign: "center", padding: "70px 20px", color: "var(--ink-3)" }}>
-              <div style={{ fontFamily: "var(--display)", fontSize: 22, fontStyle: "italic", color: "var(--ink-2)", marginBottom: 8 }}>
-                No meeting log yet.
-              </div>
-              <div style={{ fontSize: 15 }}>FamilyPause organizes this week. It does not keep a searchable history of past syncs.</div>
-            </div>
-          )}
-
-          {tab === "agenda" && (
-            <div className="ctabar">
-              <div className="copy">
-                <h3>Ready when you are.</h3>
-                <p>Record live or paste your conversation. FamilyPause turns it into a plan in about ten seconds.</p>
-              </div>
-              <button
-                type="button"
-                className="btn btn-primary btn-lg"
-                onClick={() => onDistill({ mode: "dictate", topics: agendaTopicsForDistill() })}
-              >
-                <Ico d={I.bolt} size={16} fill /> Distill this week
-              </button>
-            </div>
-          )}
-
-          {onBackToChoice && (
-            <p style={{ marginTop: 16 }}>
-              <button type="button" className="linkish" onClick={onBackToChoice}>← Back to approach</button>
-            </p>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function SyncView({ family, workspaceId, onDistill, showDeckPrompt, onUnlockDeck, onDismissDeck }) {
-  const [phase, setPhase] = useState("choice");
-  const [pickedTopics, setPickedTopics] = useState([]);
-
-  if (phase === "choice") {
-    return (
-      <ApproachChoice
-        showDeckPrompt={showDeckPrompt}
-        onUnlockDeck={onUnlockDeck}
-        onDismissDeck={onDismissDeck}
-        onStartSync={(topics) => {
-          setPickedTopics(topics);
-          setPhase("builder");
-        }}
-        onJump={() => onDistill({ mode: "dictate", topics: [] })}
-      />
-    );
-  }
-
-  return (
-    <AgendaBuilder
-      key={pickedTopics.join("|")}
-      family={family}
-      workspaceId={workspaceId}
-      initialTopics={pickedTopics}
-      onDistill={onDistill}
-      onBackToChoice={() => setPhase("choice")}
+    <ApproachChoice
+      workspace={workspace}
+      onWorkspaceUpdate={onWorkspaceUpdate}
+      onUnlockDeck={onUnlockDeck}
+      onJump={() => onDistill({ mode: "dictate", topics: [] })}
     />
   );
 }
 
 // ── CAPTURE (View 2) ──────────────────────────────────────────────────────────
-function CaptureView({ text, setText, mode, setMode, onBack, onProcess }) {
+function CaptureView({ text, setText, mode, setMode, onBack, onProcess, topics = [], setTopics }) {
+  const toggleTopic = (name) => {
+    if (!setTopics) return;
+    setTopics((prev) => (prev.includes(name) ? prev.filter((x) => x !== name) : [...prev, name]));
+  };
   const [dictating, setDictating] = useState(false);
   const [transcribing, setTranscribing] = useState(false);
   const [dictStatus, setDictStatus] = useState("");
@@ -845,6 +692,26 @@ function CaptureView({ text, setText, mode, setMode, onBack, onProcess }) {
       </div>
 
       <div className="panel capcard">
+        <div className="capture-topics">
+          <div className="tphead">
+            <div className="eyebrow">Focus topics · optional</div>
+            <span className="tpcount">{topics.length ? `${topics.length} selected` : "None selected"}</span>
+          </div>
+          <div className="topicgrid">
+            {AGENDA_TOPIC_OPTIONS.map((name) => (
+              <button
+                key={name}
+                type="button"
+                className={"topicpill " + (topics.includes(name) ? "on" : "")}
+                onClick={() => toggleTopic(name)}
+              >
+                {topics.includes(name) && <Ico d={I.check} size={13} />}
+                {name}
+              </button>
+            ))}
+          </div>
+        </div>
+
         <div className="captoggle">
           <button type="button" className={"seg " + (mode === "paste" ? "on" : "")} onClick={() => pickMode("paste")} disabled={transcribing}>
             <Ico d={I.doc} size={15} /> Write or paste
@@ -1369,8 +1236,7 @@ export default function App({ user, workspace, onSignOut }) {
   };
 
   const leaveCards = () => {
-    if (window.history.length > 1) navigate(-1);
-    else navigate(syncPath(view));
+    navigate(syncPath("agenda"));
   };
 
   const cardDeckInitialView = () => {
@@ -1413,13 +1279,6 @@ export default function App({ user, workspace, onSignOut }) {
   const adults = (Array.isArray(context.people) ? context.people : DEFAULT_CONTEXT.people).filter((p) => !kids.includes(p));
   const displayName = adults[0] || user?.user_metadata?.full_name?.split(" ")[0] || user?.email?.split("@")[0] || "Friend";
   const spouseName = adults[1] || "";
-  const showDeckPrompt = Boolean(
-    ws?.id
-    && !ws.cards_unlocked
-    && !(Array.isArray(ws.unlocked_deck_years) && ws.unlocked_deck_years.length > 0)
-    && !context.deck_prompt_dismissed_at
-  );
-
   useEffect(() => {
     if (view !== "review") return;
     if (familyNudgeShownRef.current || showFamilyNudge) return;
@@ -1437,17 +1296,7 @@ export default function App({ user, workspace, onSignOut }) {
     setShowInviteNudge(true);
   }, [view, planArrivalPhase, context.invite_nudge_dismissed_at, showInviteNudge]);
 
-  const dismissDeckPrompt = async () => {
-    if (!ws?.id) return;
-    try {
-      const data = await patchFamilyContext(ws.id, context, {
-        deck_prompt_dismissed_at: new Date().toISOString(),
-      });
-      setWs(data);
-    } catch (e) {
-      console.error("[Deck prompt] dismiss", e);
-    }
-  };
+  const openUnlockDeck = () => navigate(cardsPath("unlock"));
 
   const roleOf = useCallback((person) => {
     const p = (person || "").toLowerCase();
@@ -1458,7 +1307,6 @@ export default function App({ user, workspace, onSignOut }) {
   }, [adults]);
 
   const processingFamilyLabel = [...adults, ...(kids.length ? ["the kids"] : [])].join(", ") || "Everyone";
-  const family = { title: adults.length ? adults.join(" & ") : (ws?.name || "Your Family"), date: prettyDate(meetingDate) };
 
   // ── Realtime sync (Step 12) ──────────────────────────────────────────────
   useEffect(() => {
@@ -1836,10 +1684,7 @@ ${text}`;
           initialView={cardDeckInitialView()}
           onClose={leaveCards}
           onStartSession={startWeeklySync}
-          onSkip={async () => {
-            await dismissDeckPrompt();
-            startWeeklySync();
-          }}
+          onSkip={startWeeklySync}
           onWorkspaceUpdate={setWs}
         />
       </div>
@@ -1911,14 +1756,11 @@ ${text}`;
 
       {view === "agenda" && (
         <SyncView
-          family={family}
-          workspaceId={ws?.id}
-          showDeckPrompt={showDeckPrompt}
-          onUnlockDeck={() => openOverlay("decks")}
-          onDismissDeck={dismissDeckPrompt}
+          workspace={ws}
+          onWorkspaceUpdate={setWs}
+          onUnlockDeck={openUnlockDeck}
           onDistill={async ({ mode = "paste", topics } = {}) => {
             if (topics?.length) setAgendaTopics(topics);
-            else setAgendaTopics([]);
             setCaptureMode(mode);
             setCaptureText("");
             clearLocalCaptureDraft();
@@ -1932,6 +1774,8 @@ ${text}`;
           setText={setCaptureText}
           mode={captureMode}
           setMode={setCaptureMode}
+          topics={agendaTopics}
+          setTopics={setAgendaTopics}
           onBack={() => {
             loadCaptureDraftState();
             go("agenda");
