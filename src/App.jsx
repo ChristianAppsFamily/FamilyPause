@@ -74,22 +74,6 @@ async function patchFamilyContext(workspaceId, prev, patch) {
   return data;
 }
 
-const SAMPLE_TRANSCRIPT = `Amanda: Okay, before the week runs away from us again, let's actually do this.
-Spence: Agreed. Start with money? The accountant emailed about Q2.
-Amanda: Yeah, we need to call the accountant before month end, it's getting tight.
-Spence: I'll own that. And we still haven't looked at the Q2 household budget together. Can we block 30 minutes Tuesday night?
-Amanda: Tuesday works. Put it on the shared calendar.
-Spence: Done. Kids: Jordan has the dentist, right?
-Amanda: Take Jordan to the dentist, Thursday at 3pm. I can do the pickup.
-Spence: And Maya's swim lessons start back up. First one is Saturday morning, 9am at the rec center.
-Amanda: Got it. I'll handle Maya's swim.
-Spence: On the business side, launch week. I think we're blocked on the new payment links.
-Amanda: Right, you need to replace the placeholder Stripe links in the app before Friday.
-Spence: Yep, that's on me. Friday at the latest.
-Amanda: One more thing. Let's protect a real Sabbath this week. No screens after dinner Saturday, just us and the kids.
-Spence: Love that. Let's make it the default, not the exception.
-Amanda: Good sync. That felt like ten minutes.`;
-
 // ── AI CALL ──────────────────────────────────────────────────────────────────
 // Thin wrapper — delegates to src/lib/ai.js which handles prompt caching,
 // faithMode, and cache-usage logging. systemOverride lets the distill flow
@@ -164,11 +148,6 @@ const I = {
   menu: ["M4 7h16M4 12h16M4 17h16"],
   grid: ["M4 4h6v6H4z", "M14 4h6v6h-6z", "M4 14h6v6H4z", "M14 14h6v6h-6z"],
 };
-
-const START_TOPICS = [
-  "Kids", "Finances", "Marriage", "Faith", "Health",
-  "Work & Business", "Home & Chores", "Travel & Plans", "Friends & Family", "Rest & Sabbath",
-];
 
 // ── STEP RAIL ─────────────────────────────────────────────────────────────────
 const STEPS = [
@@ -255,8 +234,6 @@ function BrandBar({ view, onOpenCards, onOpenSettings, onSignOut }) {
     </>
   );
 }
-
-const AGENDA_TOPIC_OPTIONS = START_TOPICS;
 
 function ResumeBanner({ draft, onResume, onDiscard }) {
   const words = draft.transcript?.trim() ? draft.transcript.trim().split(/\s+/).length : 0;
@@ -484,18 +461,12 @@ function SyncView({ onDistill, workspace, onWorkspaceUpdate, onUnlockDeck }) {
 }
 
 // ── CAPTURE (View 2) ──────────────────────────────────────────────────────────
-function CaptureView({ text, setText, mode, setMode, onBack, onProcess, topics = [], setTopics }) {
-  const toggleTopic = (name) => {
-    if (!setTopics) return;
-    setTopics((prev) => (prev.includes(name) ? prev.filter((x) => x !== name) : [...prev, name]));
-  };
+function CaptureView({ text, setText, mode, setMode, onBack, onProcess }) {
   const [dictating, setDictating] = useState(false);
   const [transcribing, setTranscribing] = useState(false);
   const [dictStatus, setDictStatus] = useState("");
   const [dictNotice, setDictNotice] = useState("");
   const [livePreview, setLivePreview] = useState("");
-  const [recordSecs, setRecordSecs] = useState(0);
-  const [waveLevels, setWaveLevels] = useState(() => Array.from({ length: 9 }, () => 0.35));
   const streamRef = useRef(null);
   const recorderRef = useRef(null);
   const chunksRef = useRef([]);
@@ -505,13 +476,10 @@ function CaptureView({ text, setText, mode, setMode, onBack, onProcess, topics =
   const audioCtxRef = useRef(null);
   const analyserRef = useRef(null);
   const meterRafRef = useRef(null);
-  const timerRef = useRef(null);
 
   const stopMeter = () => {
     if (meterRafRef.current) cancelAnimationFrame(meterRafRef.current);
     meterRafRef.current = null;
-    if (timerRef.current) clearInterval(timerRef.current);
-    timerRef.current = null;
     if (audioCtxRef.current) {
       audioCtxRef.current.close().catch(() => {});
       audioCtxRef.current = null;
@@ -555,20 +523,11 @@ function CaptureView({ text, setText, mode, setMode, onBack, onProcess, topics =
     try { rec.stop(); } catch { resolve(null); }
   });
 
-  const pickMode = (next) => {
-    if (next === mode || transcribing) return;
-    if (dictating) cancelDictation();
-    setDictNotice("");
-    setDictStatus("");
-    setMode(next);
-  };
-
   const cancelDictation = () => {
     if (transcribing) return;
     stopPreview();
     stopMeter();
     setLivePreview("");
-    setRecordSecs(0);
     const rec = recorderRef.current;
     if (rec && rec.state !== "inactive") {
       rec.onstop = () => {
@@ -599,7 +558,8 @@ function CaptureView({ text, setText, mode, setMode, onBack, onProcess, topics =
       stopMeter();
       setDictating(false);
       if (!blob || blob.size < 200) {
-        setDictNotice("Recording too short. Speak for at least 2-3 seconds, then tap the check mark.");
+        setDictNotice("Recording too short. Speak for at least 2–3 seconds, then tap the mic again.");
+        setText(baseRef.current);
         return baseRef.current;
       }
       const spoken = await transcribeAudioBlob(blob, mimeRef.current, {
@@ -608,30 +568,31 @@ function CaptureView({ text, setText, mode, setMode, onBack, onProcess, topics =
       });
       if (!spoken) {
         setDictNotice("Couldn't pick up any speech. Check your mic, speak a little longer, and try again.");
+        setText(baseRef.current);
         return baseRef.current;
       }
       const merged = baseRef.current
         ? `${baseRef.current.trim()} ${spoken}`.trim()
         : spoken;
       setText(merged);
+      setMode("dictate");
       setDictNotice("");
       return merged;
     } catch (err) {
-      setDictNotice(err.message || "Transcription failed. Try again or use Write or paste.");
+      setDictNotice(err.message || "Transcription failed. Try again, or type or paste instead.");
+      setText(baseRef.current);
       return baseRef.current;
     } finally {
       setTranscribing(false);
       setDictStatus("");
-      setRecordSecs(0);
     }
   };
 
   const startDictation = async () => {
     setDictNotice("");
     setLivePreview("");
-    setRecordSecs(0);
     if (!canRecordAudio()) {
-      setDictNotice("Recording isn't supported in this browser. Use Write or paste instead.");
+      setDictNotice("Recording isn't supported in this browser. Type or paste instead.");
       return;
     }
 
@@ -653,18 +614,10 @@ function CaptureView({ text, setText, mode, setMode, onBack, onProcess, topics =
       analyserRef.current = analyser;
 
       const tickMeter = () => {
-        const a = analyserRef.current;
-        if (!a) return;
-        const buf = new Uint8Array(a.frequencyBinCount);
-        a.getByteFrequencyData(buf);
-        setWaveLevels(Array.from({ length: 9 }, (_, i) => {
-          const idx = Math.min(buf.length - 1, Math.floor((i / 9) * buf.length));
-          return 0.18 + (buf[idx] / 255) * 0.82;
-        }));
+        if (!analyserRef.current) return;
         meterRafRef.current = requestAnimationFrame(tickMeter);
       };
       meterRafRef.current = requestAnimationFrame(tickMeter);
-      timerRef.current = setInterval(() => setRecordSecs((s) => s + 1), 1000);
 
       if (speechPreviewSupported()) {
         previewRef.current = startSpeechPreview({
@@ -680,14 +633,23 @@ function CaptureView({ text, setText, mode, setMode, onBack, onProcess, topics =
       rec.start();
       setDictating(true);
       setDictStatus(speechPreviewSupported()
-        ? "Listening… words appear below as you speak"
-        : "Recording… tap ✓ when done. Words appear after save");
+        ? "Listening… tap mic to stop"
+        : "Recording… tap mic to stop");
     } catch {
       stopPreview();
       stopMeter();
       releaseStream();
       setDictNotice("Microphone access denied. Allow the mic in your browser settings and try again.");
     }
+  };
+
+  const toggleSpeak = async () => {
+    if (transcribing) return;
+    if (dictating) {
+      await confirmDictation();
+      return;
+    }
+    await startDictation();
   };
 
   useEffect(() => () => {
@@ -700,124 +662,80 @@ function CaptureView({ text, setText, mode, setMode, onBack, onProcess, topics =
     releaseStream();
   }, []);
 
-  const ready = text.trim().length > 30;
-  const wordCount = text.trim() ? `${text.trim().split(/\s+/).length} words` : null;
   const dictBusy = dictating || transcribing;
-
+  const ready = text.trim().length > 0;
+  const fieldValue = dictBusy
+    ? `${baseRef.current}${baseRef.current && livePreview ? " " : ""}${livePreview}`
+    : text;
+  const micClass = [
+    "capmic",
+    dictating ? "live" : "",
+    transcribing ? "busy" : "",
+  ].filter(Boolean).join(" ");
   return (
     <div className="view capwrap">
-      <div className="lead">
-        <div className="eyebrow" style={{ marginBottom: 12 }}>Step 2 · Have your meeting</div>
-        <h1>Talk like humans.<br /><em>We&apos;ll handle the structure.</em></h1>
-        <p>Type or paste a transcript, or dictate with speech-to-text. Kids, money, work, the week ahead: whatever needs talking about.</p>
+      <div className="lead lead-compact">
+        <h1>Build your plan</h1>
+        <p>Type, paste, or speak. It doesn&apos;t need to be organized.</p>
       </div>
 
       <div className="panel capcard">
-        <div className="capture-topics">
-          <div className="tphead">
-            <div className="eyebrow">Focus topics · optional</div>
-            <span className="tpcount">{topics.length ? `${topics.length} selected` : "None selected"}</span>
-          </div>
-          <div className="topicgrid">
-            {AGENDA_TOPIC_OPTIONS.map((name) => (
-              <button
-                key={name}
-                type="button"
-                className={"topicpill " + (topics.includes(name) ? "on" : "")}
-                onClick={() => toggleTopic(name)}
-              >
-                {topics.includes(name) && <Ico d={I.check} size={13} />}
-                {name}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="captoggle">
-          <button type="button" className={"seg " + (mode === "paste" ? "on" : "")} onClick={() => pickMode("paste")} disabled={transcribing}>
-            <Ico d={I.doc} size={15} /> Write or paste
+        {dictNotice && !dictBusy && (
+          <p className="dictnotice dictnotice-warn">{dictNotice}</p>
+        )}
+        <div className="capcomposer">
+          <textarea
+            className="capta"
+            placeholder="What’s going on?"
+            value={fieldValue}
+            readOnly={dictBusy}
+            aria-busy={dictBusy || undefined}
+            onChange={(e) => { if (!dictBusy) setText(e.target.value); }}
+          />
+          <button
+            type="button"
+            className={micClass}
+            aria-label="Speak"
+            aria-pressed={dictating}
+            disabled={transcribing}
+            title={transcribing ? "Transcribing…" : dictating ? "Stop listening" : "Speak"}
+            onClick={toggleSpeak}
+          >
+            {transcribing
+              ? <span className="capmic-spin" aria-hidden="true" />
+              : <Ico d={dictating ? I.wave : I.mic} size={18} />}
           </button>
-          <button type="button" className={"seg " + (mode === "dictate" ? "on" : "")} onClick={() => pickMode("dictate")} disabled={transcribing}>
-            <Ico d={I.wave} size={15} /> Speech to text to transcribe your meeting
-          </button>
-        </div>
-
-        {mode === "paste" && (
-          <div style={{ padding: "4px 10px 10px" }}>
-            <p className="caphint" style={{ margin: "0 0 8px", padding: "0 4px" }}>
-              Paste transcript from your written notes or other apps
+          {(dictating || transcribing) && (
+            <p className="caplisten" aria-live="polite">
+              {transcribing ? (dictStatus || "Transcribing…") : (dictStatus || "Listening…")}
             </p>
-            <textarea className="capta" placeholder="Write or paste your conversation here…" value={text} onChange={(e) => setText(e.target.value)} />
-            <div className="caprow">
-              <span className="caphint">{wordCount || "Nothing entered yet"}</span>
-              <button type="button" className="usesample" onClick={() => setText(SAMPLE_TRANSCRIPT)}>
-                ✦ Use sample conversation
-              </button>
-            </div>
-          </div>
-        )}
-
-        {mode === "dictate" && (
-          <div style={{ padding: "4px 10px 10px" }}>
-            {dictNotice && !dictBusy && (
-              <p className="dictnotice dictnotice-warn">{dictNotice}</p>
-            )}
-            <textarea
-              className="capta"
-              placeholder="Your transcript appears here after you save a dictation. You can edit anytime."
-              value={text}
-              readOnly={dictBusy}
-              onChange={(e) => { if (!dictBusy) setText(e.target.value); }}
-            />
-
-            {dictBusy ? (
-              <div className="dictpanel">
-                <div className="dictlive" aria-live="polite">
-                  {transcribing
-                    ? dictStatus
-                    : livePreview || (
-                      <span className="dictlive-hint">
-                        {speechPreviewSupported()
-                          ? "Start speaking…"
-                          : `Recording ${Math.floor(recordSecs / 60)}:${String(recordSecs % 60).padStart(2, "0")}. Tap ✓ when done`}
-                      </span>
-                    )}
-                </div>
-                <div className="dictwave" aria-hidden="true">
-                  {waveLevels.map((level, i) => (
-                    <i key={i} style={{ height: `${Math.round(level * 22)}px`, animation: "none" }} />
-                  ))}
-                </div>
-                <p className="dictstatus">{dictStatus}</p>
-                <div className="dictactions">
-                  <button type="button" className="dictbtn dictbtn-cancel" onClick={cancelDictation} disabled={transcribing} aria-label="Cancel dictation">
-                    <Ico d={I.x} size={20} />
-                  </button>
-                  <span className="caphint">{transcribing ? "Turning speech into text…" : "Cancel or save to the box"}</span>
-                  <button type="button" className="dictbtn dictbtn-save" onClick={confirmDictation} disabled={transcribing} aria-label="Save dictation">
-                    <Ico d={I.check} size={20} />
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className="caprow">
-                <span className="caphint">{wordCount || "Tap the mic, speak, then save or cancel"}</span>
-                <button type="button" className="dictmic" onClick={startDictation}>
-                  <Ico d={I.mic} size={14} /> Start dictation
-                </button>
-              </div>
-            )}
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 22 }}>
-        <button type="button" className="linkish" onClick={() => { if (dictating && !transcribing) cancelDictation(); onBack(); }}>← Back to agenda</button>
-        <button type="button" className="btn btn-primary btn-lg" disabled={dictBusy || !ready} onClick={async () => {
-          const payload = dictating ? await confirmDictation() : text;
-          if ((payload || "").trim().length > 30) onProcess(payload, mode);
-        }}>
-          <Ico d={I.bolt} size={16} fill /> Distill it
+      <div className="capactions">
+        <button
+          type="button"
+          className="linkish"
+          onClick={() => { if (dictating && !transcribing) cancelDictation(); onBack(); }}
+        >
+          ← Back
+        </button>
+        <button
+          type="button"
+          className="btn btn-primary btn-lg"
+          disabled={dictBusy || !ready}
+          onClick={async () => {
+            let payload = text;
+            let nextMode = mode;
+            if (dictating) {
+              payload = await confirmDictation();
+              nextMode = "dictate";
+            }
+            if ((payload || "").trim().length > 0) onProcess(payload, nextMode);
+          }}
+        >
+          Build
         </button>
       </div>
     </div>
@@ -1795,8 +1713,6 @@ ${text}`;
           setText={setCaptureText}
           mode={captureMode}
           setMode={setCaptureMode}
-          topics={agendaTopics}
-          setTopics={setAgendaTopics}
           onBack={() => {
             loadCaptureDraftState();
             go("agenda");

@@ -140,25 +140,6 @@
   letter-spacing: .06em;
   color: var(--ink-3);
 }
-.capture-topics {
-  margin: 0 0 16px;
-  padding: 0 4px;
-}
-.capture-topics .tphead {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 10px;
-}
-.capture-topics .tphead .eyebrow { margin: 0; }
-.capture-topics .tpcount {
-  font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: .04em;
-  color: var(--ink-3);
-}
-
 .poppop {
   position: absolute;
   top: -12px; left: 50%;
@@ -443,77 +424,124 @@
 /* ============================================================
    Capture view
    ============================================================ */
-.capwrap { max-width: 760px; margin: 0 auto; }
+.capwrap {
+  max-width: 760px;
+  width: 100%;
+  margin: 0 auto;
+  box-sizing: border-box;
+  padding-bottom: 24px;
+}
 .capwrap .lead { text-align: center; margin-bottom: 26px; }
+.capwrap .lead.lead-compact {
+  margin-bottom: 14px;
+  text-align: left;
+}
 .capwrap .lead h1 { font-size: 38px; line-height: 1.06; margin-bottom: 12px; }
+.capwrap .lead.lead-compact h1 {
+  font-size: 30px;
+  line-height: 1.1;
+  margin: 0 0 6px;
+  text-transform: uppercase;
+  letter-spacing: .02em;
+}
 .capwrap .lead h1 em { font-family: var(--display); font-style: italic; color: var(--terra); }
 .capwrap .lead p { color: var(--ink-2); font-size: 16px; margin: 0 auto; max-width: 520px; }
-
-.capcard { padding: 8px; }
-.captoggle { display: flex; gap: 6px; padding: 8px; }
-.captoggle.three .seg { font-size: 10.5px; letter-spacing: .04em; padding: 10px 8px; gap: 6px; }
-.captoggle .seg {
-  flex: 1; font-family: var(--mono); font-size: 12px; letter-spacing: .05em; text-transform: uppercase;
-  padding: 11px; border-radius: var(--r-sm); border: 1px solid transparent; background: transparent;
-  color: var(--ink-3); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+.capwrap .lead.lead-compact p {
+  margin: 0;
+  max-width: none;
+  font-size: 15.5px;
+  color: var(--ink-2);
 }
-.captoggle .seg.on { background: var(--paper-2); color: var(--ink); border-color: var(--line); }
-.captoggle .seg:disabled { opacity: 0.45; cursor: not-allowed; }
 
+.capcard { padding: 10px; }
+.capcomposer {
+  position: relative;
+  width: 100%;
+}
 .capta {
-  width: 100%; min-height: 230px; resize: vertical;
-  border: 1px solid var(--line); border-radius: var(--r); background: var(--paper);
-  padding: 18px 18px; font-family: var(--serif); font-size: 15.5px; line-height: 1.62; color: var(--ink);
+  width: 100%;
+  min-height: 200px;
+  max-width: 100%;
+  resize: vertical;
+  box-sizing: border-box;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--paper);
+  padding: 18px 56px 56px 18px;
+  font-family: var(--serif);
+  font-size: 15.5px;
+  line-height: 1.62;
+  color: var(--ink);
 }
 .capta:focus { outline: none; border-color: var(--terra); box-shadow: 0 0 0 3px var(--terra-tint); }
-.caprow { display: flex; align-items: center; justify-content: space-between; padding: 14px 10px 10px; gap: 14px; }
-.caphint { font-family: var(--mono); font-size: 11.5px; color: var(--ink-3); letter-spacing: .02em; }
-.usesample {
-  font-family: var(--mono); font-size: 11.5px; letter-spacing: .04em; text-transform: uppercase;
-  color: var(--terra); background: var(--terra-tint); border: 1px solid var(--terra-soft);
-  border-radius: 999px; padding: 7px 13px; cursor: pointer;
-}
-.usesample:hover { background: var(--terra-soft); }
+.capta:read-only { color: var(--ink); }
 
-.dictmic {
-  font-family: var(--mono); font-size: 11.5px; letter-spacing: .04em; text-transform: uppercase;
-  color: var(--terra); background: var(--paper-card); border: 1px solid var(--terra-soft);
-  border-radius: 999px; padding: 7px 13px; cursor: pointer;
-  display: inline-flex; align-items: center; gap: 7px; flex-shrink: 0;
+.capmic {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--terra-soft);
+  background: var(--paper-card);
+  color: var(--terra);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  z-index: 2;
+  box-shadow: var(--shadow-sm);
+  transition: background .15s, color .15s, border-color .15s, transform .12s;
 }
-.dictmic:hover { background: var(--terra-tint); }
-.dictmic.live { background: var(--red-tint); border-color: var(--red-soft); color: var(--red); }
+.capmic:hover { background: var(--terra-tint); transform: scale(1.04); }
+.capmic:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+.capmic.live {
+  background: var(--red-tint);
+  border-color: var(--red-soft);
+  color: var(--red);
+  animation: capmic-pulse 1.4s ease-out infinite;
+}
+.capmic.busy {
+  background: var(--paper-2);
+  border-color: var(--line);
+  color: var(--ink-3);
+}
+@keyframes capmic-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(192, 64, 47, .35); }
+  100% { box-shadow: 0 0 0 14px rgba(192, 64, 47, 0); }
+}
+.capmic-spin {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid var(--line-2);
+  border-top-color: var(--terra);
+  animation: capmic-spin .7s linear infinite;
+}
+@keyframes capmic-spin { to { transform: rotate(360deg); } }
 
-.dictpanel { margin-top: 14px; padding: 16px 14px 12px; border: 1px solid var(--line); border-radius: var(--r); background: var(--paper-2); }
-.dictlive {
-  min-height: 72px; padding: 14px 16px; border-radius: var(--r-sm);
-  background: var(--paper-card); border: 1px solid var(--line-2);
-  font-family: var(--serif); font-size: 16px; line-height: 1.55; color: var(--ink);
+.caplisten {
+  position: absolute;
+  left: 18px;
+  bottom: 18px;
+  right: 60px;
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  pointer-events: none;
 }
-.dictlive:empty::before { content: "Listening… start speaking"; color: var(--ink-3); }
-.dictlive-hint { color: var(--ink-3); font-style: italic; }
-.dictstatus {
-  margin: 0 0 4px; text-align: center;
-  font-family: var(--mono); font-size: 10.5px; letter-spacing: .06em;
-  text-transform: uppercase; color: var(--ink-3);
+
+.capactions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-top: 14px;
+  padding-bottom: env(safe-area-inset-bottom, 0);
 }
-.dictwave { display: flex; gap: 4px; justify-content: center; align-items: flex-end; height: 28px; margin: 14px 0 4px; }
-.dictwave i {
-  display: block; width: 4px; min-height: 6px; border-radius: 99px; background: var(--terra);
-  transition: height .08s ease;
-}
-.dictactions { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 8px; }
-.dictbtn {
-  width: 52px; height: 52px; border-radius: 50%; border: 1px solid var(--line-2);
-  display: grid; place-items: center; cursor: pointer; flex-shrink: 0;
-  background: var(--paper-card); transition: transform .12s, background .12s;
-}
-.dictbtn:hover { transform: scale(1.04); }
-.dictbtn-cancel { color: var(--red); border-color: var(--red-soft); background: var(--red-tint); }
-.dictbtn-cancel:hover { background: var(--red-soft); }
-.dictbtn-save { color: var(--olive-d); border-color: var(--olive-soft); background: var(--olive-tint); }
-.dictbtn-save:hover { background: var(--olive-soft); }
-.dictbtn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
 
 .dictnotice {
   margin: 0 0 12px; padding: 12px 14px; border-radius: var(--r-sm);
@@ -521,6 +549,20 @@
   font-family: var(--serif); font-size: 14px; line-height: 1.5; color: var(--ink-2);
 }
 .dictnotice-warn { background: var(--red-tint); border-color: var(--red-soft); color: var(--red); }
+
+@media (max-width: 720px) {
+  .capwrap .lead.lead-compact h1 { font-size: 26px; }
+  .capwrap .lead.lead-compact p { font-size: 14.5px; }
+  .capta { min-height: 180px; }
+  .capactions {
+    position: sticky;
+    bottom: 0;
+    z-index: 5;
+    margin-top: 12px;
+    padding: 10px 0 calc(10px + env(safe-area-inset-bottom, 0));
+    background: linear-gradient(180deg, transparent, var(--paper) 28%);
+  }
+}
 
 /* record mode */
 .recbox { padding: 38px 20px 30px; text-align: center; }
