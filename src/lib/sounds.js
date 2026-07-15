@@ -1,9 +1,10 @@
 import { prefersReducedMotion } from "./motion";
 
-const CHIME_SRC = "/sounds/plan-chime.wav";
+/** Played when Build my week / calendar sync completes. */
+const BUILD_CHIME_SRC = "/sounds/build_soundfx.mp3";
 const CARD_FLIP_SRC = "/sounds/card-flip.wav";
 
-let chimeAudio = null;
+let buildChimeAudio = null;
 let flipAudio = null;
 
 function mayPlay(soundsEnabled) {
@@ -12,24 +13,28 @@ function mayPlay(soundsEnabled) {
   return true;
 }
 
-function playClip(src, cache) {
-  let audio = cache;
+function playClip(src, getCached, setCached, volume) {
+  let audio = getCached();
   if (!audio) {
     audio = new Audio(src);
     audio.preload = "auto";
-    if (src === CHIME_SRC) chimeAudio = audio;
-    else flipAudio = audio;
+    setCached(audio);
   }
-  audio.volume = src === CHIME_SRC ? 0.42 : 0.38;
+  audio.volume = volume;
   audio.currentTime = 0;
   void audio.play().catch(() => {});
 }
 
-/** Soft completion chime when weekly sync finishes (respects mute via HTML audio). */
+/** Completion sound when weekly sync finishes (Build my week / calendar sync). */
 export function playPlanChime(soundsEnabled = true) {
   if (!mayPlay(soundsEnabled)) return;
   try {
-    playClip(CHIME_SRC, chimeAudio);
+    playClip(
+      BUILD_CHIME_SRC,
+      () => buildChimeAudio,
+      (a) => { buildChimeAudio = a; },
+      0.5,
+    );
   } catch {
     /* ignore */
   }
@@ -39,7 +44,12 @@ export function playPlanChime(soundsEnabled = true) {
 export function playCardFlip(soundsEnabled = true) {
   if (!mayPlay(soundsEnabled)) return;
   try {
-    playClip(CARD_FLIP_SRC, flipAudio);
+    playClip(
+      CARD_FLIP_SRC,
+      () => flipAudio,
+      (a) => { flipAudio = a; },
+      0.38,
+    );
   } catch {
     /* ignore */
   }
