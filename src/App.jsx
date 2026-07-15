@@ -679,44 +679,43 @@ function CaptureView({ text, setText, mode, setMode, onBack, onProcess }) {
         <p>Type, paste, or speak. It doesn&apos;t need to be organized.</p>
       </div>
 
-      <div className="panel capcard">
-        {dictNotice && !dictBusy && (
-          <p className="dictnotice dictnotice-warn">{dictNotice}</p>
+      {dictNotice && !dictBusy && (
+        <p className="dictnotice dictnotice-warn">{dictNotice}</p>
+      )}
+
+      <div className="capcomposer">
+        <textarea
+          className="capta"
+          placeholder="What’s going on?"
+          value={fieldValue}
+          readOnly={dictBusy}
+          aria-busy={dictBusy || undefined}
+          onChange={(e) => { if (!dictBusy) setText(e.target.value); }}
+        />
+        <button
+          type="button"
+          className={micClass}
+          aria-label="Speak"
+          aria-pressed={dictating}
+          disabled={transcribing}
+          title={transcribing ? "Transcribing…" : dictating ? "Stop listening" : "Speak"}
+          onClick={toggleSpeak}
+        >
+          {transcribing
+            ? <span className="capmic-spin" aria-hidden="true" />
+            : <Ico d={dictating ? I.wave : I.mic} size={18} />}
+        </button>
+        {(dictating || transcribing) && (
+          <p className="caplisten" aria-live="polite">
+            {transcribing ? (dictStatus || "Transcribing…") : (dictStatus || "Listening…")}
+          </p>
         )}
-        <div className="capcomposer">
-          <textarea
-            className="capta"
-            placeholder="What’s going on?"
-            value={fieldValue}
-            readOnly={dictBusy}
-            aria-busy={dictBusy || undefined}
-            onChange={(e) => { if (!dictBusy) setText(e.target.value); }}
-          />
-          <button
-            type="button"
-            className={micClass}
-            aria-label="Speak"
-            aria-pressed={dictating}
-            disabled={transcribing}
-            title={transcribing ? "Transcribing…" : dictating ? "Stop listening" : "Speak"}
-            onClick={toggleSpeak}
-          >
-            {transcribing
-              ? <span className="capmic-spin" aria-hidden="true" />
-              : <Ico d={dictating ? I.wave : I.mic} size={18} />}
-          </button>
-          {(dictating || transcribing) && (
-            <p className="caplisten" aria-live="polite">
-              {transcribing ? (dictStatus || "Transcribing…") : (dictStatus || "Listening…")}
-            </p>
-          )}
-        </div>
       </div>
 
       <div className="capactions">
         <button
           type="button"
-          className="linkish"
+          className="linkish capback"
           onClick={() => { if (dictating && !transcribing) cancelDictation(); onBack(); }}
         >
           ← Back
