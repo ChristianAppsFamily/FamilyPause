@@ -207,6 +207,29 @@
 .choicecard .cardfoot {
   margin-top: 28px;
 }
+.choicecard .cardfoot-tight {
+  margin-top: 18px;
+  padding-top: 0;
+}
+.cico-multi {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: auto;
+  min-width: 90px;
+  height: 90px;
+  padding: 0 22px;
+  border-radius: 9999px;
+}
+.choice-sub {
+  margin: 12px 0 0;
+  font-family: var(--serif);
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--ink-3);
+  max-width: 28ch;
+}
 
 .egrow { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 20px; }
 .egpill {
@@ -1108,6 +1131,8 @@
   .choicecard h3 { font-size: 26px; }
   .choicecard p { font-size: 17px; }
   .cico { width: 72px; height: 72px; }
+  .cico-multi { min-width: 72px; height: 72px; padding: 0 16px; gap: 8px; }
+  .choice-sub { font-size: 14px; }
   .starters-stage { max-width: 280px; }
   .starters-scale { transform: translate(-50%, -50%) scale(0.74); }
 

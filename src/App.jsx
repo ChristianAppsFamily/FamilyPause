@@ -453,13 +453,18 @@ function ApproachChoice({ onJump, workspace, onWorkspaceUpdate, onUnlockDeck }) 
           role="button"
           tabIndex={0}
         >
-          <div className="cico"><Ico d={I.mic} size={22} /></div>
-          <h3>Jump straight in.</h3>
-          <p>Hit record and talk freely. FamilyPause listens to everything and organizes your week automatically when you&apos;re done.</p>
-          <div className="cardfoot">
+          <div className="cico cico-multi" aria-hidden="true">
+            <Ico d={I.doc} size={18} />
+            <Ico d={I.wave} size={18} />
+            <Ico d={I.mic} size={18} />
+          </div>
+          <h3>What&apos;s going on?</h3>
+          <p>Type, paste, or say everything you need to remember.</p>
+          <div className="cardfoot cardfoot-tight">
             <button type="button" className="choicebtn solid" onClick={(e) => { e.stopPropagation(); onJump(); }}>
-              Start Recording <Ico d={I.arrow} size={15} />
+              Build my plan <Ico d={I.arrow} size={15} />
             </button>
+            <p className="choice-sub">Review before adding to your calendar.</p>
           </div>
         </div>
       </div>
@@ -473,7 +478,7 @@ function SyncView({ onDistill, workspace, onWorkspaceUpdate, onUnlockDeck }) {
       workspace={workspace}
       onWorkspaceUpdate={onWorkspaceUpdate}
       onUnlockDeck={onUnlockDeck}
-      onJump={() => onDistill({ mode: "dictate", topics: [] })}
+      onJump={() => onDistill({ mode: "paste", topics: [] })}
     />
   );
 }
