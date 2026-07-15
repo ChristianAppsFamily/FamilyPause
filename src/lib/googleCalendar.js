@@ -2,35 +2,70 @@ import { supabase } from "./supabase";
 
 /** @typedef {{ connected: boolean, connectedAt: string|null, memberId: string|null, googleEmail: string|null }} CalendarConnection */
 
-/** Calendar-relevant card missing date or time — needs Resolve times step. */
+/** Schema types stored on cards. */
+export const CARD_TYPES = ["event", "action", "decision", "note"];
+
+const TYPE_LABELS = {
+  event: "Event",
+  action: "To-Do",
+  decision: "Decision",
+  note: "Note",
+};
+
+/** UI label for a schema type. */
+export function typeLabel(type) {
+  return TYPE_LABELS[type] || "To-Do";
+}
+
+/** Calendar event title from current type + task (regenerated at sync). */
+export function calendarTitle(card) {
+  const task = (card?.task || "").trim() || "Untitled";
+  if (card?.type === "event") return task;
+  return `${typeLabel(card?.type)}: ${task}`;
+}
+
+/** Types that benefit from an optional/manual date-time before sync. */
+export function typeNeedsSchedule(type) {
+  return type === "event" || type === "action" || type === "decision";
+}
+
+/**
+ * Calendar-bound card missing date or time — offer in Times / Review schedule row.
+ * Notes only appear if they already have a partial schedule.
+ */
 export function needsDateTime(card) {
-  if (card.type === "note") return false;
+  if (!card) return false;
   if (card.date && card.time) return false;
-  if (
-    card.type === "event"
-    || card.recurring
-    || card.date
-    || card.time
-  ) {
+  if (card.type === "note") {
+    return !!(card.date || card.time);
+  }
+  if (typeNeedsSchedule(card.type)) {
     return !card.date || !card.time;
   }
-  // Open actions/decisions with no schedule — optional date/time in Resolve
-  return card.type === "action" || card.type === "decision";
+  return false;
 }
 
-/** Both date and time required for Google Calendar sync. */
-export function isSyncEligible(card) {
-  return !!(card.date && card.time);
+/**
+ * Kept/calendared card can sync — timed if complete, else all-day via meetingDate.
+ * @param {object} card
+ * @param {{ meetingDate?: string }} [opts]
+ */
+export function isSyncEligible(card, opts = {}) {
+  if (!(card.status === "kept" || card.status === "calendared")) return false;
+  if (card.date && card.time) return true;
+  const fallbackDate = card.date || opts.meetingDate;
+  return !!fallbackDate;
 }
 
-/** Item may belong on a calendar (used for sync guard warnings). */
+/** All kept items are calendar-relevant. */
 export function isCalendarRelevant(card) {
-  return (
-    card.type === "event"
-    || (card.type === "action" && card.recurring)
+  return card.status === "kept" || card.status === "calendared"
+    || card.type === "event"
+    || card.type === "action"
+    || card.type === "decision"
+    || card.type === "note"
     || !!card.date
-    || !!card.time
-  );
+    || !!card.time;
 }
 
 /**
@@ -142,18 +177,39 @@ export function clearCardCalendarSync(cards, cardId) {
   ));
 }
 
-/** Map a kept card to calendar-sync API payload (requires date and time). */
-export function cardToCalendarEvent(card) {
-  if (!card.date || !card.time) {
-    throw new Error("Card missing date or time");
+/**
+ * Map a kept card to calendar-sync API payload.
+ * Timed when date+time present; otherwise all-day on card.date or meetingDate.
+ * @param {object} card
+ * @param {{ meetingDate?: string }} [opts]
+ */
+export function cardToCalendarEvent(card, opts = {}) {
+  const title = calendarTitle(card);
+  const description = card.source || card.task || title;
+  if (card.date && card.time) {
+    return {
+      id: card.id,
+      title,
+      date: card.date,
+      time: card.time,
+      allDay: false,
+      duration_minutes: card.duration_minutes ?? 60,
+      description,
+      recurrence: !!card.recurring,
+    };
+  }
+  const date = card.date || opts.meetingDate;
+  if (!date) {
+    throw new Error("Card missing date for calendar sync");
   }
   return {
     id: card.id,
-    title: card.task,
-    date: card.date,
-    time: card.time,
-    duration_minutes: card.duration_minutes ?? 60,
-    description: card.source || card.task,
+    title,
+    date,
+    time: null,
+    allDay: true,
+    duration_minutes: null,
+    description,
     recurrence: !!card.recurring,
   };
 }
@@ -180,22 +236,14 @@ export function applySyncResults(cards, results) {
  * Batch-sync eligible kept cards that are not already synced.
  * @param {string} workspaceId
  * @param {object[]} cards
- * @param {{ sessionId?: string }} [opts]
+ * @param {{ sessionId?: string, meetingDate?: string }} [opts]
  * @returns {Promise<{ results: object[], updatedCards: object[] }>}
  */
 export async function syncCardsToCalendar(workspaceId, cards, opts = {}) {
   const kept = cards.filter((c) => c.status === "kept" || c.status === "calendared");
-  const unsyncedRelevant = kept.filter((c) => !c.calendar_synced && isCalendarRelevant(c));
-  const skipped = unsyncedRelevant.filter((c) => !isSyncEligible(c));
-  if (skipped.length) {
-    console.warn(
-      "[calendar-sync] Skipped items missing date or time:",
-      skipped.map((c) => ({ id: c.id, task: c.task, date: c.date, time: c.time })),
-    );
-  }
-  const toSync = kept.filter((c) => isSyncEligible(c) && !c.calendar_synced);
+  const toSync = kept.filter((c) => isSyncEligible(c, opts) && !c.calendar_synced);
   if (!toSync.length) return { results: [], updatedCards: cards };
-  const events = toSync.map(cardToCalendarEvent);
+  const events = toSync.map((c) => cardToCalendarEvent(c, { meetingDate: opts.meetingDate }));
   const { results } = await syncCalendarEvents(workspaceId, events, opts);
   return { results, updatedCards: applySyncResults(cards, results) };
 }

@@ -511,10 +511,10 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
 
         {/* ── FAITH MODE ─────────────────────────────────────────────── */}
         <section className="panel set-sec rise">
-          <div className="eyebrow">AI distillation</div>
+          <div className="eyebrow">AI extraction</div>
           <h2>Faith mode</h2>
           <p className="set-sub">
-            When on, meeting distillation uses faith-aware language for families who want Scripture-grounded framing in summaries.
+            When on, meeting extraction uses faith-aware language for families who want Scripture-grounded framing when we build your plan.
           </p>
           <button
             type="button"

@@ -48,7 +48,16 @@ Categories: ${categories.join(", ") || "Family, Kids, Business, Finance, Home, F
 MEETING DATE ANCHOR: ${meetingDate} (${meetingDay})
 Use this date to resolve every relative day mentioned in the transcript.
 
-YOUR JOB: Extract EVERY actionable item, appointment, errand, decision, task, or commitment — exhaustively. Do not skip, merge, or summarize away distinct items. If the transcript mentions 7 separate commitments, return 7 cards.
+HOW YOUR OUTPUT IS USED:
+Every extracted item will be written to the family's Google Calendar — not only appointments.
+- type:"event" → a normal timed calendar entry; the app uses the task text as the event title (no prefix).
+- type:"action" → calendar entry titled like "To-Do: {task}"
+- type:"decision" → calendar entry titled like "Decision: {task}"
+- type:"note" → calendar entry titled like "Note: {task}"
+If date/time are null, the app still keeps the item and asks the family to assign a reminder date/time (or defaults to an all-day entry on the meeting date). Prefer accurate nulls over inventing dates.
+You still return a bare "task" string and a "type" field — the app adds any title prefix.
+
+YOUR JOB: Extract EVERY actionable item, appointment, errand, decision, task, commitment, or noteworthy reminder — exhaustively. Do not skip, merge, or summarize away distinct items. If the transcript mentions 7 separate commitments, return 7 cards. Do not invent filler notes; only include notes when someone stated something the family should remember.
 
 Return ONLY a valid JSON array. No markdown, no backticks, no commentary.
 
@@ -57,7 +66,7 @@ Each item object:
   "id": (unique integer starting at 1),
   "category": (from Categories above, or create one),
   "person": (specific name from Known people, or "Both", or "Family"),
-  "task": (clear one-sentence description),
+  "task": (clear one-sentence description, no type prefix in the text),
   "source": (exact phrase from transcript, under 15 words),
   "date": "YYYY-MM-DD" or null,
   "time": "HH:MM" 24-hour or null,
@@ -73,8 +82,8 @@ DATE & TIME EXTRACTION (critical):
 - Parse times into 24h HH:MM: "6:30pm"→18:30, "1pm"→13:00, "8pm"→20:00, "4:15"→16:15 (assume PM for bare afternoon hours 1–6 without am/pm).
 - Vague periods without a clock time leave time null: "Saturday morning", "Sunday afternoon", "evening" without a number.
 - Set recurring:true when the transcript says "every", "weekly", "each week", "recurring", or similar for a repeating commitment.
-- Set type:"event" for appointments with a date/time; type:"action" for tasks and errands without a fixed appointment time.
-- ONLY leave date null when no day/date is mentioned at all. ONLY leave time null when no specific clock time is mentioned.
+- Set type:"event" for appointments with a fixed place/time on the calendar; type:"action" for tasks and errands; type:"decision" when the family agreed on a choice; type:"note" for context worth remembering that is not a task.
+- ONLY leave date null when no day/date is mentioned at all. ONLY leave time null when no specific clock time is mentioned. Null date/time is expected for many actions, decisions, and notes.
 
 EXHAUSTIVE EXTRACTION RULES:
 - Include errands ("oil change on the van"), kid tasks ("pick the summer camp"), scheduling items, and follow-ups — even if brief.

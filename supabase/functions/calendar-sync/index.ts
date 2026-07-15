@@ -17,10 +17,19 @@ type CalendarEventInput = {
   title: string;
   date: string;
   time?: string | null;
+  allDay?: boolean;
   duration_minutes?: number;
   description?: string;
   recurrence?: boolean;
 };
+
+/** Next calendar day YYYY-MM-DD for Google all-day end (exclusive). */
+function nextDayIso(date: string): string {
+  const [y, mo, d] = date.split("-").map(Number);
+  const dt = new Date(Date.UTC(y, mo - 1, d + 1));
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${dt.getUTCFullYear()}-${pad(dt.getUTCMonth() + 1)}-${pad(dt.getUTCDate())}`;
+}
 
 type SessionCard = Record<string, unknown> & { id: number | string };
 
@@ -51,6 +60,21 @@ function addDurationToLocal(
 }
 
 function buildEventBody(ev: CalendarEventInput, userTimeZone: string) {
+  const useAllDay = ev.allDay === true || !ev.time;
+
+  if (useAllDay) {
+    const body: Record<string, unknown> = {
+      summary: ev.title,
+      description: ev.description || "",
+      start: { date: ev.date },
+      end: { date: nextDayIso(ev.date) },
+    };
+    if (ev.recurrence) {
+      body.recurrence = ["RRULE:FREQ=WEEKLY"];
+    }
+    return body;
+  }
+
   const time = normalizeTime(ev.time || "10:00");
   const duration = ev.duration_minutes ?? 60;
   const startDateTime = `${ev.date}T${time}:00`;

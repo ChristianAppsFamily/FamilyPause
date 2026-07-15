@@ -1011,8 +1011,8 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
               <div className="stp">
                 <svg className="sico" viewBox="0 0 24 24" {...stroke}><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3z" /></svg>
                 <div className="snum">02</div>
-                <h3>AI distills it</h3>
-                <p>Hit Distill. The AI reads your full conversation and extracts every action, appointment, and decision, organized by person and category. About 10 seconds.</p>
+                <h3>AI builds it</h3>
+                <p>Hit Build. The AI reads your full conversation and extracts every action, appointment, and decision, organized by person and category. About 10 seconds.</p>
               </div>
               <div className="stp">
                 <svg className="sico" viewBox="0 0 24 24" {...stroke}><path d="M5 12.5 10 17.5 19.5 6.5" /></svg>

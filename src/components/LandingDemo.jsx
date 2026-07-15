@@ -173,7 +173,7 @@ export default function LandingDemo({ onStart = () => {}, onSeePricing }) {
     try {
       apiCards = await callLandingDemoAI(text);
     } catch (err) {
-      apiError = err?.message || 'Distill unavailable. Try again in a moment.';
+      apiError = err?.message || 'Build unavailable. Try again in a moment.';
     }
 
     const wait = Math.max(0, DEMO_MIN_LOADING_MS - (Date.now() - loadStart));
@@ -202,7 +202,7 @@ export default function LandingDemo({ onStart = () => {}, onSeePricing }) {
           <span className="eyebrow demo-eyebrow">Try It Now!</span>
           <h2>See what FamilyPause<br /><em>does</em>.</h2>
           <p className="lead">
-            Paste a few sentences from a real family conversation, anything you have talked about recently. Hit Distill and watch the AI organize it in seconds.
+            Paste a few sentences from a real family conversation, anything you have talked about recently. Hit Build and watch the AI organize it in seconds.
           </p>
           <p className="note">No account needed. One free try per day.</p>
         </div>
@@ -241,7 +241,7 @@ export default function LandingDemo({ onStart = () => {}, onSeePricing }) {
                   disabled={!canDistill || phase === 'loading'}
                 >
                   <FpMark />
-                  <span className="dtext">Distill It</span>
+                  <span className="dtext">Build It</span>
                   <span className="dloader" aria-hidden="true">
                     <span className="ld" /><span className="ld" /><span className="ld" />
                   </span>
@@ -283,7 +283,7 @@ export default function LandingDemo({ onStart = () => {}, onSeePricing }) {
           <div className="tryresults show">
             <hr className="resrule" />
             <div className="reslabel">
-              Your FamilyPause distill
+              Your FamilyPause plan
               <span className="chk" aria-hidden="true">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M5 12.5 10 17.5 19.5 6.5" />

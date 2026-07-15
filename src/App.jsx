@@ -7,7 +7,7 @@
 //   • Live speech capture (MediaRecorder + Whisper, ChatGPT-style)
 //   • workspace.family_context for people / categories / person routing
 //
-// Flow (StepRail): Agenda → Capture → Distill → Resolve → Review → Plan
+// Flow (StepRail): Agenda → Capture → Build → Resolve → Review → Plan
 // Styling comes from src/styles/tokens.css + src/styles/screens.css.
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -25,6 +25,8 @@ import { parseAppLocation, syncPath, SYNC_VIEWS, cardsPath } from "./lib/routes"
 import { normalizeCardPeople } from "./lib/familyContext";
 import {
   applySyncResults,
+  calendarTitle,
+  CARD_TYPES,
   clearCardCalendarSync,
   getCalendarConnection,
   isSyncEligible,
@@ -32,6 +34,8 @@ import {
   startGoogleCalendarConnect,
   syncCalendarEvents,
   syncCardsToCalendar,
+  typeLabel,
+  typeNeedsSchedule,
   unsyncCalendarEvent,
   cardToCalendarEvent,
 } from "./lib/googleCalendar";
@@ -153,7 +157,7 @@ const I = {
 const STEPS = [
   { key: "agenda", label: "Agenda" },
   { key: "capture", label: "Capture" },
-  { key: "processing", label: "Distill" },
+  { key: "processing", label: "Build" },
   { key: "resolve", label: "Times" },
   { key: "review", label: "Review" },
   { key: "plan", label: "Plan" },
@@ -764,7 +768,7 @@ function ProcessingView({ done, familyNames = "Everyone" }) {
   return (
     <div className="view proc">
       <div className="procorb"><span className="ring" /><span className="ring r2" /><Ico d={I.bolt} size={46} fill /></div>
-      <h1>Distilling your sync…</h1>
+      <h1>Building your plan…</h1>
       <div className="psub">{done ? "Done. Opening your review." : subs[Math.min(active, subs.length - 1)]}</div>
       <div className="procsteps">
         {stepLabels.map((s, i) => (
@@ -778,16 +782,31 @@ function ProcessingView({ done, familyNames = "Everyone" }) {
   );
 }
 
-// ── RESOLVE TIMES (between Distill and Review) ───────────────────────────────
-function ResolveTimesView({ cards, setCards, onBack, onContinue }) {
-  const [snapshot] = useState(() =>
-    cards.filter(needsDateTime).map((c) => ({
-      id: c.id,
-      task: c.task,
-      person: c.person,
-      category: c.category,
-    })),
+function CardTypeSelect({ value, onChange, id }) {
+  return (
+    <select
+      id={id}
+      className="card-type-select"
+      value={CARD_TYPES.includes(value) ? value : "action"}
+      onChange={(e) => onChange(e.target.value)}
+      aria-label="Item type"
+    >
+      {CARD_TYPES.map((t) => (
+        <option key={t} value={t}>{typeLabel(t)}</option>
+      ))}
+    </select>
   );
+}
+
+function setCardType(setCards, id, nextType) {
+  setCards((arr) => arr.map((c) => (
+    c.id === id ? { ...c, type: nextType } : c
+  )));
+}
+
+// ── RESOLVE TIMES (between Build and Review) ─────────────────────────────────
+function ResolveTimesView({ cards, setCards, onBack, onContinue }) {
+  const queue = cards.filter(needsDateTime);
   const [drafts, setDrafts] = useState(() => {
     const initial = {};
     cards.filter(needsDateTime).forEach((c) => {
@@ -797,9 +816,19 @@ function ResolveTimesView({ cards, setCards, onBack, onContinue }) {
   });
   const [confirmedIds, setConfirmedIds] = useState(() => new Set());
 
-  const total = snapshot.length;
-  const resolvedCount = confirmedIds.size;
-  const allResolved = total > 0 && resolvedCount === total;
+  const queueIds = queue.map((c) => c.id).join(",");
+  useEffect(() => {
+    setDrafts((prev) => {
+      const next = { ...prev };
+      cards.filter(needsDateTime).forEach((c) => {
+        if (!next[c.id]) next[c.id] = { date: c.date || "", time: c.time || "" };
+      });
+      return next;
+    });
+  }, [queueIds, cards]);
+
+  const total = queue.length;
+  const resolvedCount = queue.filter((c) => confirmedIds.has(c.id) || (c.date && c.time)).length;
 
   const patchDraft = (id, patch) => {
     setDrafts((prev) => ({ ...prev, [id]: { ...prev[id], ...patch } }));
@@ -820,15 +849,21 @@ function ResolveTimesView({ cards, setCards, onBack, onContinue }) {
         <div className="eyebrow" style={{ marginBottom: 9 }}>Step 3b · Fill in the times</div>
         <h1>A few items need a <em>date and time</em> before they can land on your calendar.</h1>
         <p style={{ color: "var(--ink-2)", marginTop: 10 }}>
-          {total} {total === 1 ? "item needs" : "items need"} scheduling details. Enter both fields, then confirm each item.
+          {total === 0
+            ? "Nothing left to schedule — continue to review."
+            : `${total} ${total === 1 ? "item could use" : "items could use"} a date and time. Confirm what you can; skip the rest.`}
         </p>
-        <p className="resolve-progress">{resolvedCount} of {total} resolved</p>
+        {total > 0 && (
+          <p className="resolve-progress">
+            {resolvedCount} of {total} scheduled · Skip anything left — we&apos;ll put it on your meeting day.
+          </p>
+        )}
       </div>
 
       <div className="resolve-list">
-        {snapshot.map((item) => {
+        {queue.map((item) => {
           const draft = drafts[item.id] || { date: "", time: "" };
-          const done = confirmedIds.has(item.id);
+          const done = confirmedIds.has(item.id) || !!(item.date && item.time);
           const canConfirm = !!draft.date && !!draft.time;
           return (
             <div className={"resolve-row" + (done ? " resolve-row--done" : "")} key={item.id}>
@@ -838,50 +873,62 @@ function ResolveTimesView({ cards, setCards, onBack, onContinue }) {
                     <Ico d={I.check} size={12} />
                   </span>
                 )}
-                <div>
+                <div style={{ flex: 1, minWidth: 0 }}>
                   <p className="resolve-row-task">{item.task}</p>
                   <div className="resolve-row-meta">
                     <span>{item.person}</span>
                     {item.category && <span>· {item.category}</span>}
                   </div>
+                  <div className="card-type-row">
+                    <CardTypeSelect
+                      id={`resolve-type-${item.id}`}
+                      value={item.type}
+                      onChange={(t) => setCardType(setCards, item.id, t)}
+                    />
+                    <span className="card-cal-preview">{calendarTitle(item)}</span>
+                  </div>
                 </div>
               </div>
-              <div className="resolve-row-fields">
-                <div className="resolve-field">
-                  <label htmlFor={`resolve-date-${item.id}`}>Date</label>
-                  <input
-                    id={`resolve-date-${item.id}`}
-                    type="date"
-                    value={draft.date}
-                    disabled={done}
-                    onChange={(e) => patchDraft(item.id, { date: e.target.value })}
-                  />
-                </div>
-                <div className="resolve-field">
-                  <label htmlFor={`resolve-time-${item.id}`}>Time</label>
-                  <input
-                    id={`resolve-time-${item.id}`}
-                    type="time"
-                    value={draft.time}
-                    disabled={done}
-                    onChange={(e) => patchDraft(item.id, { time: e.target.value })}
-                  />
-                </div>
-              </div>
-              {!done && (
-                <button
-                  type="button"
-                  className="btn btn-soft resolve-confirm"
-                  disabled={!canConfirm}
-                  onClick={() => confirmItem(item.id)}
-                >
-                  Confirm
-                </button>
-              )}
-              {done && (
-                <p className="resolve-confirmed-label">
-                  <Ico d={I.check} size={12} /> Confirmed · {formatWhen(draft.date, draft.time)}
-                </p>
+              {typeNeedsSchedule(item.type) && (
+                <>
+                  <div className="resolve-row-fields">
+                    <div className="resolve-field">
+                      <label htmlFor={`resolve-date-${item.id}`}>Date</label>
+                      <input
+                        id={`resolve-date-${item.id}`}
+                        type="date"
+                        value={draft.date}
+                        disabled={done}
+                        onChange={(e) => patchDraft(item.id, { date: e.target.value })}
+                      />
+                    </div>
+                    <div className="resolve-field">
+                      <label htmlFor={`resolve-time-${item.id}`}>Time</label>
+                      <input
+                        id={`resolve-time-${item.id}`}
+                        type="time"
+                        value={draft.time}
+                        disabled={done}
+                        onChange={(e) => patchDraft(item.id, { time: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                  {!done && (
+                    <button
+                      type="button"
+                      className="btn btn-soft resolve-confirm"
+                      disabled={!canConfirm}
+                      onClick={() => confirmItem(item.id)}
+                    >
+                      Confirm
+                    </button>
+                  )}
+                  {done && (
+                    <p className="resolve-confirmed-label">
+                      <Ico d={I.check} size={12} /> Confirmed · {formatWhen(draft.date || item.date, draft.time || item.time)}
+                    </p>
+                  )}
+                </>
               )}
             </div>
           );
@@ -890,13 +937,8 @@ function ResolveTimesView({ cards, setCards, onBack, onContinue }) {
 
       <div className="resolve-foot">
         <button type="button" className="linkish" onClick={onBack}>← Back to capture</button>
-        <button
-          type="button"
-          className={"btn btn-primary btn-lg" + (!allResolved ? " btn-disabled" : "")}
-          disabled={!allResolved}
-          onClick={onContinue}
-        >
-          {allResolved ? "Continue to review" : "Resolve all items to continue"}
+        <button type="button" className="btn btn-primary btn-lg" onClick={onContinue}>
+          Continue to review
         </button>
       </div>
     </div>
@@ -918,6 +960,10 @@ function ReviewView({ cards, setCards, roleOf, onBack, onBuild, distillError, ca
     if (!lastAction) return;
     setCards((arr) => arr.map((it) => (it.id === lastAction.id ? { ...it, status: lastAction.previousStatus } : it)));
     setLastAction(null);
+  };
+
+  const patchSchedule = (id, patch) => {
+    setCards((arr) => arr.map((c) => (c.id === id ? { ...c, ...patch } : c)));
   };
 
   const categories = ["all", ...new Set(cards.map((c) => c.category).filter(Boolean))];
@@ -994,6 +1040,7 @@ function ReviewView({ cards, setCards, roleOf, onBack, onBuild, distillError, ca
             const who = roleOf(it.person);
             const isEvent = it.type === "event";
             const when = formatWhen(it.date, it.time);
+            const needsSchedule = needsDateTime(it);
             const decidedState = it.status === STATUS.KEPT || it.status === STATUS.CALENDARED ? "kept" : it.status === STATUS.DISCARDED ? "discarded" : "";
             return (
               <div key={it.id} className={`revcard ${who} ${decidedState}`}>
@@ -1002,17 +1049,43 @@ function ReviewView({ cards, setCards, roleOf, onBack, onBuild, distillError, ca
                   <span className={"pdot " + who} />
                   <span className={"tag tag-" + who}>{it.person}</span>
                   <span className="tag tag-cat">{it.category}</span>
-                  <span className="ktype">{it.type}</span>
+                  <CardTypeSelect
+                    id={`review-type-${it.id}`}
+                    value={it.type}
+                    onChange={(t) => setCardType(setCards, it.id, t)}
+                  />
                 </div>
                 <h3>{it.task}</h3>
+                <p className="card-cal-preview">{calendarTitle(it)}</p>
                 {it.source && <div className="cq">"{it.source}"</div>}
                 {when && <div className="cwhen"><Ico d={isEvent ? I.cal : I.clock} size={13} /> {isEvent ? when : "Due · " + when}</div>}
+                {needsSchedule && (
+                  <div className="resolve-row-fields rev-schedule">
+                    <div className="resolve-field">
+                      <label htmlFor={`rev-date-${it.id}`}>Date</label>
+                      <input
+                        id={`rev-date-${it.id}`}
+                        type="date"
+                        value={it.date || ""}
+                        onChange={(e) => patchSchedule(it.id, { date: e.target.value || null })}
+                      />
+                    </div>
+                    <div className="resolve-field">
+                      <label htmlFor={`rev-time-${it.id}`}>Time</label>
+                      <input
+                        id={`rev-time-${it.id}`}
+                        type="time"
+                        value={it.time || ""}
+                        onChange={(e) => patchSchedule(it.id, { time: e.target.value || null })}
+                      />
+                    </div>
+                  </div>
+                )}
                 <div className="cact">
                   <button className="keepbtn" onClick={() => decide(it.id, STATUS.KEPT)}><Ico d={I.check} size={14} /> Keep</button>
-                  {isEvent && <button className="calbtn" onClick={() => decide(it.id, STATUS.CALENDARED)}><Ico d={I.cal} size={14} /> + Calendar</button>}
                   <button className="discbtn" onClick={() => decide(it.id, STATUS.DISCARDED)}><Ico d={I.x} size={14} /> Discard</button>
                 </div>
-                <div className="decided keep"><Ico d={I.check} size={13} /> Kept{it.status === STATUS.CALENDARED ? " · added to calendar" : ""}</div>
+                <div className="decided keep"><Ico d={I.check} size={13} /> Kept</div>
               </div>
             );
           })}
@@ -1020,7 +1093,7 @@ function ReviewView({ cards, setCards, roleOf, onBack, onBuild, distillError, ca
       )}
 
       <div className="revdone">
-        <button className="linkish" onClick={onBack}>← Re-distill</button>
+        <button className="linkish" onClick={onBack}>← Rebuild</button>
         <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
           <span className="summ">{allDecided ? <span><b>{kept} kept</b> · {total - kept} discarded</span> : `${total - decided} left to review`}</span>
           <button
@@ -1363,7 +1436,16 @@ ${text}`;
     }
 
     const newCards = normalizeCardPeople(
-      parsed.map((c, i) => ({ ...c, id: c.id ?? i + 1, status: STATUS.OPEN })),
+      parsed.map((c, i) => {
+        const type = CARD_TYPES.includes(c.type) ? c.type : "action";
+        return {
+          ...c,
+          id: c.id ?? i + 1,
+          type,
+          originalType: c.originalType || type,
+          status: STATUS.OPEN,
+        };
+      }),
       context
     );
     setCards(newCards);
@@ -1438,19 +1520,18 @@ ${text}`;
     const arrivalMode = reduced ? "static" : isFirstCelebration ? "full" : "quick";
 
     if (calendarConnected && ws?.id) {
+      const syncOpts = { meetingDate, sessionId: sessionIdRef.current ?? undefined };
       const kept = cards.filter((c) => c.status === STATUS.KEPT || c.status === STATUS.CALENDARED);
-      const syncable = kept.filter((c) => isSyncEligible(c) && !c.calendar_synced);
+      const syncable = kept.filter((c) => isSyncEligible(c, syncOpts) && !c.calendar_synced);
       if (syncable.length > 0) {
         setCalendarSyncing(true);
         try {
-          const { updatedCards } = await syncCardsToCalendar(ws.id, cards, {
-            sessionId: sessionIdRef.current ?? undefined,
-          });
+          const { updatedCards } = await syncCardsToCalendar(ws.id, cards, syncOpts);
           setCards(updatedCards);
         } catch (e) {
           console.error("[Build week] calendar sync", e);
           setCards((prev) => prev.map((c) => (
-            isSyncEligible(c)
+            isSyncEligible(c, syncOpts)
             && (c.status === STATUS.KEPT || c.status === STATUS.CALENDARED)
             && !c.calendar_synced
               ? { ...c, calendar_sync_failed: true }
@@ -1492,12 +1573,11 @@ ${text}`;
   const retryCardSync = async (cardId) => {
     if (!ws?.id) return;
     const card = cards.find((c) => c.id === cardId);
-    if (!card || !isSyncEligible(card)) return;
+    const syncOpts = { meetingDate, sessionId: sessionIdRef.current ?? undefined };
+    if (!card || !isSyncEligible(card, syncOpts)) return;
     setCalendarBusy(true);
     try {
-      const { results } = await syncCalendarEvents(ws.id, [cardToCalendarEvent(card)], {
-        sessionId: sessionIdRef.current ?? undefined,
-      });
+      const { results } = await syncCalendarEvents(ws.id, [cardToCalendarEvent(card, syncOpts)], syncOpts);
       setCards((prev) => applySyncResults(prev, results));
     } catch (e) {
       console.error("[Plan] retry sync", e);
@@ -1566,15 +1646,14 @@ ${text}`;
       setCalendarConnected(true);
       setCalendarConnectPrompt(false);
       const snapshot = cardsRef.current;
+      const syncOpts = { meetingDate, sessionId: sessionIdRef.current ?? undefined };
       const pending = snapshot.filter(
-        (c) => (c.status === STATUS.KEPT || c.status === STATUS.CALENDARED) && isSyncEligible(c) && !c.calendar_synced,
+        (c) => (c.status === STATUS.KEPT || c.status === STATUS.CALENDARED) && isSyncEligible(c, syncOpts) && !c.calendar_synced,
       );
       if (!pending.length) return;
       setCalendarBusy(true);
       try {
-        const { updatedCards } = await syncCardsToCalendar(ws.id, snapshot, {
-          sessionId: sessionIdRef.current ?? undefined,
-        });
+        const { updatedCards } = await syncCardsToCalendar(ws.id, snapshot, syncOpts);
         if (active) setCards(updatedCards);
       } catch (e) {
         console.error("[Plan] post-connect sync", e);

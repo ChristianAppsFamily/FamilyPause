@@ -979,7 +979,43 @@
   .plan-btn-ghost, .plan-btn-primary { width: 100%; text-align: center; }
 }
 
-/* resolve times (post-distill) */
+/* card type control (Times + Review) */
+.card-type-select {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 4px 8px;
+  cursor: pointer;
+  max-width: 120px;
+}
+.card-type-select:focus {
+  outline: none;
+  border-color: var(--terra);
+  box-shadow: 0 0 0 2px var(--terra-tint);
+}
+.card-type-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+.card-cal-preview {
+  margin: 6px 0 0;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: .03em;
+  color: var(--ink-3);
+}
+.revcard .card-cal-preview { margin: 4px 0 8px; }
+.rev-schedule { margin: 12px 0 4px; }
+
+/* resolve times (post-build) */
 .resolve-view { max-width: 720px; margin: 0 auto; }
 .resolve-intro { margin-bottom: 28px; }
 .resolve-progress {

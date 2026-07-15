@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { prefersReducedMotion } from "../lib/motion";
 import { eventDayIndices, getPlanningWeekDates, weekStripLabels } from "../lib/planWeek";
-import { isSyncEligible } from "../lib/googleCalendar";
+import { calendarTitle, isSyncEligible } from "../lib/googleCalendar";
 import CalendarAccountChooser from "./CalendarAccountChooser";
 
 function Ico({ d, size = 16, fill = false, sw = 1.7 }) {
@@ -239,6 +239,8 @@ export default function PlanView({
   const Item = ({ it, index, showBadge }) => {
     const synced = it.calendar_synced;
     const badgeAnim = showBadge && synced && badgeDrawn && !staticLayout;
+    const syncOpts = { meetingDate };
+    const canSync = isSyncEligible(it, syncOpts);
     return (
       <div
         className={
@@ -251,10 +253,11 @@ export default function PlanView({
       >
         <span className="pmark"><Ico d={I.check} size={11} /></span>
         <div className="pbody">
-          <div className="pt">{it.task}</div>
+          <div className="pt">{calendarTitle(it)}</div>
           <div className="pmeta">
             <span className="ct">{it.category}</span>
             {formatWhen(it.date, it.time) && <span>· {formatWhen(it.date, it.time)}</span>}
+            {!it.time && it.date && <span>· All day</span>}
             {synced && (
               <span className={"synced-badge-wrap" + (badgeAnim ? " synced-badge-wrap--pop" : "")}>
                 <span className={"synced-badge" + (unsyncingCardId === it.id ? " synced-badge--busy" : "") + (badgeAnim ? " synced-badge--in" : "")}>
@@ -272,12 +275,12 @@ export default function PlanView({
                 </button>
               </span>
             )}
-            {!synced && it.calendar_sync_failed && isSyncEligible(it) && (
+            {!synced && it.calendar_sync_failed && canSync && (
               <button type="button" className="plan-cal-retry" disabled={calendarBusy} onClick={() => onRetrySync(it.id)}>
                 Retry
               </button>
             )}
-            {!synced && !it.calendar_sync_failed && isSyncEligible(it) && (
+            {!synced && !it.calendar_sync_failed && canSync && (
               <button
                 type="button"
                 className="plan-cal-add"
@@ -286,9 +289,6 @@ export default function PlanView({
               >
                 Add to Cal
               </button>
-            )}
-            {!isSyncEligible(it) && (it.date || it.time || it.type === "event" || it.recurring) && (
-              <span className="plan-cal-hint">Add date &amp; time to sync</span>
             )}
           </div>
         </div>
