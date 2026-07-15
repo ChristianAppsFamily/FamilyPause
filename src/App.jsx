@@ -798,10 +798,83 @@ function CardTypeSelect({ value, onChange, id }) {
   );
 }
 
+/** Type-only patch — never touches task / titleEditedByUser. */
 function setCardType(setCards, id, nextType) {
   setCards((arr) => arr.map((c) => (
     c.id === id ? { ...c, type: nextType } : c
   )));
+}
+
+function setCardTitle(setCards, id, nextTitle) {
+  const task = (nextTitle || "").trim();
+  if (!task) return;
+  setCards((arr) => arr.map((c) => (
+    c.id === id
+      ? { ...c, task, titleEditedByUser: true }
+      : c
+  )));
+}
+
+function EditableCardTitle({ card, setCards, as = "h3", className = "" }) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(card.task || "");
+  const inputRef = useRef(null);
+
+  useEffect(() => {
+    if (!editing) setDraft(card.task || "");
+  }, [card.task, editing]);
+
+  useEffect(() => {
+    if (editing) {
+      inputRef.current?.focus();
+      inputRef.current?.select();
+    }
+  }, [editing]);
+
+  const commit = () => {
+    const next = (draft || "").trim();
+    if (next && next !== (card.task || "").trim()) {
+      setCardTitle(setCards, card.id, next);
+    } else {
+      setDraft(card.task || "");
+    }
+    setEditing(false);
+  };
+
+  const Tag = as;
+
+  if (editing) {
+    return (
+      <input
+        ref={inputRef}
+        className={"card-title-input " + className}
+        value={draft}
+        aria-label="Edit title"
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={commit}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") { e.preventDefault(); commit(); }
+          if (e.key === "Escape") {
+            setDraft(card.task || "");
+            setEditing(false);
+          }
+        }}
+      />
+    );
+  }
+
+  return (
+    <Tag className={"card-title-edit " + className}>
+      <button
+        type="button"
+        className="card-title-btn"
+        onClick={() => setEditing(true)}
+        aria-label="Edit title"
+      >
+        {card.task || "Untitled"}
+      </button>
+    </Tag>
+  );
 }
 
 // ── RESOLVE TIMES (between Build and Review) ─────────────────────────────────
@@ -874,7 +947,12 @@ function ResolveTimesView({ cards, setCards, onBack, onContinue }) {
                   </span>
                 )}
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <p className="resolve-row-task">{item.task}</p>
+                  <EditableCardTitle
+                    card={item}
+                    setCards={setCards}
+                    as="p"
+                    className="resolve-row-task"
+                  />
                   <div className="resolve-row-meta">
                     <span>{item.person}</span>
                     {item.category && <span>· {item.category}</span>}
@@ -1055,7 +1133,7 @@ function ReviewView({ cards, setCards, roleOf, onBack, onBuild, distillError, ca
                     onChange={(t) => setCardType(setCards, it.id, t)}
                   />
                 </div>
-                <h3>{it.task}</h3>
+                <EditableCardTitle card={it} setCards={setCards} as="h3" />
                 <p className="card-cal-preview">{calendarTitle(it)}</p>
                 {it.source && <div className="cq">"{it.source}"</div>}
                 {when && <div className="cwhen"><Ico d={isEvent ? I.cal : I.clock} size={13} /> {isEvent ? when : "Due · " + when}</div>}
@@ -1443,6 +1521,7 @@ ${text}`;
           id: c.id ?? i + 1,
           type,
           originalType: c.originalType || type,
+          titleEditedByUser: !!c.titleEditedByUser,
           status: STATUS.OPEN,
         };
       }),

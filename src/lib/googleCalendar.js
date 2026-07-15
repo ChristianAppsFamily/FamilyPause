@@ -17,9 +17,12 @@ export function typeLabel(type) {
   return TYPE_LABELS[type] || "To-Do";
 }
 
-/** Calendar event title from current type + task (regenerated at sync). */
+/** Calendar event title from current type + task (regenerated at sync).
+ * User-authored titles (titleEditedByUser) ship as-is — never clobber with type logic.
+ */
 export function calendarTitle(card) {
   const task = (card?.task || "").trim() || "Untitled";
+  if (card?.titleEditedByUser) return task;
   if (card?.type === "event") return task;
   return `${typeLabel(card?.type)}: ${task}`;
 }

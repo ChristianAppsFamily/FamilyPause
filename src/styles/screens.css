@@ -1015,6 +1015,66 @@
 .revcard .card-cal-preview { margin: 4px 0 8px; }
 .rev-schedule { margin: 12px 0 4px; }
 
+.card-title-edit {
+  margin: 0;
+}
+.card-title-edit.resolve-row-task {
+  font-size: 16px;
+  line-height: 1.35;
+  color: var(--ink);
+  margin: 0 0 6px;
+}
+.card-title-btn {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: 1px dashed transparent;
+  border-radius: var(--r-sm);
+  padding: 2px 4px;
+  margin: 0 -4px;
+  font: inherit;
+  color: inherit;
+  cursor: text;
+}
+.card-title-btn:hover,
+.card-title-btn:focus-visible {
+  border-color: var(--line-2);
+  background: var(--paper-2);
+  outline: none;
+}
+.revcard .card-title-edit {
+  font-family: var(--display);
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--ink);
+  margin: 0;
+}
+.card-title-input {
+  width: 100%;
+  box-sizing: border-box;
+  font: inherit;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1.5px solid var(--terra);
+  border-radius: var(--r-sm);
+  padding: 6px 10px;
+  box-shadow: 0 0 0 3px var(--terra-tint);
+}
+.revcard .card-title-input {
+  font-family: var(--display);
+  font-size: 22px;
+  font-weight: 600;
+  margin: 0 0 4px;
+}
+.resolve-row-task.card-title-edit .card-title-btn,
+.resolve-row .card-title-input {
+  font-family: var(--serif);
+  font-size: 16px;
+  font-weight: 500;
+}
+
 /* resolve times (post-build) */
 .resolve-view { max-width: 720px; margin: 0 auto; }
 .resolve-intro { margin-bottom: 28px; }
