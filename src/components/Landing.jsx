@@ -10,9 +10,8 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useEffect, useRef, useState } from "react";
-import LandingDemo from "./LandingDemo.jsx";
 import SampleCardCarousel from "./SampleCardCarousel.jsx";
-import { formatDigitalPrice, PHYSICAL_DECK_PRICE } from "../lib/deckPricing";
+import { PHYSICAL_DECK_PRICE } from "../lib/deckPricing";
 
 const css = `
 .fp-landing {
@@ -92,6 +91,12 @@ const css = `
   color: var(--ink-2); transition: color .18s; white-space: nowrap; line-height: 1;
 }
 .fp-landing .navlinks a:hover { color: var(--terra); }
+.fp-landing .navlinks .navlink-btn {
+  font-family: var(--mono); font-size: 12px; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--ink-2); transition: color .18s; white-space: nowrap; line-height: 1;
+  background: none; border: none; padding: 0; cursor: pointer;
+}
+.fp-landing .navlinks .navlink-btn:hover { color: var(--terra); }
 .fp-landing .navcta {
   display: flex; align-items: center; gap: 16px; flex-shrink: 0;
 }
@@ -244,11 +249,30 @@ const css = `
 .fp-landing .mcard .mt { font-family: var(--display); font-size: 16px; font-weight: 600; line-height: 1.2; margin-bottom: 6px; }
 .fp-landing .mcard .mq { font-style: italic; font-size: 12.5px; color: var(--ink-2); margin-bottom: 11px; line-height: 1.4; }
 .fp-landing .mcard .mwhen { display: inline-flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 10.5px; color: var(--terra-d); background: var(--terra-tint); border: 1px solid var(--terra-soft); padding: 4px 9px; border-radius: 6px; margin-bottom: 11px; }
+.fp-landing .mcard .mstatus {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: var(--mono); font-size: 10px; letter-spacing: .06em; text-transform: uppercase;
+  padding: 4px 9px; border-radius: 6px; margin-bottom: 11px;
+}
+.fp-landing .mcard .mstatus.needs { background: var(--gold-soft); color: #8a6a16; border: 1px solid #e6d29a; }
+.fp-landing .mcard .mstatus.ready { background: var(--olive-soft); color: var(--olive-d); border: 1px solid var(--olive-soft); }
 .fp-landing .mcard .macts { display: flex; gap: 8px; }
 .fp-landing .mbtn { flex: 1; text-align: center; font-family: var(--mono); font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; padding: 9px; border-radius: var(--r-sm); border: none; }
 .fp-landing .mbtn.keep { background: var(--olive-soft); color: var(--olive-d); }
 .fp-landing .mbtn.disc { background: var(--terra-tint); color: var(--terra-d); }
 .fp-landing .mbtn.cal  { background: var(--gold-soft); color: #8a6a16; }
+.fp-landing .mbtn.edit { background: var(--paper-2); color: var(--ink-2); border: 1px solid var(--line); }
+.fp-landing .mock .mfoot-bar {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  margin-top: 6px; padding: 10px 4px 2px; flex-wrap: wrap;
+}
+.fp-landing .mock .mfoot-bar .mstat {
+  font-family: var(--mono); font-size: 10.5px; letter-spacing: .04em; color: var(--ink-3); text-transform: uppercase;
+}
+.fp-landing .mock .mfoot-bar .mcal {
+  font-family: var(--mono); font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase;
+  background: var(--terra); color: #fff; border: none; border-radius: var(--r-sm); padding: 9px 14px;
+}
 
 /* sections — each band gets its own surface so blocks don't blend */
 .fp-landing .section { padding: 96px 0; }
@@ -278,6 +302,10 @@ const css = `
 .fp-landing .stp .snum { font-family: var(--display); font-size: 52px; font-weight: 600; color: var(--terra-soft); line-height: 1; margin-bottom: 14px; }
 .fp-landing .stp h3 { font-size: 23px; margin-bottom: 12px; }
 .fp-landing .stp p { font-size: 15.5px; color: var(--ink-2); line-height: 1.6; margin: 0; }
+.fp-landing .how-reassure {
+  margin: 40px 0 0; text-align: center;
+  font-family: var(--serif); font-size: 16px; color: var(--ink-2); font-style: italic;
+}
 
 /* who it's for */
 .fp-landing .audgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
@@ -287,6 +315,7 @@ const css = `
 .fp-landing .aud:nth-child(2) .aico { background: var(--gold-soft); color: #8a6a16; border-color: #e6d29a; }
 .fp-landing .aud:nth-child(3) .aico { background: var(--olive-tint); color: var(--olive-d); border-color: var(--olive-soft); }
 .fp-landing .aud:nth-child(4) .aico { background: var(--paper-3); color: var(--ink-2); border-color: var(--line-2); }
+.fp-landing .aud:nth-child(5) .aico { background: var(--terra-tint); color: var(--terra-d); border-color: var(--terra-soft); }
 .fp-landing .aud h3 { font-size: 25px; margin-bottom: 12px; }
 .fp-landing .aud p { font-size: 16px; color: var(--ink-2); margin: 0; line-height: 1.62; }
 
@@ -321,6 +350,14 @@ const css = `
   gap: 14px;
   justify-content: center;
   flex-wrap: wrap;
+}
+.fp-landing .deck-support {
+  max-width: 640px;
+  margin: 0 auto 28px;
+  text-align: center;
+  font-size: 16.5px;
+  color: var(--ink-2);
+  line-height: 1.55;
 }
 
 /* pricing */
@@ -864,18 +901,14 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
             <span className="word"><b>Family</b>Pause</span>
           </a>
           <nav className="navlinks">
-            <a href="#how">How it works</a>
-            <a href="#try">Try It Now</a>
-            <a href="#who">Who it's for</a>
+            <a href="#how">How It Works</a>
+            <a href="#who">Who It&apos;s For</a>
             <a href="#pricing">Pricing</a>
-            <a href="#deck">Card deck</a>
+            <a href="#deck">Card Deck</a>
+            <button type="button" className="navlink-btn" onClick={onSignIn}>Sign In</button>
           </nav>
           <div className="navcta">
-            <button className="signin" onClick={onSignIn}>Sign in</button>
-            <button className="btn btn-primary" onClick={onStart}>
-              <span className="long-label">Start Free Week</span>
-              <span className="short-label">Start Free</span>
-            </button>
+            <button className="btn btn-primary" onClick={onStart}>Start Free</button>
             <button
               type="button"
               className="navmenu-btn"
@@ -892,11 +925,10 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
         <div className={"navmobile" + (mobileNavOpen ? " open" : "")} onClick={() => setMobileNavOpen(false)}>
           <nav className="navmobile-panel" onClick={(e) => e.stopPropagation()}>
             <div className="navmobile-links">
-              <a href="#how" onClick={() => setMobileNavOpen(false)}>How it works</a>
-              <a href="#try" onClick={() => setMobileNavOpen(false)}>Try It Now</a>
-              <a href="#who" onClick={() => setMobileNavOpen(false)}>Who it&apos;s for</a>
+              <a href="#how" onClick={() => setMobileNavOpen(false)}>How It Works</a>
+              <a href="#who" onClick={() => setMobileNavOpen(false)}>Who It&apos;s For</a>
               <a href="#pricing" onClick={() => setMobileNavOpen(false)}>Pricing</a>
-              <a href="#deck" onClick={() => setMobileNavOpen(false)}>Card deck</a>
+              <a href="#deck" onClick={() => setMobileNavOpen(false)}>Card Deck</a>
               <a href="/blog" onClick={() => setMobileNavOpen(false)}>Blog</a>
             </div>
             <div className="navmobile-actions">
@@ -905,14 +937,14 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                 className="signin"
                 onClick={() => { setMobileNavOpen(false); onSignIn(); }}
               >
-                Sign in
+                Sign In
               </button>
               <button
                 type="button"
                 className="btn btn-primary btn-block"
                 onClick={() => { setMobileNavOpen(false); onStart(); }}
               >
-                Start Free Week
+                Start Free
               </button>
             </div>
           </nav>
@@ -925,60 +957,60 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
           <div className="wrap">
             <div className="herogrid">
               <div className="herocopy">
-                <span className="eyebrow">Family Meeting Intelligence</span>
-                <h1>We did a FamilyPause<br />and <em>got back on track.</em></h1>
-                <p className="sub">Record your weekly family meeting. AI extracts every action, appointment, and decision. Review in minutes. <b>Your week, planned before Sunday ends.</b></p>
+                <span className="eyebrow">The weekly reset every family needs</span>
+                <h1>Everything going on.<br />One plan your family<br />can <em>move on.</em></h1>
+                <p className="sub">Type it, paste it, or record your family talking it through. FamilyPause finds every appointment, task, reminder, and decision — and turns it into a plan you review together and add to your calendar.</p>
                 <div className="ctas">
-                  <button className="btn btn-primary btn-lg" onClick={onStart}>Start Your Free Week</button>
-                  <a className="linktext" href="#try">See how it works
-                    <svg width="15" height="15" viewBox="0 0 24 24" {...stroke} strokeWidth={2}><path d="M5 12h14M13 6l6 6-6 6" /></svg>
-                  </a>
+                  <button className="btn btn-primary btn-lg" onClick={onStart}>Start Free</button>
                 </div>
-                <p className="fineprint">7-day free trial · No credit card · Works on any device</p>
+                <p className="fineprint">7 days free · No credit card · Works on any device</p>
               </div>
 
-              {/* live review mockup */}
               <div className="mock mock-live" aria-hidden="true">
-                <span className="extracted">
-                  <svg width="13" height="13" viewBox="0 0 24 24" {...stroke} strokeWidth={2.4}><path d="M5 12.5 10 17.5 19.5 6.5" /></svg>
-                  6 items extracted
-                </span>
-                <div className="mbar"><i /><i /><i /><span className="mtitle">FamilyPause · Review</span></div>
-                <div className="review-eyebrow">This week's review</div>
+                <span className="extracted">6 items found — ready for review</span>
+                <div className="mbar"><i /><i /><i /><span className="mtitle">FamilyPause · Your Plan</span></div>
+                <div className="review-eyebrow">Your plan</div>
 
                 <div className="mcard mock-card mock-card-1">
-                  <div className="mtags"><span className="mtag spence">Spence</span><span className="mtag cat">Finance</span></div>
-                  <div className="mt">Call the accountant re: Q2 filing</div>
-                  <div className="mq">"we need to call the accountant before month end"</div>
-                  <div className="mwhen">
-                    <svg width="12" height="12" viewBox="0 0 24 24" {...stroke} strokeWidth={2}><path d="M7 3v3M17 3v3M4 8h16" /><path d="M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z" /></svg>
-                    Due · Fri, Jun 6
+                  <div className="mtags"><span className="mtag cat">Task</span><span className="mtag cat">Finances</span></div>
+                  <div className="mt">Call the accountant about Q2 filing</div>
+                  <div className="mq">&ldquo;We need to call the accountant before the end of the month.&rdquo;</div>
+                  <div className="mstatus needs">Needs a date</div>
+                  <div className="macts">
+                    <button type="button" tabIndex={-1} className="mbtn cal">Schedule</button>
+                    <button type="button" tabIndex={-1} className="mbtn disc">Discard</button>
                   </div>
-                  <div className="macts"><button type="button" tabIndex={-1} className="mbtn keep">Keep</button><button type="button" tabIndex={-1} className="mbtn disc">Discard</button></div>
                 </div>
 
                 <div className="mcard olive mock-card mock-card-2">
-                  <div className="mtags"><span className="mtag amanda">Amanda</span><span className="mtag cat">Kids</span></div>
+                  <div className="mtags"><span className="mtag cat">Appointment</span><span className="mtag amanda">Kids</span></div>
                   <div className="mt">Take Jordan to the dentist</div>
                   <div className="mwhen">
                     <svg width="12" height="12" viewBox="0 0 24 24" {...stroke} strokeWidth={2}><path d="M7 3v3M17 3v3M4 8h16" /><path d="M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z" /></svg>
-                    Thu, Jun 11 · 3:00 PM
+                    Thursday, June 11 · 3:00 PM
                   </div>
-                  <div className="macts"><button type="button" tabIndex={-1} className="mbtn keep">Keep</button><button type="button" tabIndex={-1} className="mbtn cal">+ Calendar</button></div>
+                  <div className="mstatus ready">Ready for calendar</div>
+                  <div className="macts">
+                    <button type="button" tabIndex={-1} className="mbtn edit">Edit</button>
+                    <button type="button" tabIndex={-1} className="mbtn keep">Add</button>
+                  </div>
                 </div>
 
                 <div className="mcard gold mock-card mock-card-3">
-                  <div className="mtags"><span className="mtag both">Both</span><span className="mtag cat">Finance</span></div>
-                  <div className="mt">Review Q2 household budget together</div>
-                  <div className="mq">"can we block 30 minutes Tuesday night?"</div>
-                  <div className="mwhen">
-                    <svg width="12" height="12" viewBox="0 0 24 24" {...stroke} strokeWidth={2}><path d="M7 3v3M17 3v3M4 8h16" /><path d="M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z" /></svg>
-                    Due · Tue, Jun 10 · 7:30 PM
+                  <div className="mtags"><span className="mtag both">Decision</span><span className="mtag cat">Family</span></div>
+                  <div className="mt">Switch Harbor to the 4pm swim group</div>
+                  <div className="mq">&ldquo;We decided mornings weren&apos;t working — starts Monday.&rdquo;</div>
+                  <div className="mstatus ready">Ready for calendar</div>
+                  <div className="macts">
+                    <button type="button" tabIndex={-1} className="mbtn edit">Edit</button>
+                    <button type="button" tabIndex={-1} className="mbtn keep">Add</button>
                   </div>
-                  <div className="macts"><button type="button" tabIndex={-1} className="mbtn keep">Keep</button><button type="button" tabIndex={-1} className="mbtn disc">Discard</button></div>
                 </div>
 
-                <span className="mfoot">~ 2 min to review</span>
+                <div className="mfoot-bar">
+                  <span className="mstat">2 ready · 1 needs scheduling</span>
+                  <button type="button" tabIndex={-1} className="mcal">Add 2 to calendar</button>
+                </div>
               </div>
             </div>
           </div>
@@ -988,8 +1020,8 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
         <section className="band band-terra">
           <div className="wrap quote reveal">
             <span className="qmark">&ldquo;</span>
-            <blockquote>We did a FamilyPause this weekend and it got us back on track with everything.</blockquote>
-            <div className="qby">Spence, Founder &amp; First User</div>
+            <blockquote>I put everything we had going on into FamilyPause, and within minutes our week finally made sense.</blockquote>
+            <div className="qby">Spence — Founder and First User</div>
           </div>
         </section>
 
@@ -998,94 +1030,101 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
           <div className="wrap">
             <div className="shead reveal">
               <span className="eyebrow">How it works</span>
-              <h2>Talk like humans.<br /><em>Plan like a team.</em></h2>
-              <p>No templates to fill. No agenda to pre-build. Just have your conversation, and FamilyPause handles the structure.</p>
+              <h2>Give us the chaos.<br />Get back a plan — <em>together.</em></h2>
+              <p>No templates, perfect lists, or prebuilt agendas required. Add what&apos;s going on, and FamilyPause organizes it. Want to go deeper? Sit down together, pull a card, and talk it through — FamilyPause captures that too.</p>
             </div>
             <div className="steps4 reveal">
               <div className="stp">
                 <svg className="sico" viewBox="0 0 24 24" {...stroke}><path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3z" /><path d="M5 11a7 7 0 0 0 14 0" /><path d="M12 18v3" /></svg>
                 <div className="snum">01</div>
-                <h3>Have your meeting</h3>
-                <p>Record live in the app or paste a transcript from Otter or Apple Dictation. Talk about whatever needs talking about: kids, money, work, the week ahead.</p>
+                <h3>Add what&apos;s going on</h3>
+                <p>Type a messy list, paste a message or schedule, or record your family talking. It doesn&apos;t need to be organized, and it doesn&apos;t need to be a formal meeting.</p>
               </div>
               <div className="stp">
                 <svg className="sico" viewBox="0 0 24 24" {...stroke}><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3z" /></svg>
                 <div className="snum">02</div>
-                <h3>AI builds it</h3>
-                <p>Hit Build. The AI reads your full conversation and extracts every action, appointment, and decision, organized by person and category. About 10 seconds.</p>
+                <h3>Build your plan</h3>
+                <p>FamilyPause finds the appointments, tasks, reminders, and decisions, and organizes them by person and category.</p>
               </div>
               <div className="stp">
                 <svg className="sico" viewBox="0 0 24 24" {...stroke}><path d="M5 12.5 10 17.5 19.5 6.5" /></svg>
                 <div className="snum">03</div>
-                <h3>Keep or discard</h3>
-                <p>Review each card. Keep what matters, discard what doesn't, send appointments straight to Google Calendar. The AI flags anything it's uncertain about.</p>
+                <h3>Review and schedule together</h3>
+                <p>Check every item before it goes anywhere. Confirm what&apos;s known and choose dates, times, and reminders for anything that&apos;s missing.</p>
               </div>
               <div className="stp">
                 <svg className="sico" viewBox="0 0 24 24" {...stroke}><path d="M7 3h7l4 4v14a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z" /><path d="M14 3v4h4" /><path d="M9 13h6M9 16.5h4" /></svg>
                 <div className="snum">04</div>
-                <h3>Your week is built</h3>
-                <p>A clean weekly plan organized by person: Spence's actions, Amanda's actions, shared items, kids by name. Ready before Sunday ends.</p>
+                <h3>Add it to your calendar</h3>
+                <p>Approve what matters and send it to Google Calendar — a clean family plan organized by person and type.</p>
               </div>
             </div>
+            <p className="how-reassure reveal">Nothing reaches your calendar until you approve it.</p>
           </div>
         </section>
 
-        <LandingDemo onStart={onStart} />
-
         {/* WHO IT'S FOR */}
-        <section className="section section-paper" id="who" style={{ paddingTop: 30 }}>
+        <section className="section section-paper" id="who">
           <div className="wrap">
             <div className="shead reveal">
-              <span className="eyebrow">Who it's for</span>
+              <span className="eyebrow">Who it&apos;s for</span>
               <h2>Built for families<br /><em>running real lives.</em></h2>
             </div>
             <div className="audgrid reveal">
               <div className="aud">
                 <div className="aico"><svg width="24" height="24" viewBox="0 0 24 24" {...stroke}><path d="M3 11.5 12 4l9 7.5" /><path d="M5 10v9h14v-9" /><path d="M10 19v-5h4v5" /></svg></div>
                 <h3>Married couples</h3>
-                <p>Two schedules, shared goals, constant chaos. FamilyPause is the one hour a week that keeps you both on the same page before the week runs away from you.</p>
+                <p>Two schedules, shared responsibilities, and dozens of things to remember. FamilyPause helps you see what needs to happen, who&apos;s handling it, and when — whether that comes from a quick text dump or a real conversation.</p>
+              </div>
+              <div className="aud">
+                <div className="aico"><svg width="24" height="24" viewBox="0 0 24 24" {...stroke}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" /></svg></div>
+                <h3>Busy parents</h3>
+                <p>School messages, appointments, practices, errands, and last-minute changes rarely arrive in one neat list. FamilyPause brings them together and turns them into a plan.</p>
+              </div>
+              <div className="aud">
+                <div className="aico"><svg width="24" height="24" viewBox="0 0 24 24" {...stroke} strokeWidth={1.8}><path d="M12 3v18M7 8h10" /></svg></div>
+                <h3>Families who pause together</h3>
+                <p>Sit down, pull a card, and record your weekly conversation. FamilyPause captures the appointments, responsibilities, decisions, and follow-ups so nothing important gets lost — and the ritual becomes something you look forward to.</p>
               </div>
               <div className="aud">
                 <div className="aico"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8z" /></svg></div>
                 <h3>Entrepreneur households</h3>
-                <p>When both of you are building something, the household needs its own operating system. FamilyPause is your weekly stand-up for the family business called home.</p>
-              </div>
-              <div className="aud">
-                <div className="aico"><svg width="24" height="24" viewBox="0 0 24 24" {...stroke} strokeWidth={1.8}><path d="M12 3v18M7 8h10" /></svg></div>
-                <h3>Faith-driven families</h3>
-                <p>The Sabbath principle is built into the name. A weekly pause to align, reflect, and plan is an act of stewardship. FamilyPause gives that intention a structure.</p>
+                <p>When work and family life constantly overlap, important details can disappear between conversations. FamilyPause turns those details into calendar-ready actions.</p>
               </div>
               <div className="aud">
                 <div className="aico"><svg width="24" height="24" viewBox="0 0 24 24" {...stroke}><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H12v16H6.5A2.5 2.5 0 0 0 4 21.5z" /><path d="M20 5.5A2.5 2.5 0 0 0 17.5 3H12v16h5.5a2.5 2.5 0 0 1 2.5 2.5z" /></svg></div>
                 <h3>Homeschool families</h3>
-                <p>Curriculum, appointments, activities, finances, all managed from home. The weekly sync isn't optional when home is also school and office. FamilyPause makes it fast.</p>
+                <p>Curriculum, appointments, activities, and family plans all compete for attention. FamilyPause helps organize the week without another complicated planning system.</p>
               </div>
             </div>
           </div>
         </section>
 
-        {/* PRIVACY BAND */}
+        {/* TRUST / PRIVACY BAND */}
         <section className="band band-olive">
           <div className="wrap privacy reveal">
-            <p>FamilyPause is <em>ad-free and will always be ad-free.</em> Your family's conversations are not data. They never will be.</p>
+            <p>FamilyPause is ad-free. We do not sell your family information or use your private plans to target you with advertising.</p>
           </div>
         </section>
 
         <section className="deck-section" id="deck">
           <div className="wrap">
             <div className="shead reveal">
-              <span className="eyebrow">The card deck</span>
-              <h2>One card. One week. <em>One conversation.</em></h2>
+              <span className="eyebrow">The FamilyPause card deck</span>
+              <h2>One card. One week.<br />One conversation that <em>matters.</em></h2>
               <p>
-                Before you record, pull a card. 52 questions across finances, marriage, kids, faith, dreams, and home. Each one opens a conversation your to-do list never will.
+                Every FamilyPause starts with a question if you want one. Pull a card before you talk — about marriage, kids, finances, faith, dreams, or home — and let it open the conversation before the plan gets built.
               </p>
             </div>
             <div className="deck-carousel-wrap reveal">
               <SampleCardCarousel />
             </div>
+            <p className="deck-support reveal">
+              Free during your 7-day trial — one card a day. Subscribe and unlock the full digital deck at half off, just this once. Or get the physical deck anytime.
+            </p>
             <div className="deck-actions reveal">
-              <a href="/cards" className="btn btn-primary">{`Get the Physical Deck, $${PHYSICAL_DECK_PRICE}`}</a>
-              <a href="/cards" className="btn btn-ghost">Buy Digital, {formatDigitalPrice()}</a>
+              <a href="/cards" className="btn btn-primary">{`Get the Physical Deck · $${PHYSICAL_DECK_PRICE}`}</a>
+              <a href="/cards" className="btn btn-ghost">Unlock the Digital Deck</a>
             </div>
           </div>
         </section>
@@ -1095,23 +1134,23 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
           <div className="wrap">
             <div className="shead reveal">
               <span className="eyebrow">Pricing</span>
-              <h2>Start free.<br /><em>Stay because it works.</em></h2>
-              <p>7 days free, full access, no card required. After that, stay free with manual use, or unlock AI for less than a coffee a month.</p>
+              <h2>Start free.<br /><em>Upgrade when you need more.</em></h2>
+              <p>Try the complete FamilyPause experience for seven days. No credit card required.</p>
             </div>
             <div className="pricewrap reveal">
               <div className="pricegrid">
                 <div className="tier">
                   <div className="plabel">Free</div>
                   <div className="price"><span className="amt">$0</span></div>
-                  <div className="subprice">Always free</div>
+                  <div className="subprice">Continue with the essentials after your trial.</div>
                   <ul className="feats">
-                    <li><span className="far">→</span> 7-day full trial on signup</li>
-                    <li><span className="far">→</span> 1 free AI session per day during trial</li>
-                    <li><span className="far">→</span> Unlimited manual card review</li>
-                    <li><span className="far">→</span> Record and paste transcripts</li>
-                    <li><span className="far">→</span> Keep / Discard / Calendar flow</li>
+                    <li><span className="far">→</span> Type, paste, or record</li>
+                    <li><span className="far">→</span> One plan per day</li>
+                    <li><span className="far">→</span> Review and edit extracted items</li>
+                    <li><span className="far">→</span> Schedule missing dates and times</li>
+                    <li><span className="far">→</span> Add approved items to your calendar</li>
                   </ul>
-                  <button className="btn btn-ghost btn-block" onClick={onStart}>Get Started Free</button>
+                  <button className="btn btn-ghost btn-block" onClick={onStart}>Start Free</button>
                 </div>
 
                 <div className="tier pop">
@@ -1124,7 +1163,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                       aria-pressed={familyBilling === "annual"}
                       onClick={() => setFamilyBilling("annual")}
                     >
-                      Annual · Best Value
+                      Annual
                     </button>
                     <button
                       type="button"
@@ -1146,38 +1185,42 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                         className="planhint-link"
                         onClick={() => setFamilyBilling("annual")}
                       >
-                        Save $25 with annual
+                        Or $59/year — less than $5/month
                       </button>
                     ) : (
-                      "Less than $5 a month"
+                      "Less than $5/month"
                     )}
                   </p>
                   <ul className="feats">
-                    <li><span className="far">→</span> Unlimited AI sessions</li>
-                    <li><span className="far">→</span> Full meeting history</li>
-                    <li><span className="far">→</span> Invite your spouse for real-time sync</li>
-                    <li><span className="far">→</span> Kids routed by name</li>
-                    <li><span className="far">→</span> Export sessions as PDF</li>
+                    <li><span className="far">→</span> Unlimited plan building</li>
+                    <li><span className="far">→</span> Complete plan history</li>
+                    <li><span className="far">→</span> Invite your spouse</li>
+                    <li><span className="far">→</span> Organize items by family member</li>
                     <li><span className="far">→</span> Custom categories</li>
+                    <li><span className="far">→</span> Printable and PDF plans</li>
+                    <li><span className="far">→</span> Full digital card deck included</li>
                   </ul>
-                  <button className="btn btn-cream btn-block" onClick={onStart}>Start 7-Day Trial</button>
+                  <button className="btn btn-cream btn-block" onClick={onStart}>Sign Up Now</button>
                 </div>
 
                 <div className="tier">
                   <div className="plabel">Church &amp; Ministry</div>
-                  <div className="price"><span className="amt">$39</span><span className="per">/ month</span></div>
-                  <div className="subprice">For teams &amp; congregations</div>
+                  <div className="subprice" style={{ marginBottom: 18 }}>Bring the FamilyPause planning system to couples, ministry teams, and family programs.</div>
                   <ul className="feats">
-                    <li><span className="far">→</span> Up to 10 family workspaces</li>
-                    <li><span className="far">→</span> Pastoral staff &amp; elder teams</li>
-                    <li><span className="far">→</span> All Family Plan features</li>
-                    <li><span className="far">→</span> Ministry billing &amp; invoicing</li>
-                    <li><span className="far">→</span> Priority support</li>
+                    <li><span className="far">→</span> Multiple private workspaces</li>
+                    <li><span className="far">→</span> Team and staff access</li>
+                    <li><span className="far">→</span> Centralized ministry billing</li>
+                    <li><span className="far">→</span> Family Plan features</li>
                   </ul>
-                  <button className="btn btn-primary btn-block" onClick={onStart}>Start 7-Day Trial</button>
+                  <a
+                    className="btn btn-primary btn-block"
+                    href="mailto:hello@familypause.com?subject=Church%20%26%20Ministry%20Waitlist"
+                  >
+                    Join the Waitlist
+                  </a>
                 </div>
               </div>
-              <div className="pricefoot fineprint">All plans include a 7-day free trial · Cancel anytime · No contracts</div>
+              <div className="pricefoot fineprint">7 days free · No credit card · Cancel anytime</div>
             </div>
           </div>
         </section>
@@ -1185,10 +1228,10 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
         {/* FINAL CTA */}
         <section className="section finalcta">
           <div className="wrap">
-            <h2>Your family deserves<em>one good pause.</em></h2>
-            <p>Start this Sunday. 7 days free. No credit card. Works on iPhone, iPad, Mac, or any browser.</p>
-            <button className="btn btn-primary btn-lg" onClick={onStart}>Start Your FamilyPause</button>
-            <p className="fineprint">7-day free trial · No card required · Cancel anytime</p>
+            <h2>Everything going on.<br /><em>One plan to move forward.</em></h2>
+            <p>Type it, paste it, or talk it through together. FamilyPause organizes it, you fill in what&apos;s missing, and the plan goes onto your calendar.</p>
+            <button className="btn btn-primary btn-lg" onClick={onStart}>Sign Up Now</button>
+            <p className="fineprint">7 days free · No credit card · Works on any device</p>
           </div>
         </section>
       </main>
@@ -1202,14 +1245,15 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                 <img src="/uploads/Logo_4.png" alt="" style={{ width: 32, height: 32, borderRadius: 8, display: "block" }} />
                 <div className="word"><b>Family</b>Pause</div>
               </div>
-              <div className="tag">The weekly reset every family needs.</div>
+              <div className="tag">Turn everything going on into one clear family plan.</div>
             </div>
             <div className="fcols">
               <div className="fcol">
                 <h4>Product</h4>
-                <a href="#how">How it works</a>
-                <a href="#who">Who it&apos;s for</a>
+                <a href="#how">How It Works</a>
+                <a href="#who">Who It&apos;s For</a>
                 <a href="#pricing">Pricing</a>
+                <a href="#deck">Card Deck</a>
               </div>
               <div className="fcol">
                 <h4>Company</h4>
@@ -1219,9 +1263,9 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                 <a href="mailto:hello@familypause.com">Contact</a>
               </div>
               <div className="fcol">
-                <h4>Get started</h4>
-                <button className="fp-footer-link" onClick={onSignIn}>Sign in</button>
-                <button className="fp-footer-link" onClick={onStart}>Start free week</button>
+                <h4>Get Started</h4>
+                <button className="fp-footer-link" onClick={onSignIn}>Sign In</button>
+                <button className="fp-footer-link" onClick={onStart}>Start Free</button>
               </div>
             </div>
           </div>
