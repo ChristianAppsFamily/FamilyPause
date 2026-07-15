@@ -425,16 +425,21 @@
    Capture view
    ============================================================ */
 .capwrap {
-  max-width: 640px;
+  max-width: 720px;
   width: 100%;
   margin: 0 auto;
   box-sizing: border-box;
-  padding-bottom: 28px;
+  min-height: calc(100vh - 140px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 24px 0 48px;
 }
 .capwrap .lead { text-align: center; margin-bottom: 26px; }
 .capwrap .lead.lead-compact {
-  margin-bottom: 22px;
+  margin-bottom: 26px;
   text-align: center;
+  flex-shrink: 0;
 }
 .capwrap .lead h1 { font-size: 38px; line-height: 1.06; margin-bottom: 12px; }
 .capwrap .lead.lead-compact h1 {
@@ -465,16 +470,17 @@
 }
 .capta {
   width: 100%;
-  min-height: 260px;
+  min-height: min(42vh, 420px);
+  height: min(42vh, 420px);
   max-width: 100%;
   resize: vertical;
   box-sizing: border-box;
   border: 1.5px solid var(--line-2);
   border-radius: var(--r-lg);
   background: var(--paper-card);
-  padding: 22px 58px 58px 22px;
+  padding: 24px 60px 60px 24px;
   font-family: var(--serif);
-  font-size: 16px;
+  font-size: 16.5px;
   line-height: 1.62;
   color: var(--ink);
   box-shadow: var(--shadow);
@@ -566,11 +572,21 @@
 .dictnotice-warn { background: var(--red-tint); border-color: var(--red-soft); color: var(--red); }
 
 @media (max-width: 720px) {
-  .capwrap { max-width: 100%; }
+  .capwrap {
+    max-width: 100%;
+    min-height: calc(100dvh - 120px);
+    padding: 12px 0 32px;
+    justify-content: flex-start;
+    padding-top: max(28px, 8vh);
+  }
   .capwrap .lead.lead-compact { margin-bottom: 18px; }
   .capwrap .lead.lead-compact h1 { font-size: 26px; }
   .capwrap .lead.lead-compact p { font-size: 15px; }
-  .capta { min-height: 200px; padding: 18px 54px 54px 18px; }
+  .capta {
+    min-height: min(38vh, 320px);
+    height: min(38vh, 320px);
+    padding: 18px 54px 54px 18px;
+  }
   .capmic { width: 40px; height: 40px; right: 12px; bottom: 12px; }
   .capactions {
     position: sticky;
