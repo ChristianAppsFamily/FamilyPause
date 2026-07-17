@@ -12,6 +12,7 @@
 import { useEffect, useRef, useState } from "react";
 import SampleCardCarousel from "./SampleCardCarousel.jsx";
 import { PHYSICAL_DECK_PRICE } from "../lib/deckPricing";
+import { supabase } from "../lib/supabase";
 
 const css = `
 .fp-landing {
@@ -184,6 +185,118 @@ const css = `
 .fp-landing .hero .sub { font-size: 19px; line-height: 1.6; color: var(--ink-2); max-width: 520px; margin: 0 0 18px; }
 .fp-landing .hero .sub b { color: var(--ink); font-weight: 600; }
 .fp-landing .hero .ctas { display: flex; align-items: center; gap: 22px; margin: 30px 0 22px; flex-wrap: wrap; }
+.fp-landing .guide-trigger {
+  min-height: 52px;
+  background: transparent;
+  border: 1px solid #D8CFC0;
+  color: #6A5A40;
+}
+.fp-landing .guide-trigger:hover {
+  border-color: var(--terra);
+  color: var(--terra);
+}
+
+/* Sunday Guide modal */
+.fp-guide-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(46, 40, 32, .46);
+  backdrop-filter: blur(3px);
+}
+.fp-guide-modal {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  border-radius: 16px;
+  background: #FAF7F2;
+  box-shadow: 0 24px 70px rgba(70, 45, 20, .22);
+  padding: 34px;
+}
+.fp-guide-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #A09070;
+  cursor: pointer;
+  font-size: 23px;
+  line-height: 1;
+}
+.fp-guide-close:hover { color: var(--terra); background: var(--terra-tint); }
+.fp-guide-title {
+  font-family: var(--display);
+  font-size: 24px;
+  line-height: 1.2;
+  font-style: italic;
+  font-weight: 600;
+  color: #2E2820;
+  margin: 0 38px 10px 0;
+}
+.fp-guide-subline {
+  font-family: var(--serif);
+  font-size: 14px;
+  line-height: 1.55;
+  color: #6A5A40;
+  margin: 0 0 22px;
+}
+.fp-guide-input {
+  width: 100%;
+  background: var(--paper);
+  border: 1px solid var(--line-2);
+  border-radius: 8px;
+  color: var(--ink);
+  padding: 13px 16px;
+  font: 16px var(--serif);
+  outline: none;
+  transition: border-color .2s, box-shadow .2s;
+}
+.fp-guide-input::placeholder { color: #A09070; }
+.fp-guide-input:focus {
+  border-color: var(--terra);
+  box-shadow: 0 0 0 3px var(--terra-tint);
+}
+.fp-guide-input[aria-invalid="true"] { border-color: var(--red); }
+.fp-guide-error {
+  margin: 8px 0 0;
+  padding: 9px 11px;
+  border-radius: 7px;
+  background: #FAE0DA;
+  color: var(--red);
+  font: 13px/1.4 var(--serif);
+}
+.fp-guide-submit { margin-top: 14px; }
+.fp-guide-success { text-align: center; padding: 12px 0 2px; }
+.fp-guide-check {
+  width: 34px;
+  height: 34px;
+  margin: 0 auto 16px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--olive-tint);
+  color: var(--olive);
+  font-size: 18px;
+  font-weight: 600;
+}
+.fp-guide-success h2 {
+  font-family: var(--display);
+  font-size: 24px;
+  line-height: 1.25;
+  font-style: italic;
+  font-weight: 600;
+  margin: 0 0 22px;
+  color: #2E2820;
+}
 
 /* hero mockup */
 .fp-landing .mock { background: var(--paper-card); border: 1px solid var(--line); border-radius: var(--r-xl); box-shadow: var(--shadow-lg); padding: 20px; position: relative; transform: rotate(.4deg); }
@@ -837,8 +950,11 @@ const css = `
 @media (max-width: 560px) {
   .fp-landing .wrap { padding: 0 22px; }
   .fp-landing .hero h1 { font-size: 42px; }
+  .fp-landing .hero .ctas { align-items: stretch; flex-direction: column; gap: 12px; }
+  .fp-landing .hero .ctas .btn { width: 100%; justify-content: center; }
   .fp-landing .steps4 { grid-template-columns: 1fr; }
   .fp-landing .foot .fcols { gap: 36px; flex-wrap: wrap; }
+  .fp-guide-modal { padding: 30px 22px 24px; }
 }
 @media (max-width: 480px) {
   .fp-landing .navcta .btn:not(.navmenu-btn) { display: none; }
@@ -851,6 +967,10 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
   const [scrolled, setScrolled] = useState(false);
   const [familyBilling, setFamilyBilling] = useState("annual");
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [guideOpen, setGuideOpen] = useState(false);
+  const [guideEmail, setGuideEmail] = useState("");
+  const [guideStatus, setGuideStatus] = useState("idle");
+  const [guideError, setGuideError] = useState("");
   const rootRef = useRef(null);
 
   useEffect(() => {
@@ -888,6 +1008,49 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
       if (fallback) window.clearTimeout(fallback);
     };
   }, []);
+
+  useEffect(() => {
+    if (!guideOpen) return undefined;
+    const onKeyDown = (event) => {
+      if (event.key === "Escape") setGuideOpen(false);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [guideOpen]);
+
+  const openGuide = () => {
+    setGuideEmail("");
+    setGuideError("");
+    setGuideStatus("idle");
+    setGuideOpen(true);
+  };
+
+  const closeGuide = () => {
+    setGuideOpen(false);
+  };
+
+  const submitGuide = async (event) => {
+    event.preventDefault();
+    const email = guideEmail.trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setGuideError("Enter a valid email address.");
+      return;
+    }
+
+    setGuideError("");
+    setGuideStatus("loading");
+    const { error } = await supabase.functions.invoke("capture-lead", {
+      body: { email },
+    });
+
+    if (error) {
+      setGuideStatus("idle");
+      setGuideError("We couldn't send the guide. Please try again.");
+      return;
+    }
+
+    setGuideStatus("success");
+  };
 
   return (
     <div className="fp-landing" ref={rootRef}>
@@ -961,6 +1124,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                 <p className="sub">Type it, paste it, or record your family talking it through. FamilyPause finds every appointment, task, reminder, and decision, and turns it into a plan you review together and add to your calendar.</p>
                 <div className="ctas">
                   <button className="btn btn-primary btn-lg" onClick={onStart}>Start Free</button>
+                  <button className="btn btn-lg guide-trigger" onClick={openGuide}>Get the Free Sunday Guide</button>
                 </div>
                 <p className="fineprint">7 days free · No credit card · Works on any device</p>
               </div>
@@ -1277,6 +1441,64 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
           <div className="legal fineprint">© 2026 FamilyPause · Built with intention · <a href="https://www.biblegateway.com/passage/?search=Ecclesiastes%204%3A9-12&version=NASB" target="_blank" rel="noopener noreferrer" style={{ color: "inherit", textDecoration: "underline", textUnderlineOffset: 3 }}>Ecclesiastes 4:9</a></div>
         </div>
       </footer>
+
+      {guideOpen && (
+        <div className="fp-guide-backdrop" onMouseDown={closeGuide}>
+          <div
+            className="fp-guide-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="sunday-guide-title"
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            <button type="button" className="fp-guide-close" onClick={closeGuide} aria-label="Close">
+              ×
+            </button>
+
+            {guideStatus === "success" ? (
+              <div className="fp-guide-success">
+                <div className="fp-guide-check" aria-hidden="true">✓</div>
+                <h2 id="sunday-guide-title">Check your inbox. It&apos;s on the way.</h2>
+                <button type="button" className="btn btn-primary btn-block" onClick={closeGuide}>
+                  All set
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={submitGuide} noValidate>
+                <h2 className="fp-guide-title" id="sunday-guide-title">The Sunday Guide</h2>
+                <p className="fp-guide-subline">Five conversations to have with your family this week. Free.</p>
+                <input
+                  className="fp-guide-input"
+                  type="email"
+                  inputMode="email"
+                  autoComplete="email"
+                  autoFocus
+                  placeholder="you@example.com"
+                  value={guideEmail}
+                  onChange={(event) => {
+                    setGuideEmail(event.target.value);
+                    if (guideError) setGuideError("");
+                  }}
+                  aria-label="Email address"
+                  aria-invalid={Boolean(guideError)}
+                  aria-describedby={guideError ? "sunday-guide-error" : undefined}
+                  disabled={guideStatus === "loading"}
+                />
+                {guideError && (
+                  <p className="fp-guide-error" id="sunday-guide-error" role="alert">{guideError}</p>
+                )}
+                <button
+                  type="submit"
+                  className="btn btn-primary btn-block fp-guide-submit"
+                  disabled={guideStatus === "loading"}
+                >
+                  {guideStatus === "loading" ? "Sending..." : "Send Me the Guide"}
+                </button>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
