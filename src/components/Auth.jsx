@@ -271,7 +271,7 @@ function AuthShell({ children, wide = false }) {
           </div>
           <div style={{ width: 40, height: 2, background: "rgba(250,247,242,0.3)", marginBottom: 24 }} />
           <p style={{ fontSize: 15, color: "rgba(250,247,242,0.7)", lineHeight: 1.65 }}>
-            Record your family meeting. AI extracts every action and appointment. Review together in minutes.
+            So much going on. Type it, paste it, or talk it through, and create one plan your family can move on.
           </p>
         </div>
 
