@@ -807,9 +807,15 @@
 .plan-btn-ghost {
   font-family: var(--lora); font-size: 15px; padding: 12px 24px; border-radius: 8px;
   background: transparent; border: 1px solid #D8CFC0; color: #6A5A40; cursor: pointer;
-  transition: color .15s, border-color .15s;
+  transition: color .15s, border-color .15s, background .15s;
 }
-.plan-btn-ghost:hover { color: var(--terra); border-color: var(--terra); }
+.plan-btn-ghost:hover:not(:disabled) { color: var(--terra); border-color: var(--terra); }
+.plan-btn-ghost:disabled { opacity: 0.45; cursor: not-allowed; }
+.plan-btn-ghost--ok {
+  color: var(--olive-d);
+  border-color: var(--olive-soft);
+  background: var(--olive-tint);
+}
 .plan-btn-primary {
   font-family: var(--lora); font-size: 15px; padding: 12px 24px; border-radius: 8px;
   background: #B85C38; border: 1px solid #B85C38; color: #FAF7F2; cursor: pointer;

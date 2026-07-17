@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { prefersReducedMotion } from "../lib/motion";
 import { eventDayIndices, getPlanningWeekDates, weekStripLabels } from "../lib/planWeek";
 import { calendarTitle, isSyncEligible } from "../lib/googleCalendar";
+import { buildPlanMarkdown } from "../lib/planExport";
 import CalendarAccountChooser from "./CalendarAccountChooser";
 
 function Ico({ d, size = 16, fill = false, sw = 1.7 }) {
@@ -187,6 +188,8 @@ export default function PlanView({
   const [summaryVisible, setSummaryVisible] = useState(staticLayout);
   const [sectionsVisible, setSectionsVisible] = useState(staticLayout);
   const [countAnim, setCountAnim] = useState(!staticLayout && arrivalMode === "full");
+  const [copied, setCopied] = useState(false);
+  const [pdfBusy, setPdfBusy] = useState(false);
 
   const isAdult = (p) => adults.some((a) => a.toLowerCase() === (p || "").toLowerCase());
   const byPerson = (name) => keptCards.filter((c) => (c.person || "").toLowerCase() === name.toLowerCase());
@@ -298,6 +301,28 @@ export default function PlanView({
 
   let flatIndex = 0;
 
+  const copyAsList = async () => {
+    const md = buildPlanMarkdown(personSections, meetingDate);
+    try {
+      await navigator.clipboard.writeText(md);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch { /* clipboard blocked */ }
+  };
+
+  const exportPdf = async () => {
+    if (pdfBusy) return;
+    setPdfBusy(true);
+    try {
+      const { downloadPlanPdf } = await import("../lib/planPdf");
+      await downloadPlanPdf(personSections, meetingDate);
+    } catch (e) {
+      console.error("[Plan] PDF export", e);
+    } finally {
+      setPdfBusy(false);
+    }
+  };
+
   return (
     <>
       <PlanInterstitial active={interstitialActive} exiting={interstitialExiting} />
@@ -404,6 +429,22 @@ export default function PlanView({
           <div className="planfoot-actions">
             <button type="button" className="plan-btn-ghost" onClick={onRestart}>
               Start New Sync
+            </button>
+            <button
+              type="button"
+              className={"plan-btn-ghost" + (copied ? " plan-btn-ghost--ok" : "")}
+              onClick={copyAsList}
+              disabled={!keptCards.length}
+            >
+              {copied ? "Copied!" : "Copy as List"}
+            </button>
+            <button
+              type="button"
+              className="plan-btn-ghost"
+              onClick={exportPdf}
+              disabled={!keptCards.length || pdfBusy}
+            >
+              {pdfBusy ? "Preparing…" : "Download PDF"}
             </button>
             <button
               type="button"
