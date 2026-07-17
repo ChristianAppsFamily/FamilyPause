@@ -179,7 +179,7 @@ const css = `
 }
 .fp-landing .hero .wrap { position: relative; z-index: 1; }
 .fp-landing .herogrid { display: grid; grid-template-columns: 1.04fr .96fr; gap: 56px; align-items: center; padding: 84px 0 96px; }
-.fp-landing .hero h1 { font-size: 66px; line-height: 1.02; letter-spacing: -.02em; margin: 22px 0 26px; }
+.fp-landing .hero h1 { font-size: 66px; line-height: 1.02; letter-spacing: -.02em; margin: 0 0 26px; }
 .fp-landing .hero h1 em { color: var(--terra); }
 .fp-landing .hero .sub { font-size: 19px; line-height: 1.6; color: var(--ink-2); max-width: 520px; margin: 0 0 18px; }
 .fp-landing .hero .sub b { color: var(--ink); font-weight: 600; }
@@ -294,8 +294,8 @@ const css = `
 .fp-landing .quote .qby { font-family: var(--mono); font-size: 12.5px; letter-spacing: .18em; text-transform: uppercase; color: rgba(255,255,255,.85); }
 
 /* how it works */
-.fp-landing .steps4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; }
-.fp-landing .stp { padding: 8px 30px; border-left: 1px solid var(--line); }
+.fp-landing .steps4 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0; }
+.fp-landing .stp { padding: 8px 22px; border-left: 1px solid var(--line); }
 .fp-landing .stp:first-child { padding-left: 0; border-left: none; }
 .fp-landing .stp:last-child { padding-right: 0; }
 .fp-landing .stp .sico { width: 30px; height: 30px; color: var(--ink); margin-bottom: 26px; }
@@ -905,9 +905,9 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
             <a href="#who">Who It&apos;s For</a>
             <a href="#pricing">Pricing</a>
             <a href="#deck">Card Deck</a>
-            <button type="button" className="navlink-btn" onClick={onSignIn}>Sign In</button>
           </nav>
           <div className="navcta">
+            <button type="button" className="signin" onClick={onSignIn}>Sign In</button>
             <button className="btn btn-primary" onClick={onStart}>Start Free</button>
             <button
               type="button"
@@ -957,9 +957,8 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
           <div className="wrap">
             <div className="herogrid">
               <div className="herocopy">
-                <span className="eyebrow">The weekly reset every family needs</span>
-                <h1>Everything going on.<br />One plan your family<br />can <em>move on.</em></h1>
-                <p className="sub">Type it, paste it, or record your family talking it through. FamilyPause finds every appointment, task, reminder, and decision — and turns it into a plan you review together and add to your calendar.</p>
+                <h1>So much going on.<br />Create one plan your family<br />can <em>move on.</em></h1>
+                <p className="sub">Type it, paste it, or record your family talking it through. FamilyPause finds every appointment, task, reminder, and decision, and turns it into a plan you review together and add to your calendar.</p>
                 <div className="ctas">
                   <button className="btn btn-primary btn-lg" onClick={onStart}>Start Free</button>
                 </div>
@@ -967,7 +966,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
               </div>
 
               <div className="mock mock-live" aria-hidden="true">
-                <span className="extracted">6 items found — ready for review</span>
+                <span className="extracted">6 items found, ready for review</span>
                 <div className="mbar"><i /><i /><i /><span className="mtitle">FamilyPause · Your Plan</span></div>
                 <div className="review-eyebrow">Your plan</div>
 
@@ -999,7 +998,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                 <div className="mcard gold mock-card mock-card-3">
                   <div className="mtags"><span className="mtag both">Decision</span><span className="mtag cat">Family</span></div>
                   <div className="mt">Switch Harbor to the 4pm swim group</div>
-                  <div className="mq">&ldquo;We decided mornings weren&apos;t working — starts Monday.&rdquo;</div>
+                  <div className="mq">&ldquo;We decided mornings weren&apos;t working, starts Monday.&rdquo;</div>
                   <div className="mstatus ready">Ready for calendar</div>
                   <div className="macts">
                     <button type="button" tabIndex={-1} className="mbtn edit">Edit</button>
@@ -1021,7 +1020,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
           <div className="wrap quote reveal">
             <span className="qmark">&ldquo;</span>
             <blockquote>I put everything we had going on into FamilyPause, and within minutes our week finally made sense.</blockquote>
-            <div className="qby">Spence — Founder and First User</div>
+            <div className="qby">Spence, Founder and First User</div>
           </div>
         </section>
 
@@ -1030,8 +1029,8 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
           <div className="wrap">
             <div className="shead reveal">
               <span className="eyebrow">How it works</span>
-              <h2>Give us the chaos.<br />Get back a plan — <em>together.</em></h2>
-              <p>No templates, perfect lists, or prebuilt agendas required. Add what&apos;s going on, and FamilyPause organizes it. Want to go deeper? Sit down together, pull a card, and talk it through — FamilyPause captures that too.</p>
+              <h2>Give us the chaos.<br />Create a plan, <em>together.</em></h2>
+              <p>No templates, perfect lists, or prebuilt agendas required. Add what&apos;s going on, and FamilyPause organizes it. Want to go deeper? Sit down together, pull a card, and talk it through, FamilyPause captures that too.</p>
             </div>
             <div className="steps4 reveal">
               <div className="stp">
@@ -1043,7 +1042,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
               <div className="stp">
                 <svg className="sico" viewBox="0 0 24 24" {...stroke}><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3z" /></svg>
                 <div className="snum">02</div>
-                <h3>Build your plan</h3>
+                <h3>Create your plan</h3>
                 <p>FamilyPause finds the appointments, tasks, reminders, and decisions, and organizes them by person and category.</p>
               </div>
               <div className="stp">
@@ -1056,7 +1055,13 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                 <svg className="sico" viewBox="0 0 24 24" {...stroke}><path d="M7 3h7l4 4v14a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z" /><path d="M14 3v4h4" /><path d="M9 13h6M9 16.5h4" /></svg>
                 <div className="snum">04</div>
                 <h3>Add it to your calendar</h3>
-                <p>Approve what matters and send it to Google Calendar — a clean family plan organized by person and type.</p>
+                <p>Approve what matters and send it to Google Calendar, a clean family plan organized by person and type.</p>
+              </div>
+              <div className="stp">
+                <svg className="sico" viewBox="0 0 24 24" {...stroke}><path d="M12 3v12" /><path d="M8 11l4 4 4-4" /><path d="M5 19h14" /></svg>
+                <div className="snum">05</div>
+                <h3>Take it anywhere</h3>
+                <p>Print your plan as a PDF, save it to your clipboard, or copy and paste it straight into Notion or Slack.</p>
               </div>
             </div>
             <p className="how-reassure reveal">Nothing reaches your calendar until you approve it.</p>
@@ -1068,23 +1073,23 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
           <div className="wrap">
             <div className="shead reveal">
               <span className="eyebrow">Who it&apos;s for</span>
-              <h2>Built for families<br /><em>running real lives.</em></h2>
+              <h2>Built for families<br /><em>creating order from real life.</em></h2>
             </div>
             <div className="audgrid reveal">
               <div className="aud">
                 <div className="aico"><svg width="24" height="24" viewBox="0 0 24 24" {...stroke}><path d="M3 11.5 12 4l9 7.5" /><path d="M5 10v9h14v-9" /><path d="M10 19v-5h4v5" /></svg></div>
                 <h3>Married couples</h3>
-                <p>Two schedules, shared responsibilities, and dozens of things to remember. FamilyPause helps you see what needs to happen, who&apos;s handling it, and when — whether that comes from a quick text dump or a real conversation.</p>
+                <p>Two schedules, shared responsibilities, and dozens of things to remember. FamilyPause helps you create a shared picture of what needs to happen, who&apos;s handling it, and when, whether that comes from a quick text dump or a real conversation.</p>
               </div>
               <div className="aud">
                 <div className="aico"><svg width="24" height="24" viewBox="0 0 24 24" {...stroke}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" /></svg></div>
                 <h3>Busy parents</h3>
-                <p>School messages, appointments, practices, errands, and last-minute changes rarely arrive in one neat list. FamilyPause brings them together and turns them into a plan.</p>
+                <p>School messages, appointments, practices, errands, and last-minute changes rarely arrive in one neat list. FamilyPause brings them together and creates a plan out of the noise.</p>
               </div>
               <div className="aud">
                 <div className="aico"><svg width="24" height="24" viewBox="0 0 24 24" {...stroke} strokeWidth={1.8}><path d="M12 3v18M7 8h10" /></svg></div>
                 <h3>Families who pause together</h3>
-                <p>Sit down, pull a card, and record your weekly conversation. FamilyPause captures the appointments, responsibilities, decisions, and follow-ups so nothing important gets lost — and the ritual becomes something you look forward to.</p>
+                <p>Sit down, pull a card, and record your weekly conversation. FamilyPause captures the appointments, responsibilities, decisions, and follow-ups so nothing important gets lost, and creating that plan together becomes something you look forward to.</p>
               </div>
               <div className="aud">
                 <div className="aico"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8z" /></svg></div>
@@ -1094,7 +1099,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
               <div className="aud">
                 <div className="aico"><svg width="24" height="24" viewBox="0 0 24 24" {...stroke}><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H12v16H6.5A2.5 2.5 0 0 0 4 21.5z" /><path d="M20 5.5A2.5 2.5 0 0 0 17.5 3H12v16h5.5a2.5 2.5 0 0 1 2.5 2.5z" /></svg></div>
                 <h3>Homeschool families</h3>
-                <p>Curriculum, appointments, activities, and family plans all compete for attention. FamilyPause helps organize the week without another complicated planning system.</p>
+                <p>Curriculum, appointments, activities, and family plans all compete for attention. FamilyPause helps you create order for the week without another complicated planning system.</p>
               </div>
             </div>
           </div>
@@ -1111,16 +1116,16 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
           <div className="wrap">
             <div className="shead reveal">
               <span className="eyebrow">The FamilyPause card deck</span>
-              <h2>One card. One week.<br />One conversation that <em>matters.</em></h2>
+              <h2>One card. One week.<br />One conversation <em>starter.</em></h2>
               <p>
-                Every FamilyPause starts with a question if you want one. Pull a card before you talk — about marriage, kids, finances, faith, dreams, or home — and let it open the conversation before the plan gets built.
+                Every FamilyPause starts with a question if you want one. Pull a card before you talk, about marriage, kids, finances, faith, dreams, or home, and let it open the conversation before the plan gets built.
               </p>
             </div>
             <div className="deck-carousel-wrap reveal">
               <SampleCardCarousel />
             </div>
             <p className="deck-support reveal">
-              Free during your 7-day trial — one card a day. Subscribe and unlock the full digital deck at half off, just this once. Or get the physical deck anytime.
+              Free during your 7-day trial, one card a day. Subscribe and unlock the full digital deck at half off, just this once. Or get the physical deck anytime.
             </p>
             <div className="deck-actions reveal">
               <a href="/cards" className="btn btn-primary">{`Get the Physical Deck · $${PHYSICAL_DECK_PRICE}`}</a>
@@ -1134,7 +1139,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
           <div className="wrap">
             <div className="shead reveal">
               <span className="eyebrow">Pricing</span>
-              <h2>Start free.<br /><em>Upgrade when you need more.</em></h2>
+              <h2>Start free.<br /><em>Upgrade when you&apos;re ready to create more.</em></h2>
               <p>Try the complete FamilyPause experience for seven days. No credit card required.</p>
             </div>
             <div className="pricewrap reveal">
@@ -1188,7 +1193,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                         Or $59/year — less than $5/month
                       </button>
                     ) : (
-                      "Less than $5/month"
+                      "less than $5/month"
                     )}
                   </p>
                   <ul className="feats">
@@ -1228,8 +1233,8 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
         {/* FINAL CTA */}
         <section className="section finalcta">
           <div className="wrap">
-            <h2>Everything going on.<br /><em>One plan to move forward.</em></h2>
-            <p>Type it, paste it, or talk it through together. FamilyPause organizes it, you fill in what&apos;s missing, and the plan goes onto your calendar.</p>
+            <h2>So much going on.<br /><em>One plan to move forward with.</em></h2>
+            <p>Type it, paste it, or talk it through together. FamilyPause organizes it, you create what&apos;s missing, and the plan goes onto your calendar.</p>
             <button className="btn btn-primary btn-lg" onClick={onStart}>Sign Up Now</button>
             <p className="fineprint">7 days free · No credit card · Works on any device</p>
           </div>
@@ -1245,7 +1250,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                 <img src="/uploads/Logo_4.png" alt="" style={{ width: 32, height: 32, borderRadius: 8, display: "block" }} />
                 <div className="word"><b>Family</b>Pause</div>
               </div>
-              <div className="tag">Turn everything going on into one clear family plan.</div>
+              <div className="tag">Turn everything going on into one plan you create together.</div>
             </div>
             <div className="fcols">
               <div className="fcol">
