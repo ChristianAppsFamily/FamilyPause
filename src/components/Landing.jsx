@@ -1122,7 +1122,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
               </p>
             </div>
             <div className="deck-carousel-wrap reveal">
-              <SampleCardCarousel />
+              <SampleCardCarousel interactive={false} />
             </div>
             <p className="deck-support reveal">
               Free during your 7-day trial, one card a day. Subscribe and unlock the full digital deck at half off, just this once. Or get the physical deck anytime.

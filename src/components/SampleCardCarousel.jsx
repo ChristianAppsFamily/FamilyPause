@@ -130,7 +130,12 @@ function ChevronRight() {
  * Interactive front-and-back deck preview using the v2 card design.
  * Used on locked cards, unlock deck, and landing page.
  */
-export default function SampleCardCarousel({ year = 2026, showCaption = false, className = "" }) {
+export default function SampleCardCarousel({
+  year = 2026,
+  showCaption = false,
+  interactive = true,
+  className = "",
+}) {
   const [index, setIndex] = useState(0);
   const [transitioning, setTransitioning] = useState(false);
 
@@ -158,30 +163,34 @@ export default function SampleCardCarousel({ year = 2026, showCaption = false, c
 
   return (
     <div className={`sample-card-carousel ${className}`.trim()}>
-      <div className="cs-preview-pair cs-preview-pair--interactive">
+      <div className={`cs-preview-pair${interactive ? " cs-preview-pair--interactive" : ""}`}>
         <div className="cs-pv-card cs-pv-a">
           <CardBackV2 year={year} />
         </div>
         <div className="cs-pv-face-wrap">
-          <button
-            type="button"
-            className="sample-carousel-arrow"
-            onClick={() => go(-1)}
-            aria-label="Previous sample card"
-          >
-            <ChevronLeft />
-          </button>
+          {interactive && (
+            <button
+              type="button"
+              className="sample-carousel-arrow"
+              onClick={() => go(-1)}
+              aria-label="Previous sample card"
+            >
+              <ChevronLeft />
+            </button>
+          )}
           <div className="cs-pv-card cs-pv-b">
             <CardFrontV2 card={card} year={year} transitioning={transitioning} />
           </div>
-          <button
-            type="button"
-            className="sample-carousel-arrow"
-            onClick={() => go(1)}
-            aria-label="Next sample card"
-          >
-            <ChevronRight />
-          </button>
+          {interactive && (
+            <button
+              type="button"
+              className="sample-carousel-arrow"
+              onClick={() => go(1)}
+              aria-label="Next sample card"
+            >
+              <ChevronRight />
+            </button>
+          )}
         </div>
       </div>
 
@@ -189,9 +198,11 @@ export default function SampleCardCarousel({ year = 2026, showCaption = false, c
         <div className="cs-pv-cap">Front &amp; back · 52 cards in the deck</div>
       )}
 
-      <div className="sample-carousel-counter" aria-live="polite">
-        {index + 1} / {SAMPLE_CARDS.length}
-      </div>
+      {interactive && (
+        <div className="sample-carousel-counter" aria-live="polite">
+          {index + 1} / {SAMPLE_CARDS.length}
+        </div>
+      )}
     </div>
   );
 }
