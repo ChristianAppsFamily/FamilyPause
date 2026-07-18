@@ -394,12 +394,15 @@ const css = `
 .fp-landing .mtag.cat    { background: var(--paper-3); color: var(--ink-2); }
 .fp-landing .mcard .mt { font-family: var(--display); font-size: 16px; font-weight: 600; line-height: 1.2; margin-bottom: 6px; }
 .fp-landing .mcard .mq { font-style: italic; font-size: 12.5px; color: var(--ink-2); margin-bottom: 11px; line-height: 1.4; }
+.fp-landing .mcard .mwhen-row { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; margin-bottom: 11px; }
 .fp-landing .mcard .mwhen { display: inline-flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 10.5px; color: var(--terra-d); background: var(--terra-tint); border: 1px solid var(--terra-soft); padding: 4px 9px; border-radius: 6px; margin-bottom: 11px; }
 .fp-landing .mcard .mstatus {
   display: inline-flex; align-items: center; gap: 6px;
   font-family: var(--mono); font-size: 10px; letter-spacing: .06em; text-transform: uppercase;
   padding: 4px 9px; border-radius: 6px; margin-bottom: 11px;
 }
+.fp-landing .mcard .mwhen-row .mwhen,
+.fp-landing .mcard .mwhen-row .mstatus { margin-bottom: 0; }
 .fp-landing .mcard .mstatus.needs { background: var(--gold-soft); color: #8a6a16; border: 1px solid #e6d29a; }
 .fp-landing .mcard .mstatus.ready { background: var(--olive-soft); color: var(--olive-d); border: 1px solid var(--olive-soft); }
 .fp-landing .mcard .macts { display: flex; gap: 8px; }
@@ -1189,11 +1192,13 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                 <div className="mcard olive mock-card mock-card-2">
                   <div className="mtags"><span className="mtag cat">Appointment</span><span className="mtag amanda">Kids</span></div>
                   <div className="mt">Take Jordan to the dentist</div>
-                  <div className="mwhen">
-                    <svg width="12" height="12" viewBox="0 0 24 24" {...stroke} strokeWidth={2}><path d="M7 3v3M17 3v3M4 8h16" /><path d="M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z" /></svg>
-                    Thursday, June 11 · 3:00 PM
+                  <div className="mwhen-row">
+                    <div className="mwhen">
+                      <svg width="12" height="12" viewBox="0 0 24 24" {...stroke} strokeWidth={2}><path d="M7 3v3M17 3v3M4 8h16" /><path d="M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z" /></svg>
+                      Thursday, June 11 · 3:00 PM
+                    </div>
+                    <div className="mstatus ready">Ready for calendar</div>
                   </div>
-                  <div className="mstatus ready">Ready for calendar</div>
                   <div className="macts">
                     <button type="button" tabIndex={-1} className="mbtn edit">Edit</button>
                     <button type="button" tabIndex={-1} className="mbtn keep">Add</button>
