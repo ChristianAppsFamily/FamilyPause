@@ -308,13 +308,6 @@ const css = `
   margin-top: 12px;
   box-shadow: 0 8px 20px rgba(190, 90, 55, .24);
 }
-.fp-guide-fineprint {
-  margin: 12px 0 0;
-  color: #A09070;
-  font-family: var(--mono);
-  font-size: 9px;
-  letter-spacing: .04em;
-}
 .fp-guide-success { text-align: center; padding: 12px 0 2px; }
 .fp-guide-check {
   width: 34px;
@@ -1172,7 +1165,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                 <p className="sub">Type it, paste it, or record your family talking it through. FamilyPause finds every appointment, task, reminder, and decision, and turns it into a plan you review together and add to your calendar.</p>
                 <div className="ctas">
                   <button className="btn btn-primary btn-lg" onClick={onStart}>Start Free</button>
-                  <button className="btn btn-lg guide-trigger" onClick={openGuide}>Get the Free Sunday Guide</button>
+                  <button className="btn btn-lg guide-trigger" onClick={openGuide}>Get the Free Planning Guide</button>
                 </div>
                 <p className="fineprint">7 days free · No credit card · Works on any device</p>
               </div>
@@ -1518,7 +1511,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                 <img className="fp-guide-brand" src="/uploads/Logo_4.png" alt="" />
                 <p className="fp-guide-eyebrow">Free Sunday Guide</p>
                 <h2 className="fp-guide-title" id="sunday-guide-title">The Sunday Guide</h2>
-                <p className="fp-guide-subline">Five conversations to have with your family this week. Delivered free, one time.</p>
+                <p className="fp-guide-subline">Five simple conversations you can have with your family this week.</p>
                 <input
                   className="fp-guide-input"
                   type="email"
@@ -1546,7 +1539,6 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                 >
                   {guideStatus === "loading" ? "Sending..." : "Send Me the Guide"}
                 </button>
-                <p className="fp-guide-fineprint">One-time delivery. No weekly emails.</p>
               </form>
             )}
           </div>
