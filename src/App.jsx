@@ -19,7 +19,8 @@ import Settings from "./components/Settings.jsx";
 import CardSystem from "./components/CardSystem.jsx";
 import Paywall from "./components/Paywall.jsx";
 import PlanView from "./components/PlanView.jsx";
-import { paywallReason } from "./lib/subscription";
+import UpgradePrompt from "./components/UpgradePrompt.jsx";
+import { hasFamilyPlanFeatures, paywallReason } from "./lib/subscription";
 import { loadDistillsToday, recordDistillUsage } from "./lib/distillUsage";
 import { parseAppLocation, syncPath, SYNC_VIEWS, cardsPath } from "./lib/routes";
 import { normalizeCardPeople } from "./lib/familyContext";
@@ -162,11 +163,12 @@ const STEPS = [
   { key: "review", label: "Review" },
   { key: "plan", label: "Plan" },
 ];
-function StepRail({ view, vertical = false }) {
-  const cur = STEPS.findIndex((s) => s.key === view);
+function StepRail({ view, vertical = false, showResolve = true }) {
+  const visibleSteps = showResolve ? STEPS : STEPS.filter((step) => step.key !== "resolve");
+  const cur = visibleSteps.findIndex((s) => s.key === view);
   return (
     <div className={"steps" + (vertical ? " steps-vertical" : "")}>
-      {STEPS.map((s, i) => (
+      {visibleSteps.map((s, i) => (
         <span key={s.key} style={{ display: "contents" }}>
           {i > 0 && <span className="sep" />}
           <span className={"step " + (i < cur ? "done" : i === cur ? "active" : "")}>
@@ -179,7 +181,7 @@ function StepRail({ view, vertical = false }) {
   );
 }
 
-function BrandBar({ view, onOpenCards, onOpenSettings, onSignOut }) {
+function BrandBar({ view, onOpenCards, onOpenSettings, onSignOut, showResolve }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const closeMenu = useCallback(() => setMenuOpen(false), []);
 
@@ -203,7 +205,7 @@ function BrandBar({ view, onOpenCards, onOpenSettings, onSignOut }) {
         </div>
         <div className="brandbar-actions">
           <div className="brandbar-desktop">
-            <StepRail view={view} />
+            <StepRail view={view} showResolve={showResolve} />
             <div className="brandbar-tools">
               <button className="linkish" title="Card deck" onClick={onOpenCards} style={{ display: "inline-flex", padding: 8 }}><Ico d={I.cards} size={16} /></button>
               <button className="linkish" title="Settings" onClick={onOpenSettings} style={{ display: "inline-flex", padding: 8 }}><Ico d={I.gear} size={16} /></button>
@@ -226,7 +228,7 @@ function BrandBar({ view, onOpenCards, onOpenSettings, onSignOut }) {
           <button type="button" className="brandbar-backdrop" aria-label="Close menu" onClick={closeMenu} />
           <nav className="brandbar-drawer" aria-label="App menu">
             <div className="brandbar-drawer-label">Weekly sync</div>
-            <StepRail view={view} vertical />
+            <StepRail view={view} vertical showResolve={showResolve} />
             <div className="brandbar-drawer-links">
               <button type="button" className="brandbar-drawer-link" onClick={run(onOpenCards)}><Ico d={I.cards} size={16} /> Card deck</button>
               <button type="button" className="brandbar-drawer-link" onClick={run(onOpenSettings)}><Ico d={I.gear} size={16} /> Settings</button>
@@ -782,12 +784,26 @@ function ProcessingView({ done, familyNames = "Everyone" }) {
   );
 }
 
-function CardTypeSelect({ value, onChange, id }) {
+function CardTypeSelect({ value, onChange, id, locked = false, onLocked }) {
+  const selected = CARD_TYPES.includes(value) ? value : "action";
+  if (locked) {
+    return (
+      <button
+        type="button"
+        id={id}
+        className="card-type-select card-type-select--locked"
+        onClick={onLocked}
+        aria-label="Item type, Family Plan feature"
+      >
+        {typeLabel(selected)}
+      </button>
+    );
+  }
   return (
     <select
       id={id}
       className="card-type-select"
-      value={CARD_TYPES.includes(value) ? value : "action"}
+      value={selected}
       onChange={(e) => onChange(e.target.value)}
       aria-label="Item type"
     >
@@ -815,7 +831,14 @@ function setCardTitle(setCards, id, nextTitle) {
   )));
 }
 
-function EditableCardTitle({ card, setCards, as = "h3", className = "" }) {
+function EditableCardTitle({
+  card,
+  setCards,
+  as = "h3",
+  className = "",
+  locked = false,
+  onLocked,
+}) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(card.task || "");
   const inputRef = useRef(null);
@@ -867,9 +890,9 @@ function EditableCardTitle({ card, setCards, as = "h3", className = "" }) {
     <Tag className={"card-title-edit " + className}>
       <button
         type="button"
-        className="card-title-btn"
-        onClick={() => setEditing(true)}
-        aria-label="Edit title"
+        className={"card-title-btn" + (locked ? " card-title-btn--locked" : "")}
+        onClick={locked ? onLocked : () => setEditing(true)}
+        aria-label={locked ? "Edit title, Family Plan feature" : "Edit title"}
       >
         {card.task || "Untitled"}
       </button>
@@ -1024,9 +1047,21 @@ function ResolveTimesView({ cards, setCards, onBack, onContinue }) {
 }
 
 // ── REVIEW (View 4) ───────────────────────────────────────────────────────────
-function ReviewView({ cards, setCards, roleOf, onBack, onBuild, distillError, calendarSyncing }) {
+function ReviewView({
+  cards,
+  setCards,
+  roleOf,
+  onBack,
+  onBuild,
+  distillError,
+  calendarSyncing,
+  hasFamilyFeatures,
+  onUpgrade,
+}) {
   const [activeCategory, setActiveCategory] = useState("all");
   const [lastAction, setLastAction] = useState(null);
+  const [showEditingUpgrade, setShowEditingUpgrade] = useState(false);
+  const openEditingUpgrade = () => setShowEditingUpgrade(true);
 
   const decide = (id, status) => {
     const item = cards.find((c) => c.id === id);
@@ -1119,6 +1154,7 @@ function ReviewView({ cards, setCards, roleOf, onBack, onBuild, distillError, ca
             const isEvent = it.type === "event";
             const when = formatWhen(it.date, it.time);
             const needsSchedule = needsDateTime(it);
+            const freeNeedsSchedule = !hasFamilyFeatures && (!it.date || !it.time);
             const decidedState = it.status === STATUS.KEPT || it.status === STATUS.CALENDARED ? "kept" : it.status === STATUS.DISCARDED ? "discarded" : "";
             return (
               <div key={it.id} className={`revcard ${who} ${decidedState}`}>
@@ -1131,13 +1167,26 @@ function ReviewView({ cards, setCards, roleOf, onBack, onBuild, distillError, ca
                     id={`review-type-${it.id}`}
                     value={it.type}
                     onChange={(t) => setCardType(setCards, it.id, t)}
+                    locked={!hasFamilyFeatures}
+                    onLocked={openEditingUpgrade}
                   />
                 </div>
-                <EditableCardTitle card={it} setCards={setCards} as="h3" />
+                <EditableCardTitle
+                  card={it}
+                  setCards={setCards}
+                  as="h3"
+                  locked={!hasFamilyFeatures}
+                  onLocked={openEditingUpgrade}
+                />
                 <p className="card-cal-preview">{calendarTitle(it)}</p>
                 {it.source && <div className="cq">"{it.source}"</div>}
                 {when && <div className="cwhen"><Ico d={isEvent ? I.cal : I.clock} size={13} /> {isEvent ? when : "Due · " + when}</div>}
-                {needsSchedule && (
+                {freeNeedsSchedule && (
+                  <button type="button" className="family-plan-needed" onClick={openEditingUpgrade}>
+                    Needs a date · Family Plan
+                  </button>
+                )}
+                {needsSchedule && hasFamilyFeatures && (
                   <div className="resolve-row-fields rev-schedule">
                     <div className="resolve-field">
                       <label htmlFor={`rev-date-${it.id}`}>Date</label>
@@ -1188,6 +1237,14 @@ function ReviewView({ cards, setCards, roleOf, onBack, onBuild, distillError, ca
           </button>
         </div>
       </div>
+      {showEditingUpgrade && (
+        <UpgradePrompt
+          title="Editing is a Family Plan feature"
+          body="Fix titles, times, and dates in one tap instead of starting over."
+          onUpgrade={onUpgrade}
+          onClose={() => setShowEditingUpgrade(false)}
+        />
+      )}
     </div>
   );
 }
@@ -1212,6 +1269,7 @@ export default function App({ user, workspace, onSignOut }) {
   const [overlay, setOverlay] = useState(overlayFromLocation);
   const [paywallBlock, setPaywallBlock] = useState(null);
   const [subscription, setSubscription] = useState(null);
+  const [subscriptionLoaded, setSubscriptionLoaded] = useState(false);
   const [distillsToday, setDistillsToday] = useState(0);
   const [calendarBusy, setCalendarBusy] = useState(false);
   const [calendarSyncing, setCalendarSyncing] = useState(false);
@@ -1313,6 +1371,11 @@ export default function App({ user, workspace, onSignOut }) {
     navigate(paths[name] || syncPath(view));
   };
 
+  const openFeatureUpgrade = () => {
+    setPaywallBlock("upgrade");
+    openOverlay("paywall");
+  };
+
   const closeOverlay = () => {
     if (window.history.length > 1) navigate(-1);
     else navigate(syncPath(view));
@@ -1336,19 +1399,31 @@ export default function App({ user, workspace, onSignOut }) {
   useEffect(() => {
     if (!ws?.id) return;
     let active = true;
+    setSubscriptionLoaded(false);
     (async () => {
       const { data: sub } = await supabase
         .from("subscriptions")
         .select("*")
         .eq("workspace_id", ws.id)
         .maybeSingle();
-      if (active) setSubscription(sub);
+      if (active) {
+        setSubscription(sub);
+        setSubscriptionLoaded(true);
+      }
 
       const todayCount = await loadDistillsToday(ws.id);
       if (active) setDistillsToday(todayCount);
     })();
     return () => { active = false; };
   }, [ws?.id]);
+
+  const familyFeaturesEnabled = hasFamilyPlanFeatures(subscription);
+
+  useEffect(() => {
+    if (!subscriptionLoaded || familyFeaturesEnabled || view !== "resolve") return;
+    go("review", { replace: true });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [subscriptionLoaded, familyFeaturesEnabled, view]);
 
   useEffect(() => {
     if (!ws?.id || !user?.id) {
@@ -1468,7 +1543,20 @@ export default function App({ user, workspace, onSignOut }) {
 
   // ── Distill (real AI) ────────────────────────────────────────────────────
   const runDistill = async (text, mode = "paste") => {
-    const block = paywallReason(subscription, { distillsToday });
+    let currentSubscription = subscription;
+    if (!subscriptionLoaded && ws?.id) {
+      const { data: loadedSubscription } = await supabase
+        .from("subscriptions")
+        .select("*")
+        .eq("workspace_id", ws.id)
+        .maybeSingle();
+      currentSubscription = loadedSubscription;
+      setSubscription(loadedSubscription);
+      setSubscriptionLoaded(true);
+    }
+
+    const featureAccessForRun = hasFamilyPlanFeatures(currentSubscription);
+    const block = paywallReason(currentSubscription, { distillsToday });
     if (block) {
       setPaywallBlock(block);
       openOverlay("paywall");
@@ -1561,7 +1649,7 @@ ${text}`;
       } catch { /* session update is best-effort */ }
     }
 
-    const nextView = newCards.some(needsDateTime) ? "resolve" : "review";
+    const nextView = featureAccessForRun && newCards.some(needsDateTime) ? "resolve" : "review";
     setTimeout(() => go(nextView, { replace: true }), 650); // let the orb finish
   };
 
@@ -1599,7 +1687,11 @@ ${text}`;
     const arrivalMode = reduced ? "static" : isFirstCelebration ? "full" : "quick";
 
     if (calendarConnected && ws?.id) {
-      const syncOpts = { meetingDate, sessionId: sessionIdRef.current ?? undefined };
+      const syncOpts = {
+        meetingDate,
+        sessionId: sessionIdRef.current ?? undefined,
+        requireResolved: !familyFeaturesEnabled,
+      };
       const kept = cards.filter((c) => c.status === STATUS.KEPT || c.status === STATUS.CALENDARED);
       const syncable = kept.filter((c) => isSyncEligible(c, syncOpts) && !c.calendar_synced);
       if (syncable.length > 0) {
@@ -1652,7 +1744,11 @@ ${text}`;
   const retryCardSync = async (cardId) => {
     if (!ws?.id) return;
     const card = cards.find((c) => c.id === cardId);
-    const syncOpts = { meetingDate, sessionId: sessionIdRef.current ?? undefined };
+    const syncOpts = {
+      meetingDate,
+      sessionId: sessionIdRef.current ?? undefined,
+      requireResolved: !familyFeaturesEnabled,
+    };
     if (!card || !isSyncEligible(card, syncOpts)) return;
     setCalendarBusy(true);
     try {
@@ -1725,7 +1821,11 @@ ${text}`;
       setCalendarConnected(true);
       setCalendarConnectPrompt(false);
       const snapshot = cardsRef.current;
-      const syncOpts = { meetingDate, sessionId: sessionIdRef.current ?? undefined };
+      const syncOpts = {
+        meetingDate,
+        sessionId: sessionIdRef.current ?? undefined,
+        requireResolved: !familyFeaturesEnabled,
+      };
       const pending = snapshot.filter(
         (c) => (c.status === STATUS.KEPT || c.status === STATUS.CALENDARED) && isSyncEligible(c, syncOpts) && !c.calendar_synced,
       );
@@ -1844,6 +1944,7 @@ ${text}`;
         onOpenCards={openCardDeck}
         onOpenSettings={() => openOverlay("settings")}
         onSignOut={onSignOut}
+        showResolve={familyFeaturesEnabled}
       />
 
       {captureDraft && view !== "capture" && view !== "processing" && view !== "resolve" && view !== "review" && view !== "plan" && (
@@ -1878,7 +1979,7 @@ ${text}`;
         />
       )}
       {view === "processing" && <ProcessingView done={distillDone} familyNames={processingFamilyLabel} />}
-      {view === "resolve" && (
+      {view === "resolve" && familyFeaturesEnabled && (
         <ResolveTimesView
           cards={cards}
           setCards={setCards}
@@ -1895,6 +1996,8 @@ ${text}`;
           onBuild={buildWeek}
           distillError={distillError}
           calendarSyncing={calendarSyncing}
+          hasFamilyFeatures={familyFeaturesEnabled}
+          onUpgrade={openFeatureUpgrade}
         />
       )}
       {view === "plan" && (
@@ -1917,6 +2020,8 @@ ${text}`;
           arrivalPhase={planArrivalPhase}
           arrivalMode={planArrivalMode}
           showFirstConfetti={showPlanConfetti}
+          hasFamilyFeatures={familyFeaturesEnabled}
+          onUpgrade={openFeatureUpgrade}
         />
       )}
     </div>

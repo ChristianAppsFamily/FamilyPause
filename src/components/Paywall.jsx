@@ -42,6 +42,7 @@ const css = `
   .pw-price .amt { font-family: var(--display); font-size: 44px; font-weight: 600; color: var(--ink); line-height: 1; }
   .pw-price .per { font-family: var(--mono); font-size: 12px; letter-spacing: .04em; color: var(--ink-3); }
   .pw-tagline { color: var(--ink-2); font-size: 14.5px; line-height: 1.5; margin: 10px 0 18px; min-height: 42px; }
+  .pw-includes { margin: 0 0 12px; font-family: var(--mono); font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--terra-d); }
   .pw-feats { list-style: none; margin: 0 0 24px; padding: 0; display: flex; flex-direction: column; gap: 11px; }
   .pw-feats li { display: flex; gap: 11px; align-items: flex-start; font-size: 14.5px; color: var(--ink); line-height: 1.4; }
   .pw-feats .ck {
@@ -79,8 +80,8 @@ export default function Paywall({ reason = "trial", onClose }) {
   const sub = reason === "daily"
     ? "You've used today's free session. Come back tomorrow, or upgrade for unlimited sessions."
     : reason === "upgrade"
-      ? "You're on a free trial with full access. Upgrade anytime for unlimited AI sessions, spouse sync, and session history after your trial ends."
-      : "We hope the last 7 days brought a little more calm to your week. Keep the rhythm going with unlimited AI sessions, spouse sync, and full session history.";
+      ? "Unlock editing, missing-time resolution, exports, unlimited plans, and spouse sync with Family Plan."
+      : "We hope the last 7 days brought a little more calm to your week. Keep the rhythm going with editing, exports, unlimited plans, and spouse sync.";
 
   const goCheckout = async (product) => {
     try {
@@ -122,11 +123,16 @@ export default function Paywall({ reason = "trial", onClose }) {
               <span className="per">/ year</span>
             </div>
             <p className="pw-tagline">Everything your weekly FamilyPause needs, all year.</p>
+            <p className="pw-includes">Everything in Free, plus:</p>
             <ul className="pw-feats">
-              <li><Check /> Unlimited AI meeting sessions</li>
-              <li><Check /> Full session history</li>
-              <li><Check /> Live spouse sync</li>
-              <li><Check /> Kids name routing</li>
+              <li><Check /> Edit anything: titles, times, dates, and people</li>
+              <li><Check /> Resolve missing dates and times inline</li>
+              <li><Check /> Unlimited plans</li>
+              <li><Check /> Complete plan history</li>
+              <li><Check /> Invite your spouse with real-time sync</li>
+              <li><Check /> Organize by family member, custom categories</li>
+              <li><Check /> Download as PDF, copy into Notion or Slack</li>
+              <li><Check /> Full digital card deck included</li>
             </ul>
             <div className="pw-cta">
               <button className="btn btn-primary btn-lg btn-block" onClick={() => goCheckout("family")}>
@@ -141,11 +147,13 @@ export default function Paywall({ reason = "trial", onClose }) {
               <span className="amt">$0</span>
               <span className="per">/ forever</span>
             </div>
-            <p className="pw-tagline">Manual use after trial. Upgrade anytime for unlimited AI.</p>
+            <p className="pw-tagline">Continue with the essentials after your trial.</p>
             <ul className="pw-feats">
-              <li><Check /> Manual card review anytime</li>
-              <li><Check /> Record and paste transcripts</li>
-              <li><Check /> Your week organized by person</li>
+              <li><Check /> Type, paste, or record what needs planning</li>
+              <li><Check /> One plan per day</li>
+              <li><Check /> Review extracted items, keep or discard</li>
+              <li><Check /> Add approved items to your calendar</li>
+              <li><Check /> Digital Conversation Starter Cards, one card a day</li>
             </ul>
             <div className="pw-cta">
               <button className="btn btn-ghost btn-block" onClick={() => onClose?.()}>

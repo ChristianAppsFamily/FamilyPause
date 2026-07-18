@@ -33,6 +33,28 @@ function nextDayIso(date: string): string {
 
 type SessionCard = Record<string, unknown> & { id: number | string };
 
+type Subscription = {
+  plan?: string | null;
+  active?: boolean | null;
+  trial_ends_at?: string | null;
+};
+
+function hasFamilyFeatures(subscription: Subscription | null): boolean {
+  const paid = subscription?.active === true
+    && (
+      subscription.plan === "family"
+      || subscription.plan === "pro"
+      || subscription.plan === "ministry"
+    );
+  const trialEnd = subscription?.trial_ends_at
+    ? new Date(subscription.trial_ends_at).getTime()
+    : 0;
+  const trial = subscription?.active === true
+    && subscription.plan === "free"
+    && trialEnd > Date.now();
+  return paid || trial;
+}
+
 function normalizeTime(time: string): string {
   const [h, m = "00"] = time.split(":");
   return `${h.padStart(2, "0")}:${m.padStart(2, "0")}`;
@@ -123,12 +145,14 @@ async function deleteGoogleEvent(accessToken: string, eventId: string) {
 async function patchSessionCards(
   admin: ReturnType<typeof createClient>,
   sessionId: string,
+  workspaceId: string,
   patches: Array<{ cardId: number | string; googleEventId?: string | null; unsync?: boolean }>,
 ) {
   const { data: session, error } = await admin
     .from("sessions")
     .select("cards")
     .eq("id", sessionId)
+    .eq("workspace_id", workspaceId)
     .maybeSingle();
   if (error || !session?.cards || !Array.isArray(session.cards)) return;
 
@@ -152,7 +176,11 @@ async function patchSessionCards(
     };
   });
 
-  await admin.from("sessions").update({ cards: updated }).eq("id", sessionId);
+  await admin
+    .from("sessions")
+    .update({ cards: updated })
+    .eq("id", sessionId)
+    .eq("workspace_id", workspaceId);
 }
 
 Deno.serve(async (req) => {
@@ -196,6 +224,17 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
+
+    const { data: subscription, error: subscriptionError } = await admin
+      .from("subscriptions")
+      .select("plan, active, trial_ends_at")
+      .eq("workspace_id", workspace_id)
+      .maybeSingle();
+    if (subscriptionError) {
+      console.error("[calendar-sync] Subscription lookup failed", subscriptionError);
+      return json({ error: "Could not verify plan access" }, 500);
+    }
+    const familyFeatures = hasFamilyFeatures(subscription as Subscription | null);
 
     const { data: row, error: rowErr } = await admin
       .from("workspace_members")
@@ -242,7 +281,7 @@ Deno.serve(async (req) => {
       }
 
       if (session_id && card_id != null) {
-        await patchSessionCards(admin, session_id, [{ cardId: card_id, unsync: true }]);
+        await patchSessionCards(admin, session_id, workspace_id, [{ cardId: card_id, unsync: true }]);
       }
 
       return json({ success: true, notFound: gone });
@@ -262,6 +301,15 @@ Deno.serve(async (req) => {
     const sessionPatches: Array<{ cardId: number | string; googleEventId: string }> = [];
 
     for (const ev of events) {
+      if (!familyFeatures && (!ev.date || !ev.time || ev.allDay === true)) {
+        results.push({
+          id: ev.id,
+          success: false,
+          error: "A date and time are required on the Free plan",
+        });
+        continue;
+      }
+
       const eventBody = buildEventBody(ev, userTimeZone);
       console.log("[calendar-sync] Google event start:", JSON.stringify(eventBody.start));
       if (eventBody.recurrence) {
@@ -296,7 +344,7 @@ Deno.serve(async (req) => {
     }
 
     if (session_id && sessionPatches.length) {
-      await patchSessionCards(admin, session_id, sessionPatches);
+      await patchSessionCards(admin, session_id, workspace_id, sessionPatches);
     }
 
     return json({ results });

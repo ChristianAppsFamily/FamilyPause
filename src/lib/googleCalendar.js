@@ -50,11 +50,13 @@ export function needsDateTime(card) {
 
 /**
  * Kept/calendared card can sync — timed if complete, else all-day via meetingDate.
+ * Free-tier callers set requireResolved so missing dates or times never sync.
  * @param {object} card
- * @param {{ meetingDate?: string }} [opts]
+ * @param {{ meetingDate?: string, requireResolved?: boolean }} [opts]
  */
 export function isSyncEligible(card, opts = {}) {
   if (!(card.status === "kept" || card.status === "calendared")) return false;
+  if (opts.requireResolved && (!card.date || !card.time)) return false;
   if (card.date && card.time) return true;
   const fallbackDate = card.date || opts.meetingDate;
   return !!fallbackDate;

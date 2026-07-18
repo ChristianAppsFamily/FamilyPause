@@ -31,24 +31,27 @@ export function trialDaysRemaining(subscription) {
 
 export function isPaidPlan(subscription) {
   if (!subscription?.active) return false;
-  return subscription.plan === "family" || subscription.plan === "pro";
+  return subscription.plan === "family"
+    || subscription.plan === "pro"
+    || subscription.plan === "ministry";
 }
 
 export function isTrialActive(subscription) {
-  if (!subscription?.trial_ends_at) return false;
+  if (!subscription?.active || subscription.plan !== "free" || !subscription?.trial_ends_at) return false;
   return new Date(subscription.trial_ends_at) > new Date();
 }
 
+/** Full Family Plan features are available to paid plans and active trials. */
+export function hasFamilyPlanFeatures(subscription) {
+  return isPaidPlan(subscription) || isTrialActive(subscription);
+}
+
 /**
- * Returns null if distill allowed, or paywall reason: "daily" | "trial".
+ * Returns null if plan creation is allowed, or "daily" after Free uses its daily plan.
  * @param {object} subscription
  * @param {{ distillsToday?: number }} opts
  */
 export function paywallReason(subscription, { distillsToday = 0 } = {}) {
-  if (isPaidPlan(subscription)) return null;
-  if (isTrialActive(subscription)) {
-    if (distillsToday >= 1) return "daily";
-    return null;
-  }
-  return "trial";
+  if (hasFamilyPlanFeatures(subscription)) return null;
+  return distillsToday >= 1 ? "daily" : null;
 }

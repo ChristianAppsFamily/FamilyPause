@@ -534,6 +534,14 @@ const css = `
   text-underline-offset: 2px;
 }
 .fp-landing .tier.pop .planhint-link:hover { color: #FAF7F2; }
+.fp-landing .tier-includes {
+  margin: 0 0 13px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.82);
+}
 .fp-landing .feats { list-style: none; padding: 0; margin: 0 0 28px; display: flex; flex-direction: column; gap: 13px; flex: 1; }
 .fp-landing .feats li { display: flex; gap: 11px; font-size: 15px; line-height: 1.4; color: var(--ink-2); }
 .fp-landing .tier.pop .feats li { color: rgba(255,255,255,.94); }
@@ -1313,11 +1321,11 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                   <div className="price"><span className="amt">$0</span></div>
                   <div className="subprice">Continue with the essentials after your trial.</div>
                   <ul className="feats">
-                    <li><span className="far">→</span> Type, paste, or record</li>
+                    <li><span className="far">→</span> Type, paste, or record what needs planning</li>
                     <li><span className="far">→</span> One plan per day</li>
-                    <li><span className="far">→</span> Review and edit extracted items</li>
-                    <li><span className="far">→</span> Schedule missing dates and times</li>
+                    <li><span className="far">→</span> Review extracted items, keep or discard</li>
                     <li><span className="far">→</span> Add approved items to your calendar</li>
+                    <li><span className="far">→</span> Digital Conversation Starter Cards, one card a day</li>
                   </ul>
                   <button className="btn btn-ghost btn-block" onClick={onStart}>Start Free</button>
                 </div>
@@ -1360,13 +1368,15 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                       "less than $5/month"
                     )}
                   </p>
+                  <p className="tier-includes">Everything in Free, plus:</p>
                   <ul className="feats">
-                    <li><span className="far">→</span> Unlimited plan building</li>
+                    <li><span className="far">→</span> Edit anything: titles, times, dates, and people</li>
+                    <li><span className="far">→</span> Resolve missing dates and times inline</li>
+                    <li><span className="far">→</span> Unlimited plans</li>
                     <li><span className="far">→</span> Complete plan history</li>
-                    <li><span className="far">→</span> Invite your spouse</li>
-                    <li><span className="far">→</span> Organize items by family member</li>
-                    <li><span className="far">→</span> Custom categories</li>
-                    <li><span className="far">→</span> Printable and PDF plans</li>
+                    <li><span className="far">→</span> Invite your spouse with real-time sync</li>
+                    <li><span className="far">→</span> Organize by family member, custom categories</li>
+                    <li><span className="far">→</span> Download as PDF, copy into Notion or Slack</li>
                     <li><span className="far">→</span> Full digital card deck included</li>
                   </ul>
                   <button className="btn btn-cream btn-block" onClick={onStart}>Sign Up Now</button>

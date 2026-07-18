@@ -4,6 +4,7 @@ import { eventDayIndices, getPlanningWeekDates, weekStripLabels } from "../lib/p
 import { calendarTitle, isSyncEligible } from "../lib/googleCalendar";
 import { buildPlanMarkdown } from "../lib/planExport";
 import CalendarAccountChooser from "./CalendarAccountChooser";
+import UpgradePrompt from "./UpgradePrompt";
 
 function Ico({ d, size = 16, fill = false, sw = 1.7 }) {
   return (
@@ -17,6 +18,7 @@ function Ico({ d, size = 16, fill = false, sw = 1.7 }) {
 const I = {
   check: "M5 12.5 10 17.5 19.5 6.5",
   cal: ["M7 3v3M17 3v3", "M4 8h16", "M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"],
+  lock: ["M7 11V8a5 5 0 0 1 10 0v3", "M6 11h12v10H6z"],
 };
 
 function formatWhen(date, time) {
@@ -175,6 +177,8 @@ export default function PlanView({
   arrivalPhase = "done",
   arrivalMode = "static",
   showFirstConfetti = false,
+  hasFamilyFeatures = false,
+  onUpgrade,
 }) {
   const reduced = prefersReducedMotion();
   const staticLayout = arrivalMode === "static" || reduced;
@@ -190,6 +194,7 @@ export default function PlanView({
   const [countAnim, setCountAnim] = useState(!staticLayout && arrivalMode === "full");
   const [copied, setCopied] = useState(false);
   const [pdfBusy, setPdfBusy] = useState(false);
+  const [showExportUpgrade, setShowExportUpgrade] = useState(false);
 
   const isAdult = (p) => adults.some((a) => a.toLowerCase() === (p || "").toLowerCase());
   const byPerson = (name) => keptCards.filter((c) => (c.person || "").toLowerCase() === name.toLowerCase());
@@ -242,8 +247,9 @@ export default function PlanView({
   const Item = ({ it, index, showBadge }) => {
     const synced = it.calendar_synced;
     const badgeAnim = showBadge && synced && badgeDrawn && !staticLayout;
-    const syncOpts = { meetingDate };
+    const syncOpts = { meetingDate, requireResolved: !hasFamilyFeatures };
     const canSync = isSyncEligible(it, syncOpts);
+    const lockedUnresolved = !hasFamilyFeatures && (!it.date || !it.time);
     return (
       <div
         className={
@@ -260,7 +266,8 @@ export default function PlanView({
           <div className="pmeta">
             <span className="ct">{it.category}</span>
             {formatWhen(it.date, it.time) && <span>· {formatWhen(it.date, it.time)}</span>}
-            {!it.time && it.date && <span>· All day</span>}
+            {!it.time && it.date && hasFamilyFeatures && <span>· All day</span>}
+            {lockedUnresolved && <span className="plan-needs-family">Needs a date · Family Plan</span>}
             {synced && (
               <span className={"synced-badge-wrap" + (badgeAnim ? " synced-badge-wrap--pop" : "")}>
                 <span className={"synced-badge" + (unsyncingCardId === it.id ? " synced-badge--busy" : "") + (badgeAnim ? " synced-badge--in" : "")}>
@@ -432,18 +439,24 @@ export default function PlanView({
             </button>
             <button
               type="button"
-              className={"plan-btn-ghost" + (copied ? " plan-btn-ghost--ok" : "")}
-              onClick={copyAsList}
-              disabled={!keptCards.length}
+              className={
+                "plan-btn-ghost"
+                + (copied ? " plan-btn-ghost--ok" : "")
+                + (!hasFamilyFeatures ? " plan-btn-ghost--locked" : "")
+              }
+              onClick={hasFamilyFeatures ? copyAsList : () => setShowExportUpgrade(true)}
+              disabled={hasFamilyFeatures && !keptCards.length}
             >
+              {!hasFamilyFeatures && <Ico d={I.lock} size={13} />}
               {copied ? "Copied!" : "Copy as List"}
             </button>
             <button
               type="button"
-              className="plan-btn-ghost"
-              onClick={exportPdf}
-              disabled={!keptCards.length || pdfBusy}
+              className={"plan-btn-ghost" + (!hasFamilyFeatures ? " plan-btn-ghost--locked" : "")}
+              onClick={hasFamilyFeatures ? exportPdf : () => setShowExportUpgrade(true)}
+              disabled={hasFamilyFeatures && (!keptCards.length || pdfBusy)}
             >
+              {!hasFamilyFeatures && <Ico d={I.lock} size={13} />}
               {pdfBusy ? "Preparing…" : "Download PDF"}
             </button>
             <button
@@ -456,6 +469,14 @@ export default function PlanView({
           </div>
         </div>
       </div>
+      {showExportUpgrade && (
+        <UpgradePrompt
+          title="Take your plan anywhere."
+          body="PDF, Notion, Slack, and more with Family Plan."
+          onUpgrade={onUpgrade}
+          onClose={() => setShowExportUpgrade(false)}
+        />
+      )}
     </>
   );
 }
