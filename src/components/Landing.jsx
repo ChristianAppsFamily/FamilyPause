@@ -213,8 +213,21 @@ const css = `
   max-width: 420px;
   border-radius: 16px;
   background: #FAF7F2;
-  box-shadow: 0 24px 70px rgba(70, 45, 20, .22);
-  padding: 34px;
+  box-shadow: 0 24px 70px rgba(70, 45, 20, .26);
+  padding: 48px 40px 28px;
+  text-align: center;
+  overflow: hidden;
+}
+.fp-guide-modal::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 34px;
+  height: 3px;
+  transform: translateX(-50%);
+  border-radius: 0 0 3px 3px;
+  background: var(--terra);
 }
 .fp-guide-close {
   position: absolute;
@@ -233,6 +246,21 @@ const css = `
   line-height: 1;
 }
 .fp-guide-close:hover { color: var(--terra); background: var(--terra-tint); }
+.fp-guide-brand {
+  width: 30px;
+  height: 30px;
+  display: block;
+  margin: 0 auto 10px;
+  border-radius: 7px;
+}
+.fp-guide-eyebrow {
+  margin: 0 0 12px;
+  color: #A09070;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: .23em;
+  text-transform: uppercase;
+}
 .fp-guide-title {
   font-family: var(--display);
   font-size: 24px;
@@ -240,14 +268,15 @@ const css = `
   font-style: italic;
   font-weight: 600;
   color: #2E2820;
-  margin: 0 38px 10px 0;
+  margin: 0 0 10px;
 }
 .fp-guide-subline {
   font-family: var(--serif);
   font-size: 14px;
   line-height: 1.55;
   color: #6A5A40;
-  margin: 0 0 22px;
+  max-width: 300px;
+  margin: 0 auto 22px;
 }
 .fp-guide-input {
   width: 100%;
@@ -257,6 +286,7 @@ const css = `
   color: var(--ink);
   padding: 13px 16px;
   font: 16px var(--serif);
+  text-align: left;
   outline: none;
   transition: border-color .2s, box-shadow .2s;
 }
@@ -274,7 +304,17 @@ const css = `
   color: var(--red);
   font: 13px/1.4 var(--serif);
 }
-.fp-guide-submit { margin-top: 14px; }
+.fp-guide-submit {
+  margin-top: 12px;
+  box-shadow: 0 8px 20px rgba(190, 90, 55, .24);
+}
+.fp-guide-fineprint {
+  margin: 12px 0 0;
+  color: #A09070;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: .04em;
+}
 .fp-guide-success { text-align: center; padding: 12px 0 2px; }
 .fp-guide-check {
   width: 34px;
@@ -387,7 +427,7 @@ const css = `
   background: var(--terra); color: #fff; border: none; border-radius: var(--r-sm); padding: 9px 14px;
 }
 
-/* sections — each band gets its own surface so blocks don't blend */
+/* sections: each band gets its own surface so blocks don't blend */
 .fp-landing .section { padding: 96px 0; }
 .fp-landing .section-paper { background: var(--paper); }
 .fp-landing .section-alt { background: var(--paper-2); }
@@ -549,7 +589,7 @@ const css = `
 .fp-landing .tier.pop .feats li .far { color: #F2E7C9; }
 .fp-landing .pricefoot { text-align: center; margin-top: 26px; }
 
-/* live demo — try it now */
+/* live demo: try it now */
 .fp-landing .trysec {
   --demo-cream: #FAF7F2;
   --demo-surface: #F0EAE0;
@@ -962,7 +1002,7 @@ const css = `
   .fp-landing .hero .ctas .btn { width: 100%; justify-content: center; }
   .fp-landing .steps4 { grid-template-columns: 1fr; }
   .fp-landing .foot .fcols { gap: 36px; flex-wrap: wrap; }
-  .fp-guide-modal { padding: 30px 22px 24px; }
+  .fp-guide-modal { padding: 44px 22px 24px; }
 }
 @media (max-width: 480px) {
   .fp-landing .navcta .btn:not(.navmenu-btn) { display: none; }
@@ -1362,7 +1402,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                         className="planhint-link"
                         onClick={() => setFamilyBilling("annual")}
                       >
-                        Or $59/year — less than $5/month
+                        Or $59/year, less than $5/month
                       </button>
                     ) : (
                       "less than $5/month"
@@ -1475,8 +1515,10 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
               </div>
             ) : (
               <form onSubmit={submitGuide} noValidate>
+                <img className="fp-guide-brand" src="/uploads/Logo_4.png" alt="" />
+                <p className="fp-guide-eyebrow">Free Sunday Guide</p>
                 <h2 className="fp-guide-title" id="sunday-guide-title">The Sunday Guide</h2>
-                <p className="fp-guide-subline">Five conversations to have with your family this week. Free.</p>
+                <p className="fp-guide-subline">Five conversations to have with your family this week. Delivered free, one time.</p>
                 <input
                   className="fp-guide-input"
                   type="email"
@@ -1504,6 +1546,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                 >
                   {guideStatus === "loading" ? "Sending..." : "Send Me the Guide"}
                 </button>
+                <p className="fp-guide-fineprint">One-time delivery. No weekly emails.</p>
               </form>
             )}
           </div>
