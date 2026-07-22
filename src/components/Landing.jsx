@@ -1183,7 +1183,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
             <div className="herogrid">
               <div className="herocopy">
                 <h1>So much going on.<br />Create one plan your family can move forward with.</h1>
-                <p className="sub">Stop manually inputting every event into your calendar one by one. Type it, paste it, or record your family talking it through. FamilyPause finds every appointment, task, reminder, and decision, you review and approve together, then everything auto-syncs straight to your calendar.</p>
+                <p className="sub">No more typing events into your calendar one by one. Just talk, paste, or type. FamilyPause handles the rest.</p>
                 <div className="ctas">
                   <button className="btn btn-primary btn-lg" onClick={onStart}>Create My Family Plan</button>
                   <button className="btn btn-lg guide-trigger" onClick={() => openLeadModal("guide")}>Get My Free Plan Guide</button>
