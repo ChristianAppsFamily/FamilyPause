@@ -387,7 +387,7 @@ function ConversationStartersCard({ workspace, onWorkspaceUpdate, onUnlock }) {
       ? "Sit with today's question · Tap to unlock the full deck"
       : "Sit with today's question · Come back tomorrow";
   } else {
-    hint = "Tap to draw today's starter · 1 per day";
+    hint = `Tap to draw a starter · ${TRIAL_STARTER_CARDS.length - drawsUsed} of ${TRIAL_STARTER_CARDS.length} free left`;
   }
 
   return (

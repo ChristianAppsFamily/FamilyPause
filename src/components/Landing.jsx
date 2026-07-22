@@ -1340,7 +1340,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
               <SampleCardCarousel interactive={false} />
             </div>
             <p className="deck-support reveal">
-              Free during your 7-day trial, one card a day. Subscribe and unlock the full digital deck at half off, just this once. Or get the physical deck anytime.
+              Free for everyone: 7 conversation cards total. Subscribe and unlock the full digital deck free if you&apos;re one of the first 100 subscribers. Or get the physical deck anytime.
             </p>
             <div className="deck-actions reveal">
               <a href="/cards" className="btn btn-primary">{`Get the Physical Deck · $${PHYSICAL_DECK_PRICE}`}</a>
@@ -1368,7 +1368,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                     <li><span className="far">→</span> One plan per day</li>
                     <li><span className="far">→</span> Review extracted items, keep or discard</li>
                     <li><span className="far">→</span> Add approved items to your calendar</li>
-                    <li><span className="far">→</span> Digital Conversation Starter Cards, one card a day</li>
+                    <li><span className="far">→</span> Digital Conversation Starter Cards, 7 free cards total</li>
                   </ul>
                   <button className="btn btn-ghost btn-block" onClick={onStart}>Start Free</button>
                 </div>
@@ -1420,7 +1420,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                     <li><span className="far">→</span> Invite your spouse with real-time sync</li>
                     <li><span className="far">→</span> Organize by family member, custom categories</li>
                     <li><span className="far">→</span> Download as PDF, copy into Notion or Slack</li>
-                    <li><span className="far">→</span> Full digital card deck included</li>
+                    <li><span className="far">→</span> Digital deck unlocked free for the first 100 subscribers</li>
                   </ul>
                   <button className="btn btn-cream btn-block" onClick={onStart}>Sign Up Now</button>
                 </div>

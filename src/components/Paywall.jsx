@@ -132,7 +132,7 @@ export default function Paywall({ reason = "trial", onClose }) {
               <li><Check /> Invite your spouse with real-time sync</li>
               <li><Check /> Organize by family member, custom categories</li>
               <li><Check /> Download as PDF, copy into Notion or Slack</li>
-              <li><Check /> Full digital card deck included</li>
+              <li><Check /> Digital deck unlocked free for the first 100 subscribers</li>
             </ul>
             <div className="pw-cta">
               <button className="btn btn-primary btn-lg btn-block" onClick={() => goCheckout("family")}>
@@ -153,7 +153,7 @@ export default function Paywall({ reason = "trial", onClose }) {
               <li><Check /> One plan per day</li>
               <li><Check /> Review extracted items, keep or discard</li>
               <li><Check /> Add approved items to your calendar</li>
-              <li><Check /> Digital Conversation Starter Cards, one card a day</li>
+              <li><Check /> Digital Conversation Starter Cards, 7 free cards total</li>
             </ul>
             <div className="pw-cta">
               <button className="btn btn-ghost btn-block" onClick={() => onClose?.()}>
