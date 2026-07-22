@@ -1,10 +1,13 @@
-// Public Sunday Guide lead capture.
+// Public lead capture for Free Planning Guide and Church & Ministry waitlist.
 // Required secrets:
 //   RESEND_API_KEY
+// Guide (kind = "guide"):
 //   RESEND_SUNDAY_GUIDE_SEGMENT_ID
 //   SUNDAY_GUIDE_URL
+// Waitlist (kind = "ministry-waitlist"):
+//   RESEND_MINISTRY_WAITLIST_SEGMENT_ID
 // Optional:
-//   SUNDAY_GUIDE_FROM_EMAIL
+//   SUNDAY_GUIDE_FROM_EMAIL / LEAD_FROM_EMAIL
 
 const allowedOrigins = new Set([
   "https://familypause.com",
@@ -44,9 +47,23 @@ function guideHtml(guideUrl: string) {
   <body style="margin:0;padding:0;background:#FAF7F2;font-family:Georgia,'Lora',serif;color:#2E2820;">
     <div style="max-width:560px;margin:0 auto;padding:44px 24px;">
       <p style="margin:0 0 24px;color:#BE5A37;font-size:13px;letter-spacing:.12em;text-transform:uppercase;">FamilyPause</p>
-      <h1 style="margin:0 0 18px;font-size:28px;font-style:italic;font-weight:600;line-height:1.25;">Your Sunday Guide is here.</h1>
-      <p style="margin:0 0 28px;color:#6A5A40;font-size:16px;line-height:1.65;">Here are five conversations to help your family slow down, connect, and move into the week together. With care, Spence.</p>
-      <a href="${safeUrl}" style="display:inline-block;padding:13px 20px;border-radius:7px;background:#BE5A37;color:#ffffff;text-decoration:none;font-size:14px;">Open the Sunday Guide</a>
+      <h1 style="margin:0 0 18px;font-size:28px;font-style:italic;font-weight:600;line-height:1.25;">Your One-Plan Guide is here.</h1>
+      <p style="margin:0 0 28px;color:#6A5A40;font-size:16px;line-height:1.65;">A simple weekly planning system for families with too much going on. With care, Spence.</p>
+      <a href="${safeUrl}" style="display:inline-block;padding:13px 20px;border-radius:7px;background:#BE5A37;color:#ffffff;text-decoration:none;font-size:14px;">Open the One-Plan Guide</a>
+    </div>
+  </body>
+</html>`;
+}
+
+function waitlistHtml() {
+  return `<!DOCTYPE html>
+<html>
+  <head><meta charset="utf-8"><meta name="viewport" content="width=device-width"></head>
+  <body style="margin:0;padding:0;background:#FAF7F2;font-family:Georgia,'Lora',serif;color:#2E2820;">
+    <div style="max-width:560px;margin:0 auto;padding:44px 24px;">
+      <p style="margin:0 0 24px;color:#BE5A37;font-size:13px;letter-spacing:.12em;text-transform:uppercase;">FamilyPause</p>
+      <h1 style="margin:0 0 18px;font-size:28px;font-style:italic;font-weight:600;line-height:1.25;">You're on the Church &amp; Ministry waitlist.</h1>
+      <p style="margin:0;color:#6A5A40;font-size:16px;line-height:1.65;">Thanks for your interest. We'll reach out when FamilyPause is ready for couples ministries, teams, and family programs. With care, Spence.</p>
     </div>
   </body>
 </html>`;
@@ -63,6 +80,38 @@ async function resendRequest(path: string, apiKey: string, init: RequestInit) {
   });
 }
 
+async function enrollContact(apiKey: string, email: string, segmentId: string) {
+  const contactRes = await resendRequest("/contacts", apiKey, {
+    method: "POST",
+    body: JSON.stringify({
+      email,
+      unsubscribed: false,
+      segments: [{ id: segmentId }],
+    }),
+  });
+  const contactData = await contactRes.json().catch(() => ({}));
+  const duplicate = contactRes.status === 409 || /already exists/i.test(contactData?.message || "");
+
+  if (!contactRes.ok && !duplicate) {
+    return { ok: false as const, status: contactRes.status, data: contactData, stage: "contact" as const };
+  }
+
+  if (duplicate) {
+    const segmentRes = await resendRequest(
+      `/contacts/${encodeURIComponent(email)}/segments/${encodeURIComponent(segmentId)}`,
+      apiKey,
+      { method: "POST" },
+    );
+    const segmentData = await segmentRes.json().catch(() => ({}));
+    const alreadySegmented = segmentRes.status === 409 || /already/i.test(segmentData?.message || "");
+    if (!segmentRes.ok && !alreadySegmented) {
+      return { ok: false as const, status: segmentRes.status, data: segmentData, stage: "segment" as const };
+    }
+  }
+
+  return { ok: true as const };
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors(req) });
   if (req.method !== "POST") return json(req, { error: "Method not allowed" }, 405);
@@ -75,52 +124,67 @@ Deno.serve(async (req) => {
     const email = typeof body?.email === "string" ? body.email.trim().toLowerCase() : "";
     if (!isEmail(email)) return json(req, { error: "Enter a valid email address" }, 400);
 
+    const kind = body?.kind === "ministry-waitlist" ? "ministry-waitlist" : "guide";
     const apiKey = Deno.env.get("RESEND_API_KEY");
+    if (!apiKey) {
+      console.error("[capture-lead] Missing RESEND_API_KEY");
+      return json(req, { error: "Lead capture is not configured" }, 500);
+    }
+
+    const from = Deno.env.get("LEAD_FROM_EMAIL")
+      || Deno.env.get("SUNDAY_GUIDE_FROM_EMAIL")
+      || "FamilyPause <hello@familypause.com>";
+
+    if (kind === "ministry-waitlist") {
+      const segmentId = Deno.env.get("RESEND_MINISTRY_WAITLIST_SEGMENT_ID");
+      if (!segmentId) {
+        console.error("[capture-lead] Missing RESEND_MINISTRY_WAITLIST_SEGMENT_ID");
+        return json(req, { error: "Waitlist is not configured" }, 500);
+      }
+
+      const enrolled = await enrollContact(apiKey, email, segmentId);
+      if (!enrolled.ok) {
+        console.error("[capture-lead] Waitlist enrollment failed", enrolled.stage, enrolled.status, enrolled.data);
+        return json(req, { error: "Unable to join waitlist" }, 502);
+      }
+
+      const sendRes = await resendRequest("/emails", apiKey, {
+        method: "POST",
+        body: JSON.stringify({
+          from,
+          to: [email],
+          subject: "You're on the Church & Ministry waitlist",
+          html: waitlistHtml(),
+        }),
+      });
+      const sendData = await sendRes.json().catch(() => ({}));
+      if (!sendRes.ok) {
+        console.error("[capture-lead] Waitlist confirmation failed", sendRes.status, sendData);
+        return json(req, { error: "Unable to confirm waitlist" }, 502);
+      }
+
+      return json(req, { ok: true });
+    }
+
     const segmentId = Deno.env.get("RESEND_SUNDAY_GUIDE_SEGMENT_ID");
     const guideUrl = Deno.env.get("SUNDAY_GUIDE_URL");
-    if (!apiKey || !segmentId || !guideUrl) {
-      console.error("[capture-lead] Missing Resend or Sunday Guide configuration");
+    if (!segmentId || !guideUrl) {
+      console.error("[capture-lead] Missing Resend or One-Plan Guide configuration");
       return json(req, { error: "Guide delivery is not configured" }, 500);
     }
 
-    const contactRes = await resendRequest("/contacts", apiKey, {
-      method: "POST",
-      body: JSON.stringify({
-        email,
-        unsubscribed: false,
-        segments: [{ id: segmentId }],
-      }),
-    });
-    const contactData = await contactRes.json().catch(() => ({}));
-    const duplicate = contactRes.status === 409 || /already exists/i.test(contactData?.message || "");
-
-    if (!contactRes.ok && !duplicate) {
-      console.error("[capture-lead] Contact creation failed", contactRes.status, contactData);
+    const enrolled = await enrollContact(apiKey, email, segmentId);
+    if (!enrolled.ok) {
+      console.error("[capture-lead] Guide enrollment failed", enrolled.stage, enrolled.status, enrolled.data);
       return json(req, { error: "Unable to save contact" }, 502);
     }
 
-    if (duplicate) {
-      const segmentRes = await resendRequest(
-        `/contacts/${encodeURIComponent(email)}/segments/${encodeURIComponent(segmentId)}`,
-        apiKey,
-        { method: "POST" },
-      );
-      const segmentData = await segmentRes.json().catch(() => ({}));
-      const alreadySegmented = segmentRes.status === 409 || /already/i.test(segmentData?.message || "");
-      if (!segmentRes.ok && !alreadySegmented) {
-        console.error("[capture-lead] Segment enrollment failed", segmentRes.status, segmentData);
-        return json(req, { error: "Unable to enroll contact" }, 502);
-      }
-    }
-
-    const from = Deno.env.get("SUNDAY_GUIDE_FROM_EMAIL")
-      || "FamilyPause <hello@familypause.com>";
     const sendRes = await resendRequest("/emails", apiKey, {
       method: "POST",
       body: JSON.stringify({
         from,
         to: [email],
-        subject: "Your Sunday Guide is here",
+        subject: "Your One-Plan Guide is here",
         html: guideHtml(guideUrl),
       }),
     });

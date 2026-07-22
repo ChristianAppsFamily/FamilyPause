@@ -1009,12 +1009,12 @@ const stroke = { fill: "none", stroke: "currentColor", strokeWidth: 1.7, strokeL
 
 export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
   const [scrolled, setScrolled] = useState(false);
-  const [familyBilling, setFamilyBilling] = useState("annual");
+  const [familyBilling, setFamilyBilling] = useState("monthly");
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
-  const [guideOpen, setGuideOpen] = useState(false);
-  const [guideEmail, setGuideEmail] = useState("");
-  const [guideStatus, setGuideStatus] = useState("idle");
-  const [guideError, setGuideError] = useState("");
+  const [leadModal, setLeadModal] = useState(null); // "guide" | "waitlist" | null
+  const [leadEmail, setLeadEmail] = useState("");
+  const [leadStatus, setLeadStatus] = useState("idle");
+  const [leadError, setLeadError] = useState("");
   const rootRef = useRef(null);
 
   useEffect(() => {
@@ -1054,46 +1054,51 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
   }, []);
 
   useEffect(() => {
-    if (!guideOpen) return undefined;
+    if (!leadModal) return undefined;
     const onKeyDown = (event) => {
-      if (event.key === "Escape") setGuideOpen(false);
+      if (event.key === "Escape") setLeadModal(null);
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [guideOpen]);
+  }, [leadModal]);
 
-  const openGuide = () => {
-    setGuideEmail("");
-    setGuideError("");
-    setGuideStatus("idle");
-    setGuideOpen(true);
+  const openLeadModal = (kind) => {
+    setLeadEmail("");
+    setLeadError("");
+    setLeadStatus("idle");
+    setLeadModal(kind);
   };
 
-  const closeGuide = () => {
-    setGuideOpen(false);
+  const closeLeadModal = () => {
+    setLeadModal(null);
   };
 
-  const submitGuide = async (event) => {
+  const submitLead = async (event) => {
     event.preventDefault();
-    const email = guideEmail.trim().toLowerCase();
+    const email = leadEmail.trim().toLowerCase();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setGuideError("Enter a valid email address.");
+      setLeadError("Enter a valid email address.");
       return;
     }
 
-    setGuideError("");
-    setGuideStatus("loading");
+    setLeadError("");
+    setLeadStatus("loading");
+    const kind = leadModal === "waitlist" ? "ministry-waitlist" : "guide";
     const { error } = await supabase.functions.invoke("capture-lead", {
-      body: { email },
+      body: { email, kind },
     });
 
     if (error) {
-      setGuideStatus("idle");
-      setGuideError("We couldn't send the guide. Please try again.");
+      setLeadStatus("idle");
+      setLeadError(
+        kind === "ministry-waitlist"
+          ? "We couldn't join the waitlist. Please try again."
+          : "We couldn't send the guide. Please try again.",
+      );
       return;
     }
 
-    setGuideStatus("success");
+    setLeadStatus("success");
   };
 
   return (
@@ -1168,7 +1173,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                 <p className="sub">Type it, paste it, or record your family talking it through. FamilyPause finds every appointment, task, reminder, and decision, and turns it into a plan you review together and add to your calendar.</p>
                 <div className="ctas">
                   <button className="btn btn-primary btn-lg" onClick={onStart}>Start Free</button>
-                  <button className="btn btn-lg guide-trigger" onClick={openGuide}>Get the Free Planning Guide</button>
+                  <button className="btn btn-lg guide-trigger" onClick={() => openLeadModal("guide")}>Get the Free Planning Guide</button>
                 </div>
                 <p className="fineprint">7 days free · No credit card · Works on any device</p>
               </div>
@@ -1374,19 +1379,19 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                   <div className="billing-toggle" role="group" aria-label="Billing period">
                     <button
                       type="button"
-                      className={`billing-pill${familyBilling === "annual" ? " on" : ""}`}
-                      aria-pressed={familyBilling === "annual"}
-                      onClick={() => setFamilyBilling("annual")}
-                    >
-                      Annual
-                    </button>
-                    <button
-                      type="button"
                       className={`billing-pill${familyBilling === "monthly" ? " on" : ""}`}
                       aria-pressed={familyBilling === "monthly"}
                       onClick={() => setFamilyBilling("monthly")}
                     >
                       Monthly
+                    </button>
+                    <button
+                      type="button"
+                      className={`billing-pill${familyBilling === "annual" ? " on" : ""}`}
+                      aria-pressed={familyBilling === "annual"}
+                      onClick={() => setFamilyBilling("annual")}
+                    >
+                      Annual
                     </button>
                   </div>
                   <div className="price">
@@ -1429,12 +1434,13 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                     <li><span className="far">→</span> Centralized ministry billing</li>
                     <li><span className="far">→</span> Family Plan features</li>
                   </ul>
-                  <a
+                  <button
+                    type="button"
                     className="btn btn-primary btn-block"
-                    href="mailto:hello@familypause.com?subject=Church%20%26%20Ministry%20Waitlist"
+                    onClick={() => openLeadModal("waitlist")}
                   >
                     Join the Waitlist
-                  </a>
+                  </button>
                 </div>
               </div>
               <div className="pricefoot fineprint">7 days free · No credit card · Cancel anytime</div>
@@ -1490,33 +1496,51 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
         </div>
       </footer>
 
-      {guideOpen && (
-        <div className="fp-guide-backdrop" onMouseDown={closeGuide}>
+      {leadModal && (
+        <div className="fp-guide-backdrop" onMouseDown={closeLeadModal}>
           <div
             className="fp-guide-modal"
             role="dialog"
             aria-modal="true"
-            aria-labelledby="planning-guide-title"
+            aria-labelledby="lead-modal-title"
             onMouseDown={(event) => event.stopPropagation()}
           >
-            <button type="button" className="fp-guide-close" onClick={closeGuide} aria-label="Close">
+            <button type="button" className="fp-guide-close" onClick={closeLeadModal} aria-label="Close">
               ×
             </button>
 
-            {guideStatus === "success" ? (
+            {leadStatus === "success" ? (
               <div className="fp-guide-success">
                 <div className="fp-guide-check" aria-hidden="true">✓</div>
-                <h2 id="planning-guide-title">Check your inbox. It&apos;s on the way.</h2>
-                <button type="button" className="btn btn-primary btn-block" onClick={closeGuide}>
+                <h2 id="lead-modal-title">
+                  {leadModal === "waitlist"
+                    ? "You're on the list. We'll be in touch."
+                    : "Check your inbox. It's on the way."}
+                </h2>
+                <button type="button" className="btn btn-primary btn-block" onClick={closeLeadModal}>
                   All set
                 </button>
               </div>
             ) : (
-              <form onSubmit={submitGuide} noValidate>
+              <form onSubmit={submitLead} noValidate>
                 <img className="fp-guide-brand" src="/uploads/Logo_4.png" alt="" />
-                <p className="fp-guide-eyebrow">Free Planning Guide</p>
-                <h2 className="fp-guide-title" id="planning-guide-title">The One-Plan Guide</h2>
-                <p className="fp-guide-subline">A simple but effective weekly planning system for families with too much going on.</p>
+                {leadModal === "waitlist" ? (
+                  <>
+                    <p className="fp-guide-eyebrow">Church &amp; Ministry</p>
+                    <h2 className="fp-guide-title" id="lead-modal-title">Join the waitlist</h2>
+                    <p className="fp-guide-subline">
+                      Be first to bring FamilyPause to your couples, ministry teams, and family programs.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p className="fp-guide-eyebrow">Free Planning Guide</p>
+                    <h2 className="fp-guide-title" id="lead-modal-title">The One-Plan Guide</h2>
+                    <p className="fp-guide-subline">
+                      A simple but effective weekly planning system for families with too much going on.
+                    </p>
+                  </>
+                )}
                 <input
                   className="fp-guide-input"
                   type="email"
@@ -1524,25 +1548,27 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                   autoComplete="email"
                   autoFocus
                   placeholder="you@example.com"
-                  value={guideEmail}
+                  value={leadEmail}
                   onChange={(event) => {
-                    setGuideEmail(event.target.value);
-                    if (guideError) setGuideError("");
+                    setLeadEmail(event.target.value);
+                    if (leadError) setLeadError("");
                   }}
                   aria-label="Email address"
-                  aria-invalid={Boolean(guideError)}
-                  aria-describedby={guideError ? "planning-guide-error" : undefined}
-                  disabled={guideStatus === "loading"}
+                  aria-invalid={Boolean(leadError)}
+                  aria-describedby={leadError ? "lead-modal-error" : undefined}
+                  disabled={leadStatus === "loading"}
                 />
-                {guideError && (
-                  <p className="fp-guide-error" id="planning-guide-error" role="alert">{guideError}</p>
+                {leadError && (
+                  <p className="fp-guide-error" id="lead-modal-error" role="alert">{leadError}</p>
                 )}
                 <button
                   type="submit"
                   className="btn btn-primary btn-block fp-guide-submit"
-                  disabled={guideStatus === "loading"}
+                  disabled={leadStatus === "loading"}
                 >
-                  {guideStatus === "loading" ? "Sending..." : "Send Me the Guide"}
+                  {leadStatus === "loading"
+                    ? (leadModal === "waitlist" ? "Joining..." : "Sending...")
+                    : (leadModal === "waitlist" ? "Join the Waitlist" : "Send Me the Guide")}
                 </button>
               </form>
             )}
