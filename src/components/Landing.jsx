@@ -11,7 +11,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import SampleCardCarousel from "./SampleCardCarousel.jsx";
-import { PHYSICAL_DECK_PRICE } from "../lib/deckPricing";
 import { supabase } from "../lib/supabase";
 
 const css = `
@@ -939,7 +938,7 @@ const css = `
 .fp-landing .foot .row { display: flex; align-items: flex-start; justify-content: space-between; gap: 30px; flex-wrap: wrap; }
 .fp-landing .foot .word { font-family: var(--display); font-size: 26px; font-weight: 600; }
 .fp-landing .foot .word b { color: var(--terra); }
-.fp-landing .foot .tag { color: var(--ink-3); font-size: 15px; margin-top: 6px; }
+.fp-landing .foot .tag { color: var(--ink-3); font-size: 13.5px; line-height: 1.45; margin-top: 6px; max-width: 280px; }
 .fp-landing .foot .fcols { display: flex; gap: 64px; }
 .fp-landing .foot .fcol h4 { font-family: var(--mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 14px; font-weight: 500; }
 .fp-landing .foot .fcol a { display: block; font-size: 14.5px; color: var(--ink-2); margin-bottom: 9px; transition: color .15s; }
@@ -1014,7 +1013,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
   const [scrolled, setScrolled] = useState(false);
   const [familyBilling, setFamilyBilling] = useState("monthly");
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
-  const [leadModal, setLeadModal] = useState(null); // "guide" | "waitlist" | null
+  const [leadModal, setLeadModal] = useState(null); // "guide" | "waitlist" | "deck-waitlist" | null
   const [leadEmail, setLeadEmail] = useState("");
   const [leadStatus, setLeadStatus] = useState("idle");
   const [leadError, setLeadError] = useState("");
@@ -1086,7 +1085,11 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
 
     setLeadError("");
     setLeadStatus("loading");
-    const kind = leadModal === "waitlist" ? "ministry-waitlist" : "guide";
+    const kind = leadModal === "waitlist"
+      ? "ministry-waitlist"
+      : leadModal === "deck-waitlist"
+        ? "physical-deck-waitlist"
+        : "guide";
     const { error } = await supabase.functions.invoke("capture-lead", {
       body: { email, kind },
     });
@@ -1094,9 +1097,9 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
     if (error) {
       setLeadStatus("idle");
       setLeadError(
-        kind === "ministry-waitlist"
-          ? "We couldn't join the waitlist. Please try again."
-          : "We couldn't send the guide. Please try again.",
+        kind === "guide"
+          ? "We couldn't send the guide. Please try again."
+          : "We couldn't join the waitlist. Please try again.",
       );
       return;
     }
@@ -1123,7 +1126,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
           </nav>
           <div className="navcta">
             <button type="button" className="signin" onClick={onSignIn}>Sign In</button>
-            <button className="btn btn-primary" onClick={onStart}>Create My Family Plan</button>
+            <button className="btn btn-primary" onClick={onStart}>Create My Free Plan</button>
             <button
               type="button"
               className="navmenu-btn"
@@ -1159,7 +1162,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                 className="btn btn-primary btn-block"
                 onClick={() => { setMobileNavOpen(false); onStart(); }}
               >
-                Create My Family Plan
+                Create My Free Plan
               </button>
             </div>
           </nav>
@@ -1175,7 +1178,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                 <h1>So much going on.<br />Create one plan your family can move forward with.</h1>
                 <p className="sub">Type it, paste it, or record your family talking it through. FamilyPause finds the appointments, tasks, reminders, and decisions, then turns them into a plan you review together before adding them to your calendar.</p>
                 <div className="ctas">
-                  <button className="btn btn-primary btn-lg" onClick={onStart}>Create My Family Plan</button>
+                  <button className="btn btn-primary btn-lg" onClick={onStart}>Create My Free Plan</button>
                   <button className="btn btn-lg guide-trigger" onClick={() => openLeadModal("guide")}>Get the Free Planning Guide</button>
                 </div>
                 <p className="fineprint">Starts your free 7-day trial • No credit card required</p>
@@ -1348,11 +1351,13 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
             </div>
             <p className="deck-support reveal">
               7 conversation cards are free for everyone.
-              Upgrade to Family Plan to unlock the complete digital deck, free for our first 100 subscribers. Prefer something you can hold? The physical deck is available anytime.
+              Upgrade to Family Plan to unlock the complete digital deck, free for our first 100 subscribers. Prefer something you can hold? Join the waitlist for the physical deck!
             </p>
             <div className="deck-actions reveal">
-              <a href="/cards" className="btn btn-primary">{`Get the Physical Deck — $${PHYSICAL_DECK_PRICE}`}</a>
-              <button type="button" className="btn btn-ghost" onClick={onStart}>Create My Family Plan</button>
+              <button type="button" className="btn btn-primary" onClick={() => openLeadModal("deck-waitlist")}>
+                Join The Physical Deck Waitlist
+              </button>
+              <button type="button" className="btn btn-ghost" onClick={onStart}>Create My Free Plan</button>
             </div>
           </div>
         </section>
@@ -1461,7 +1466,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
           <div className="wrap">
             <h2>So much going on.<br /><em>One plan to move forward with.</em></h2>
             <p>Type it, paste it, or talk it through together. FamilyPause organizes it, you create what&apos;s missing, and the plan goes onto your calendar.</p>
-            <button className="btn btn-primary btn-lg" onClick={onStart}>Create My Family Plan</button>
+            <button className="btn btn-primary btn-lg" onClick={onStart}>Create My Free Plan</button>
             <p className="fineprint">Starts your free 7-day trial • No credit card required</p>
           </div>
         </section>
@@ -1476,7 +1481,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                 <img src="/uploads/Logo_4.png" alt="" style={{ width: 32, height: 32, borderRadius: 8, display: "block" }} />
                 <div className="word"><b>Family</b>Pause</div>
               </div>
-              <div className="tag">Turn everything going on into one plan you create together.</div>
+              <div className="tag">Turn everything going on into one plan your family can move forward with.</div>
             </div>
             <div className="fcols">
               <div className="fcol">
@@ -1496,7 +1501,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
               <div className="fcol">
                 <h4>Get Started</h4>
                 <button className="fp-footer-link" onClick={onSignIn}>Sign In</button>
-                <button className="fp-footer-link" onClick={onStart}>Create My Family Plan</button>
+                <button className="fp-footer-link" onClick={onStart}>Create My Free Plan</button>
               </div>
             </div>
           </div>
@@ -1521,9 +1526,9 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
               <div className="fp-guide-success">
                 <div className="fp-guide-check" aria-hidden="true">✓</div>
                 <h2 id="lead-modal-title">
-                  {leadModal === "waitlist"
-                    ? "You're on the list. We'll be in touch."
-                    : "Check your inbox. It's on the way."}
+                  {leadModal === "guide"
+                    ? "Check your inbox. It's on the way."
+                    : "You're on the list. We'll be in touch."}
                 </h2>
                 <button type="button" className="btn btn-primary btn-block" onClick={closeLeadModal}>
                   All set
@@ -1538,6 +1543,14 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                     <h2 className="fp-guide-title" id="lead-modal-title">Join the waitlist</h2>
                     <p className="fp-guide-subline">
                       Be first to bring FamilyPause to your couples, ministry teams, and family programs.
+                    </p>
+                  </>
+                ) : leadModal === "deck-waitlist" ? (
+                  <>
+                    <p className="fp-guide-eyebrow">Physical Deck</p>
+                    <h2 className="fp-guide-title" id="lead-modal-title">Join the waitlist</h2>
+                    <p className="fp-guide-subline">
+                      Be first to know when the printed FamilyPause Conversation Deck is ready.
                     </p>
                   </>
                 ) : (
@@ -1575,8 +1588,8 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                   disabled={leadStatus === "loading"}
                 >
                   {leadStatus === "loading"
-                    ? (leadModal === "waitlist" ? "Joining..." : "Sending...")
-                    : (leadModal === "waitlist" ? "Join the Waitlist" : "Send Me the Guide")}
+                    ? (leadModal === "guide" ? "Sending..." : "Joining...")
+                    : (leadModal === "guide" ? "Send Me the Guide" : "Join the Waitlist")}
                 </button>
               </form>
             )}

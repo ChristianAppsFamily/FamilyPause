@@ -1,11 +1,12 @@
-// Public lead capture for Free Planning Guide and Church & Ministry waitlist.
+// Public lead capture for Free Planning Guide and waitlists.
 // Required secrets:
 //   RESEND_API_KEY
 // Guide (kind = "guide"):
 //   RESEND_SUNDAY_GUIDE_SEGMENT_ID
 //   SUNDAY_GUIDE_URL
-// Waitlist (kind = "ministry-waitlist"):
-//   RESEND_MINISTRY_WAITLIST_SEGMENT_ID
+// Waitlists:
+//   RESEND_MINISTRY_WAITLIST_SEGMENT_ID (kind = "ministry-waitlist")
+//   RESEND_PHYSICAL_DECK_WAITLIST_SEGMENT_ID (kind = "physical-deck-waitlist")
 // Optional:
 //   SUNDAY_GUIDE_FROM_EMAIL / LEAD_FROM_EMAIL
 
@@ -55,7 +56,7 @@ function guideHtml(guideUrl: string) {
 </html>`;
 }
 
-function waitlistHtml() {
+function ministryWaitlistHtml() {
   return `<!DOCTYPE html>
 <html>
   <head><meta charset="utf-8"><meta name="viewport" content="width=device-width"></head>
@@ -64,6 +65,20 @@ function waitlistHtml() {
       <p style="margin:0 0 24px;color:#BE5A37;font-size:13px;letter-spacing:.12em;text-transform:uppercase;">FamilyPause</p>
       <h1 style="margin:0 0 18px;font-size:28px;font-style:italic;font-weight:600;line-height:1.25;">You're on the Church &amp; Ministry waitlist.</h1>
       <p style="margin:0;color:#6A5A40;font-size:16px;line-height:1.65;">Thanks for your interest. We'll reach out when FamilyPause is ready for couples ministries, teams, and family programs. With care, Spence.</p>
+    </div>
+  </body>
+</html>`;
+}
+
+function physicalDeckWaitlistHtml() {
+  return `<!DOCTYPE html>
+<html>
+  <head><meta charset="utf-8"><meta name="viewport" content="width=device-width"></head>
+  <body style="margin:0;padding:0;background:#FAF7F2;font-family:Georgia,'Lora',serif;color:#2E2820;">
+    <div style="max-width:560px;margin:0 auto;padding:44px 24px;">
+      <p style="margin:0 0 24px;color:#BE5A37;font-size:13px;letter-spacing:.12em;text-transform:uppercase;">FamilyPause</p>
+      <h1 style="margin:0 0 18px;font-size:28px;font-style:italic;font-weight:600;line-height:1.25;">You're on the physical deck waitlist.</h1>
+      <p style="margin:0;color:#6A5A40;font-size:16px;line-height:1.65;">Thanks for joining. We'll let you know when the printed FamilyPause Conversation Deck is ready. With care, Spence.</p>
     </div>
   </body>
 </html>`;
@@ -112,6 +127,41 @@ async function enrollContact(apiKey: string, email: string, segmentId: string) {
   return { ok: true as const };
 }
 
+async function handleWaitlist(
+  req: Request,
+  apiKey: string,
+  from: string,
+  email: string,
+  segmentEnv: string,
+  subject: string,
+  html: string,
+  label: string,
+) {
+  const segmentId = Deno.env.get(segmentEnv);
+  if (!segmentId) {
+    console.error(`[capture-lead] Missing ${segmentEnv}`);
+    return json(req, { error: "Waitlist is not configured" }, 500);
+  }
+
+  const enrolled = await enrollContact(apiKey, email, segmentId);
+  if (!enrolled.ok) {
+    console.error(`[capture-lead] ${label} enrollment failed`, enrolled.stage, enrolled.status, enrolled.data);
+    return json(req, { error: "Unable to join waitlist" }, 502);
+  }
+
+  const sendRes = await resendRequest("/emails", apiKey, {
+    method: "POST",
+    body: JSON.stringify({ from, to: [email], subject, html }),
+  });
+  const sendData = await sendRes.json().catch(() => ({}));
+  if (!sendRes.ok) {
+    console.error(`[capture-lead] ${label} confirmation failed`, sendRes.status, sendData);
+    return json(req, { error: "Unable to confirm waitlist" }, 502);
+  }
+
+  return json(req, { ok: true });
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors(req) });
   if (req.method !== "POST") return json(req, { error: "Method not allowed" }, 405);
@@ -124,7 +174,11 @@ Deno.serve(async (req) => {
     const email = typeof body?.email === "string" ? body.email.trim().toLowerCase() : "";
     if (!isEmail(email)) return json(req, { error: "Enter a valid email address" }, 400);
 
-    const kind = body?.kind === "ministry-waitlist" ? "ministry-waitlist" : "guide";
+    const kind = body?.kind === "ministry-waitlist"
+      ? "ministry-waitlist"
+      : body?.kind === "physical-deck-waitlist"
+        ? "physical-deck-waitlist"
+        : "guide";
     const apiKey = Deno.env.get("RESEND_API_KEY");
     if (!apiKey) {
       console.error("[capture-lead] Missing RESEND_API_KEY");
@@ -136,34 +190,29 @@ Deno.serve(async (req) => {
       || "FamilyPause <hello@familypause.com>";
 
     if (kind === "ministry-waitlist") {
-      const segmentId = Deno.env.get("RESEND_MINISTRY_WAITLIST_SEGMENT_ID");
-      if (!segmentId) {
-        console.error("[capture-lead] Missing RESEND_MINISTRY_WAITLIST_SEGMENT_ID");
-        return json(req, { error: "Waitlist is not configured" }, 500);
-      }
+      return await handleWaitlist(
+        req,
+        apiKey,
+        from,
+        email,
+        "RESEND_MINISTRY_WAITLIST_SEGMENT_ID",
+        "You're on the Church & Ministry waitlist",
+        ministryWaitlistHtml(),
+        "Ministry waitlist",
+      );
+    }
 
-      const enrolled = await enrollContact(apiKey, email, segmentId);
-      if (!enrolled.ok) {
-        console.error("[capture-lead] Waitlist enrollment failed", enrolled.stage, enrolled.status, enrolled.data);
-        return json(req, { error: "Unable to join waitlist" }, 502);
-      }
-
-      const sendRes = await resendRequest("/emails", apiKey, {
-        method: "POST",
-        body: JSON.stringify({
-          from,
-          to: [email],
-          subject: "You're on the Church & Ministry waitlist",
-          html: waitlistHtml(),
-        }),
-      });
-      const sendData = await sendRes.json().catch(() => ({}));
-      if (!sendRes.ok) {
-        console.error("[capture-lead] Waitlist confirmation failed", sendRes.status, sendData);
-        return json(req, { error: "Unable to confirm waitlist" }, 502);
-      }
-
-      return json(req, { ok: true });
+    if (kind === "physical-deck-waitlist") {
+      return await handleWaitlist(
+        req,
+        apiKey,
+        from,
+        email,
+        "RESEND_PHYSICAL_DECK_WAITLIST_SEGMENT_ID",
+        "You're on the physical deck waitlist",
+        physicalDeckWaitlistHtml(),
+        "Physical deck waitlist",
+      );
     }
 
     const segmentId = Deno.env.get("RESEND_SUNDAY_GUIDE_SEGMENT_ID");
