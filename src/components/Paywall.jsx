@@ -125,14 +125,14 @@ export default function Paywall({ reason = "trial", onClose }) {
             <p className="pw-tagline">Everything your weekly FamilyPause needs, all year.</p>
             <p className="pw-includes">Everything in Free, plus:</p>
             <ul className="pw-feats">
-              <li><Check /> Edit anything: titles, times, dates, and people</li>
+              <li><Check /> Edit titles, dates, times, and family members</li>
               <li><Check /> Resolve missing dates and times inline</li>
-              <li><Check /> Unlimited plans</li>
-              <li><Check /> Complete plan history</li>
-              <li><Check /> Invite your spouse with real-time sync</li>
-              <li><Check /> Organize by family member, custom categories</li>
-              <li><Check /> Download as PDF, copy into Notion or Slack</li>
-              <li><Check /> Digital deck unlocked free for the first 100 subscribers</li>
+              <li><Check /> Create unlimited plans</li>
+              <li><Check /> Access your complete plan history</li>
+              <li><Check /> Invite your spouse with real-time syncing</li>
+              <li><Check /> Organize with family members and custom categories</li>
+              <li><Check /> Export to PDF or copy into Notion and Slack</li>
+              <li><Check /> Unlock the complete digital Conversation Card Deck (free for the first 100 subscribers)</li>
             </ul>
             <div className="pw-cta">
               <button className="btn btn-primary btn-lg btn-block" onClick={() => goCheckout("family")}>
@@ -147,13 +147,13 @@ export default function Paywall({ reason = "trial", onClose }) {
               <span className="amt">$0</span>
               <span className="per">/ forever</span>
             </div>
-            <p className="pw-tagline">Continue with the essentials after your trial.</p>
+            <p className="pw-tagline">Everything you need to keep creating family plans after your trial.</p>
             <ul className="pw-feats">
               <li><Check /> Type, paste, or record what needs planning</li>
               <li><Check /> One plan per day</li>
-              <li><Check /> Review extracted items, keep or discard</li>
+              <li><Check /> Review extracted items before they&apos;re scheduled</li>
               <li><Check /> Add approved items to your calendar</li>
-              <li><Check /> Digital Conversation Starter Cards, 7 free cards total</li>
+              <li><Check /> 7 free Conversation Starter Cards</li>
             </ul>
             <div className="pw-cta">
               <button className="btn btn-ghost btn-block" onClick={() => onClose?.()}>

@@ -519,7 +519,7 @@ function SignIn({ onSwitch, onSuccess, initialEmail = "" }) {
 
       <div className="fp-fade-1 fp-field">
         <label className="fp-label">Email</label>
-        <input className="fp-input" type="email" placeholder="you@example.com"
+        <input className="fp-input" type="email"
           value={email} onChange={e => setEmail(e.target.value)} onKeyDown={handleKey} autoFocus />
       </div>
 
@@ -532,7 +532,6 @@ function SignIn({ onSwitch, onSuccess, initialEmail = "" }) {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           onKeyDown={handleKey}
-          placeholder="••••••••"
         />
       </div>
 

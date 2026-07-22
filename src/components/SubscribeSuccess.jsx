@@ -1,4 +1,8 @@
-// Post-subscribe order bump: digital deck at $4.97, today only (server-gated).
+// Post-subscribe screen.
+// TODO: Rebuild for first-100 free digital deck unlock (replaces 50%-off order bump).
+// Blocked on product decision for subscriber 101+:
+//   (a) deck reverts to regular-price purchase, or
+//   (b) deck stays included for all Family Plan subscribers (soft/aspirational cap).
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "../lib/supabase";

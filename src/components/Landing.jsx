@@ -107,7 +107,7 @@ const css = `
   line-height: 1; white-space: nowrap;
 }
 .fp-landing .navcta .signin:hover { color: var(--terra); }
-.fp-landing .navcta .btn { line-height: 1; }
+.fp-landing .navcta .btn { line-height: 1.15; white-space: normal; text-align: center; max-width: 220px; }
 .fp-landing .navcta .btn .short-label { display: none; }
 .fp-landing .navcta .btn .long-label { display: inline; }
 .fp-landing .navmenu-btn {
@@ -487,8 +487,11 @@ const css = `
   text-align: center;
 }
 .fp-landing .deck-section .shead p {
-  max-width: 520px;
+  max-width: 560px;
   margin: 14px auto 0;
+}
+.fp-landing .deck-section .shead p + p {
+  margin-top: 12px;
 }
 .fp-landing .deck-carousel-wrap {
   margin: 0 auto 40px;
@@ -1120,7 +1123,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
           </nav>
           <div className="navcta">
             <button type="button" className="signin" onClick={onSignIn}>Sign In</button>
-            <button className="btn btn-primary" onClick={onStart}>Start Free</button>
+            <button className="btn btn-primary" onClick={onStart}>Create My Family Plan</button>
             <button
               type="button"
               className="navmenu-btn"
@@ -1156,7 +1159,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                 className="btn btn-primary btn-block"
                 onClick={() => { setMobileNavOpen(false); onStart(); }}
               >
-                Start Free
+                Create My Family Plan
               </button>
             </div>
           </nav>
@@ -1169,13 +1172,13 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
           <div className="wrap">
             <div className="herogrid">
               <div className="herocopy">
-                <h1>So much going on.<br />Create one plan your family<br />can <em>move on.</em></h1>
-                <p className="sub">Type it, paste it, or record your family talking it through. FamilyPause finds every appointment, task, reminder, and decision, and turns it into a plan you review together and add to your calendar.</p>
+                <h1>So much going on.<br />Create one plan your family can move forward with.</h1>
+                <p className="sub">Type it, paste it, or record your family talking it through. FamilyPause finds the appointments, tasks, reminders, and decisions, then turns them into a plan you review together before adding them to your calendar.</p>
                 <div className="ctas">
-                  <button className="btn btn-primary btn-lg" onClick={onStart}>Start Free</button>
+                  <button className="btn btn-primary btn-lg" onClick={onStart}>Create My Family Plan</button>
                   <button className="btn btn-lg guide-trigger" onClick={() => openLeadModal("guide")}>Get the Free Planning Guide</button>
                 </div>
-                <p className="fineprint">7 days free · No credit card · Works on any device</p>
+                <p className="fineprint">Starts your free 7-day trial • No credit card required</p>
               </div>
 
               <div className="mock mock-live" aria-hidden="true">
@@ -1244,8 +1247,8 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
           <div className="wrap">
             <div className="shead reveal">
               <span className="eyebrow">How it works</span>
-              <h2>Give us the chaos.<br />Create a plan, <em>together.</em></h2>
-              <p>No templates, perfect lists, or prebuilt agendas required. Add what&apos;s going on, and FamilyPause organizes it. Want to go deeper? Sit down together, pull a card, and talk it through, FamilyPause captures that too.</p>
+              <h2>Start with the chaos.<br />End with a <em>plan.</em></h2>
+              <p>No perfect lists, templates, or agendas required. Type it, paste it, or record your family talking it through. FamilyPause finds the appointments, tasks, reminders, and decisions, then organizes everything into a plan you review together before it goes on your calendar.</p>
             </div>
             <div className="steps4 reveal">
               <div className="stp">
@@ -1288,33 +1291,34 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
           <div className="wrap">
             <div className="shead reveal">
               <span className="eyebrow">Who it&apos;s for</span>
-              <h2>Built for families<br /><em>creating order from real life.</em></h2>
+              <h2>Built for real families with real life to manage.</h2>
+              <p>Whether you&apos;re coordinating busy schedules, raising kids, or simply trying to stay on the same page, FamilyPause helps you turn conversations into a plan everyone can follow.</p>
             </div>
             <div className="audgrid reveal">
               <div className="aud">
                 <div className="aico"><svg width="24" height="24" viewBox="0 0 24 24" {...stroke}><path d="M3 11.5 12 4l9 7.5" /><path d="M5 10v9h14v-9" /><path d="M10 19v-5h4v5" /></svg></div>
-                <h3>Married couples</h3>
-                <p>Two schedules, shared responsibilities, and dozens of things to remember. FamilyPause helps you create a shared picture of what needs to happen, who&apos;s handling it, and when, whether that comes from a quick text dump or a real conversation.</p>
+                <h3>Married Couples</h3>
+                <p>Two schedules. Shared responsibilities. Endless things to remember. FamilyPause helps you create one shared plan so everyone knows what&apos;s happening, who&apos;s responsible, and what comes next.</p>
               </div>
               <div className="aud">
                 <div className="aico"><svg width="24" height="24" viewBox="0 0 24 24" {...stroke}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" /></svg></div>
-                <h3>Busy parents</h3>
-                <p>School messages, appointments, practices, errands, and last-minute changes rarely arrive in one neat list. FamilyPause brings them together and creates a plan out of the noise.</p>
+                <h3>Busy Parents</h3>
+                <p>School emails, appointments, practices, errands, and last-minute changes don&apos;t arrive in order. FamilyPause gathers everything into one place and turns the chaos into a clear plan.</p>
               </div>
               <div className="aud">
                 <div className="aico"><svg width="24" height="24" viewBox="0 0 24 24" {...stroke} strokeWidth={1.8}><path d="M12 3v18M7 8h10" /></svg></div>
-                <h3>Families who pause together</h3>
-                <p>Sit down, pull a card, and record your weekly conversation. FamilyPause captures the appointments, responsibilities, decisions, and follow-ups so nothing important gets lost, and creating that plan together becomes something you look forward to.</p>
+                <h3>Families Who Pause Together</h3>
+                <p>Start your weekly planning with a conversation. Pull a card, talk about what matters, and let FamilyPause capture the appointments, decisions, reminders, and next steps so nothing gets forgotten.</p>
               </div>
               <div className="aud">
                 <div className="aico"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8z" /></svg></div>
-                <h3>Entrepreneur households</h3>
-                <p>When work and family life constantly overlap, important details can disappear between conversations. FamilyPause turns those details into calendar-ready actions.</p>
+                <h3>Entrepreneur Households</h3>
+                <p>When work and family constantly overlap, details can easily slip through the cracks. FamilyPause helps you capture those conversations and turn them into calendar-ready actions.</p>
               </div>
               <div className="aud">
                 <div className="aico"><svg width="24" height="24" viewBox="0 0 24 24" {...stroke}><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H12v16H6.5A2.5 2.5 0 0 0 4 21.5z" /><path d="M20 5.5A2.5 2.5 0 0 0 17.5 3H12v16h5.5a2.5 2.5 0 0 1 2.5 2.5z" /></svg></div>
-                <h3>Homeschool families</h3>
-                <p>Curriculum, appointments, activities, and family plans all compete for attention. FamilyPause helps you create order for the week without another complicated planning system.</p>
+                <h3>Homeschool Families</h3>
+                <p>Lessons, activities, appointments, and family life all compete for attention. FamilyPause helps you organize the week without adding another complicated planning system.</p>
               </div>
             </div>
           </div>
@@ -1323,28 +1327,32 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
         {/* TRUST / PRIVACY BAND */}
         <section className="band band-olive">
           <div className="wrap privacy reveal">
-            <p>FamilyPause is ad-free. We do not sell your family information or use your private plans to target you with advertising.</p>
+            <p>FamilyPause is ad-free. Your family&apos;s conversations and plans stay private. We never sell your information or use it to target you with advertising.</p>
           </div>
         </section>
 
         <section className="deck-section" id="deck">
           <div className="wrap">
             <div className="shead reveal">
-              <span className="eyebrow">The FamilyPause card deck</span>
-              <h2>One card. One week.<br />One conversation <em>starter.</em></h2>
+              <span className="eyebrow">The FamilyPause Conversation Deck</span>
+              <h2>Better conversations.<br />Better <em>plans.</em></h2>
               <p>
-                Every FamilyPause starts with a question if you want one. Pull a card before you talk, about marriage, kids, finances, faith, dreams, or home, and let it open the conversation before the plan gets built.
+                The best family plans start with a meaningful conversation.
+              </p>
+              <p>
+                Before you organize schedules, talk about what matters. Pull a conversation card on marriage, parenting, finances, faith, dreams, or home. Then, as you talk, FamilyPause captures the appointments, decisions, reminders, and next steps so nothing important gets lost.
               </p>
             </div>
             <div className="deck-carousel-wrap reveal">
               <SampleCardCarousel interactive={false} />
             </div>
             <p className="deck-support reveal">
-              Free for everyone: 7 conversation cards total. Subscribe and unlock the full digital deck free if you&apos;re one of the first 100 subscribers. Or get the physical deck anytime.
+              7 conversation cards are free for everyone.
+              Upgrade to Family Plan to unlock the complete digital deck, free for our first 100 subscribers. Prefer something you can hold? The physical deck is available anytime.
             </p>
             <div className="deck-actions reveal">
-              <a href="/cards" className="btn btn-primary">{`Get the Physical Deck · $${PHYSICAL_DECK_PRICE}`}</a>
-              <a href="/cards" className="btn btn-ghost">Unlock the Digital Deck</a>
+              <a href="/cards" className="btn btn-primary">{`Get the Physical Deck — $${PHYSICAL_DECK_PRICE}`}</a>
+              <button type="button" className="btn btn-ghost" onClick={onStart}>Create My Family Plan</button>
             </div>
           </div>
         </section>
@@ -1354,23 +1362,23 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
           <div className="wrap">
             <div className="shead reveal">
               <span className="eyebrow">Pricing</span>
-              <h2>Start free.<br /><em>Upgrade when you&apos;re ready to create more.</em></h2>
-              <p>Try the complete FamilyPause experience for seven days. No credit card required.</p>
+              <h2>Start with a free trial.<br /><em>Choose what works for your family.</em></h2>
+              <p>Try every Family Plan feature free for 7 days. No credit card required. When your trial ends, you&apos;ll automatically continue on the Free plan unless you choose to upgrade.</p>
             </div>
             <div className="pricewrap reveal">
               <div className="pricegrid">
                 <div className="tier">
                   <div className="plabel">Free</div>
                   <div className="price"><span className="amt">$0</span></div>
-                  <div className="subprice">Continue with the essentials after your trial.</div>
+                  <div className="subprice">Everything you need to keep creating family plans after your trial.</div>
                   <ul className="feats">
                     <li><span className="far">→</span> Type, paste, or record what needs planning</li>
                     <li><span className="far">→</span> One plan per day</li>
-                    <li><span className="far">→</span> Review extracted items, keep or discard</li>
+                    <li><span className="far">→</span> Review extracted items before they&apos;re scheduled</li>
                     <li><span className="far">→</span> Add approved items to your calendar</li>
-                    <li><span className="far">→</span> Digital Conversation Starter Cards, 7 free cards total</li>
+                    <li><span className="far">→</span> 7 free Conversation Starter Cards</li>
                   </ul>
-                  <button className="btn btn-ghost btn-block" onClick={onStart}>Start Free</button>
+                  <button className="btn btn-ghost btn-block" onClick={onStart}>Continue Free</button>
                 </div>
 
                 <div className="tier pop">
@@ -1413,26 +1421,26 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                   </p>
                   <p className="tier-includes">Everything in Free, plus:</p>
                   <ul className="feats">
-                    <li><span className="far">→</span> Edit anything: titles, times, dates, and people</li>
+                    <li><span className="far">→</span> Edit titles, dates, times, and family members</li>
                     <li><span className="far">→</span> Resolve missing dates and times inline</li>
-                    <li><span className="far">→</span> Unlimited plans</li>
-                    <li><span className="far">→</span> Complete plan history</li>
-                    <li><span className="far">→</span> Invite your spouse with real-time sync</li>
-                    <li><span className="far">→</span> Organize by family member, custom categories</li>
-                    <li><span className="far">→</span> Download as PDF, copy into Notion or Slack</li>
-                    <li><span className="far">→</span> Digital deck unlocked free for the first 100 subscribers</li>
+                    <li><span className="far">→</span> Create unlimited plans</li>
+                    <li><span className="far">→</span> Access your complete plan history</li>
+                    <li><span className="far">→</span> Invite your spouse with real-time syncing</li>
+                    <li><span className="far">→</span> Organize with family members and custom categories</li>
+                    <li><span className="far">→</span> Export to PDF or copy into Notion and Slack</li>
+                    <li><span className="far">→</span> Unlock the complete digital Conversation Card Deck (free for the first 100 subscribers)</li>
                   </ul>
-                  <button className="btn btn-cream btn-block" onClick={onStart}>Sign Up Now</button>
+                  <button className="btn btn-cream btn-block" onClick={onStart}>Start Your Free Trial</button>
                 </div>
 
                 <div className="tier">
                   <div className="plabel">Church &amp; Ministry</div>
-                  <div className="subprice" style={{ marginBottom: 18 }}>Bring the FamilyPause planning system to couples, ministry teams, and family programs.</div>
+                  <div className="subprice" style={{ marginBottom: 18 }}>Help couples, families, and ministry teams plan together with FamilyPause.</div>
                   <ul className="feats">
                     <li><span className="far">→</span> Multiple private workspaces</li>
                     <li><span className="far">→</span> Team and staff access</li>
                     <li><span className="far">→</span> Centralized ministry billing</li>
-                    <li><span className="far">→</span> Family Plan features</li>
+                    <li><span className="far">→</span> Everything included in Family Plan</li>
                   </ul>
                   <button
                     type="button"
@@ -1443,7 +1451,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                   </button>
                 </div>
               </div>
-              <div className="pricefoot fineprint">7 days free · No credit card · Cancel anytime</div>
+              <div className="pricefoot fineprint">Starts your free 7-day trial • No credit card required</div>
             </div>
           </div>
         </section>
@@ -1453,8 +1461,8 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
           <div className="wrap">
             <h2>So much going on.<br /><em>One plan to move forward with.</em></h2>
             <p>Type it, paste it, or talk it through together. FamilyPause organizes it, you create what&apos;s missing, and the plan goes onto your calendar.</p>
-            <button className="btn btn-primary btn-lg" onClick={onStart}>Sign Up Now</button>
-            <p className="fineprint">7 days free · No credit card · Works on any device</p>
+            <button className="btn btn-primary btn-lg" onClick={onStart}>Create My Family Plan</button>
+            <p className="fineprint">Starts your free 7-day trial • No credit card required</p>
           </div>
         </section>
       </main>
@@ -1488,7 +1496,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
               <div className="fcol">
                 <h4>Get Started</h4>
                 <button className="fp-footer-link" onClick={onSignIn}>Sign In</button>
-                <button className="fp-footer-link" onClick={onStart}>Start Free</button>
+                <button className="fp-footer-link" onClick={onStart}>Create My Family Plan</button>
               </div>
             </div>
           </div>
