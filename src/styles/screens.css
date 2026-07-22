@@ -804,6 +804,160 @@
 .planfoot-actions {
   display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; width: 100%;
 }
+
+/* Plan / Itinerary toggle */
+.plan-view-toggle {
+  display: flex;
+  width: fit-content;
+  align-items: center;
+  gap: 4px;
+  margin: 0 auto 22px;
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--paper-2);
+}
+.plan-view-pill {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  border: none;
+  border-radius: 999px;
+  padding: 8px 16px;
+  cursor: pointer;
+  color: var(--ink-3);
+  background: transparent;
+  transition: background .15s, color .15s;
+}
+.plan-view-pill.is-active {
+  background: var(--terra);
+  color: var(--paper);
+}
+.plan-view-pill:not(.is-active):hover {
+  color: var(--terra-d);
+}
+
+/* Itinerary view */
+.itinerary {
+  max-width: 640px;
+  margin: 0 auto;
+}
+.itinerary-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 28px;
+}
+.itinerary-mark {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  display: block;
+  flex: none;
+}
+.itinerary-week {
+  margin: 0;
+  font-family: var(--display);
+  font-size: 18px;
+  font-style: italic;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--ink);
+}
+.itinerary-wordmark {
+  font-family: var(--display);
+  font-size: 22px;
+  font-weight: 600;
+}
+.itinerary-wordmark b { color: var(--terra); }
+.itinerary-wordmark span { color: var(--ink); }
+.print-only { display: none; }
+.itinerary-empty {
+  margin: 12px 0 0;
+  color: var(--ink-2);
+  font-family: var(--serif);
+  font-size: 15px;
+  line-height: 1.55;
+  font-style: italic;
+}
+.itinerary-day {
+  margin-bottom: 26px;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+.itinerary-day-h {
+  margin: 0 0 12px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--terra);
+  font-weight: 500;
+}
+.itinerary-day-h--muted { color: var(--ink-3); }
+.itinerary-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.itinerary-row {
+  display: grid;
+  grid-template-columns: 72px 1fr auto;
+  gap: 12px;
+  align-items: baseline;
+}
+.itinerary-time {
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: .02em;
+  color: var(--gold);
+  white-space: nowrap;
+}
+.itinerary-task {
+  font-family: var(--serif);
+  font-size: 15px;
+  line-height: 1.4;
+  color: var(--ink);
+}
+.itinerary-pattern {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.itinerary-who {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: .04em;
+  white-space: nowrap;
+  opacity: .85;
+}
+.itinerary-who--spence { color: var(--terra); }
+.itinerary-who--amanda { color: var(--olive); }
+.itinerary-who--both { color: var(--gold); }
+.itinerary-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 34px;
+  position: sticky;
+  bottom: 16px;
+  padding-top: 8px;
+}
+.itinerary-actions .plan-btn-primary,
+.itinerary-actions .plan-btn-ghost {
+  flex: 1 1 180px;
+  max-width: 280px;
+  justify-content: center;
+  text-align: center;
+}
+
 .plan-btn-ghost {
   font-family: var(--lora); font-size: 15px; padding: 12px 24px; border-radius: 8px;
   background: transparent; border: 1px solid #D8CFC0; color: #6A5A40; cursor: pointer;
@@ -835,7 +989,24 @@
   background: #B85C38; border: 1px solid #B85C38; color: #FAF7F2; cursor: pointer;
   transition: filter .15s;
 }
-.plan-btn-primary:hover { filter: brightness(0.96); }
+.plan-btn-primary:hover:not(:disabled) { filter: brightness(.97); }
+.plan-btn-primary:disabled { opacity: 0.45; cursor: not-allowed; }
+.plan-btn-primary--locked {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  background: var(--paper-2);
+  border-color: var(--line);
+  color: var(--ink-3);
+  box-shadow: none;
+}
+.plan-btn-primary--locked:hover:not(:disabled) {
+  filter: none;
+  color: var(--terra);
+  border-color: var(--terra);
+  background: var(--terra-tint);
+}
 
 /* ── Plan arrival: interstitial, week strip, staged reveal ── */
 .plan-interstitial {
@@ -1379,4 +1550,81 @@
   .agrow { flex-wrap: wrap; gap: 10px; padding: 14px; }
   .agrow .agcat { max-width: none; flex: 1 1 calc(100% - 80px); }
   .agrow .agtopic { flex: 1 1 100%; font-size: 15px; }
+
+  .itinerary-row {
+    grid-template-columns: 64px 1fr;
+    gap: 8px 12px;
+  }
+  .itinerary-who {
+    grid-column: 2;
+  }
+  .itinerary-actions {
+    position: static;
+  }
+}
+
+/* Itinerary print / Save as PDF */
+@media print {
+  @page {
+    margin: 0.6in;
+  }
+
+  body.printing-itinerary {
+    background: #FBF6EC !important;
+  }
+
+  body.printing-itinerary * {
+    visibility: hidden;
+  }
+
+  body.printing-itinerary .itinerary-print-root,
+  body.printing-itinerary .itinerary-print-root * {
+    visibility: visible;
+  }
+
+  body.printing-itinerary .itinerary-print-root {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 0;
+    background: #FBF6EC;
+    color: #2A251D;
+  }
+
+  body.printing-itinerary .no-print,
+  body.printing-itinerary .plan-view-toggle,
+  body.printing-itinerary .brandbar,
+  body.printing-itinerary .nudge-scrim {
+    display: none !important;
+  }
+
+  body.printing-itinerary .itinerary-mark {
+    display: none !important;
+  }
+
+  body.printing-itinerary .print-only {
+    display: block !important;
+    margin-bottom: 8px;
+  }
+
+  body.printing-itinerary .itinerary-head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    margin-bottom: 22px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid #E6D9C4;
+  }
+
+  body.printing-itinerary .itinerary-day {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  body.printing-itinerary .itinerary-day + .itinerary-day {
+    page-break-before: auto;
+  }
 }

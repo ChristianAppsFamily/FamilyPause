@@ -131,7 +131,8 @@ export default function Paywall({ reason = "trial", onClose }) {
               <li><Check /> Access your complete plan history</li>
               <li><Check /> Invite your spouse with real-time syncing</li>
               <li><Check /> Organize with family members and custom categories</li>
-              <li><Check /> Export to PDF or copy into Notion and Slack</li>
+              <li><Check /> Print or download your plan and itinerary as a PDF</li>
+              <li><Check /> Export to Notion, Slack, or anywhere as a formatted list</li>
               <li><Check /> Unlock the complete digital Conversation Card Deck (free for the first 100 subscribers)</li>
             </ul>
             <div className="pw-cta">
@@ -151,8 +152,10 @@ export default function Paywall({ reason = "trial", onClose }) {
             <ul className="pw-feats">
               <li><Check /> Type, paste, or record what needs planning</li>
               <li><Check /> One plan per day</li>
-              <li><Check /> Review extracted items before they&apos;re scheduled</li>
+              <li><Check /> Review extracted items before they are scheduled</li>
               <li><Check /> Add approved items to your calendar</li>
+              <li><Check /> View your week as a simple itinerary</li>
+              <li><Check /> Copy your plan as text into any app</li>
               <li><Check /> 7 free Conversation Starter Cards</li>
             </ul>
             <div className="pw-cta">

@@ -1386,8 +1386,10 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                   <ul className="feats">
                     <li><span className="far">→</span> Type, paste, or record what needs planning</li>
                     <li><span className="far">→</span> One plan per day</li>
-                    <li><span className="far">→</span> Review extracted items before they&apos;re scheduled</li>
+                    <li><span className="far">→</span> Review extracted items before they are scheduled</li>
                     <li><span className="far">→</span> Add approved items to your calendar</li>
+                    <li><span className="far">→</span> View your week as a simple itinerary</li>
+                    <li><span className="far">→</span> Copy your plan as text into any app</li>
                     <li><span className="far">→</span> 7 free Conversation Starter Cards</li>
                   </ul>
                   <button className="btn btn-ghost btn-block" onClick={onStart}>Continue Free</button>
@@ -1439,7 +1441,8 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                     <li><span className="far">→</span> Access your complete plan history</li>
                     <li><span className="far">→</span> Invite your spouse with real-time syncing</li>
                     <li><span className="far">→</span> Organize with family members and custom categories</li>
-                    <li><span className="far">→</span> Export to PDF or copy into Notion and Slack</li>
+                    <li><span className="far">→</span> Print or download your plan and itinerary as a PDF</li>
+                    <li><span className="far">→</span> Export to Notion, Slack, or anywhere as a formatted list</li>
                     <li><span className="far">→</span> Unlock the complete digital Conversation Card Deck (free for the first 100 subscribers)</li>
                   </ul>
                   <button className="btn btn-cream btn-block" onClick={onStart}>Start Your Free Trial</button>

@@ -20,7 +20,7 @@ const css = `
     box-shadow: var(--shadow-lg);
   }
   .upgrade-prompt-card h2 {
-    margin: 0 0 9px;
+    margin: 0;
     color: var(--ink);
     font-family: var(--display);
     font-size: 18px;
@@ -29,7 +29,7 @@ const css = `
     line-height: 1.3;
   }
   .upgrade-prompt-card p {
-    margin: 0 0 20px;
+    margin: 9px 0 0;
     color: var(--ink-2);
     font-family: var(--serif);
     font-size: 13px;
@@ -38,6 +38,7 @@ const css = `
   .upgrade-prompt-actions {
     display: flex;
     gap: 10px;
+    margin-top: 20px;
   }
   .upgrade-prompt-actions .btn { flex: 1; justify-content: center; }
   @media (max-width: 480px) {
@@ -65,7 +66,7 @@ export default function UpgradePrompt({ title, body, onUpgrade, onClose }) {
         onMouseDown={(event) => event.stopPropagation()}
       >
         <h2 id="upgrade-prompt-title">{title}</h2>
-        <p>{body}</p>
+        {body ? <p>{body}</p> : null}
         <div className="upgrade-prompt-actions">
           <button type="button" className="btn btn-primary" onClick={onUpgrade}>Upgrade</button>
           <button type="button" className="btn btn-ghost" onClick={onClose}>Not now</button>

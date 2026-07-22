@@ -3,6 +3,11 @@ import { prefersReducedMotion } from "../lib/motion";
 import { eventDayIndices, getPlanningWeekDates, weekStripLabels } from "../lib/planWeek";
 import { calendarTitle, isSyncEligible } from "../lib/googleCalendar";
 import { buildPlanMarkdown } from "../lib/planExport";
+import {
+  buildItinerary,
+  buildItineraryText,
+  formatItineraryTime,
+} from "../lib/planItinerary";
 import CalendarAccountChooser from "./CalendarAccountChooser";
 import UpgradePrompt from "./UpgradePrompt";
 
@@ -113,6 +118,157 @@ function AnimatedCount({ target, animate, duration = 800 }) {
   return <span className="plan-summary-count">{n}</span>;
 }
 
+function PlanViewToggle({ view, onChange }) {
+  return (
+    <div className="plan-view-toggle" role="tablist" aria-label="Plan view">
+      <button
+        type="button"
+        role="tab"
+        aria-selected={view === "plan"}
+        className={"plan-view-pill" + (view === "plan" ? " is-active" : "")}
+        onClick={() => onChange("plan")}
+      >
+        Plan
+      </button>
+      <button
+        type="button"
+        role="tab"
+        aria-selected={view === "itinerary"}
+        className={"plan-view-pill" + (view === "itinerary" ? " is-active" : "")}
+        onClick={() => onChange("itinerary")}
+      >
+        Itinerary
+      </button>
+    </div>
+  );
+}
+
+function ItineraryView({ keptCards, meetingDate, roleOf, hasFamilyFeatures = false, onUpgrade }) {
+  const [copied, setCopied] = useState(false);
+  const [showPdfUpgrade, setShowPdfUpgrade] = useState(false);
+  const itinerary = useMemo(
+    () => buildItinerary(keptCards, meetingDate),
+    [keptCards, meetingDate],
+  );
+
+  const copyText = async () => {
+    try {
+      await navigator.clipboard.writeText(buildItineraryText(keptCards, meetingDate));
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch { /* clipboard blocked */ }
+  };
+
+  const printItinerary = () => {
+    document.body.classList.add("printing-itinerary");
+    const cleanup = () => {
+      document.body.classList.remove("printing-itinerary");
+      window.removeEventListener("afterprint", cleanup);
+    };
+    window.addEventListener("afterprint", cleanup);
+    window.print();
+    // Fallback if afterprint never fires
+    setTimeout(cleanup, 1000);
+  };
+
+  const empty = !itinerary.days.length && !itinerary.recurring.length;
+
+  return (
+    <div className="itinerary">
+      <div className="itinerary-print-root">
+        <header className="itinerary-head">
+          <img className="itinerary-mark" src="/uploads/Logo_4.png" alt="" width={28} height={28} />
+          <h2 className="itinerary-week">Week of {itinerary.weekRange}</h2>
+          <div className="itinerary-wordmark print-only" aria-hidden="true">
+            <b>Family</b><span>Pause</span>
+          </div>
+        </header>
+
+        {empty ? (
+          <p className="itinerary-empty">No timed items this week yet. Add times on Review to build your itinerary.</p>
+        ) : (
+          <>
+            {itinerary.days.map((day) => (
+              <section className="itinerary-day" key={day.date}>
+                <h3 className="itinerary-day-h">{day.header}</h3>
+                <ul className="itinerary-list">
+                  {day.items.map((it) => {
+                    const who = roleOf?.(it.person) || "both";
+                    return (
+                      <li className="itinerary-row" key={it.id}>
+                        <span className="itinerary-time">{formatItineraryTime(it.time)}</span>
+                        <span className="itinerary-task">{calendarTitle(it)}</span>
+                        {it.person ? (
+                          <span className={"itinerary-who itinerary-who--" + who}>{it.person}</span>
+                        ) : null}
+                      </li>
+                    );
+                  })}
+                </ul>
+              </section>
+            ))}
+
+            {itinerary.recurring.length > 0 && (
+              <section className="itinerary-day itinerary-recurring">
+                <h3 className="itinerary-day-h itinerary-day-h--muted">Recurring</h3>
+                <ul className="itinerary-list">
+                  {itinerary.recurring.map((it) => {
+                    const who = roleOf?.(it.person) || "both";
+                    return (
+                      <li className="itinerary-row" key={`rec-${it.id}`}>
+                        <span className="itinerary-time">{formatItineraryTime(it.time)}</span>
+                        <span className="itinerary-task">
+                          <span className="itinerary-pattern">Weekly</span>
+                          {" · "}
+                          {calendarTitle(it)}
+                        </span>
+                        {it.person ? (
+                          <span className={"itinerary-who itinerary-who--" + who}>{it.person}</span>
+                        ) : null}
+                      </li>
+                    );
+                  })}
+                </ul>
+              </section>
+            )}
+          </>
+        )}
+      </div>
+
+      <div className="itinerary-actions no-print">
+        <button
+          type="button"
+          className={
+            "plan-btn-primary"
+            + (!hasFamilyFeatures ? " plan-btn-primary--locked" : "")
+          }
+          onClick={hasFamilyFeatures ? printItinerary : () => setShowPdfUpgrade(true)}
+          disabled={hasFamilyFeatures && empty}
+        >
+          {!hasFamilyFeatures && <Ico d={I.lock} size={13} />}
+          Print / Save as PDF
+        </button>
+        <button
+          type="button"
+          className={"plan-btn-ghost" + (copied ? " plan-btn-ghost--ok" : "")}
+          onClick={copyText}
+          disabled={empty}
+        >
+          {copied ? "Copied!" : "Copy as Text"}
+        </button>
+      </div>
+
+      {showPdfUpgrade && (
+        <UpgradePrompt
+          title="Print and save your family plan as a PDF with Family Plan."
+          onUpgrade={onUpgrade}
+          onClose={() => setShowPdfUpgrade(false)}
+        />
+      )}
+    </div>
+  );
+}
+
 function WeekStrip({ meetingDate, cards, reveal, quick }) {
   const labels = weekStripLabels();
   const eventDays = useMemo(() => eventDayIndices(cards, meetingDate), [cards, meetingDate]);
@@ -195,6 +351,8 @@ export default function PlanView({
   const [copied, setCopied] = useState(false);
   const [pdfBusy, setPdfBusy] = useState(false);
   const [showExportUpgrade, setShowExportUpgrade] = useState(false);
+  const [planMode, setPlanMode] = useState("plan"); // "plan" | "itinerary"
+
 
   const isAdult = (p) => adults.some((a) => a.toLowerCase() === (p || "").toLowerCase());
   const byPerson = (name) => keptCards.filter((c) => (c.person || "").toLowerCase() === name.toLowerCase());
@@ -343,6 +501,18 @@ export default function PlanView({
           + (staticLayout ? " plan-view--static" : "")
         }
       >
+        <PlanViewToggle view={planMode} onChange={setPlanMode} />
+
+        {planMode === "itinerary" ? (
+          <ItineraryView
+            keptCards={keptCards}
+            meetingDate={meetingDate}
+            roleOf={roleOf}
+            hasFamilyFeatures={hasFamilyFeatures}
+            onUpgrade={onUpgrade}
+          />
+        ) : (
+          <>
         {calendarConnected && (
           <div className="plan-cal-status">
             <span className="plan-cal-dot" aria-hidden="true" />
@@ -439,16 +609,11 @@ export default function PlanView({
             </button>
             <button
               type="button"
-              className={
-                "plan-btn-ghost"
-                + (copied ? " plan-btn-ghost--ok" : "")
-                + (!hasFamilyFeatures ? " plan-btn-ghost--locked" : "")
-              }
-              onClick={hasFamilyFeatures ? copyAsList : () => setShowExportUpgrade(true)}
-              disabled={hasFamilyFeatures && !keptCards.length}
+              className={"plan-btn-ghost" + (copied ? " plan-btn-ghost--ok" : "")}
+              onClick={copyAsList}
+              disabled={!keptCards.length}
             >
-              {!hasFamilyFeatures && <Ico d={I.lock} size={13} />}
-              {copied ? "Copied!" : "Copy as List"}
+              {copied ? "Copied!" : "Copy as Text"}
             </button>
             <button
               type="button"
@@ -468,11 +633,12 @@ export default function PlanView({
             </button>
           </div>
         </div>
+          </>
+        )}
       </div>
       {showExportUpgrade && (
         <UpgradePrompt
-          title="Take your plan anywhere."
-          body="PDF, Notion, Slack, and more with Family Plan."
+          title="Print and save your family plan as a PDF with Family Plan."
           onUpgrade={onUpgrade}
           onClose={() => setShowExportUpgrade(false)}
         />
