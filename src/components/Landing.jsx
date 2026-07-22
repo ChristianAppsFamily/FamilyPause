@@ -1183,7 +1183,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
             <div className="herogrid">
               <div className="herocopy">
                 <h1>So much going on.<br />Create one plan your family can move forward with.</h1>
-                <p className="sub">Type it, paste it, or record your family talking it through. FamilyPause finds the appointments, tasks, reminders, and decisions, then turns them into a plan you review together before adding them to your calendar.</p>
+                <p className="sub">Stop manually inputting every event into your calendar one by one. Type it, paste it, or record your family talking it through. FamilyPause finds every appointment, task, reminder, and decision, you review and approve together, then everything auto-syncs straight to your calendar.</p>
                 <div className="ctas">
                   <button className="btn btn-primary btn-lg" onClick={onStart}>Create My Family Plan</button>
                   <button className="btn btn-lg guide-trigger" onClick={() => openLeadModal("guide")}>Get My Free Plan Guide</button>
@@ -1258,7 +1258,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
             <div className="shead reveal">
               <span className="eyebrow">How it works</span>
               <h2>Start with the chaos.<br />End with a <em>plan.</em></h2>
-              <p>No perfect lists, templates, or agendas required. Type it, paste it, or record your family talking it through. FamilyPause finds the appointments, tasks, reminders, and decisions, then organizes everything into a plan you review together before it goes on your calendar.</p>
+              <p>No perfect lists, templates, or agendas required. Type it, paste it, or record your family talking it through. FamilyPause finds the appointments, tasks, reminders, and decisions, then organizes everything into a plan you review and approve together before it auto-syncs straight to your calendar.</p>
             </div>
             <div className="steps4 reveal">
               <div className="stp">
@@ -1283,7 +1283,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                 <svg className="sico" viewBox="0 0 24 24" {...stroke}><path d="M7 3h7l4 4v14a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z" /><path d="M14 3v4h4" /><path d="M9 13h6M9 16.5h4" /></svg>
                 <div className="snum">04</div>
                 <h3>Add it to your calendar</h3>
-                <p>Approve what matters and send it to Google Calendar, a clean family plan organized by person and type.</p>
+                <p>Approve what matters and everything auto-syncs straight to Google Calendar. A clean family plan organized by person and type, already there when you need it.</p>
               </div>
               <div className="stp">
                 <svg className="sico" viewBox="0 0 24 24" {...stroke}><path d="M12 3v12" /><path d="M8 11l4 4 4-4" /><path d="M5 19h14" /></svg>
