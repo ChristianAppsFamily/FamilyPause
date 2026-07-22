@@ -106,7 +106,25 @@ const css = `
   line-height: 1; white-space: nowrap;
 }
 .fp-landing .navcta .signin:hover { color: var(--terra); }
-.fp-landing .navcta .btn { line-height: 1.15; white-space: normal; text-align: center; max-width: 220px; }
+.fp-landing .navcta .btn { line-height: 1; white-space: nowrap; }
+.fp-landing .hero .ctas { display: flex; align-items: center; gap: 14px; margin: 30px 0 22px; flex-wrap: nowrap; }
+.fp-landing .hero .ctas .btn {
+  white-space: nowrap;
+  flex: 0 0 auto;
+}
+.fp-landing .guide-trigger {
+  min-height: 52px;
+  padding-left: 22px;
+  padding-right: 22px;
+  font-size: 13px;
+  background: transparent;
+  border: 1px solid #D8CFC0;
+  color: #6A5A40;
+}
+.fp-landing .guide-trigger:hover {
+  border-color: var(--terra);
+  color: var(--terra);
+}
 .fp-landing .navcta .btn .short-label { display: none; }
 .fp-landing .navcta .btn .long-label { display: inline; }
 .fp-landing .navmenu-btn {
@@ -183,17 +201,6 @@ const css = `
 .fp-landing .hero h1 em { color: var(--terra); }
 .fp-landing .hero .sub { font-size: 19px; line-height: 1.6; color: var(--ink-2); max-width: 520px; margin: 0 0 18px; }
 .fp-landing .hero .sub b { color: var(--ink); font-weight: 600; }
-.fp-landing .hero .ctas { display: flex; align-items: center; gap: 22px; margin: 30px 0 22px; flex-wrap: wrap; }
-.fp-landing .guide-trigger {
-  min-height: 52px;
-  background: transparent;
-  border: 1px solid #D8CFC0;
-  color: #6A5A40;
-}
-.fp-landing .guide-trigger:hover {
-  border-color: var(--terra);
-  color: var(--terra);
-}
 
 /* Free Planning Guide modal */
 .fp-guide-backdrop {
@@ -996,7 +1003,7 @@ const css = `
 @media (max-width: 560px) {
   .fp-landing .wrap { padding: 0 22px; }
   .fp-landing .hero h1 { font-size: 42px; }
-  .fp-landing .hero .ctas { align-items: stretch; flex-direction: column; gap: 12px; }
+  .fp-landing .hero .ctas { align-items: stretch; flex-direction: column; flex-wrap: wrap; gap: 12px; }
   .fp-landing .hero .ctas .btn { width: 100%; justify-content: center; }
   .fp-landing .steps4 { grid-template-columns: 1fr; }
   .fp-landing .foot .fcols { gap: 36px; flex-wrap: wrap; }
@@ -1126,7 +1133,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
           </nav>
           <div className="navcta">
             <button type="button" className="signin" onClick={onSignIn}>Sign In</button>
-            <button className="btn btn-primary" onClick={onStart}>Create My Free Plan</button>
+            <button className="btn btn-primary" onClick={onStart}>Create My Plan</button>
             <button
               type="button"
               className="navmenu-btn"
@@ -1162,7 +1169,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                 className="btn btn-primary btn-block"
                 onClick={() => { setMobileNavOpen(false); onStart(); }}
               >
-                Create My Free Plan
+                Create My Plan
               </button>
             </div>
           </nav>
@@ -1178,8 +1185,8 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                 <h1>So much going on.<br />Create one plan your family can move forward with.</h1>
                 <p className="sub">Type it, paste it, or record your family talking it through. FamilyPause finds the appointments, tasks, reminders, and decisions, then turns them into a plan you review together before adding them to your calendar.</p>
                 <div className="ctas">
-                  <button className="btn btn-primary btn-lg" onClick={onStart}>Create My Free Plan</button>
-                  <button className="btn btn-lg guide-trigger" onClick={() => openLeadModal("guide")}>Get the Free Planning Guide</button>
+                  <button className="btn btn-primary btn-lg" onClick={onStart}>Create My Family Plan</button>
+                  <button className="btn btn-lg guide-trigger" onClick={() => openLeadModal("guide")}>Get My Free Plan Guide</button>
                 </div>
                 <p className="fineprint">Starts your free 7-day trial • No credit card required</p>
               </div>
@@ -1357,7 +1364,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
               <button type="button" className="btn btn-primary" onClick={() => openLeadModal("deck-waitlist")}>
                 Join The Physical Deck Waitlist
               </button>
-              <button type="button" className="btn btn-ghost" onClick={onStart}>Create My Free Plan</button>
+              <button type="button" className="btn btn-ghost" onClick={onStart}>Create My Family Plan</button>
             </div>
           </div>
         </section>
@@ -1466,7 +1473,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
           <div className="wrap">
             <h2>So much going on.<br /><em>One plan to move forward with.</em></h2>
             <p>Type it, paste it, or talk it through together. FamilyPause organizes it, you create what&apos;s missing, and the plan goes onto your calendar.</p>
-            <button className="btn btn-primary btn-lg" onClick={onStart}>Create My Free Plan</button>
+            <button className="btn btn-primary btn-lg" onClick={onStart}>Create My Family Plan</button>
             <p className="fineprint">Starts your free 7-day trial • No credit card required</p>
           </div>
         </section>
@@ -1501,7 +1508,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
               <div className="fcol">
                 <h4>Get Started</h4>
                 <button className="fp-footer-link" onClick={onSignIn}>Sign In</button>
-                <button className="fp-footer-link" onClick={onStart}>Create My Free Plan</button>
+                <button className="fp-footer-link" onClick={onStart}>Create My Family Plan</button>
               </div>
             </div>
           </div>
