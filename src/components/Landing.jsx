@@ -196,7 +196,7 @@ const css = `
   color: var(--terra);
 }
 
-/* Sunday Guide modal */
+/* Free Planning Guide modal */
 .fp-guide-backdrop {
   position: fixed;
   inset: 0;
@@ -1496,7 +1496,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
             className="fp-guide-modal"
             role="dialog"
             aria-modal="true"
-            aria-labelledby="sunday-guide-title"
+            aria-labelledby="planning-guide-title"
             onMouseDown={(event) => event.stopPropagation()}
           >
             <button type="button" className="fp-guide-close" onClick={closeGuide} aria-label="Close">
@@ -1506,7 +1506,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
             {guideStatus === "success" ? (
               <div className="fp-guide-success">
                 <div className="fp-guide-check" aria-hidden="true">✓</div>
-                <h2 id="sunday-guide-title">Check your inbox. It&apos;s on the way.</h2>
+                <h2 id="planning-guide-title">Check your inbox. It&apos;s on the way.</h2>
                 <button type="button" className="btn btn-primary btn-block" onClick={closeGuide}>
                   All set
                 </button>
@@ -1514,9 +1514,9 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
             ) : (
               <form onSubmit={submitGuide} noValidate>
                 <img className="fp-guide-brand" src="/uploads/Logo_4.png" alt="" />
-                <p className="fp-guide-eyebrow">Free Sunday Guide</p>
-                <h2 className="fp-guide-title" id="sunday-guide-title">The Sunday Guide</h2>
-                <p className="fp-guide-subline">Five simple conversations you can have with your family this week.</p>
+                <p className="fp-guide-eyebrow">Free Planning Guide</p>
+                <h2 className="fp-guide-title" id="planning-guide-title">The One-Plan Guide</h2>
+                <p className="fp-guide-subline">A simple but effective weekly planning system for families with too much going on.</p>
                 <input
                   className="fp-guide-input"
                   type="email"
@@ -1531,11 +1531,11 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                   }}
                   aria-label="Email address"
                   aria-invalid={Boolean(guideError)}
-                  aria-describedby={guideError ? "sunday-guide-error" : undefined}
+                  aria-describedby={guideError ? "planning-guide-error" : undefined}
                   disabled={guideStatus === "loading"}
                 />
                 {guideError && (
-                  <p className="fp-guide-error" id="sunday-guide-error" role="alert">{guideError}</p>
+                  <p className="fp-guide-error" id="planning-guide-error" role="alert">{guideError}</p>
                 )}
                 <button
                   type="submit"
