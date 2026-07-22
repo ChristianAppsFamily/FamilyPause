@@ -198,7 +198,7 @@ const css = `
 .fp-landing .hero .wrap { position: relative; z-index: 1; }
 .fp-landing .herogrid { display: grid; grid-template-columns: 1.04fr .96fr; gap: 56px; align-items: center; padding: 84px 0 96px; }
 .fp-landing .hero h1 { font-size: 66px; line-height: 1.02; letter-spacing: -.02em; margin: 0 0 26px; }
-.fp-landing .hero h1 em { color: var(--terra); }
+.fp-landing .hero h1 em { color: var(--terra); font-style: italic; }
 .fp-landing .hero .sub { font-size: 19px; line-height: 1.6; color: var(--ink-2); max-width: 520px; margin: 0 0 18px; }
 .fp-landing .hero .sub b { color: var(--ink); font-weight: 600; }
 
@@ -1182,8 +1182,8 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
           <div className="wrap">
             <div className="herogrid">
               <div className="herocopy">
-                <h1>So much going on.<br />Create one plan your family can move forward with.</h1>
-                <p className="sub">No more typing events into your calendar one by one. Just talk, paste, or type. FamilyPause handles the rest.</p>
+                <h1>So much going on.<br /><em>Create one plan your family can move on.</em></h1>
+                <p className="sub">No more typing events into your calendar one by one.<br />Type it, paste it, or record your family talking.<br />FamilyPause handles the rest.</p>
                 <div className="ctas">
                   <button className="btn btn-primary btn-lg" onClick={onStart}>Create My Family Plan</button>
                   <button className="btn btn-lg guide-trigger" onClick={() => openLeadModal("guide")}>Get My Free Plan Guide</button>
@@ -1347,10 +1347,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
               <span className="eyebrow">The FamilyPause Conversation Deck</span>
               <h2>Better conversations.<br />Better <em>plans.</em></h2>
               <p>
-                The best family plans start with a meaningful conversation.
-              </p>
-              <p>
-                Before you organize schedules, talk about what matters. Pull a conversation card on marriage, parenting, finances, faith, dreams, or home. Then, as you talk, FamilyPause captures the appointments, decisions, reminders, and next steps so nothing important gets lost.
+                Before you plan the week, start with a real conversation. Pull a card on marriage, kids, finances, faith, dreams, or home. Talk it through, then let FamilyPause capture everything that came up.
               </p>
             </div>
             <div className="deck-carousel-wrap reveal">
@@ -1475,7 +1472,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
         <section className="section finalcta">
           <div className="wrap">
             <h2>So much going on.<br /><em>One plan to move forward with.</em></h2>
-            <p>Type it, paste it, or talk it through together. FamilyPause organizes it, you create what&apos;s missing, and the plan goes onto your calendar.</p>
+            <p>Stop manually entering every event one by one. Type it, paste it, or record your family talking it through. FamilyPause finds everything, you approve it together, then it auto-syncs straight to your calendar.</p>
             <button className="btn btn-primary btn-lg" onClick={onStart}>Create My Family Plan</button>
             <p className="fineprint">Starts your free 7-day trial • No credit card required</p>
           </div>
@@ -1491,7 +1488,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                 <img src="/uploads/Logo_4.png" alt="" style={{ width: 32, height: 32, borderRadius: 8, display: "block" }} />
                 <div className="word"><b>Family</b>Pause</div>
               </div>
-              <div className="tag">Turn everything going on into one plan your family can move forward with.</div>
+              <div className="tag">So much going on. One plan to move forward with.</div>
             </div>
             <div className="fcols">
               <div className="fcol">
