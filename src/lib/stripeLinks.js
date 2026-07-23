@@ -21,6 +21,9 @@ const cardDigital = (
 
 const digital12 = (env.VITE_STRIPE_DIGITAL_12 || "").trim();
 
+/** Stripe publishable key (pk_test_… / pk_live_…). Safe for the browser. */
+export const STRIPE_PUBLISHABLE_KEY = (env.VITE_STRIPE_PUBLISHABLE_KEY || "").trim();
+
 export const STRIPE_LINKS = {
   /** Family Plan $59/year */
   family: familyAnnual,
@@ -32,3 +35,13 @@ export const STRIPE_LINKS = {
   /** Onboarding digital upsell — falls back to card digital if not set separately. */
   digital: digital12 || cardDigital,
 };
+
+/** Open a Stripe Payment Link in a new browser tab. */
+export function openPaymentLink(url) {
+  const href = String(url || "").trim();
+  if (!href) {
+    console.warn("[Stripe] Missing payment link URL");
+    return;
+  }
+  window.open(href, "_blank", "noopener,noreferrer");
+}

@@ -246,6 +246,7 @@ If checkout is misconfigured, the app falls back to static Payment Links. Set in
 - `VITE_STRIPE_FAMILY_MONTHLY`
 - `VITE_STRIPE_FAMILY_PRO`
 - `VITE_STRIPE_CARD_DIGITAL`
+- `VITE_STRIPE_PUBLISHABLE_KEY`
 
 > Payment Links **without** checkout metadata will **not** auto-unlock the workspace.
 > Prefer Checkout Sessions for production.

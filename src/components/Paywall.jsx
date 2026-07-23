@@ -8,7 +8,8 @@
 //   onClose()  optional (dismiss / go back)
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { openStripeCheckout } from "../lib/stripeCheckout";
+import { formatDigitalPrice } from "../lib/deckPricing";
+import { openPaymentLink, STRIPE_LINKS } from "../lib/stripeLinks";
 
 const css = `
   .pw-wrap { max-width: 760px; margin: 0 auto; }
@@ -50,15 +51,24 @@ const css = `
     display: grid; place-items: center; font-size: 11px;
     background: var(--olive-tint); color: var(--olive-d); border: 1px solid var(--olive-soft);
   }
-  .pw-cta { margin-top: auto; }
+  .pw-cta { margin-top: auto; display: flex; flex-direction: column; gap: 10px; }
+  .pw-cta .btn-monthly {
+    font-family: var(--mono); text-transform: uppercase; letter-spacing: .07em;
+    font-size: 12px; font-weight: 500; border: 1px solid var(--line-2);
+    border-radius: var(--r-sm); padding: 13px 18px; cursor: pointer;
+    background: transparent; color: var(--ink-2);
+    transition: color .15s, border-color .15s, background .15s;
+  }
+  .pw-cta .btn-monthly:hover { color: var(--terra); border-color: var(--terra); background: var(--terra-tint); }
   .pw-foot { text-align: center; margin-top: 26px; }
   .pw-foot .note { font-family: var(--mono); font-size: 11.5px; letter-spacing: .04em; color: var(--ink-3); }
-  .pw-foot .pro {
+  .pw-foot .deck {
     display: inline-block; margin-top: 14px;
     font-family: var(--mono); font-size: 11.5px; letter-spacing: .05em; text-transform: uppercase;
     color: var(--ink-2); text-decoration: none; border-bottom: 1px dashed var(--line-2); padding-bottom: 2px;
+    background: none; border-left: none; border-right: none; border-top: none; cursor: pointer;
   }
-  .pw-foot .pro:hover { color: var(--terra); border-color: var(--terra); }
+  .pw-foot .deck:hover { color: var(--terra); border-color: var(--terra); }
 
   @media (max-width: 720px) {
     .pw-grid { grid-template-columns: 1fr; }
@@ -82,15 +92,6 @@ export default function Paywall({ reason = "trial", onClose }) {
     : reason === "upgrade"
       ? "Unlock editing, missing-time resolution, exports, unlimited plans, and spouse sync with Family Plan."
       : "We hope the last 7 days brought a little more calm to your week. Keep the rhythm going with editing, exports, unlimited plans, and spouse sync.";
-
-  const goCheckout = async (product) => {
-    try {
-      // Family/Pro land on /app/subscribe/success with {CHECKOUT_SESSION_ID} (stripeCheckout default).
-      await openStripeCheckout(product);
-    } catch (e) {
-      console.error("[Paywall] checkout failed", e);
-    }
-  };
 
   return (
     <div className="stage view">
@@ -122,7 +123,7 @@ export default function Paywall({ reason = "trial", onClose }) {
               <span className="amt">$59</span>
               <span className="per">/ year</span>
             </div>
-            <p className="pw-tagline">Everything your weekly FamilyPause needs, all year.</p>
+            <p className="pw-tagline">Everything your weekly FamilyPause needs, all year. Or $7/month.</p>
             <p className="pw-includes">Everything in Free, plus:</p>
             <ul className="pw-feats">
               <li><Check /> Edit titles, dates, times, and family members</li>
@@ -136,8 +137,19 @@ export default function Paywall({ reason = "trial", onClose }) {
               <li><Check /> Unlock the complete digital Conversation Card Deck (free for the first 100 subscribers)</li>
             </ul>
             <div className="pw-cta">
-              <button className="btn btn-primary btn-lg btn-block" onClick={() => goCheckout("family")}>
-                Upgrade to Family, $59
+              <button
+                type="button"
+                className="btn btn-primary btn-lg btn-block"
+                onClick={() => openPaymentLink(STRIPE_LINKS.familyAnnual)}
+              >
+                Upgrade Annual, $59/year
+              </button>
+              <button
+                type="button"
+                className="btn-monthly"
+                onClick={() => openPaymentLink(STRIPE_LINKS.familyMonthly)}
+              >
+                Or Monthly, $7/month
               </button>
             </div>
           </div>
@@ -167,9 +179,13 @@ export default function Paywall({ reason = "trial", onClose }) {
         </div>
 
         <div className="pw-foot">
-          <div className="note">No credit card required for your trial.</div>
-          <button type="button" className="pro" onClick={() => goCheckout("pro")}>
-            Need recurring-item memory + kids profiles? See Family Pro, $99/yr
+          <div className="note">Secure checkout via Stripe · Opens in a new tab</div>
+          <button
+            type="button"
+            className="deck"
+            onClick={() => openPaymentLink(STRIPE_LINKS.cardDigital || STRIPE_LINKS.digital)}
+          >
+            Buy Digital Card Deck, {formatDigitalPrice()}
           </button>
         </div>
       </div>

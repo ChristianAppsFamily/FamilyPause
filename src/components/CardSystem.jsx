@@ -19,7 +19,7 @@
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "../lib/supabase";
 import { playCardFlip, soundsEnabledForWorkspace } from "../lib/sounds";
-import { openStripeCheckout } from "../lib/stripeCheckout";
+import { openPaymentLink, STRIPE_LINKS } from "../lib/stripeLinks";
 import { DIGITAL_DECK_PRICE, formatDigitalPrice, PHYSICAL_DECK_PRICE } from "../lib/deckPricing";
 import SampleCardCarousel from "./SampleCardCarousel";
 import "../styles/cards.css";
@@ -630,12 +630,8 @@ function UnlockDeck({ workspace, onSuccess, onClose }) {
     setTimeout(() => onSuccess(deckYear), 2000);
   };
 
-  const handleDigitalPurchase = async () => {
-    try {
-      await openStripeCheckout("digital", { successPath: "/app/cards?checkout=success" });
-    } catch (e) {
-      console.error("[CardSystem] checkout failed", e);
-    }
+  const handleDigitalPurchase = () => {
+    openPaymentLink(STRIPE_LINKS.cardDigital || STRIPE_LINKS.digital);
   };
 
   if (success) {
