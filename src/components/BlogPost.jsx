@@ -67,6 +67,15 @@ const postCss = `
 }
 .fp-post-body p { margin: 0 0 24px; }
 .fp-post-body p:last-child { margin-bottom: 0; }
+.fp-post-body ul {
+  margin: 0 0 24px;
+  padding-left: 1.25em;
+}
+.fp-post-body li {
+  margin: 0 0 8px;
+  line-height: 1.65;
+}
+.fp-post-body li:last-child { margin-bottom: 0; }
 .fp-post-body h2 {
   margin: 40px 0 16px;
   font-family: var(--display);
