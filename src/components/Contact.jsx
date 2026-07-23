@@ -325,6 +325,7 @@ const stroke = {
 
 function ContactForm() {
   const [state, handleSubmit] = useForm(FORMSPREE_FORM_ID);
+  const [localError, setLocalError] = useState("");
 
   if (state.succeeded) {
     return (
@@ -335,10 +336,27 @@ function ContactForm() {
     );
   }
 
+  const onSubmit = (event) => {
+    const form = event.currentTarget;
+    const name = String(new FormData(form).get("name") || "").trim();
+    const email = String(new FormData(form).get("email") || "").trim();
+
+    if (!name || !email) {
+      event.preventDefault();
+      setLocalError("Name and email are required.");
+      return;
+    }
+
+    setLocalError("");
+    handleSubmit(event);
+  };
+
   return (
-    <form className="fp-contact-form" onSubmit={handleSubmit}>
+    <form className="fp-contact-form" onSubmit={onSubmit} noValidate>
       <div className="fp-contact-field">
-        <label className="fp-contact-label" htmlFor="contact-name">Name</label>
+        <label className="fp-contact-label" htmlFor="contact-name">
+          Name <span aria-hidden="true">*</span>
+        </label>
         <input
           id="contact-name"
           className="fp-contact-input"
@@ -346,12 +364,16 @@ function ContactForm() {
           name="name"
           autoComplete="name"
           required
+          aria-required="true"
           disabled={state.submitting}
+          onChange={() => { if (localError) setLocalError(""); }}
         />
         <ValidationError prefix="Name" field="name" errors={state.errors} className="fp-contact-error" />
       </div>
       <div className="fp-contact-field">
-        <label className="fp-contact-label" htmlFor="contact-email">Email</label>
+        <label className="fp-contact-label" htmlFor="contact-email">
+          Email <span aria-hidden="true">*</span>
+        </label>
         <input
           id="contact-email"
           className="fp-contact-input"
@@ -360,7 +382,9 @@ function ContactForm() {
           inputMode="email"
           autoComplete="email"
           required
+          aria-required="true"
           disabled={state.submitting}
+          onChange={() => { if (localError) setLocalError(""); }}
         />
         <ValidationError prefix="Email" field="email" errors={state.errors} className="fp-contact-error" />
       </div>
@@ -370,11 +394,13 @@ function ContactForm() {
           id="contact-message"
           className="fp-contact-textarea"
           name="message"
-          required
           disabled={state.submitting}
         />
         <ValidationError prefix="Message" field="message" errors={state.errors} className="fp-contact-error" />
       </div>
+      {localError && (
+        <p className="fp-contact-error" role="alert">{localError}</p>
+      )}
       <ValidationError errors={state.errors} className="fp-contact-error" />
       <button
         type="submit"
