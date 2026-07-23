@@ -443,6 +443,7 @@ export default function Contact() {
             <a href="/#who">Who It&apos;s For</a>
             <a href="/#pricing">Pricing</a>
             <a href="/#deck">Card Deck</a>
+            <a href="/blog">Blog</a>
           </nav>
           <div className="navcta">
             <button type="button" className="signin" onClick={onSignIn}>Sign In</button>
