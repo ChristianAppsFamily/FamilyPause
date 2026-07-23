@@ -191,11 +191,16 @@ const chromeCss = `
 }
 .fp-mkt .foot .word b { color: var(--terra); }
 .fp-mkt .foot .tag {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: .08em;
+  text-transform: uppercase;
   color: var(--ink-3);
-  font-size: 13.5px;
-  line-height: 1.45;
-  margin-top: 6px;
-  max-width: 280px;
+  line-height: 1.4;
+  margin-top: 8px;
+  max-width: none;
+  white-space: nowrap;
 }
 .fp-mkt .foot .fcols { display: flex; gap: 64px; flex-wrap: wrap; }
 .fp-mkt .foot .fcol h4 {
@@ -242,6 +247,10 @@ const chromeCss = `
   .fp-mkt .navcta .btn:not(.navmenu-btn) { display: none; }
   .fp-mkt .navmenu-btn { display: inline-flex; }
   .fp-mkt .foot .fcols { gap: 36px; }
+  .fp-mkt .foot .tag {
+    white-space: normal;
+    font-size: 9px;
+  }
 }
 `;
 
