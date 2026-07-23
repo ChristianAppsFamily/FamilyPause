@@ -1,12 +1,32 @@
-/** Stripe Payment Link URLs — set in Vercel / .env.local before launch. */
+/** Stripe Payment Link URLs — env vars override; test defaults below for local/dev. */
 
-const familyAnnual = (import.meta.env.VITE_STRIPE_FAMILY_ANNUAL || "").trim();
-const familyPro = (import.meta.env.VITE_STRIPE_FAMILY_PRO || "").trim();
-const cardDigital = (import.meta.env.VITE_STRIPE_CARD_DIGITAL || "").trim();
-const digital12 = (import.meta.env.VITE_STRIPE_DIGITAL_12 || "").trim();
+const env = import.meta.env || {};
+
+const familyAnnual = (
+  env.VITE_STRIPE_FAMILY_ANNUAL
+  || "https://buy.stripe.com/test_3cI3cwb7of0m31RcPgcjS00"
+).trim();
+
+const familyMonthly = (
+  env.VITE_STRIPE_FAMILY_MONTHLY
+  || "https://buy.stripe.com/test_eVq3cwdfw6tQ31R16ycjS02"
+).trim();
+
+const familyPro = (env.VITE_STRIPE_FAMILY_PRO || "").trim();
+
+const cardDigital = (
+  env.VITE_STRIPE_CARD_DIGITAL
+  || "https://buy.stripe.com/test_6oUbJ27VcdWi0TJ02ucjS01"
+).trim();
+
+const digital12 = (env.VITE_STRIPE_DIGITAL_12 || "").trim();
 
 export const STRIPE_LINKS = {
+  /** Family Plan $59/year */
   family: familyAnnual,
+  familyAnnual,
+  /** Family Plan $7/month */
+  familyMonthly,
   pro: familyPro,
   cardDigital,
   /** Onboarding digital upsell — falls back to card digital if not set separately. */

@@ -243,6 +243,7 @@ Re-run the bottom of **`supabase_setup.sql`** in the SQL Editor (adds
 If checkout is misconfigured, the app falls back to static Payment Links. Set in Vercel:
 
 - `VITE_STRIPE_FAMILY_ANNUAL`
+- `VITE_STRIPE_FAMILY_MONTHLY`
 - `VITE_STRIPE_FAMILY_PRO`
 - `VITE_STRIPE_CARD_DIGITAL`
 
