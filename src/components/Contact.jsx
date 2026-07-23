@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useForm, ValidationError } from "@formspree/react";
 
-/** Set in Vercel / .env.local after creating a Formspree form pointed at hello@familypause.com */
-const FORMSPREE_ENDPOINT = (import.meta.env.VITE_FORMSPREE_CONTACT_ENDPOINT || "").trim();
+/** Formspree form id (from https://formspree.io/f/mojgnkoz). Override via Vercel env if needed. */
+const FORMSPREE_FORM_ID = (import.meta.env.VITE_FORMSPREE_FORM_ID || "mojgnkoz").trim();
 
 const css = `
 .fp-contact {
@@ -230,6 +231,7 @@ const css = `
 .fp-contact-input[aria-invalid="true"],
 .fp-contact-textarea[aria-invalid="true"] { border-color: var(--red); }
 .fp-contact-error {
+  display: block;
   margin: 8px 0 0;
   padding: 9px 11px;
   border-radius: 7px;
@@ -237,6 +239,8 @@ const css = `
   color: var(--red);
   font: 13px/1.4 var(--serif);
 }
+.fp-contact-field .fp-contact-error { margin-bottom: 0; }
+.fp-contact-form > .fp-contact-error { margin: 0 0 12px; }
 .fp-contact-submit {
   width: 100%;
   margin-top: 8px;
@@ -319,15 +323,74 @@ const stroke = {
   strokeLinejoin: "round",
 };
 
+function ContactForm() {
+  const [state, handleSubmit] = useForm(FORMSPREE_FORM_ID);
+
+  if (state.succeeded) {
+    return (
+      <div className="fp-contact-success">
+        <div className="fp-contact-check" aria-hidden="true">✓</div>
+        <p>Message sent. We&apos;ll be in touch soon.</p>
+      </div>
+    );
+  }
+
+  return (
+    <form className="fp-contact-form" onSubmit={handleSubmit}>
+      <div className="fp-contact-field">
+        <label className="fp-contact-label" htmlFor="contact-name">Name</label>
+        <input
+          id="contact-name"
+          className="fp-contact-input"
+          type="text"
+          name="name"
+          autoComplete="name"
+          required
+          disabled={state.submitting}
+        />
+        <ValidationError prefix="Name" field="name" errors={state.errors} className="fp-contact-error" />
+      </div>
+      <div className="fp-contact-field">
+        <label className="fp-contact-label" htmlFor="contact-email">Email</label>
+        <input
+          id="contact-email"
+          className="fp-contact-input"
+          type="email"
+          name="email"
+          inputMode="email"
+          autoComplete="email"
+          required
+          disabled={state.submitting}
+        />
+        <ValidationError prefix="Email" field="email" errors={state.errors} className="fp-contact-error" />
+      </div>
+      <div className="fp-contact-field">
+        <label className="fp-contact-label" htmlFor="contact-message">Message</label>
+        <textarea
+          id="contact-message"
+          className="fp-contact-textarea"
+          name="message"
+          required
+          disabled={state.submitting}
+        />
+        <ValidationError prefix="Message" field="message" errors={state.errors} className="fp-contact-error" />
+      </div>
+      <ValidationError errors={state.errors} className="fp-contact-error" />
+      <button
+        type="submit"
+        className="fp-contact-submit"
+        disabled={state.submitting}
+      >
+        {state.submitting ? "Sending..." : "Send Message"}
+      </button>
+    </form>
+  );
+}
+
 export default function Contact() {
   const navigate = useNavigate();
   const [scrolled, setScrolled] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [message, setMessage] = useState("");
-  const [status, setStatus] = useState("idle");
-  const [error, setError] = useState("");
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
@@ -338,52 +401,6 @@ export default function Contact() {
 
   const onSignIn = () => navigate("/app", { replace: true });
   const onStart = () => navigate("/app?signup=1", { replace: true });
-
-  const submit = async (event) => {
-    event.preventDefault();
-    const trimmedName = name.trim();
-    const trimmedEmail = email.trim().toLowerCase();
-    const trimmedMessage = message.trim();
-
-    if (!trimmedName || !trimmedEmail || !trimmedMessage) {
-      setError("Please fill in all fields.");
-      return;
-    }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
-      setError("Enter a valid email address.");
-      return;
-    }
-    if (!FORMSPREE_ENDPOINT) {
-      setError("Contact form is not configured yet. Email hello@familypause.com instead.");
-      return;
-    }
-
-    setError("");
-    setStatus("loading");
-
-    try {
-      const res = await fetch(FORMSPREE_ENDPOINT, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify({
-          name: trimmedName,
-          email: trimmedEmail,
-          message: trimmedMessage,
-        }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        throw new Error(data?.error || "Unable to send message");
-      }
-      setStatus("success");
-    } catch {
-      setStatus("idle");
-      setError("We couldn't send your message. Please try again or email hello@familypause.com.");
-    }
-  };
 
   return (
     <div className="fp-contact">
@@ -453,72 +470,7 @@ export default function Contact() {
           Whether you have a question, a bug to report, or just want to say hello, we read every message.
         </p>
 
-        {status === "success" ? (
-          <div className="fp-contact-success">
-            <div className="fp-contact-check" aria-hidden="true">✓</div>
-            <p>Message sent. We&apos;ll be in touch soon.</p>
-          </div>
-        ) : (
-          <form className="fp-contact-form" onSubmit={submit} noValidate>
-            <div className="fp-contact-field">
-              <label className="fp-contact-label" htmlFor="contact-name">Name</label>
-              <input
-                id="contact-name"
-                className="fp-contact-input"
-                type="text"
-                autoComplete="name"
-                value={name}
-                onChange={(e) => {
-                  setName(e.target.value);
-                  if (error) setError("");
-                }}
-                aria-invalid={Boolean(error) && !name.trim()}
-                disabled={status === "loading"}
-              />
-            </div>
-            <div className="fp-contact-field">
-              <label className="fp-contact-label" htmlFor="contact-email">Email</label>
-              <input
-                id="contact-email"
-                className="fp-contact-input"
-                type="email"
-                inputMode="email"
-                autoComplete="email"
-                value={email}
-                onChange={(e) => {
-                  setEmail(e.target.value);
-                  if (error) setError("");
-                }}
-                aria-invalid={Boolean(error) && !email.trim()}
-                disabled={status === "loading"}
-              />
-            </div>
-            <div className="fp-contact-field">
-              <label className="fp-contact-label" htmlFor="contact-message">Message</label>
-              <textarea
-                id="contact-message"
-                className="fp-contact-textarea"
-                value={message}
-                onChange={(e) => {
-                  setMessage(e.target.value);
-                  if (error) setError("");
-                }}
-                aria-invalid={Boolean(error) && !message.trim()}
-                disabled={status === "loading"}
-              />
-            </div>
-            {error && (
-              <p className="fp-contact-error" role="alert">{error}</p>
-            )}
-            <button
-              type="submit"
-              className="fp-contact-submit"
-              disabled={status === "loading"}
-            >
-              {status === "loading" ? "Sending..." : "Send Message"}
-            </button>
-          </form>
-        )}
+        <ContactForm />
 
         <p className="fp-contact-or">
           Or email us directly at{" "}
