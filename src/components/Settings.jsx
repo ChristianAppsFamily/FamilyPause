@@ -107,6 +107,32 @@ const css = `
   .set-upgrade-price .per {
     font-family: var(--mono); font-size: 12px; color: var(--ink-3);
   }
+  .set-toggle {
+    display: inline-flex; align-items: center; gap: 12px;
+    border: 1px solid var(--line); background: var(--paper-2);
+    border-radius: 999px; padding: 6px 6px 6px 14px; cursor: pointer;
+    font-family: var(--mono); font-size: 11px; letter-spacing: .08em;
+    text-transform: uppercase; color: var(--ink-2); user-select: none;
+    transition: border-color .15s, background .15s, color .15s;
+  }
+  .set-toggle:hover:not(:disabled) { border-color: var(--line-2); }
+  .set-toggle:disabled { opacity: .65; cursor: not-allowed; }
+  .set-toggle.is-on {
+    background: var(--terra-tint); border-color: var(--terra-soft); color: var(--terra-d);
+  }
+  .set-toggle-track {
+    width: 42px; height: 24px; border-radius: 999px; flex-shrink: 0;
+    background: var(--line-2); position: relative;
+    transition: background .15s;
+  }
+  .set-toggle.is-on .set-toggle-track { background: var(--terra); }
+  .set-toggle-thumb {
+    position: absolute; top: 3px; left: 3px;
+    width: 18px; height: 18px; border-radius: 50%;
+    background: #fff; box-shadow: var(--shadow-sm);
+    transition: transform .15s ease;
+  }
+  .set-toggle.is-on .set-toggle-thumb { transform: translateX(18px); }
 
   .set-cal-label {
     font-family: var(--mono); font-size: 9px; letter-spacing: .14em; text-transform: uppercase;
@@ -288,7 +314,9 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
   }, [checkoutSuccess]);
 
   useEffect(() => {
-    setSoundsEnabled(workspace?.sounds_enabled !== false);
+    if (typeof workspace?.sounds_enabled === "boolean") {
+      setSoundsEnabled(workspace.sounds_enabled);
+    }
   }, [workspace?.sounds_enabled]);
 
   const loadCalendarConnection = async () => {
@@ -389,19 +417,30 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
   };
 
   const toggleSounds = async () => {
-    if (!workspace?.id) return;
-    setSoundsSaving(true);
+    if (!workspace?.id || soundsSaving) return;
     const next = !soundsEnabled;
+    setError("");
+    setSoundsEnabled(next);
+    setSoundsSaving(true);
+
     const { data, error: err } = await supabase
       .from("workspaces")
       .update({ sounds_enabled: next })
       .eq("id", workspace.id)
-      .select()
-      .single();
+      .select("*")
+      .maybeSingle();
+
     setSoundsSaving(false);
-    if (err) { setError(err.message); return; }
-    setSoundsEnabled(next);
-    if (data && onWorkspaceUpdate) onWorkspaceUpdate(data);
+
+    if (err || !data) {
+      setSoundsEnabled(!next);
+      setError(err?.message || "Couldn't update sound settings. Please try again.");
+      return;
+    }
+
+    const enabled = typeof data.sounds_enabled === "boolean" ? data.sounds_enabled : next;
+    setSoundsEnabled(enabled);
+    onWorkspaceUpdate?.({ ...workspace, ...data, sounds_enabled: enabled });
   };
 
   // ── Plan + trial ───────────────────────────────────────────────────────────
@@ -542,11 +581,16 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
           </p>
           <button
             type="button"
-            className={"btn " + (soundsEnabled ? "btn-primary" : "btn-soft")}
+            className={"set-toggle" + (soundsEnabled ? " is-on" : "")}
             onClick={toggleSounds}
             disabled={soundsSaving}
+            aria-pressed={soundsEnabled}
+            aria-label={soundsEnabled ? "Sounds on" : "Sounds off"}
           >
-            {soundsSaving ? "Saving…" : soundsEnabled ? "Sounds on" : "Sounds off"}
+            <span>{soundsSaving ? "Saving…" : soundsEnabled ? "Sounds on" : "Sounds off"}</span>
+            <span className="set-toggle-track" aria-hidden="true">
+              <span className="set-toggle-thumb" />
+            </span>
           </button>
         </section>
 
