@@ -1503,7 +1503,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                 <a href="/blog">Blog</a>
                 <a href="/privacy.html">Privacy</a>
                 <a href="/terms.html">Terms</a>
-                <a href="mailto:hello@familypause.com">Contact</a>
+                <a href="/contact">Contact</a>
               </div>
               <div className="fcol">
                 <h4>Get Started</h4>
