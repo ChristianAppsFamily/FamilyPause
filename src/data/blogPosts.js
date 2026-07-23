@@ -84,15 +84,92 @@ export const blogPosts = [
     <p><em><a href="https://familypause.com">Start your free 7-day trial</a> and turn one weekly conversation into a calmer, more connected week.</em></p>
   `,
   },
+  {
+    slug: "weekly-family-meeting-most-underrated-marriage-habit",
+    title: "The Weekly Family Meeting Is the Most Underrated Marriage Habit",
+    excerpt: "Most couples invest in date nights, anniversary trips, and quality time. Almost none of them invest in the one weekly habit that quietly keeps everything else working.",
+    category: "Marriage",
+    readTime: "5 min",
+    publishDate: "2026-07-22",
+    content: `
+    <p>Most couples know the things they're supposed to do to build a healthy marriage.</p>
+    <p>Go on date nights. Spend quality time together. Communicate honestly. Show appreciation.</p>
+    <p>Those habits matter. They create connection, strengthen trust, and remind you why you chose each other in the first place.</p>
+    <p>But there's one habit almost nobody talks about. It's practical instead of glamorous. Simple instead of exciting. And because of that, it's often overlooked.</p>
+    <p>It's called a <strong>weekly family meeting</strong>.</p>
+    <p>Not a corporate meeting. Not a relationship summit. Just twenty minutes once a week where two people intentionally get on the same page about their shared life.</p>
+    <p>It may be the most underrated marriage habit you've never tried.</p>
+    <h2>Why a Weekly Family Meeting Doesn't Sound Romantic</h2>
+    <p>Let's be honest - the phrase "family meeting" doesn't exactly inspire excitement. It sounds formal. Structured. Maybe even a little boring. Something you'd schedule in a conference room instead of your kitchen.</p>
+    <p>That perception keeps many couples from trying it.</p>
+    <p>But think about what happens when two people stop having intentional conversations about their shared life.</p>
+    <p>Assumptions begin filling the gaps. One partner thinks the other knows about Thursday's appointment. Someone silently carries more of the mental load. Small misunderstandings slowly become recurring arguments.</p>
+    <p>Resentment doesn't usually arrive all at once. It builds quietly through dozens of ordinary moments that were never talked about.</p>
+    <p>And there's nothing romantic about that.</p>
+    <h2>What a Weekly Family Meeting Really Feels Like</h2>
+    <p>A weekly family meeting isn't about creating more structure. It's about creating more alignment.</p>
+    <p>Maybe you're talking about soccer practice, grocery shopping, bills, or who's taking the car in for service. On the surface, it sounds like logistics. Underneath, something much more important is happening.</p>
+    <p>You're choosing to face the coming week together instead of separately. You're saying: "I want to know what's on your plate." "I want you to know what's on mine." "Let's build this week together."</p>
+    <p>That simple decision, repeated every week, strengthens a marriage in ways that grand gestures rarely can.</p>
+    <p>Date nights are wonderful. But date nights are the reward. <strong>A weekly family meeting is the foundation.</strong></p>
+    <h2>How a Weekly Family Meeting Strengthens Your Marriage</h2>
+    <p>Couples who build this habit often notice the same changes.</p>
+    <p>Arguments about logistics become less frequent. Not because life gets simpler - but because both people already know the plan. Instead of discovering conflicts in the middle of a stressful day, you've already talked through them together.</p>
+    <p>Communication also becomes easier. When you know you'll have dedicated time every week to discuss concerns, little frustrations don't have time to become major resentments. You bring them up early. You solve them together. You move on.</p>
+    <p>Perhaps the biggest change is how your partnership feels. There's a difference between two people who simply live in the same house and two people intentionally building a life together. A weekly family meeting reinforces that partnership every single week.</p>
+    <h2>5 Weekly Family Meeting Ideas to Try This Sunday</h2>
+    <p>If you're wondering what to actually talk about, keep it simple. Here are five conversation starters that work for almost every family:</p>
+    <ul>
+      <li>Share one highlight from the past week.</li>
+      <li>Review everyone's schedule for the coming week.</li>
+      <li>Talk about anything that's causing stress before it becomes a bigger problem.</li>
+      <li>Decide on one thing you'll do together as a family this week.</li>
+      <li>End by sharing one thing you appreciated about each other.</li>
+    </ul>
+    <p>You don't need a complicated agenda. You just need a conversation.</p>
+    <h2>Why This Marriage Habit Actually Sticks</h2>
+    <p>Many relationship habits fade because they ask couples to add something new to an already busy life. Another date night. Another book. Another routine.</p>
+    <p>A weekly family meeting works differently. It doesn't create more to do. It creates space for everything that's already happening.</p>
+    <p>The appointments already exist. The decisions already need to be made. The conversations are already waiting to happen. A weekly family meeting simply gives them a home.</p>
+    <p>That's why it becomes sustainable. Instead of feeling like another obligation, it makes everything else feel more manageable.</p>
+    <h2>How to Introduce a Weekly Family Meeting to Your Spouse</h2>
+    <p>If your partner hears the word "meeting" and immediately loses interest, don't worry. Skip the label.</p>
+    <p>Instead, say something like: "Can we spend twenty minutes on Sunday talking through the week so neither of us has to guess what's coming?"</p>
+    <p>That's much easier to say yes to. You're not asking for another obligation. You're removing dozens of little ones.</p>
+    <p>Most couples who try this habit notice a difference after only a few weeks. Monday mornings feel calmer. Schedules become clearer. The mental load feels lighter because both people are carrying it together.</p>
+    <h2>Start This Sunday</h2>
+    <p>You don't need the perfect agenda. You don't need color-coded planners. You don't even need to know exactly what you'll talk about.</p>
+    <p>You just need twenty uninterrupted minutes. Make coffee. Sit down together. Talk about the next seven days. Ask each other what's going well. Ask what's feeling heavy. Decide how you'll help each other.</p>
+    <p>That's enough.</p>
+    <p>The happiest couples aren't the ones who've eliminated every challenge. They're the ones who've built habits that keep them connected while navigating those challenges together.</p>
+    <p>A weekly family meeting is one of those habits. And the best time to start is this Sunday.</p>
+    <h2>Frequently Asked Questions</h2>
+    <h3>How long should a weekly family meeting last?</h3>
+    <p>Most couples find that 20 to 30 minutes is enough. The goal isn't a long discussion - it's creating a consistent habit of reconnecting and planning together.</p>
+    <h3>What should we talk about during a weekly family meeting?</h3>
+    <p>Discuss upcoming schedules, finances, children's activities, meals, household responsibilities, upcoming decisions, and anything either of you has been carrying mentally throughout the week.</p>
+    <h3>What if my spouse doesn't like meetings?</h3>
+    <p>Don't focus on the word "meeting." Think of it as a weekly conversation over coffee or after dinner. The consistency matters far more than the label.</p>
+    <h3>Should children join the meeting?</h3>
+    <p>Many couples begin with just the two adults. As children get older, they can gradually be included in age-appropriate parts of the conversation.</p>
+    <h2>Build a Stronger Marriage One Conversation at a Time</h2>
+    <p>Healthy marriages aren't built through one grand romantic gesture. They're built through hundreds of ordinary conversations that help two people stay connected through everyday life.</p>
+    <p>FamilyPause helps make those conversations easier. With guided prompts, shared planning, and automatic calendar syncing, you can turn one weekly conversation into a calmer, more connected week.</p>
+    <p><em><a href="https://familypause.com">Start your free 7-day trial today</a> and discover how one simple habit can strengthen your marriage all year long.</em></p>
+  `,
+  },
 ];
 
-/** Newest first */
+/** Newest first. Same-day posts: later entries in the array rank higher. */
 export function getSortedPosts(posts = blogPosts) {
-  return [...posts].sort((a, b) => {
-    const da = a.publishDate || "";
-    const db = b.publishDate || "";
-    return db.localeCompare(da);
-  });
+  return posts
+    .map((post, index) => ({ post, index }))
+    .sort((a, b) => {
+      const dateCmp = (b.post.publishDate || "").localeCompare(a.post.publishDate || "");
+      if (dateCmp !== 0) return dateCmp;
+      return b.index - a.index;
+    })
+    .map(({ post }) => post);
 }
 
 export function getPostBySlug(slug, posts = blogPosts) {
