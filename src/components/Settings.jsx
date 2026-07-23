@@ -215,8 +215,6 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
 
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [faithMode, setFaithMode] = useState(workspace?.faith_mode ?? false);
-  const [faithSaving, setFaithSaving] = useState(false);
   const [soundsEnabled, setSoundsEnabled] = useState(workspace?.sounds_enabled !== false);
   const [soundsSaving, setSoundsSaving] = useState(false);
 
@@ -290,9 +288,8 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
   }, [checkoutSuccess]);
 
   useEffect(() => {
-    setFaithMode(workspace?.faith_mode ?? false);
     setSoundsEnabled(workspace?.sounds_enabled !== false);
-  }, [workspace?.faith_mode, workspace?.sounds_enabled]);
+  }, [workspace?.sounds_enabled]);
 
   const loadCalendarConnection = async () => {
     if (!workspace?.id || !user?.id) {
@@ -389,22 +386,6 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
     if (!code) return;
     const body = encodeURIComponent(`Join our FamilyPause workspace: ${code}\nhttps://familypause.com/join/${code}`);
     window.location.href = `sms:?&body=${body}`;
-  };
-
-  const toggleFaithMode = async () => {
-    if (!workspace?.id) return;
-    setFaithSaving(true);
-    const next = !faithMode;
-    const { data, error: err } = await supabase
-      .from("workspaces")
-      .update({ faith_mode: next })
-      .eq("id", workspace.id)
-      .select()
-      .single();
-    setFaithSaving(false);
-    if (err) { setError(err.message); return; }
-    setFaithMode(next);
-    if (data && onWorkspaceUpdate) onWorkspaceUpdate(data);
   };
 
   const toggleSounds = async () => {
@@ -549,23 +530,6 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
               ))}
             </div>
           )}
-        </section>
-
-        {/* ── FAITH MODE ─────────────────────────────────────────────── */}
-        <section className="panel set-sec rise">
-          <div className="eyebrow">AI extraction</div>
-          <h2>Faith mode</h2>
-          <p className="set-sub">
-            When on, meeting extraction uses faith-aware language for families who want Scripture-grounded framing when we build your plan.
-          </p>
-          <button
-            type="button"
-            className={"btn " + (faithMode ? "btn-primary" : "btn-soft")}
-            onClick={toggleFaithMode}
-            disabled={faithSaving}
-          >
-            {faithSaving ? "Saving…" : faithMode ? "Faith mode on" : "Faith mode off"}
-          </button>
         </section>
 
         {/* ── SOUNDS ─────────────────────────────────────────────────── */}
