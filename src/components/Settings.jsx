@@ -18,7 +18,7 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "../lib/supabase";
-import { openStripeCheckout } from "../lib/stripeCheckout";
+import { openPaymentLink, STRIPE_LINKS } from "../lib/stripeLinks";
 import { trialDaysRemaining as getTrialDaysRemaining, isPaidPlan } from "../lib/subscription";
 import {
   getCalendarConnection,
@@ -68,6 +68,46 @@ const css = `
   }
   .set-plan { display: flex; align-items: baseline; gap: 12px; margin-bottom: 8px; }
   .set-plan .name { font-family: var(--display); font-size: 26px; color: var(--ink); }
+  .set-upgrade {
+    margin-top: 16px; padding: 16px 16px 14px;
+    background: var(--terra-tint); border: 1px solid var(--terra-soft);
+    border-radius: var(--r); animation: setUpgradeIn .18s ease both;
+  }
+  @keyframes setUpgradeIn {
+    from { opacity: 0; transform: translateY(-6px); }
+    to { opacity: 1; transform: none; }
+  }
+  .set-upgrade-title {
+    font-family: var(--display); font-size: 18px; font-weight: 600;
+    color: var(--ink); margin: 0 0 6px;
+  }
+  .set-upgrade-sub {
+    font-family: var(--serif); font-size: 14px; color: var(--ink-2);
+    line-height: 1.45; margin: 0 0 14px;
+  }
+  .set-billing {
+    display: inline-flex; gap: 4px; padding: 4px;
+    background: var(--paper-2); border-radius: 999px; margin-bottom: 14px;
+  }
+  .set-billing button {
+    font-family: var(--mono); font-size: 11px; letter-spacing: .06em;
+    text-transform: uppercase; border: none; background: transparent;
+    color: var(--ink-3); padding: 8px 14px; border-radius: 999px; cursor: pointer;
+  }
+  .set-billing button.on {
+    background: var(--paper-card); color: var(--terra-d);
+    box-shadow: var(--shadow-sm); font-weight: 500;
+  }
+  .set-upgrade-price {
+    display: flex; align-items: baseline; gap: 6px; margin-bottom: 14px;
+  }
+  .set-upgrade-price .amt {
+    font-family: var(--display); font-size: 32px; font-weight: 600; color: var(--ink);
+  }
+  .set-upgrade-price .per {
+    font-family: var(--mono); font-size: 12px; color: var(--ink-3);
+  }
+
   .set-cal-label {
     font-family: var(--mono); font-size: 9px; letter-spacing: .14em; text-transform: uppercase;
     color: var(--ink-3); margin-bottom: 8px;
@@ -162,6 +202,8 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
   const [subscription, setSubscription] = useState(null);
   const [subLoading, setSubLoading] = useState(true);
   const [checkoutNotice, setCheckoutNotice] = useState(false);
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
+  const [familyBilling, setFamilyBilling] = useState("monthly");
   const [calendarConn, setCalendarConn] = useState({
     connected: false, connectedAt: null, memberId: null, googleEmail: null,
   });
@@ -653,14 +695,17 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
               <div className="eyebrow" style={{ marginBottom: 9 }}>Your plan</div>
               <h2 style={{ margin: 0 }}>Subscription</h2>
             </div>
-            <button
-              type="button"
-              className="btn btn-primary"
-              style={{ flexShrink: 0, marginTop: 4 }}
-              onClick={() => openStripeCheckout("pro")}
-            >
-              Upgrade to Pro
-            </button>
+            {!isPaidPlan(subscription) && (
+              <button
+                type="button"
+                className="btn btn-primary"
+                style={{ flexShrink: 0, marginTop: 4 }}
+                aria-expanded={upgradeOpen}
+                onClick={() => setUpgradeOpen((o) => !o)}
+              >
+                {upgradeOpen ? "Close" : "Upgrade"}
+              </button>
+            )}
           </div>
           {subLoading ? (
             <div className="set-spin" />
@@ -684,6 +729,52 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
               )}
               {!subscription && trialDaysRemaining === null && (
                 <p className="set-sub" style={{ margin: 0 }}>You&apos;re on the free plan. Upgrade for unlimited AI sessions.</p>
+              )}
+
+              {upgradeOpen && !isPaidPlan(subscription) && (
+                <div className="set-upgrade" role="region" aria-label="Choose Family Plan billing">
+                  <div className="set-upgrade-title">Family Plan</div>
+                  <p className="set-upgrade-sub">
+                    Unlimited AI sessions, spouse sync, plan history, and PDF exports.
+                  </p>
+                  <div className="set-billing" role="group" aria-label="Billing period">
+                    <button
+                      type="button"
+                      className={familyBilling === "monthly" ? "on" : ""}
+                      aria-pressed={familyBilling === "monthly"}
+                      onClick={() => setFamilyBilling("monthly")}
+                    >
+                      Monthly
+                    </button>
+                    <button
+                      type="button"
+                      className={familyBilling === "annual" ? "on" : ""}
+                      aria-pressed={familyBilling === "annual"}
+                      onClick={() => setFamilyBilling("annual")}
+                    >
+                      Yearly
+                    </button>
+                  </div>
+                  <div className="set-upgrade-price">
+                    <span className="amt">{familyBilling === "monthly" ? "$7" : "$59"}</span>
+                    <span className="per">{familyBilling === "monthly" ? "/ month" : "/ year"}</span>
+                  </div>
+                  <button
+                    type="button"
+                    className="btn btn-primary btn-block"
+                    onClick={() => {
+                      openPaymentLink(
+                        familyBilling === "monthly"
+                          ? STRIPE_LINKS.familyMonthly
+                          : STRIPE_LINKS.familyAnnual,
+                      );
+                    }}
+                  >
+                    {familyBilling === "monthly"
+                      ? "Continue with Monthly, $7"
+                      : "Continue with Yearly, $59"}
+                  </button>
+                </div>
               )}
             </div>
           )}
