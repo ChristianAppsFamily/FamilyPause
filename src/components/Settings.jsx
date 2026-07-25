@@ -2,8 +2,8 @@
 // Settings.jsx - FamilyPause
 // Visual source of truth: project/app/styles.css + screens.css (design bundle).
 // Composes the shared design classes from src/styles/tokens.css.
-// Sections: Family members, Invite code, Card decks, Subscription,
-//           Sign out, Danger zone (delete workspace)
+// Sections: Subscription, Card decks, Family members, Invite code,
+//           Sounds, Calendar, Sign out, Danger zone
 //
 // Props:
 //   workspace   { id, name, invite_code, family_context, unlocked_deck_years, cards_unlocked }
@@ -20,6 +20,10 @@ import { useSearchParams } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { openPaymentLink, STRIPE_LINKS } from "../lib/stripeLinks";
 import { trialDaysRemaining as getTrialDaysRemaining, isPaidPlan } from "../lib/subscription";
+import {
+  setLocalSoundsEnabled,
+  soundsEnabledForWorkspace,
+} from "../lib/sounds";
 import {
   getCalendarConnection,
   startGoogleCalendarConnect,
@@ -241,8 +245,7 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
 
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [soundsEnabled, setSoundsEnabled] = useState(workspace?.sounds_enabled !== false);
-  const [soundsSaving, setSoundsSaving] = useState(false);
+  const [soundsEnabled, setSoundsEnabled] = useState(() => soundsEnabledForWorkspace(workspace));
 
   // ── Members who accepted invite ────────────────────────────────────────────
   const [members, setMembers] = useState([]);
@@ -314,10 +317,8 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
   }, [checkoutSuccess]);
 
   useEffect(() => {
-    if (typeof workspace?.sounds_enabled === "boolean") {
-      setSoundsEnabled(workspace.sounds_enabled);
-    }
-  }, [workspace?.sounds_enabled]);
+    setSoundsEnabled(soundsEnabledForWorkspace(workspace));
+  }, [workspace?.id]);
 
   const loadCalendarConnection = async () => {
     if (!workspace?.id || !user?.id) {
@@ -416,31 +417,22 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
     window.location.href = `sms:?&body=${body}`;
   };
 
-  const toggleSounds = async () => {
-    if (!workspace?.id || soundsSaving) return;
+  const toggleSounds = () => {
+    if (!workspace?.id) return;
     const next = !soundsEnabled;
     setError("");
     setSoundsEnabled(next);
-    setSoundsSaving(true);
+    setLocalSoundsEnabled(workspace.id, next);
+    onWorkspaceUpdate?.({ ...workspace, sounds_enabled: next });
 
-    const { data, error: err } = await supabase
+    // Best-effort DB sync — never revert UI if this fails (column/RLS may be missing).
+    void supabase
       .from("workspaces")
       .update({ sounds_enabled: next })
       .eq("id", workspace.id)
-      .select("*")
-      .maybeSingle();
-
-    setSoundsSaving(false);
-
-    if (err || !data) {
-      setSoundsEnabled(!next);
-      setError(err?.message || "Couldn't update sound settings. Please try again.");
-      return;
-    }
-
-    const enabled = typeof data.sounds_enabled === "boolean" ? data.sounds_enabled : next;
-    setSoundsEnabled(enabled);
-    onWorkspaceUpdate?.({ ...workspace, ...data, sounds_enabled: enabled });
+      .then(({ error: err }) => {
+        if (err) console.warn("[Settings] sounds_enabled sync failed", err.message);
+      });
   };
 
   // ── Plan + trial ───────────────────────────────────────────────────────────
@@ -488,6 +480,123 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
             <span style={{ fontFamily: "var(--serif)", color: "var(--red)", fontSize: 14.5 }}>{error}</span>
           </div>
         )}
+
+        {/* ── SUBSCRIPTION ───────────────────────────────────────────── */}
+        <section className="panel set-sec rise">
+          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, marginBottom: 18 }}>
+            <div>
+              <div className="eyebrow" style={{ marginBottom: 9 }}>Your plan</div>
+              <h2 style={{ margin: 0 }}>Subscription</h2>
+            </div>
+            {!isPaidPlan(subscription) && (
+              <button
+                type="button"
+                className="btn btn-primary"
+                style={{ flexShrink: 0, marginTop: 4 }}
+                aria-expanded={upgradeOpen}
+                onClick={() => setUpgradeOpen((o) => !o)}
+              >
+                {upgradeOpen ? "Close" : "Upgrade"}
+              </button>
+            )}
+          </div>
+          {subLoading ? (
+            <div className="set-spin" />
+          ) : (
+            <div>
+              <div className="set-plan">
+                <span className="name">{planLabel}</span>
+                {subscription?.active && <span className="tag tag-amanda">Active</span>}
+              </div>
+              {checkoutNotice && (
+                <p className="set-sub" style={{ margin: "0 0 12px", color: "var(--olive-d)" }}>
+                  Thanks, your plan should update shortly.
+                </p>
+              )}
+              {(subscription?.plan === "free" || !subscription) && !isPaidPlan(subscription) && trialDaysRemaining !== null && (
+                <p className="set-sub" style={{ margin: 0 }}>
+                  {trialDaysRemaining > 0
+                    ? `${trialDaysRemaining} trial day${trialDaysRemaining === 1 ? "" : "s"} remaining.`
+                    : "Your free trial has ended. Upgrade for unlimited AI sessions, or use manual review."}
+                </p>
+              )}
+              {!subscription && trialDaysRemaining === null && (
+                <p className="set-sub" style={{ margin: 0 }}>You&apos;re on the free plan. Upgrade for unlimited AI sessions.</p>
+              )}
+
+              {upgradeOpen && !isPaidPlan(subscription) && (
+                <div className="set-upgrade" role="region" aria-label="Choose Family Plan billing">
+                  <div className="set-upgrade-title">Family Plan</div>
+                  <p className="set-upgrade-sub">
+                    Unlimited AI sessions, spouse sync, plan history, and PDF exports.
+                  </p>
+                  <div className="set-billing" role="group" aria-label="Billing period">
+                    <button
+                      type="button"
+                      className={familyBilling === "monthly" ? "on" : ""}
+                      aria-pressed={familyBilling === "monthly"}
+                      onClick={() => setFamilyBilling("monthly")}
+                    >
+                      Monthly
+                    </button>
+                    <button
+                      type="button"
+                      className={familyBilling === "annual" ? "on" : ""}
+                      aria-pressed={familyBilling === "annual"}
+                      onClick={() => setFamilyBilling("annual")}
+                    >
+                      Yearly
+                    </button>
+                  </div>
+                  <div className="set-upgrade-price">
+                    <span className="amt">{familyBilling === "monthly" ? "$7" : "$59"}</span>
+                    <span className="per">{familyBilling === "monthly" ? "/ month" : "/ year"}</span>
+                  </div>
+                  <button
+                    type="button"
+                    className="btn btn-primary btn-block"
+                    onClick={() => {
+                      openPaymentLink(
+                        familyBilling === "monthly"
+                          ? STRIPE_LINKS.familyMonthly
+                          : STRIPE_LINKS.familyAnnual,
+                      );
+                    }}
+                  >
+                    {familyBilling === "monthly"
+                      ? "Continue with Monthly, $7"
+                      : "Continue with Yearly, $59"}
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </section>
+
+        {/* ── CARD DECKS ─────────────────────────────────────────────── */}
+        <section className="panel set-sec rise">
+          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, marginBottom: 18 }}>
+            <div>
+              <div className="eyebrow" style={{ marginBottom: 9 }}>Conversation cards</div>
+              <h2 style={{ margin: 0 }}>Card decks</h2>
+            </div>
+            {onOpenDecks && (
+              <button className="btn btn-primary" onClick={onOpenDecks} style={{ flexShrink: 0, marginTop: 4 }}>
+                {unlockedDecks.length > 0 ? "Open library" : "Unlock now"}
+              </button>
+            )}
+          </div>
+          {unlockedDecks.length > 0 ? (
+            <div className="set-chips" style={{ marginBottom: 4 }}>
+              {unlockedDecks.map((yr) => <span key={yr} className="set-deckpill">{yr} Deck</span>)}
+            </div>
+          ) : (
+            <p className="set-sub" style={{ margin: 0 }}>
+              You haven't unlocked any card decks yet. Unlock the 52-question deck to draw a
+              conversation card together each week.
+            </p>
+          )}
+        </section>
 
         {/* ── FAMILY MEMBERS ─────────────────────────────────────────── */}
         <section className="panel set-sec rise">
@@ -583,11 +692,10 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
             type="button"
             className={"set-toggle" + (soundsEnabled ? " is-on" : "")}
             onClick={toggleSounds}
-            disabled={soundsSaving}
             aria-pressed={soundsEnabled}
             aria-label={soundsEnabled ? "Sounds on" : "Sounds off"}
           >
-            <span>{soundsSaving ? "Saving…" : soundsEnabled ? "Sounds on" : "Sounds off"}</span>
+            <span>{soundsEnabled ? "Sounds on" : "Sounds off"}</span>
             <span className="set-toggle-track" aria-hidden="true">
               <span className="set-toggle-thumb" />
             </span>
@@ -668,123 +776,6 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
             >
               Connect Google Calendar
             </button>
-          )}
-        </section>
-
-        {/* ── CARD DECKS ─────────────────────────────────────────────── */}
-        <section className="panel set-sec rise">
-          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, marginBottom: 18 }}>
-            <div>
-              <div className="eyebrow" style={{ marginBottom: 9 }}>Conversation cards</div>
-              <h2 style={{ margin: 0 }}>Card decks</h2>
-            </div>
-            {onOpenDecks && (
-              <button className="btn btn-primary" onClick={onOpenDecks} style={{ flexShrink: 0, marginTop: 4 }}>
-                {unlockedDecks.length > 0 ? "Open library" : "Unlock now"}
-              </button>
-            )}
-          </div>
-          {unlockedDecks.length > 0 ? (
-            <div className="set-chips" style={{ marginBottom: 4 }}>
-              {unlockedDecks.map((yr) => <span key={yr} className="set-deckpill">{yr} Deck</span>)}
-            </div>
-          ) : (
-            <p className="set-sub" style={{ margin: 0 }}>
-              You haven't unlocked any card decks yet. Unlock the 52-question deck to draw a
-              conversation card together each week.
-            </p>
-          )}
-        </section>
-
-        {/* ── SUBSCRIPTION ───────────────────────────────────────────── */}
-        <section className="panel set-sec rise">
-          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, marginBottom: 18 }}>
-            <div>
-              <div className="eyebrow" style={{ marginBottom: 9 }}>Your plan</div>
-              <h2 style={{ margin: 0 }}>Subscription</h2>
-            </div>
-            {!isPaidPlan(subscription) && (
-              <button
-                type="button"
-                className="btn btn-primary"
-                style={{ flexShrink: 0, marginTop: 4 }}
-                aria-expanded={upgradeOpen}
-                onClick={() => setUpgradeOpen((o) => !o)}
-              >
-                {upgradeOpen ? "Close" : "Upgrade"}
-              </button>
-            )}
-          </div>
-          {subLoading ? (
-            <div className="set-spin" />
-          ) : (
-            <div>
-              <div className="set-plan">
-                <span className="name">{planLabel}</span>
-                {subscription?.active && <span className="tag tag-amanda">Active</span>}
-              </div>
-              {checkoutNotice && (
-                <p className="set-sub" style={{ margin: "0 0 12px", color: "var(--olive-d)" }}>
-                  Thanks, your plan should update shortly.
-                </p>
-              )}
-              {(subscription?.plan === "free" || !subscription) && !isPaidPlan(subscription) && trialDaysRemaining !== null && (
-                <p className="set-sub" style={{ margin: 0 }}>
-                  {trialDaysRemaining > 0
-                    ? `${trialDaysRemaining} trial day${trialDaysRemaining === 1 ? "" : "s"} remaining.`
-                    : "Your free trial has ended. Upgrade for unlimited AI sessions, or use manual review."}
-                </p>
-              )}
-              {!subscription && trialDaysRemaining === null && (
-                <p className="set-sub" style={{ margin: 0 }}>You&apos;re on the free plan. Upgrade for unlimited AI sessions.</p>
-              )}
-
-              {upgradeOpen && !isPaidPlan(subscription) && (
-                <div className="set-upgrade" role="region" aria-label="Choose Family Plan billing">
-                  <div className="set-upgrade-title">Family Plan</div>
-                  <p className="set-upgrade-sub">
-                    Unlimited AI sessions, spouse sync, plan history, and PDF exports.
-                  </p>
-                  <div className="set-billing" role="group" aria-label="Billing period">
-                    <button
-                      type="button"
-                      className={familyBilling === "monthly" ? "on" : ""}
-                      aria-pressed={familyBilling === "monthly"}
-                      onClick={() => setFamilyBilling("monthly")}
-                    >
-                      Monthly
-                    </button>
-                    <button
-                      type="button"
-                      className={familyBilling === "annual" ? "on" : ""}
-                      aria-pressed={familyBilling === "annual"}
-                      onClick={() => setFamilyBilling("annual")}
-                    >
-                      Yearly
-                    </button>
-                  </div>
-                  <div className="set-upgrade-price">
-                    <span className="amt">{familyBilling === "monthly" ? "$7" : "$59"}</span>
-                    <span className="per">{familyBilling === "monthly" ? "/ month" : "/ year"}</span>
-                  </div>
-                  <button
-                    type="button"
-                    className="btn btn-primary btn-block"
-                    onClick={() => {
-                      openPaymentLink(
-                        familyBilling === "monthly"
-                          ? STRIPE_LINKS.familyMonthly
-                          : STRIPE_LINKS.familyAnnual,
-                      );
-                    }}
-                  >
-                    {familyBilling === "monthly"
-                      ? "Continue with Monthly, $7"
-                      : "Continue with Yearly, $59"}
-                  </button>
-                </div>
-              )}
-            </div>
           )}
         </section>
 

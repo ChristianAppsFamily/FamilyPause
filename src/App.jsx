@@ -1316,7 +1316,13 @@ export default function App({ user, workspace, onSignOut }) {
     return () => clearTimeout(t);
   }, [view, planArrivalPhase, planArrivalMode]);
 
-  useEffect(() => { setWs(workspace); }, [workspace]);
+  // Keep device sound preference when parent workspace refreshes (DB may omit/ lag sounds_enabled).
+  useEffect(() => {
+    setWs({
+      ...workspace,
+      sounds_enabled: soundsEnabledForWorkspace(workspace),
+    });
+  }, [workspace]);
 
   // Refresh workspace after digital-offer return to agenda
   useEffect(() => {
@@ -1325,7 +1331,12 @@ export default function App({ user, workspace, onSignOut }) {
     let active = true;
     (async () => {
       const { data } = await supabase.from("workspaces").select("*").eq("id", ws.id).maybeSingle();
-      if (active && data) setWs(data);
+      if (active && data) {
+        setWs({
+          ...data,
+          sounds_enabled: soundsEnabledForWorkspace(data),
+        });
+      }
       navigate(syncPath(viewFromLocation()), { replace: true });
     })();
     return () => { active = false; };
