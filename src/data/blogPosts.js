@@ -396,6 +396,49 @@ export const blogPosts = [
     <p><em><a href="https://familypause.com">Start your free 7-day trial</a> at familypause.com. No credit card required.</em></p>
   `,
   },
+  {
+    slug: "how-to-use-ai-to-organize-your-weekly-family-conversation",
+    title: "How to Use AI to Organize Your Weekly Family Conversation",
+    excerpt: "Most families have the conversation. They just lose everything that came out of it. Here is how AI changes that without changing the conversation itself.",
+    category: "Family Planning",
+    readTime: "6 min",
+    publishDate: "2026-07-22",
+    content: `
+    <p>The weekly family conversation is not the hard part.</p>
+    <p>Most couples have it, in some form, already. In the car. Over dinner. During the ten minutes before the kids go to bed when everything that needs to be discussed finally surfaces because the week is almost over and you have run out of time to deal with it differently.</p>
+    <p>The hard part is what happens after. Someone tries to remember what you decided. A few things get written down somewhere. The rest stays in someone's head until Monday morning when it either gets done or quietly disappears into the next week's pile.</p>
+    <p>This is not a communication problem. It is a capture problem. The conversation is happening. The output just has nowhere to land. That is exactly what AI is useful for.</p>
+    <h2>What AI Does Well in a Family Context</h2>
+    <p>AI is not a replacement for the conversation. It is not a therapist, a planner, or a decision-maker. It is a very fast, very patient listener that is good at one specific thing: finding structure inside unstructured speech.</p>
+    <p>When you tell your spouse about Jordan's dentist appointment on Thursday, the call you need to make before Friday, the decision about summer camp you have been putting off, and the thing that has been bothering you about how the week is being divided, an AI can pull the appointment, the call, and the decision out of that conversation and present them back to you as a clean, reviewable list.</p>
+    <p>It cannot tell you whether the summer camp decision is the right one. It cannot resolve the tension in the conversation about how the week is divided. Those things still require you. But it can make sure that the appointment, the call, and the decision do not disappear into the noise of everything else that was said.</p>
+    <h2>The Practical Problem It Solves</h2>
+    <p>Here is what happens in most family conversations without a capture system. You talk for twenty minutes. Fifteen things come up. You both have the vague sense that things were decided and commitments were made. A few of them get added to a calendar, usually by one person, usually incompletely. The others stay in one person's mental load until they either get done or get dropped.</p>
+    <p>The following week you discover that the call never happened, the appointment never made it to the calendar, and the decision about summer camp is still open because nobody officially closed it.</p>
+    <p>This is the failure mode. Not the conversation. The capture. AI solves the capture problem without requiring you to change how you talk to each other. You do not need to speak in bullet points. You do not need to pause every two minutes to write something down. You just talk, and the AI listens for the things that need to be remembered.</p>
+    <h2>How It Works in FamilyPause</h2>
+    <p>In FamilyPause the process is straightforward. You sit down together and either record your conversation live or paste in whatever notes, messages, or voice memo transcripts contain what you need to deal with this week. FamilyPause sends that to an AI that reads through everything and pulls out every appointment, task, reminder, and decision it finds.</p>
+    <p>You get back a set of cards, one per item, showing you what the AI found, where in the conversation it came from, and whether it has a date and time attached. You review each one together. Keep what is accurate. Edit anything that needs adjusting. Fill in missing dates for anything that came up without a specific time. Discard anything the AI caught that is not actually actionable.</p>
+    <p>Everything you approve syncs directly to your Google Calendar. No retyping. No copying from one app to another. The conversation becomes a calendar in about five minutes.</p>
+    <h2>What You Still Have to Do</h2>
+    <p>This is worth being clear about because AI gets oversold. The AI does not know whether Thursday at 3pm actually works for the dentist appointment. It does not know if the call you mentioned is one you will handle or one your spouse will. It does not know if the summer camp decision needs to happen this week or can wait.</p>
+    <p>You review all of that. The AI presents the items. You decide what to keep, what to discard, who owns it, and when it happens. The approval step is not optional. It is the point.</p>
+    <p>FamilyPause is designed so that nothing reaches your calendar until you have seen it and said yes. The AI does the extraction. You do the judgment. That division of labor is what makes it useful rather than just clever.</p>
+    <h2>Why This Changes the Weekly Meeting</h2>
+    <p>The most common reason couples stop having weekly family meetings is not that the conversation feels pointless. It is that the conversation does not produce anything durable.</p>
+    <p>You talk, you feel briefly organized, and then the week begins and none of what you discussed has anywhere to live. By Wednesday you are back to the same reactive mode the meeting was supposed to prevent.</p>
+    <p>When the output of the conversation goes directly onto your calendar, that dynamic changes. Monday morning you already know what the week holds. The things you discussed on Sunday night are already accounted for. The decisions that got made are already reflected in the plan. The meeting starts to feel worth having not because the conversation is more meaningful but because the output does not disappear.</p>
+    <h2>What a Good Weekly AI-Assisted Family Meeting Looks Like</h2>
+    <p>You do not need special equipment or a particular setup. Sit down together. Pull a conversation starter card if you have them. Talk through the week. Record it on your phone or speak it into the FamilyPause app directly. Or type out the key things if that is easier than recording.</p>
+    <p>Let FamilyPause find the structure in what you said. Review the items together. Keep what is right, fix what needs adjusting, discard what does not belong. Confirm the dates and times. Approve everything. Watch your week appear on both of your calendars.</p>
+    <p>The whole thing takes about twenty minutes. Probably less once you have done it a few times. The conversation itself is maybe fifteen of those minutes. The AI does the rest.</p>
+    <h2>The Thing That Does Not Change</h2>
+    <p>The conversation still requires both of you. AI does not replace the ten minutes at the end when one of you asks how the other is actually doing. It does not replace the moment when something important surfaces that you have both been avoiding. It does not replace the decision to sit down together on a Sunday evening when every other part of the week has been pulling you in different directions.</p>
+    <p>Those things are still yours. What AI gives you is the confidence that everything practical which came out of the conversation will actually land somewhere real. That the appointment will be on the calendar. That the task will be visible. That the decision you made together will not quietly disappear by Tuesday.</p>
+    <p>The conversation is the relationship. The calendar is the plan. AI is what connects them.</p>
+    <p><em>FamilyPause is free to try for 7 days at <a href="https://familypause.com">familypause.com</a>. No credit card required. Your conversation, your plan, your calendar.</em></p>
+  `,
+  },
 ];
 
 /** Newest first. Same-day posts: later entries in the array rank higher. */
