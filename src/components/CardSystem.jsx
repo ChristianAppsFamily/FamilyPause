@@ -571,6 +571,84 @@ function CardDraw({ workspace, meetingDate, onStartSession, onSkip, onUnlock }) 
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Physical deck waitlist (printed deck not for sale yet)
+// ─────────────────────────────────────────────────────────────────────────────
+function PhysicalDeckWaitlist({ variant = "terra" }) {
+  const [email, setEmail] = useState("");
+  const [status, setStatus] = useState("idle"); // idle | loading | success
+  const [error, setError] = useState("");
+  const isGold = variant === "gold";
+
+  const submit = async (e) => {
+    e.preventDefault();
+    const trimmed = email.trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
+      setError("Enter a valid email address.");
+      return;
+    }
+    setError("");
+    setStatus("loading");
+    const { error: invokeErr } = await supabase.functions.invoke("capture-lead", {
+      body: { email: trimmed, kind: "physical-deck-waitlist" },
+    });
+    if (invokeErr) {
+      setStatus("idle");
+      setError("We couldn't join the waitlist. Please try again.");
+      return;
+    }
+    setStatus("success");
+  };
+
+  if (status === "success") {
+    return (
+      <div className={isGold ? "cs-info-gold" : "cs-physical-waitlist"}>
+        <div className={isGold ? "cs-info-gold-title" : "cs-physical-waitlist-eyebrow"}>You're on the list</div>
+        <p className={isGold ? undefined : "cs-physical-waitlist-copy"}>
+          Thanks — we'll email you when the printed FamilyPause deck is ready to ship.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className={isGold ? "cs-info-gold" : "cs-physical-waitlist"}>
+      <div className={isGold ? "cs-info-gold-title" : "cs-physical-waitlist-eyebrow"}>
+        Physical deck · Coming soon
+      </div>
+      <p className={isGold ? undefined : "cs-physical-waitlist-copy"}>
+        {isGold
+          ? "The printed deck isn't available to buy yet. Join the waitlist and we'll let you know when it ships — it will include a digital unlock code."
+          : "Want the physical experience too? The printed deck isn't for sale yet. Join the waitlist and we'll email you when it's ready."}
+      </p>
+      <form className="cs-physical-waitlist-form" onSubmit={submit}>
+        <label className="cs-sr-only" htmlFor="physical-deck-waitlist-email">Email</label>
+        <input
+          id="physical-deck-waitlist-email"
+          className="cs-physical-waitlist-input"
+          type="email"
+          name="email"
+          inputMode="email"
+          autoComplete="email"
+          placeholder="you@example.com"
+          value={email}
+          onChange={(e) => { setEmail(e.target.value); setError(""); }}
+          disabled={status === "loading"}
+          required
+        />
+        <button
+          type="submit"
+          className="cs-physical-waitlist-btn"
+          disabled={status === "loading" || !email.trim()}
+        >
+          {status === "loading" ? "Joining…" : "Join waitlist"}
+        </button>
+      </form>
+      {error && <p className="cs-physical-waitlist-error">{error}</p>}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // 2. UNLOCK DECK: code entry + digital purchase
 // ─────────────────────────────────────────────────────────────────────────────
 function UnlockDeck({ workspace, onSuccess, onClose }) {
@@ -721,12 +799,7 @@ function UnlockDeck({ workspace, onSuccess, onClose }) {
               </button>
             </div>
 
-            <div className="cs-info-gold">
-              <div className="cs-info-gold-title">Don&apos;t have the deck yet?</div>
-              <p>
-                Get the physical deck at <a href="https://familypause.com/cards" target="_blank" rel="noreferrer" style={{ color: T.terra }}>familypause.com/cards</a> for {`$${PHYSICAL_DECK_PRICE}`}. Includes 52 cards, a beautiful tuck box, and your digital unlock code.
-              </p>
-            </div>
+            <PhysicalDeckWaitlist variant="gold" />
           </div>
         )}
 
@@ -755,11 +828,7 @@ function UnlockDeck({ workspace, onSuccess, onClose }) {
               Secure payment via Stripe · Instant access
             </div>
 
-            <div style={{ marginTop: 18, padding: "14px 18px", background: T.terraL, border: `1px solid ${T.terra}22`, borderRadius: 10 }}>
-              <div style={{ fontSize: 15, color: T.terraD, lineHeight: 1.55 }}>
-                Want the physical experience too? The printed deck is $24 and includes this digital unlock. <a href="https://familypause.com/cards" target="_blank" rel="noreferrer" style={{ color: T.terra }}>Get the full deck →</a>
-              </div>
-            </div>
+            <PhysicalDeckWaitlist variant="terra" />
           </div>
         )}
       </div>
