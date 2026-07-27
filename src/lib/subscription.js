@@ -51,7 +51,24 @@ export function hasFamilyPlanFeatures(subscription) {
  * @param {object} subscription
  * @param {{ distillsToday?: number }} opts
  */
+/**
+ * Returns null if plan creation is allowed, or a paywall reason.
+ * After trial expiry, distill is gated server-side (session packs → 402).
+ * @param {object} subscription
+ * @param {{ distillsToday?: number }} opts
+ */
 export function paywallReason(subscription, { distillsToday = 0 } = {}) {
-  if (hasFamilyPlanFeatures(subscription)) return null;
-  return distillsToday >= 1 ? "daily" : null;
+  if (isPaidPlan(subscription)) return null;
+  if (isTrialActive(subscription)) return null;
+  // Trial expired: free daily limit no longer applies — session packs / upgrade instead.
+  // Keep "daily" unused for expired; client shows SessionPackModal on 402.
+  void distillsToday;
+  return null;
+}
+
+/** Reason for opening the full Paywall overlay from Settings / upgrade CTAs. */
+export function upgradePaywallReason(subscription) {
+  if (isPaidPlan(subscription)) return "upgrade";
+  if (isTrialActive(subscription)) return "upgrade";
+  return "trial";
 }

@@ -1,15 +1,16 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // Paywall.jsx: FamilyPause
-// Visual source of truth: project/app design bundle (src/styles/tokens.css).
-// Shown when the 7-day trial expires, trial daily limit hit, or user opens upgrade.
-//
-// Props:
-//   reason     "trial" | "daily" | "upgrade"  (tailors headline/subcopy)
-//   onClose()  optional (dismiss / go back)
+// Trial expiry shows founding / half-off deck offer banner (once per session).
 // ─────────────────────────────────────────────────────────────────────────────
 
+import { useEffect, useState } from "react";
 import { formatDigitalPrice } from "../lib/deckPricing";
+import { openStripeCheckout } from "../lib/stripeCheckout";
 import { openPaymentLink, STRIPE_LINKS } from "../lib/stripeLinks";
+import { isPaidPlan, isTrialActive } from "../lib/subscription";
+import { supabase } from "../lib/supabase";
+
+const OFFER_FLAG = "trial_deck_offer_dismissed";
 
 const css = `
   .pw-wrap { max-width: 760px; margin: 0 auto; }
@@ -18,6 +19,22 @@ const css = `
   .pw-head h1 { font-size: 40px; line-height: 1.06; margin-bottom: 12px; }
   .pw-head h1 em { font-style: italic; color: var(--terra); }
   .pw-head p { color: var(--ink-2); font-size: 16.5px; line-height: 1.55; max-width: 480px; margin: 0 auto; }
+
+  .pw-offer {
+    border-radius: var(--r); padding: 16px 18px; margin-bottom: 18px; text-align: left;
+  }
+  .pw-offer.free { background: var(--olive-tint); border: 1px solid var(--olive-soft); }
+  .pw-offer.half { background: var(--terra-tint); border: 1px solid var(--terra-soft); }
+  .pw-offer-eyebrow {
+    font-family: var(--mono); font-size: 10px; letter-spacing: .14em; text-transform: uppercase;
+    margin: 0 0 8px;
+  }
+  .pw-offer.free .pw-offer-eyebrow { color: var(--olive-d); }
+  .pw-offer.half .pw-offer-eyebrow { color: var(--terra-d); }
+  .pw-offer-hl {
+    font-family: var(--display); font-style: italic; font-weight: 600;
+    font-size: 16px; line-height: 1.35; color: var(--ink); margin: 0;
+  }
 
   .pw-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; align-items: stretch; }
   .pw-card {
@@ -60,6 +77,10 @@ const css = `
     transition: color .15s, border-color .15s, background .15s;
   }
   .pw-cta .btn-monthly:hover { color: var(--terra); border-color: var(--terra); background: var(--terra-tint); }
+  .pw-deck-note {
+    font-family: var(--mono); font-size: 10px; letter-spacing: .04em;
+    color: var(--ink-3); text-align: center; margin: 0;
+  }
   .pw-foot { text-align: center; margin-top: 26px; }
   .pw-foot .note { font-family: var(--mono); font-size: 11.5px; letter-spacing: .04em; color: var(--ink-3); }
   .pw-foot .deck {
@@ -80,7 +101,32 @@ function Check() {
   return <span className="ck">✓</span>;
 }
 
-export default function Paywall({ reason = "trial", onClose }) {
+function parseCount(value) {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string") return parseInt(value, 10) || 0;
+  return Number(value) || 0;
+}
+
+function offerDismissed() {
+  try { return sessionStorage.getItem(OFFER_FLAG) === "1"; } catch { return false; }
+}
+
+function dismissOffer() {
+  try { sessionStorage.setItem(OFFER_FLAG, "1"); } catch { /* ignore */ }
+}
+
+/**
+ * @param {{
+ *   reason?: "trial"|"daily"|"upgrade",
+ *   onClose?: () => void,
+ *   workspace?: object,
+ *   subscription?: object,
+ * }} props
+ */
+export default function Paywall({ reason = "trial", onClose, workspace, subscription }) {
+  const [subscriberCount, setSubscriberCount] = useState(null);
+  const [showOffer, setShowOffer] = useState(false);
+
   const headline = reason === "daily"
     ? <>You&apos;ve used <em>today&apos;s</em> free session</>
     : reason === "upgrade"
@@ -92,6 +138,46 @@ export default function Paywall({ reason = "trial", onClose }) {
     : reason === "upgrade"
       ? "Unlock editing, missing-time resolution, exports, unlimited plans, and spouse sync with Family Plan."
       : "We hope the last 7 days brought a little more calm to your week. Keep the rhythm going with editing, exports, unlimited plans, and spouse sync.";
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      const { data } = await supabase
+        .from("app_config")
+        .select("value")
+        .eq("key", "subscriber_count")
+        .maybeSingle();
+      if (!active) return;
+      setSubscriberCount(parseCount(data?.value));
+    })();
+    return () => { active = false; };
+  }, []);
+
+  useEffect(() => {
+    const trialExpiry = reason === "trial";
+    const eligible = trialExpiry
+      && !isPaidPlan(subscription)
+      && !isTrialActive(subscription)
+      && !workspace?.cards_unlocked
+      && !offerDismissed();
+    setShowOffer(!!eligible && subscriberCount !== null);
+  }, [reason, subscription, workspace?.cards_unlocked, subscriberCount]);
+
+  const handleClose = () => {
+    if (showOffer) dismissOffer();
+    onClose?.();
+  };
+
+  const foundingFree = showOffer && subscriberCount !== null && subscriberCount < 100;
+  const halfOff = showOffer && subscriberCount !== null && subscriberCount >= 100;
+
+  const startCheckout = (product) => {
+    void openStripeCheckout(product, {
+      successPath: "/subscribe/success?session_id={CHECKOUT_SESSION_ID}",
+      cancelPath: "/subscribe/cancel",
+      includeTrialDeckOffer: showOffer,
+    });
+  };
 
   return (
     <div className="stage view">
@@ -105,7 +191,7 @@ export default function Paywall({ reason = "trial", onClose }) {
           </div>
           <div className="word"><b>Family</b><span>Pause</span></div>
         </div>
-        {onClose && <button className="btn btn-ghost" onClick={onClose}>Not now</button>}
+        {onClose && <button className="btn btn-ghost" onClick={handleClose}>Not now</button>}
       </div>
 
       <div className="pw-wrap">
@@ -114,6 +200,19 @@ export default function Paywall({ reason = "trial", onClose }) {
           <h1>{headline}</h1>
           <p>{sub}</p>
         </div>
+
+        {foundingFree && (
+          <div className="pw-offer free" role="status">
+            <div className="pw-offer-eyebrow">Founding Member Offer</div>
+            <p className="pw-offer-hl">Get the full digital card deck free when you become a member today.</p>
+          </div>
+        )}
+        {halfOff && (
+          <div className="pw-offer half" role="status">
+            <div className="pw-offer-eyebrow">Trial Member Offer</div>
+            <p className="pw-offer-hl">Get the full digital card deck at half off when you upgrade today.</p>
+          </div>
+        )}
 
         <div className="pw-grid">
           <div className="pw-card feat">
@@ -140,14 +239,20 @@ export default function Paywall({ reason = "trial", onClose }) {
               <button
                 type="button"
                 className="btn btn-primary btn-lg btn-block"
-                onClick={() => openPaymentLink(STRIPE_LINKS.familyAnnual)}
+                onClick={() => startCheckout("family")}
               >
                 Upgrade Annual, $59/year
               </button>
+              {foundingFree && (
+                <p className="pw-deck-note">Digital card deck included free — today only.</p>
+              )}
+              {halfOff && (
+                <p className="pw-deck-note">Digital Deck: $4.99 (half off today only)</p>
+              )}
               <button
                 type="button"
                 className="btn-monthly"
-                onClick={() => openPaymentLink(STRIPE_LINKS.familyMonthly)}
+                onClick={() => startCheckout("family_monthly")}
               >
                 Or Monthly, $7/month
               </button>
@@ -171,7 +276,7 @@ export default function Paywall({ reason = "trial", onClose }) {
               <li><Check /> 7 free Conversation Starter Cards</li>
             </ul>
             <div className="pw-cta">
-              <button className="btn btn-ghost btn-block" onClick={() => onClose?.()}>
+              <button className="btn btn-ghost btn-block" onClick={handleClose}>
                 {reason === "daily" ? "Come back tomorrow" : "Stay on Free"}
               </button>
             </div>
@@ -179,7 +284,7 @@ export default function Paywall({ reason = "trial", onClose }) {
         </div>
 
         <div className="pw-foot">
-          <div className="note">Secure checkout via Stripe · Opens in a new tab</div>
+          <div className="note">Secure checkout via Stripe</div>
           <button
             type="button"
             className="deck"

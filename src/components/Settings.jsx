@@ -18,7 +18,7 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "../lib/supabase";
-import { openPaymentLink, STRIPE_LINKS } from "../lib/stripeLinks";
+import { openStripeCheckout } from "../lib/stripeCheckout";
 import { trialDaysRemaining as getTrialDaysRemaining, isPaidPlan } from "../lib/subscription";
 import {
   setLocalSoundsEnabled,
@@ -30,6 +30,15 @@ import {
   disconnectGoogleCalendar,
 } from "../lib/googleCalendar";
 import CalendarAccountChooser from "./CalendarAccountChooser";
+import ReminderPicker, {
+  DEFAULT_REMINDER_DAY,
+  DEFAULT_REMINDER_TIME,
+  formatReminderDay,
+  formatReminderTime,
+  normalizeReminderDay,
+  normalizeReminderTime,
+} from "./ReminderPicker";
+import "../styles/reminder.css";
 
 const css = `
   .set-sec { padding: 24px 26px; margin-bottom: 18px; }
@@ -246,6 +255,11 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [soundsEnabled, setSoundsEnabled] = useState(() => soundsEnabledForWorkspace(workspace));
+  const [reminderDay, setReminderDay] = useState(() => normalizeReminderDay(workspace?.reminder_day));
+  const [reminderTime, setReminderTime] = useState(() => normalizeReminderTime(workspace?.reminder_time));
+  const [reminderEditing, setReminderEditing] = useState(false);
+  const [reminderSaving, setReminderSaving] = useState(false);
+  const [reminderSaved, setReminderSaved] = useState(false);
 
   // ── Members who accepted invite ────────────────────────────────────────────
   const [members, setMembers] = useState([]);
@@ -319,6 +333,12 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
   useEffect(() => {
     setSoundsEnabled(soundsEnabledForWorkspace(workspace));
   }, [workspace?.id]);
+
+  useEffect(() => {
+    setReminderDay(normalizeReminderDay(workspace?.reminder_day));
+    setReminderTime(normalizeReminderTime(workspace?.reminder_time));
+    setReminderEditing(false);
+  }, [workspace?.id, workspace?.reminder_day, workspace?.reminder_time]);
 
   const loadCalendarConnection = async () => {
     if (!workspace?.id || !user?.id) {
@@ -433,6 +453,31 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
       .then(({ error: err }) => {
         if (err) console.warn("[Settings] sounds_enabled sync failed", err.message);
       });
+  };
+
+  const saveReminder = async () => {
+    if (!workspace?.id || reminderSaving) return;
+    setReminderSaving(true);
+    setError("");
+    const day = normalizeReminderDay(reminderDay);
+    const time = normalizeReminderTime(reminderTime);
+    const { data, error: err } = await supabase
+      .from("workspaces")
+      .update({ reminder_day: day, reminder_time: time })
+      .eq("id", workspace.id)
+      .select("*")
+      .maybeSingle();
+    setReminderSaving(false);
+    if (err) {
+      setError(err.message || "Couldn't save reminder.");
+      return;
+    }
+    setReminderDay(day);
+    setReminderTime(time);
+    setReminderEditing(false);
+    setReminderSaved(true);
+    setTimeout(() => setReminderSaved(false), 2500);
+    onWorkspaceUpdate?.(data || { ...workspace, reminder_day: day, reminder_time: time });
   };
 
   // ── Plan + trial ───────────────────────────────────────────────────────────
@@ -556,10 +601,8 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
                     type="button"
                     className="btn btn-primary btn-block"
                     onClick={() => {
-                      openPaymentLink(
-                        familyBilling === "monthly"
-                          ? STRIPE_LINKS.familyMonthly
-                          : STRIPE_LINKS.familyAnnual,
+                      void openStripeCheckout(
+                        familyBilling === "monthly" ? "family_monthly" : "family",
                       );
                     }}
                   >
@@ -676,6 +719,63 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
                   </div>
                 </div>
               ))}
+            </div>
+          )}
+        </section>
+
+        {/* ── WEEKLY REMINDER ────────────────────────────────────────── */}
+        <section className="panel set-sec rise">
+          <div className="eyebrow">Weekly rhythm</div>
+          <h2>Reminder</h2>
+          <p className="set-sub">
+            We&apos;ll email you once a week so you and your spouse sit down together.
+          </p>
+          {reminderEditing ? (
+            <div>
+              <ReminderPicker
+                idPrefix="set-reminder"
+                day={reminderDay}
+                time={reminderTime}
+                onDayChange={setReminderDay}
+                onTimeChange={setReminderTime}
+              />
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 4 }}>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={saveReminder}
+                  disabled={reminderSaving}
+                >
+                  {reminderSaving ? "Saving…" : "Save reminder"}
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-ghost"
+                  onClick={() => {
+                    setReminderDay(normalizeReminderDay(workspace?.reminder_day ?? DEFAULT_REMINDER_DAY));
+                    setReminderTime(normalizeReminderTime(workspace?.reminder_time ?? DEFAULT_REMINDER_TIME));
+                    setReminderEditing(false);
+                  }}
+                  disabled={reminderSaving}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+              <div>
+                <div style={{ fontFamily: "var(--display)", fontSize: 22, color: "var(--ink)" }}>
+                  {formatReminderDay(reminderDay)} · {formatReminderTime(reminderTime)}
+                </div>
+                <div style={{ fontFamily: "var(--mono)", fontSize: 11, letterSpacing: ".04em", color: "var(--ink-3)", marginTop: 4 }}>
+                  Pacific time
+                </div>
+                {reminderSaved && <div className="set-saved" style={{ marginTop: 8 }}>✓ Saved</div>}
+              </div>
+              <button type="button" className="btn btn-soft" onClick={() => setReminderEditing(true)}>
+                Edit
+              </button>
             </div>
           )}
         </section>

@@ -11,6 +11,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import SampleCardCarousel from "./SampleCardCarousel.jsx";
+import ExitIntentModal from "./ExitIntentModal.jsx";
 import { supabase } from "../lib/supabase";
 
 const css = `
@@ -335,6 +336,145 @@ const css = `
   font-weight: 600;
   margin: 0 0 22px;
   color: #2E2820;
+}
+
+/* Exit-intent founding offer */
+.fp-exit-backdrop {
+  position: fixed; inset: 0; z-index: 80;
+  background: rgba(42, 37, 29, 0.45);
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px; backdrop-filter: blur(2px);
+}
+.fp-exit-modal {
+  position: relative;
+  width: min(100%, 440px);
+  background: var(--paper-card, #FCF8F0);
+  border: 1px solid var(--line, #E6D9C4);
+  border-radius: 18px;
+  padding: 36px 28px 28px;
+  box-shadow: 0 18px 50px rgba(70, 45, 20, 0.18);
+  text-align: center;
+}
+.fp-exit-x {
+  position: absolute; top: 12px; right: 12px;
+  width: 36px; height: 36px; border: none; border-radius: 8px;
+  background: transparent; color: var(--ink-3);
+  font-size: 22px; line-height: 1; cursor: pointer;
+}
+.fp-exit-x:hover { color: var(--terra); background: var(--terra-tint); }
+.fp-exit-pill {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--terra-d);
+  background: var(--terra-soft, #F1DDCF);
+  border-radius: 999px;
+  padding: 6px 12px;
+  margin-bottom: 14px;
+}
+.fp-exit-hl {
+  font-family: var(--display);
+  font-style: italic;
+  font-weight: 600;
+  font-size: 28px;
+  line-height: 1.15;
+  color: #2E2820;
+  margin: 0 0 10px;
+  text-align: center;
+}
+.fp-exit-sub {
+  font-family: var(--serif);
+  font-size: 15px;
+  line-height: 1.55;
+  color: #6A5A40;
+  margin: 0;
+  text-align: center;
+}
+.fp-exit-rule {
+  border: none;
+  border-top: 1px solid #D8CFC0;
+  margin: 16px 0;
+  width: 100%;
+}
+.fp-exit-offers {
+  list-style: none;
+  margin: 0 0 14px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  text-align: left;
+}
+.fp-exit-offers li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-family: var(--serif);
+  font-size: 14px;
+  line-height: 1.45;
+  color: #2E2820;
+}
+.fp-exit-ico {
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: #fff;
+  margin-top: 2px;
+}
+.fp-exit-ico--olive { background: var(--olive, #5E6B37); }
+.fp-exit-ico--gold { background: var(--gold, #C09740); }
+.fp-exit-spots {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  margin: 0 0 16px;
+  text-align: center;
+}
+.fp-exit-fine {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  color: var(--ink-3, #8C8070);
+  margin: 12px 0 10px;
+  text-align: center;
+}
+.fp-exit-pass {
+  display: block;
+  width: 100%;
+  background: none;
+  border: none;
+  font-family: var(--serif);
+  font-size: 14px;
+  color: var(--ink-3);
+  cursor: pointer;
+  padding: 8px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.fp-exit-pass:hover { color: var(--terra); }
+.fp-exit-success { text-align: center; padding: 8px 0 4px; }
+.fp-exit-check {
+  width: 52px; height: 52px; border-radius: 50%; margin: 0 auto 16px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--olive-soft); color: var(--olive-d);
+  font-size: 22px; font-weight: 600;
+}
+.fp-exit-success h2 {
+  font-family: var(--display); font-size: 26px; font-style: italic;
+  margin: 0 0 10px; color: #2E2820;
+}
+.fp-exit-success p {
+  font-family: var(--serif); font-size: 15px; color: #6A5A40; margin: 0;
+  line-height: 1.5;
 }
 
 /* hero mockup */
@@ -1516,6 +1656,8 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
           <div className="legal fineprint">© 2026 FamilyPause · Built with intention · <a href="https://www.biblegateway.com/passage/?search=Ecclesiastes%204%3A9-12&version=NASB" target="_blank" rel="noopener noreferrer" style={{ color: "inherit", textDecoration: "underline", textUnderlineOffset: 3 }}>Ecclesiastes 4:9</a></div>
         </div>
       </footer>
+
+      <ExitIntentModal onStarted={onStart} />
 
       {leadModal && (
         <div className="fp-guide-backdrop" onMouseDown={closeLeadModal}>

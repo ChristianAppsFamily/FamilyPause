@@ -135,6 +135,67 @@ Deno.serve(async (req) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return json({ error: "Unauthorized" }, 401);
 
+    const admin = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    );
+
+    // Resolve workspace
+    const { data: membership } = await supabase
+      .from("workspace_members")
+      .select("workspace_id, role")
+      .eq("user_id", user.id);
+    if (!membership?.length) return json({ error: "No workspace" }, 400);
+    const owner = membership.find((m: { role: string }) => m.role === "owner");
+    const workspaceId = owner?.workspace_id ?? membership[0].workspace_id;
+
+    // Plan / session gate
+    const { data: sub } = await admin
+      .from("subscriptions")
+      .select("plan, active, trial_ends_at")
+      .eq("workspace_id", workspaceId)
+      .maybeSingle();
+
+    const plan = sub?.plan || "free";
+    const isPaid = sub?.active && (plan === "family" || plan === "pro" || plan === "ministry");
+    const trialActive = !!sub?.trial_ends_at && new Date(sub.trial_ends_at) > new Date()
+      && (!plan || plan === "free");
+
+    if (!isPaid) {
+      if (trialActive) {
+        // 1 AI session per calendar day during trial
+        const today = new Date().toISOString().slice(0, 10);
+        const { data: usage } = await admin
+          .from("ai_distill_usage")
+          .select("count")
+          .eq("workspace_id", workspaceId)
+          .eq("usage_date", today)
+          .maybeSingle();
+        if ((usage?.count || 0) >= 1) {
+          return json({ error: "Daily trial limit reached", code: "DAILY_LIMIT" }, 402);
+        }
+      } else {
+        // Trial expired — consume prepaid session pack
+        const { data: ws } = await admin
+          .from("workspaces")
+          .select("sessions_remaining")
+          .eq("id", workspaceId)
+          .maybeSingle();
+        const remaining = ws?.sessions_remaining || 0;
+        if (remaining <= 0) {
+          return json({ error: "Session pack required", code: "SESSION_PACK_REQUIRED" }, 402);
+        }
+        const { error: decErr } = await admin
+          .from("workspaces")
+          .update({ sessions_remaining: remaining - 1 })
+          .eq("id", workspaceId)
+          .eq("sessions_remaining", remaining); // optimistic lock
+        if (decErr) {
+          return json({ error: "Could not reserve session", code: "SESSION_PACK_REQUIRED" }, 402);
+        }
+      }
+    }
+
     const { prompt, system, cacheSystem = false, extraction } = await req.json();
     if (!prompt) return json({ error: "Missing prompt" }, 400);
 

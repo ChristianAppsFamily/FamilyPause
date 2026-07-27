@@ -31,6 +31,59 @@ async function markEventProcessed(admin: ReturnType<typeof adminClient>, eventId
   return true;
 }
 
+function parseConfigCount(value: unknown): number {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string") {
+    const n = parseInt(value, 10);
+    return Number.isFinite(n) ? n : 0;
+  }
+  const n = Number(value);
+  return Number.isFinite(n) ? n : 0;
+}
+
+async function getSubscriberCount(admin: ReturnType<typeof adminClient>): Promise<number> {
+  const { data } = await admin
+    .from("app_config")
+    .select("value")
+    .eq("key", "subscriber_count")
+    .maybeSingle();
+  return parseConfigCount(data?.value);
+}
+
+async function maybeUnlockFoundingDeck(
+  admin: ReturnType<typeof adminClient>,
+  workspaceId: string,
+) {
+  const { data: ws } = await admin
+    .from("workspaces")
+    .select("metadata, cards_unlocked")
+    .eq("id", workspaceId)
+    .maybeSingle();
+  const meta = (ws?.metadata && typeof ws.metadata === "object")
+    ? ws.metadata as Record<string, unknown>
+    : {};
+  if (meta.founding_member !== true) return;
+
+  const countBefore = await getSubscriberCount(admin);
+  // First 100 paid slots (count 0..99 before this payment) unlock the deck.
+  if (countBefore < 100 && !ws?.cards_unlocked) {
+    await unlockDigitalDeck(admin, workspaceId);
+  }
+}
+
+async function bumpSubscriberCount(admin: ReturnType<typeof adminClient>) {
+  const { error } = await admin.rpc("increment_subscriber_count");
+  if (error) {
+    // Fallback if RPC unavailable
+    const count = await getSubscriberCount(admin);
+    await admin.from("app_config").upsert({
+      key: "subscriber_count",
+      value: count + 1,
+      updated_at: new Date().toISOString(),
+    });
+  }
+}
+
 async function unlockDigitalDeck(admin: ReturnType<typeof adminClient>, workspaceId: string, deckYear?: number) {
   const year = deckYear ?? new Date().getFullYear();
   const { data: ws, error: fetchErr } = await admin
@@ -96,6 +149,23 @@ async function handleCheckoutCompleted(admin: ReturnType<typeof adminClient>, se
     : session.subscription?.id ?? null;
 
   if (product === "digital" || product === "digital_offer" || session.mode === "payment") {
+    // Session packs
+    if (product === "pack_1" || product === "pack_3" || product === "pack_5" || session.metadata?.sessions_to_add) {
+      const add = parseInt(session.metadata?.sessions_to_add || "0", 10);
+      if (Number.isFinite(add) && add > 0) {
+        const { data: ws } = await admin
+          .from("workspaces")
+          .select("sessions_remaining, session_packs_purchased")
+          .eq("id", workspaceId)
+          .maybeSingle();
+        await admin.from("workspaces").update({
+          sessions_remaining: (ws?.sessions_remaining || 0) + add,
+          session_packs_purchased: (ws?.session_packs_purchased || 0) + 1,
+        }).eq("id", workspaceId);
+      }
+      return;
+    }
+
     const deckYear = session.metadata?.deck_year
       ? parseInt(session.metadata.deck_year, 10)
       : new Date().getFullYear();
@@ -113,6 +183,30 @@ async function handleCheckoutCompleted(admin: ReturnType<typeof adminClient>, se
 
   if (product === "family" || product === "pro") {
     await upsertSubscription(admin, workspaceId, product, customerId, subscriptionId, true);
+    // Unlock deck for founding / first-100 / trial offer metadata
+    const countBefore = await getSubscriberCount(admin);
+    const { data: ws } = await admin
+      .from("workspaces")
+      .select("metadata, cards_unlocked")
+      .eq("id", workspaceId)
+      .maybeSingle();
+    const meta = (ws?.metadata && typeof ws.metadata === "object")
+      ? ws.metadata as Record<string, unknown>
+      : {};
+    const unlockRequested = session.metadata?.unlock_deck === "true"
+      || session.metadata?.trial_deck_offer === "free"
+      || session.metadata?.trial_deck_offer === "half"
+      || session.metadata?.half_off_deck === "true"
+      || meta.founding_member === true;
+    if (!ws?.cards_unlocked && unlockRequested && countBefore < 100) {
+      await unlockDigitalDeck(admin, workspaceId);
+    } else if (!ws?.cards_unlocked && (session.metadata?.unlock_deck === "true" || session.metadata?.half_off_deck === "true")) {
+      // Half-off path (≥100): still unlock — they paid or accepted the offer
+      await unlockDigitalDeck(admin, workspaceId);
+    } else {
+      await maybeUnlockFoundingDeck(admin, workspaceId);
+    }
+    await bumpSubscriberCount(admin);
     return;
   }
 
@@ -124,6 +218,8 @@ async function handleCheckoutCompleted(admin: ReturnType<typeof adminClient>, se
     const inferred = planFromPriceId(priceId);
     if (inferred === "family" || inferred === "pro") {
       await upsertSubscription(admin, workspaceId, inferred, customerId, subscriptionId, true);
+      await maybeUnlockFoundingDeck(admin, workspaceId);
+      await bumpSubscriberCount(admin);
     }
   }
 }

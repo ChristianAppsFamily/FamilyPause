@@ -36,6 +36,8 @@ async function invokeDistill(body) {
 
   if (error) {
     let detail = error?.message || String(error);
+    let code = null;
+    let status = error?.context?.status;
     try {
       const ctx = error?.context;
       if (ctx) {
@@ -46,9 +48,19 @@ async function invokeDistill(body) {
         }
         if (parsed?.error) detail = parsed.error;
         else if (typeof parsed === 'string' && parsed) detail = parsed;
+        if (parsed?.code) code = parsed.code;
+        if (ctx.status) status = ctx.status;
       }
     } catch (_) { /* ignore */ }
-    console.error('[FamilyPause AI] Edge function error:', error?.context?.status, detail, error);
+
+    if (code === 'SESSION_PACK_REQUIRED' || code === 'DAILY_LIMIT' || status === 402) {
+      const err = new Error(detail || 'Session pack required');
+      err.code = code || 'SESSION_PACK_REQUIRED';
+      err.status = 402;
+      throw err;
+    }
+
+    console.error('[FamilyPause AI] Edge function error:', status, detail, error);
     throw new Error(`AI unavailable: ${detail}`);
   }
 

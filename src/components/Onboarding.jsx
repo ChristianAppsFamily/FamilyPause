@@ -1,15 +1,51 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// Onboarding.jsx - FamilyPause (Elon cut: one primer screen → Agenda)
+// Onboarding.jsx - FamilyPause (Elon cut: one Ready screen → Agenda)
 // Family names, spouse invite, and card deck are deferred to in-session nudges.
+// Reminder day/time is collected here before entering the app.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useNavigate, useLocation } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { onboardingPath } from "../lib/routes";
+import { supabase } from "../lib/supabase";
+import ReminderPicker, {
+  DEFAULT_REMINDER_DAY,
+  DEFAULT_REMINDER_TIME,
+} from "./ReminderPicker";
 import "../styles/onboarding.css";
+import "../styles/reminder.css";
 
-function StepPrimer({ displayName, onComplete }) {
+function StepPrimer({ displayName, workspaceId, onComplete }) {
   const first = (displayName || "friend").trim() || "friend";
+  const [reminderDay, setReminderDay] = useState(DEFAULT_REMINDER_DAY);
+  const [reminderTime, setReminderTime] = useState(DEFAULT_REMINDER_TIME);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleStart = async () => {
+    if (saving) return;
+    setSaving(true);
+    setError("");
+
+    if (workspaceId) {
+      const { error: updErr } = await supabase
+        .from("workspaces")
+        .update({
+          reminder_day: reminderDay,
+          reminder_time: reminderTime,
+        })
+        .eq("id", workspaceId);
+
+      if (updErr) {
+        setSaving(false);
+        setError(updErr.message || "Couldn't save your reminder. Please try again.");
+        return;
+      }
+    }
+
+    await onComplete?.({ reminderDay, reminderTime });
+    setSaving(false);
+  };
 
   return (
     <div className="ob-center">
@@ -37,16 +73,31 @@ function StepPrimer({ displayName, onComplete }) {
           <div key={text} className="ob-how-row"><span className="ob-how-emoji">{emoji}</span><span>{text}</span></div>
         ))}
       </div>
+
+      <div className="ob-anim ob-reminder-wrap" style={{ "--d": "340ms" }}>
+        <ReminderPicker
+          idPrefix="ob-reminder"
+          day={reminderDay}
+          time={reminderTime}
+          onDayChange={setReminderDay}
+          onTimeChange={setReminderTime}
+        />
+      </div>
+
+      {error && (
+        <p className="ob-anim ob-reminder-error" style={{ "--d": "360ms" }} role="alert">{error}</p>
+      )}
+
       <div className="ob-anim" style={{ "--d": "380ms" }}>
-        <button type="button" className="ob-btn-primary" onClick={onComplete}>
-          Start my first FamilyPause →
+        <button type="button" className="ob-btn-primary" onClick={handleStart} disabled={saving}>
+          {saving ? "Saving…" : "Start my first FamilyPause →"}
         </button>
       </div>
     </div>
   );
 }
 
-export default function Onboarding({ displayName, onComplete }) {
+export default function Onboarding({ workspaceId, displayName, onComplete }) {
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -59,7 +110,11 @@ export default function Onboarding({ displayName, onComplete }) {
   return (
     <div className="ob-page">
       <div className="ob-column">
-        <StepPrimer displayName={displayName} onComplete={onComplete} />
+        <StepPrimer
+          displayName={displayName}
+          workspaceId={workspaceId}
+          onComplete={onComplete}
+        />
       </div>
     </div>
   );

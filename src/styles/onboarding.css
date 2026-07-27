@@ -394,3 +394,19 @@
   margin: 40px auto;
 }
 @keyframes obSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+.ob-reminder-wrap {
+  margin: 28px 0 8px;
+  padding: 18px 16px 14px;
+  background: var(--paper-card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  text-align: left;
+}
+
+.ob-reminder-error {
+  font-family: var(--serif);
+  font-size: 14px;
+  color: var(--red);
+  margin: 0 0 12px;
+}

@@ -18,9 +18,10 @@ import { callDistillExtraction, callFamilyPauseAI, buildSystemPrompt } from "./l
 import Settings from "./components/Settings.jsx";
 import CardSystem from "./components/CardSystem.jsx";
 import Paywall from "./components/Paywall.jsx";
+import SessionPackModal from "./components/SessionPackModal.jsx";
 import PlanView from "./components/PlanView.jsx";
 import UpgradePrompt from "./components/UpgradePrompt.jsx";
-import { hasFamilyPlanFeatures, paywallReason } from "./lib/subscription";
+import { hasFamilyPlanFeatures, paywallReason, upgradePaywallReason } from "./lib/subscription";
 import { loadDistillsToday, recordDistillUsage } from "./lib/distillUsage";
 import { parseAppLocation, syncPath, SYNC_VIEWS, cardsPath } from "./lib/routes";
 import { normalizeCardPeople } from "./lib/familyContext";
@@ -1268,6 +1269,7 @@ export default function App({ user, workspace, onSignOut }) {
   const [view, setView] = useState(viewFromLocation);
   const [overlay, setOverlay] = useState(overlayFromLocation);
   const [paywallBlock, setPaywallBlock] = useState(null);
+  const [sessionPackOpen, setSessionPackOpen] = useState(false);
   const [subscription, setSubscription] = useState(null);
   const [subscriptionLoaded, setSubscriptionLoaded] = useState(false);
   const [distillsToday, setDistillsToday] = useState(0);
@@ -1383,7 +1385,7 @@ export default function App({ user, workspace, onSignOut }) {
   };
 
   const openFeatureUpgrade = () => {
-    setPaywallBlock("upgrade");
+    setPaywallBlock(upgradePaywallReason(subscription));
     openOverlay("paywall");
   };
 
@@ -1608,6 +1610,17 @@ ${text}`;
       try { parsed = JSON.parse(raw.replace(/```json|```/g, "").trim()); }
       catch { const m = raw.match(/\[[\s\S]*\]/); if (m) parsed = JSON.parse(m[0]); }
     } catch (err) {
+      if (err?.code === "SESSION_PACK_REQUIRED" || (err?.status === 402 && err?.code !== "DAILY_LIMIT")) {
+        setSessionPackOpen(true);
+        go("capture");
+        return;
+      }
+      if (err?.code === "DAILY_LIMIT") {
+        setPaywallBlock("daily");
+        openOverlay("paywall");
+        go("capture");
+        return;
+      }
       errorMsg = err?.message || String(err);
       parsed = [];
     }
@@ -1859,7 +1872,12 @@ ${text}`;
     const resolvedReason = paywallBlock || paywallReason(subscription, { distillsToday }) || "upgrade";
     return (
       <div className="stage" style={{ padding: "48px 24px 80px" }}>
-        <Paywall reason={resolvedReason} onClose={() => { closeOverlay(); setPaywallBlock(null); }} />
+        <Paywall
+          reason={resolvedReason}
+          workspace={ws}
+          subscription={subscription}
+          onClose={() => { closeOverlay(); setPaywallBlock(null); }}
+        />
       </div>
     );
   }
@@ -1900,6 +1918,16 @@ ${text}`;
 
   return (
     <div className="stage">
+      {sessionPackOpen && (
+        <SessionPackModal
+          onClose={() => setSessionPackOpen(false)}
+          onOpenPaywall={() => {
+            setSessionPackOpen(false);
+            setPaywallBlock(upgradePaywallReason(subscription));
+            openOverlay("paywall");
+          }}
+        />
+      )}
       {(showFamilyNudge || showInviteNudge) && ws?.id && (
         <div
           className="nudge-scrim"

@@ -1,4 +1,4 @@
-// Public lead capture for Free Planning Guide and waitlists.
+// Public lead capture for Free Planning Guide, waitlists, and founding members.
 // Required secrets:
 //   RESEND_API_KEY
 // Guide (kind = "guide"):
@@ -7,6 +7,8 @@
 // Waitlists:
 //   RESEND_MINISTRY_WAITLIST_SEGMENT_ID (kind = "ministry-waitlist")
 //   RESEND_PHYSICAL_DECK_WAITLIST_SEGMENT_ID (kind = "physical-deck-waitlist")
+// Founding (kind = "founding-member"):
+//   optional RESEND_FOUNDING_SEGMENT_ID
 // Optional:
 //   SUNDAY_GUIDE_FROM_EMAIL / LEAD_FROM_EMAIL
 
@@ -79,6 +81,20 @@ function physicalDeckWaitlistHtml() {
       <p style="margin:0 0 24px;color:#BE5A37;font-size:13px;letter-spacing:.12em;text-transform:uppercase;">FamilyPause</p>
       <h1 style="margin:0 0 18px;font-size:28px;font-style:italic;font-weight:600;line-height:1.25;">You're on the physical deck waitlist.</h1>
       <p style="margin:0;color:#6A5A40;font-size:16px;line-height:1.65;">Thanks for joining. We'll let you know when the printed FamilyPause Conversation Deck is ready. With care, Spence.</p>
+    </div>
+  </body>
+</html>`;
+}
+
+function foundingMemberHtml() {
+  return `<!DOCTYPE html>
+<html>
+  <head><meta charset="utf-8"><meta name="viewport" content="width=device-width"></head>
+  <body style="margin:0;padding:0;background:#FAF7F2;font-family:Georgia,'Lora',serif;color:#2E2820;">
+    <div style="max-width:560px;margin:0 auto;padding:44px 24px;">
+      <p style="margin:0 0 24px;color:#BE5A37;font-size:13px;letter-spacing:.12em;text-transform:uppercase;">FamilyPause</p>
+      <h1 style="margin:0 0 18px;font-size:28px;font-style:italic;font-weight:600;line-height:1.25;">Welcome, founding member.</h1>
+      <p style="margin:0;color:#6A5A40;font-size:16px;line-height:1.65;">Your free trial is ready. Check your inbox for a link to set your password, then start your first weekly sync. With care, Spence.</p>
     </div>
   </body>
 </html>`;
@@ -178,7 +194,9 @@ Deno.serve(async (req) => {
       ? "ministry-waitlist"
       : body?.kind === "physical-deck-waitlist"
         ? "physical-deck-waitlist"
-        : "guide";
+        : body?.kind === "founding-member"
+          ? "founding-member"
+          : "guide";
     const apiKey = Deno.env.get("RESEND_API_KEY");
     if (!apiKey) {
       console.error("[capture-lead] Missing RESEND_API_KEY");
@@ -213,6 +231,31 @@ Deno.serve(async (req) => {
         physicalDeckWaitlistHtml(),
         "Physical deck waitlist",
       );
+    }
+
+    if (kind === "founding-member") {
+      // Soft capture: enroll when segment is configured; never block signup on missing segment.
+      const segmentId = Deno.env.get("RESEND_FOUNDING_SEGMENT_ID");
+      if (segmentId) {
+        const enrolled = await enrollContact(apiKey, email, segmentId);
+        if (!enrolled.ok) {
+          console.error("[capture-lead] Founding enrollment failed", enrolled.stage, enrolled.status, enrolled.data);
+        }
+      }
+      const sendRes = await resendRequest("/emails", apiKey, {
+        method: "POST",
+        body: JSON.stringify({
+          from,
+          to: [email],
+          subject: "Welcome, founding member",
+          html: foundingMemberHtml(),
+        }),
+      });
+      if (!sendRes.ok) {
+        const sendData = await sendRes.json().catch(() => ({}));
+        console.error("[capture-lead] Founding confirmation failed", sendRes.status, sendData);
+      }
+      return json(req, { ok: true });
     }
 
     const segmentId = Deno.env.get("RESEND_SUNDAY_GUIDE_SEGMENT_ID");
