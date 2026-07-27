@@ -5,7 +5,7 @@ import Seo from "./Seo.jsx";
 
 const blogCss = `
 .fp-blog {
-  max-width: 760px;
+  max-width: 800px;
   margin: 0 auto;
   padding: 64px 24px 96px;
 }
@@ -28,7 +28,7 @@ const blogCss = `
   color: #2E2820;
 }
 .fp-blog-sub {
-  margin: 0 0 32px;
+  margin: 0 0 48px;
   font-family: var(--serif);
   font-size: 16px;
   line-height: 1.65;
@@ -38,26 +38,38 @@ const blogCss = `
 .fp-blog-list {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 28px;
 }
 .fp-blog-card {
   display: block;
   background: #F0EAE0;
   border-radius: 12px;
-  padding: 28px 32px;
+  padding: 36px 40px;
+  min-height: 180px;
   border: none;
   text-decoration: none;
   color: #2E2820;
   transition: transform .18s ease, box-shadow .18s ease;
+  overflow: hidden;
 }
 .fp-blog-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 10px 28px rgba(46, 40, 32, .08);
   color: #2E2820;
 }
+.fp-blog-card-thumb {
+  float: right;
+  width: 120px;
+  height: 90px;
+  margin: 0 0 0 16px;
+  border-radius: 8px;
+  object-fit: cover;
+  object-position: center;
+  flex-shrink: 0;
+}
 .fp-blog-pill {
   display: inline-block;
-  margin: 0 0 12px;
+  margin: 0 0 14px;
   padding: 4px 8px;
   border-radius: 4px;
   font-family: var(--mono);
@@ -69,9 +81,9 @@ const blogCss = `
   color: var(--terra-d, #A2481F);
 }
 .fp-blog-card-title {
-  margin: 0 0 8px;
+  margin: 0 0 12px;
   font-family: var(--display);
-  font-size: 20px;
+  font-size: 22px;
   font-style: normal;
   font-weight: 500;
   line-height: 1.3;
@@ -81,7 +93,7 @@ const blogCss = `
   color: #2E2820;
 }
 .fp-blog-card-excerpt {
-  margin: 0 0 16px;
+  margin: 0 0 20px;
   font-family: var(--serif);
   font-size: 14px;
   line-height: 1.6;
@@ -96,6 +108,7 @@ const blogCss = `
   align-items: baseline;
   justify-content: space-between;
   gap: 16px;
+  clear: both;
 }
 .fp-blog-readtime {
   font-family: var(--mono);
@@ -113,13 +126,24 @@ const blogCss = `
 @media (max-width: 560px) {
   .fp-blog { padding: 48px 20px 72px; }
   .fp-blog-title { font-size: 26px; }
-  .fp-blog-card { padding: 24px 22px; }
+  .fp-blog-card { padding: 28px 24px; min-height: 0; }
+  .fp-blog-card-thumb { display: none; }
+  .fp-blog-card-title { font-size: 20px; }
 }
 `;
 
 export function BlogPostCard({ post }) {
   return (
     <Link className="fp-blog-card" to={`/blog/${post.slug}`}>
+      {post.image ? (
+        <img
+          className="fp-blog-card-thumb"
+          src={post.image}
+          alt=""
+          loading="lazy"
+          decoding="async"
+        />
+      ) : null}
       {post.category ? <span className="fp-blog-pill">{post.category}</span> : null}
       <h2 className="fp-blog-card-title">{post.title}</h2>
       {post.excerpt ? <p className="fp-blog-card-excerpt">{post.excerpt}</p> : null}

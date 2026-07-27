@@ -59,6 +59,24 @@ const postCss = `
   background: var(--terra);
   opacity: .55;
 }
+.fp-post-hero {
+  display: block;
+  width: 100%;
+  max-width: 680px;
+  height: 340px;
+  margin: 0 0 40px;
+  border: none;
+  border-radius: 12px;
+  object-fit: cover;
+  object-position: center;
+  box-shadow: 0 4px 24px rgba(46, 40, 32, 0.10);
+  opacity: 0;
+  animation: fp-post-hero-fade 0.4s ease forwards;
+}
+@keyframes fp-post-hero-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
 .fp-post-body {
   font-family: var(--serif);
   font-size: 17px;
@@ -269,19 +287,31 @@ const postCss = `
   display: block;
   background: #F0EAE0;
   border-radius: 12px;
-  padding: 28px 32px;
+  padding: 36px 40px;
+  min-height: 180px;
   text-decoration: none;
   color: #2E2820;
   transition: transform .18s ease, box-shadow .18s ease;
+  overflow: hidden;
 }
 .fp-blog-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 10px 28px rgba(46, 40, 32, .08);
   color: #2E2820;
 }
+.fp-blog-card-thumb {
+  float: right;
+  width: 120px;
+  height: 90px;
+  margin: 0 0 0 16px;
+  border-radius: 8px;
+  object-fit: cover;
+  object-position: center;
+  flex-shrink: 0;
+}
 .fp-blog-pill {
   display: inline-block;
-  margin: 0 0 12px;
+  margin: 0 0 14px;
   padding: 4px 8px;
   border-radius: 4px;
   font-family: var(--mono);
@@ -293,9 +323,9 @@ const postCss = `
   color: var(--terra-d, #A2481F);
 }
 .fp-blog-card-title {
-  margin: 0 0 8px;
+  margin: 0 0 12px;
   font-family: var(--display);
-  font-size: 20px;
+  font-size: 22px;
   font-style: normal;
   font-weight: 500;
   line-height: 1.3;
@@ -305,7 +335,7 @@ const postCss = `
   color: #2E2820;
 }
 .fp-blog-card-excerpt {
-  margin: 0 0 16px;
+  margin: 0 0 20px;
   font-family: var(--serif);
   font-size: 14px;
   line-height: 1.6;
@@ -320,6 +350,7 @@ const postCss = `
   align-items: baseline;
   justify-content: space-between;
   gap: 16px;
+  clear: both;
 }
 .fp-blog-readtime {
   font-family: var(--mono);
@@ -337,6 +368,7 @@ const postCss = `
 @media (max-width: 560px) {
   .fp-post { padding: 48px 20px 72px; }
   .fp-post-title { font-size: 30px; }
+  .fp-post-hero { height: 220px; }
   .fp-guide-inline-form { flex-direction: column; }
   .fp-guide-inline-btn { width: 100%; }
 }
@@ -383,6 +415,22 @@ export function splitContentAroundGuide(html) {
     before: source.slice(0, insertAt),
     after: source.slice(insertAt),
   };
+}
+
+function PostHeroImage({ src, alt }) {
+  const [hidden, setHidden] = useState(false);
+  if (!src || hidden) return null;
+
+  return (
+    <img
+      className="fp-post-hero"
+      src={src}
+      alt={alt}
+      loading="eager"
+      decoding="async"
+      onError={() => setHidden(true)}
+    />
+  );
 }
 
 function GuideCaptureBlock() {
@@ -531,6 +579,8 @@ export default function BlogPost() {
           <span>{post.readTime}</span>
         </div>
         <hr className="fp-post-rule" />
+
+        <PostHeroImage src={post.image} alt="" />
 
         <div className="fp-post-body">
           {before ? (

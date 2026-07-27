@@ -9,6 +9,7 @@
  *   category: string,
  *   readTime: string,       // e.g. "6 min"
  *   publishDate: string,    // ISO date YYYY-MM-DD
+ *   image?: string,         // optional hero/thumbnail URL
  *   content: string,        // HTML body of the post
  * }
  */
@@ -20,6 +21,7 @@ export const blogPosts = [
     category: "Family Planning",
     readTime: "6 min",
     publishDate: "2026-07-22",
+    image: "https://images.unsplash.com/photo-1606787366850-de6330128bfc?w=800&q=80",
     content: `
     <p>By Monday morning, you usually have a rough idea of what the week will look like.</p>
     <p>By Wednesday, plans have changed, schedules have shifted, and something important has slipped through the cracks.</p>
@@ -91,6 +93,7 @@ export const blogPosts = [
     category: "Marriage",
     readTime: "5 min",
     publishDate: "2026-07-22",
+    image: "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?w=800&q=80",
     content: `
     <p>Most couples know the things they're supposed to do to build a healthy marriage.</p>
     <p>Go on date nights. Spend quality time together. Communicate honestly. Show appreciation.</p>
@@ -165,6 +168,7 @@ export const blogPosts = [
     category: "Family Planning",
     readTime: "7 min",
     publishDate: "2026-07-22",
+    image: "https://images.unsplash.com/photo-1484712401471-05c7215830eb?w=800&q=80",
     content: `
     <p>If you've ever thought, "A weekly family meeting sounds like a good idea, but I have no idea how to actually do one," you're not alone.</p>
     <p>Most families don't avoid weekly meetings because they don't want them. They avoid them because they imagine something formal. An agenda. Someone taking notes. A conversation that drags on for two hours.</p>
@@ -241,6 +245,7 @@ export const blogPosts = [
     category: "Family Planning",
     readTime: "8 min",
     publishDate: "2026-07-22",
+    image: "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=800&q=80",
     content: `
     <p>The most common question couples ask after deciding to start a weekly family meeting is a simple one: What do we actually talk about?</p>
     <p>It sounds like the answer should be obvious. You know your family. You know what is happening in your home. You probably already have a running list of appointments, decisions, responsibilities, and things you have been meaning to discuss.</p>
@@ -350,6 +355,7 @@ export const blogPosts = [
     category: "Our Story",
     readTime: "5 min",
     publishDate: "2026-07-22",
+    image: "https://images.unsplash.com/photo-1543269865-cbf427effbad?w=800&q=80",
     content: `
     <p>We were not looking to build a product.</p>
     <p>We were looking for a way to stop losing our Sunday evenings to the same conversation that never quite finished.</p>
@@ -403,6 +409,7 @@ export const blogPosts = [
     category: "Family Planning",
     readTime: "6 min",
     publishDate: "2026-07-22",
+    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&q=80",
     content: `
     <p>The weekly family conversation is not the hard part.</p>
     <p>Most couples have it, in some form, already. In the car. Over dinner. During the ten minutes before the kids go to bed when everything that needs to be discussed finally surfaces because the week is almost over and you have run out of time to deal with it differently.</p>
