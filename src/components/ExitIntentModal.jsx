@@ -228,10 +228,6 @@ export default function ExitIntentModal({ onStarted = () => {} }) {
     return null;
   }
 
-  const spotsColor = spotsRemaining != null && spotsRemaining < 20
-    ? "var(--terra)"
-    : "#4A6741";
-
   return (
     <div className="fp-exit-backdrop" onMouseDown={close} role="presentation">
       <div
@@ -271,12 +267,6 @@ export default function ExitIntentModal({ onStarted = () => {} }) {
                 <span>Sign up as a member today and receive 30% off your first month.</span>
               </li>
             </ul>
-
-            {spotsRemaining != null && (
-              <p className="fp-exit-spots" style={{ color: spotsColor }}>
-                {spotsRemaining} founding member spots remaining.
-              </p>
-            )}
 
             <input
               className="fp-guide-input"
