@@ -10,6 +10,7 @@
  *   readTime: string,       // e.g. "6 min"
  *   publishDate: string,    // ISO date YYYY-MM-DD
  *   image?: string,         // optional hero/thumbnail URL
+ *   imageAlt?: string,      // optional alt text for hero/thumbnail
  *   content: string,        // HTML body of the post
  * }
  */
@@ -409,7 +410,8 @@ export const blogPosts = [
     category: "Family Planning",
     readTime: "6 min",
     publishDate: "2026-07-22",
-    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&q=80",
+    image: "/images/blog-ai-family-conversation.jpg",
+    imageAlt: "A family sitting together on their porch steps",
     content: `
     <p>The weekly family conversation is not the hard part.</p>
     <p>Most couples have it, in some form, already. In the car. Over dinner. During the ten minutes before the kids go to bed when everything that needs to be discussed finally surfaces because the week is almost over and you have run out of time to deal with it differently.</p>

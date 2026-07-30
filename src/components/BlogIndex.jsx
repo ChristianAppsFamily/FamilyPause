@@ -139,7 +139,7 @@ export function BlogPostCard({ post }) {
         <img
           className="fp-blog-card-thumb"
           src={post.image}
-          alt=""
+          alt={post.imageAlt || ""}
           loading="lazy"
           decoding="async"
         />

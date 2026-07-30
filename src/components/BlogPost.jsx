@@ -580,7 +580,7 @@ export default function BlogPost() {
         </div>
         <hr className="fp-post-rule" />
 
-        <PostHeroImage src={post.image} alt="" />
+        <PostHeroImage src={post.image} alt={post.imageAlt || ""} />
 
         <div className="fp-post-body">
           {before ? (
