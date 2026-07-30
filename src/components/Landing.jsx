@@ -477,54 +477,7 @@ const css = `
   line-height: 1.5;
 }
 
-/* lifestyle photos */
-.fp-landing .fp-photo {
-  display: block;
-  opacity: 0;
-  transition: opacity .5s ease;
-  background: var(--paper-3);
-}
-.fp-landing .fp-photo.in,
-.fp-landing .fp-photo.reveal.in {
-  opacity: 1;
-}
-.fp-landing .hero-photo {
-  width: 100%;
-  height: auto;
-  max-height: 580px;
-  object-fit: cover;
-  object-position: center;
-  border-radius: 16px;
-  box-shadow: 0 8px 32px rgba(46, 40, 32, 0.14);
-}
-.fp-landing .how-photo {
-  display: block;
-  width: 100%;
-  max-width: 860px;
-  height: 460px;
-  margin: 48px auto 32px;
-  object-fit: cover;
-  object-position: center top;
-  border-radius: 16px;
-  box-shadow: 0 8px 28px rgba(46, 40, 32, 0.12);
-}
-.fp-landing .deck-photos {
-  display: flex;
-  gap: 3%;
-  margin-top: 40px;
-  justify-content: center;
-  align-items: stretch;
-}
-.fp-landing .deck-photo {
-  width: 48.5%;
-  height: 340px;
-  object-fit: cover;
-  object-position: center;
-  border-radius: 14px;
-  box-shadow: 0 8px 24px rgba(46, 40, 32, 0.10);
-}
-
-/* hero mockup (kept for reference / unused on landing) */
+/* hero mockup */
 .fp-landing .mock { background: var(--paper-card); border: 1px solid var(--line); border-radius: var(--r-xl); box-shadow: var(--shadow-lg); padding: 20px; position: relative; transform: rotate(.4deg); }
 .fp-landing .mock.mock-live {
   animation: mockFloat 7s ease-in-out infinite;
@@ -645,7 +598,7 @@ const css = `
 .fp-landing .stp h3 { font-size: 23px; margin-bottom: 12px; }
 .fp-landing .stp p { font-size: 15.5px; color: var(--ink-2); line-height: 1.6; margin: 0; }
 .fp-landing .how-reassure {
-  margin: 0; text-align: center;
+  margin: 40px 0 0; text-align: center;
   font-family: var(--serif); font-size: 16px; color: var(--ink-2); font-style: italic;
 }
 
@@ -1145,7 +1098,6 @@ const css = `
 .fp-landing .reveal.in { opacity: 1; transform: none; }
 @media (prefers-reduced-motion: reduce) {
   .fp-landing .reveal { opacity: 1; transform: none; transition: none; }
-  .fp-landing .fp-photo { opacity: 1; transition: none; }
   .fp-landing .mock.mock-live { animation: none; }
   .fp-landing .mock .extracted,
   .fp-landing .mock .mock-card,
@@ -1161,10 +1113,6 @@ const css = `
 @media (max-width: 960px) {
   .fp-landing .herogrid { grid-template-columns: 1fr; gap: 48px; padding: 60px 0 72px; }
   .fp-landing .hero h1 { font-size: 52px; }
-  .fp-landing .hero-photo { height: 280px; max-height: none; }
-  .fp-landing .how-photo { height: 260px; }
-  .fp-landing .deck-photos { flex-direction: column; gap: 16px; }
-  .fp-landing .deck-photo { width: 100%; height: 240px; }
   .fp-landing .mock { max-width: 460px; }
   .fp-landing .steps4 { grid-template-columns: 1fr 1fr; gap: 36px 0; }
   .fp-landing .stp { border-left: none; padding: 0 20px; }
@@ -1197,17 +1145,12 @@ const css = `
   .fp-landing .hero h1 { font-size: 42px; }
   .fp-landing .hero .ctas { align-items: stretch; flex-direction: column; flex-wrap: wrap; gap: 12px; }
   .fp-landing .hero .ctas .btn { width: 100%; justify-content: center; }
-  .fp-landing .hero-photo { height: 280px; }
-  .fp-landing .how-photo { height: 260px; }
-  .fp-landing .deck-photo { height: 220px; }
   .fp-landing .steps4 { grid-template-columns: 1fr; }
   .fp-landing .foot .fcols { gap: 36px; flex-wrap: wrap; }
   .fp-guide-modal { padding: 44px 22px 24px; }
 }
 @media (max-width: 480px) {
   .fp-landing .navcta .btn:not(.navmenu-btn) { display: none; }
-  .fp-landing .deck-photo--box { display: none; }
-  .fp-landing .deck-photo--reading { height: 240px; }
 }
 `;
 
@@ -1229,9 +1172,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
     window.addEventListener("scroll", onScroll, { passive: true });
     onScroll();
 
-    const els = root
-      ? [...root.querySelectorAll(".reveal, .fp-photo")]
-      : [];
+    const els = root ? [...root.querySelectorAll(".reveal")] : [];
     let io;
     let fallback;
 
@@ -1391,15 +1332,54 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                 <p className="fineprint">Starts your free 7-day trial • No credit card required</p>
               </div>
 
-              <img
-                className="fp-photo hero-photo"
-                src="/images/fp-hero.png"
-                alt="A couple having their weekly FamilyPause conversation at the kitchen table"
-                loading="lazy"
-                decoding="async"
-                width={900}
-                height={580}
-              />
+              <div className="mock mock-live" aria-hidden="true">
+                <span className="extracted">6 items found, ready for review</span>
+                <div className="mbar"><i /><i /><i /><span className="mtitle">FamilyPause · Your Plan</span></div>
+                <div className="review-eyebrow">Your plan</div>
+
+                <div className="mcard mock-card mock-card-1">
+                  <div className="mtags"><span className="mtag cat">Task</span><span className="mtag cat">Finances</span></div>
+                  <div className="mt">Call the accountant about Q2 filing</div>
+                  <div className="mq">&ldquo;We need to call the accountant before the end of the month.&rdquo;</div>
+                  <div className="mstatus needs">Needs a date</div>
+                  <div className="macts">
+                    <button type="button" tabIndex={-1} className="mbtn cal">Schedule</button>
+                    <button type="button" tabIndex={-1} className="mbtn disc">Discard</button>
+                  </div>
+                </div>
+
+                <div className="mcard olive mock-card mock-card-2">
+                  <div className="mtags"><span className="mtag cat">Appointment</span><span className="mtag amanda">Kids</span></div>
+                  <div className="mt">Take Jordan to the dentist</div>
+                  <div className="mwhen-row">
+                    <div className="mwhen">
+                      <svg width="12" height="12" viewBox="0 0 24 24" {...stroke} strokeWidth={2}><path d="M7 3v3M17 3v3M4 8h16" /><path d="M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z" /></svg>
+                      Thursday, June 11 · 3:00 PM
+                    </div>
+                    <div className="mstatus ready">Ready for calendar</div>
+                  </div>
+                  <div className="macts">
+                    <button type="button" tabIndex={-1} className="mbtn edit">Edit</button>
+                    <button type="button" tabIndex={-1} className="mbtn keep">Add</button>
+                  </div>
+                </div>
+
+                <div className="mcard gold mock-card mock-card-3">
+                  <div className="mtags"><span className="mtag both">Decision</span><span className="mtag cat">Family</span></div>
+                  <div className="mt">Switch Harbor to the 4pm swim group</div>
+                  <div className="mq">&ldquo;We decided mornings weren&apos;t working, starts Monday.&rdquo;</div>
+                  <div className="mstatus ready">Ready for calendar</div>
+                  <div className="macts">
+                    <button type="button" tabIndex={-1} className="mbtn edit">Edit</button>
+                    <button type="button" tabIndex={-1} className="mbtn keep">Add</button>
+                  </div>
+                </div>
+
+                <div className="mfoot-bar">
+                  <span className="mstat">2 ready · 1 needs scheduling</span>
+                  <button type="button" tabIndex={-1} className="mcal">Add 2 to calendar</button>
+                </div>
+              </div>
             </div>
           </div>
         </section>
@@ -1453,15 +1433,6 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                 <p>Print your plan as a PDF, save it to your clipboard, or copy and paste it straight into Notion or Slack.</p>
               </div>
             </div>
-            <img
-              className="fp-photo how-photo"
-              src="/images/fp-app-in-use.png"
-              alt="Couple reviewing their weekly family plan on the FamilyPause app"
-              loading="lazy"
-              decoding="async"
-              width={860}
-              height={460}
-            />
             <p className="how-reassure reveal">Nothing reaches your calendar until you approve it.</p>
           </div>
         </section>
@@ -1521,7 +1492,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
               </p>
             </div>
             <div className="deck-carousel-wrap reveal">
-              <SampleCardCarousel interactive />
+              <SampleCardCarousel interactive={false} />
             </div>
             <p className="deck-support reveal">
               7 conversation cards are free for everyone.
@@ -1532,26 +1503,6 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                 Join The Physical Deck Waitlist
               </button>
               <button type="button" className="btn btn-ghost" onClick={onStart}>Create My Family Plan</button>
-            </div>
-            <div className="deck-photos">
-              <img
-                className="fp-photo deck-photo deck-photo--reading"
-                src="/images/fp-card-reading.png"
-                alt="Couple reading a FamilyPause conversation card together at home"
-                loading="lazy"
-                decoding="async"
-                width={560}
-                height={340}
-              />
-              <img
-                className="fp-photo deck-photo deck-photo--box"
-                src="/images/fp-card-box.png"
-                alt="Hand pulling a weekly check-in card from the FamilyPause card deck"
-                loading="lazy"
-                decoding="async"
-                width={560}
-                height={340}
-              />
             </div>
           </div>
         </section>
