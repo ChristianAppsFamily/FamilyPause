@@ -417,7 +417,7 @@ export function splitContentAroundGuide(html) {
   };
 }
 
-function PostHeroImage({ src, alt }) {
+function PostHeroImage({ src, alt, objectPosition }) {
   const [hidden, setHidden] = useState(false);
   if (!src || hidden) return null;
 
@@ -428,6 +428,7 @@ function PostHeroImage({ src, alt }) {
       alt={alt}
       loading="eager"
       decoding="async"
+      style={objectPosition ? { objectPosition } : undefined}
       onError={() => setHidden(true)}
     />
   );
@@ -580,7 +581,11 @@ export default function BlogPost() {
         </div>
         <hr className="fp-post-rule" />
 
-        <PostHeroImage src={post.image} alt={post.imageAlt || ""} />
+        <PostHeroImage
+          src={post.image}
+          alt={post.imageAlt || ""}
+          objectPosition={post.imagePosition}
+        />
 
         <div className="fp-post-body">
           {before ? (

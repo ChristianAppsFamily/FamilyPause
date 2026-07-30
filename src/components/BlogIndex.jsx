@@ -142,6 +142,7 @@ export function BlogPostCard({ post }) {
           alt={post.imageAlt || ""}
           loading="lazy"
           decoding="async"
+          style={post.imagePosition ? { objectPosition: post.imagePosition } : undefined}
         />
       ) : null}
       {post.category ? <span className="fp-blog-pill">{post.category}</span> : null}
