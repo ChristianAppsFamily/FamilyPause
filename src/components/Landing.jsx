@@ -477,6 +477,88 @@ const css = `
   line-height: 1.5;
 }
 
+/* trial photo placements — same image, section-specific framing */
+.fp-landing .fp-try-photo-wrap {
+  margin: 0 auto;
+}
+.fp-landing .fp-try-label {
+  display: inline-block;
+  margin: 0 0 10px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.fp-landing .fp-try-photo {
+  display: block;
+  width: 100%;
+  object-fit: cover;
+  object-position: center;
+  border-radius: 16px;
+  box-shadow: 0 8px 28px rgba(46, 40, 32, 0.12);
+  background: var(--paper-3);
+}
+.fp-landing .fp-try-photo--quote {
+  max-width: 720px;
+  height: 320px;
+  margin: 0 auto 36px;
+  border-radius: 18px;
+  box-shadow: 0 12px 36px rgba(42, 24, 12, 0.28);
+}
+.fp-landing .band-terra .fp-try-label,
+.fp-landing .band-olive .fp-try-label {
+  color: rgba(255, 255, 255, 0.75);
+}
+.fp-landing .fp-try-photo--how {
+  max-width: 920px;
+  height: 420px;
+  margin: 0 auto 48px;
+  object-position: center 35%;
+}
+.fp-landing .fp-try-photo--who {
+  max-width: 100%;
+  height: 280px;
+  margin: 0 0 48px;
+  border-radius: 18px;
+  object-position: center 40%;
+}
+.fp-landing .fp-try-photo--privacy {
+  max-width: 680px;
+  height: 300px;
+  margin: 0 auto 28px;
+  border-radius: 18px;
+  box-shadow: 0 12px 36px rgba(30, 40, 16, 0.28);
+}
+.fp-landing .fp-try-photo--deck {
+  max-width: 860px;
+  height: 400px;
+  margin: 8px auto 44px;
+  object-position: center 30%;
+}
+.fp-landing .fp-try-photo--pricing {
+  max-width: 760px;
+  height: 340px;
+  margin: 0 auto 40px;
+}
+.fp-landing .fp-try-photo--final {
+  max-width: 880px;
+  height: 380px;
+  margin: 0 auto 40px;
+  object-position: center 35%;
+}
+@media (max-width: 720px) {
+  .fp-landing .fp-try-photo--quote,
+  .fp-landing .fp-try-photo--how,
+  .fp-landing .fp-try-photo--who,
+  .fp-landing .fp-try-photo--privacy,
+  .fp-landing .fp-try-photo--deck,
+  .fp-landing .fp-try-photo--pricing,
+  .fp-landing .fp-try-photo--final {
+    height: 220px;
+  }
+}
+
 /* hero mockup */
 .fp-landing .mock { background: var(--paper-card); border: 1px solid var(--line); border-radius: var(--r-xl); box-shadow: var(--shadow-lg); padding: 20px; position: relative; transform: rotate(.4deg); }
 .fp-landing .mock.mock-live {
@@ -1387,6 +1469,16 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
         {/* TESTIMONIAL BAND */}
         <section className="band band-terra">
           <div className="wrap quote reveal">
+            <div className="fp-try-photo-wrap">
+              <span className="fp-try-label">Trial A · Testimonial</span>
+              <img
+                className="fp-try-photo fp-try-photo--quote"
+                src="/images/fp-hero.png"
+                alt="A couple having their weekly FamilyPause conversation at the kitchen table"
+                loading="lazy"
+                decoding="async"
+              />
+            </div>
             <span className="qmark">&ldquo;</span>
             <blockquote>I put everything we had going on into FamilyPause, and within minutes our week finally made sense.</blockquote>
             <div className="qby">Spence, Founder and First User</div>
@@ -1400,6 +1492,16 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
               <span className="eyebrow">How it works</span>
               <h2>Start with the chaos.<br />End with a <em>plan.</em></h2>
               <p>No perfect lists, templates, or agendas required. Type it, paste it, or record your family talking it through. FamilyPause finds the appointments, tasks, reminders, and decisions, then organizes everything into a plan you review and approve together before it auto-syncs straight to your calendar.</p>
+            </div>
+            <div className="fp-try-photo-wrap reveal">
+              <span className="fp-try-label">Trial B · How it works</span>
+              <img
+                className="fp-try-photo fp-try-photo--how"
+                src="/images/fp-hero.png"
+                alt="A couple having their weekly FamilyPause conversation at the kitchen table"
+                loading="lazy"
+                decoding="async"
+              />
             </div>
             <div className="steps4 reveal">
               <div className="stp">
@@ -1440,6 +1542,16 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
         {/* WHO IT'S FOR */}
         <section className="section section-paper" id="who">
           <div className="wrap">
+            <div className="fp-try-photo-wrap reveal">
+              <span className="fp-try-label">Trial C · Who it&apos;s for</span>
+              <img
+                className="fp-try-photo fp-try-photo--who"
+                src="/images/fp-hero.png"
+                alt="A couple having their weekly FamilyPause conversation at the kitchen table"
+                loading="lazy"
+                decoding="async"
+              />
+            </div>
             <div className="shead reveal">
               <span className="eyebrow">Who it&apos;s for</span>
               <h2>Built for real families with real life to manage.</h2>
@@ -1478,6 +1590,16 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
         {/* TRUST / PRIVACY BAND */}
         <section className="band band-olive">
           <div className="wrap privacy reveal">
+            <div className="fp-try-photo-wrap">
+              <span className="fp-try-label">Trial D · Privacy</span>
+              <img
+                className="fp-try-photo fp-try-photo--privacy"
+                src="/images/fp-hero.png"
+                alt="A couple having their weekly FamilyPause conversation at the kitchen table"
+                loading="lazy"
+                decoding="async"
+              />
+            </div>
             <p>FamilyPause is ad-free. Your family&apos;s conversations and plans stay private. We never sell your information or use it to target you with advertising.</p>
           </div>
         </section>
@@ -1490,6 +1612,16 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
               <p>
                 Before you plan the week, start with a real question. Pull a card on marriage, kids, finances, faith, dreams, or home. Talk it through. Then let FamilyPause handle the rest. Every appointment, reminder, and decision from your conversation is automatically added to your calendar.
               </p>
+            </div>
+            <div className="fp-try-photo-wrap reveal">
+              <span className="fp-try-label">Trial E · Card deck</span>
+              <img
+                className="fp-try-photo fp-try-photo--deck"
+                src="/images/fp-hero.png"
+                alt="A couple having their weekly FamilyPause conversation at the kitchen table"
+                loading="lazy"
+                decoding="async"
+              />
             </div>
             <div className="deck-carousel-wrap reveal">
               <SampleCardCarousel interactive={false} />
@@ -1514,6 +1646,16 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
               <span className="eyebrow">Pricing</span>
               <h2>Start with a free trial.<br /><em>Choose what works for your family.</em></h2>
               <p>Try every Family Plan feature free for 7 days. No credit card required. When your trial ends, you&apos;ll automatically continue on the Free plan unless you choose to upgrade.</p>
+            </div>
+            <div className="fp-try-photo-wrap reveal">
+              <span className="fp-try-label">Trial F · Pricing</span>
+              <img
+                className="fp-try-photo fp-try-photo--pricing"
+                src="/images/fp-hero.png"
+                alt="A couple having their weekly FamilyPause conversation at the kitchen table"
+                loading="lazy"
+                decoding="async"
+              />
             </div>
             <div className="pricewrap reveal">
               <div className="pricegrid">
@@ -1612,6 +1754,16 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
         {/* FINAL CTA */}
         <section className="section finalcta">
           <div className="wrap">
+            <div className="fp-try-photo-wrap reveal">
+              <span className="fp-try-label">Trial G · Final CTA</span>
+              <img
+                className="fp-try-photo fp-try-photo--final"
+                src="/images/fp-hero.png"
+                alt="A couple having their weekly FamilyPause conversation at the kitchen table"
+                loading="lazy"
+                decoding="async"
+              />
+            </div>
             <h2>So much going on.<br /><em>One plan to move forward with.</em></h2>
             <p>Stop manually entering every event one by one. Type it, paste it, or record your family talking it through. FamilyPause finds everything, you approve it together, then it auto-syncs straight to your calendar.</p>
             <button className="btn btn-primary btn-lg" onClick={onStart}>Create My Family Plan</button>
