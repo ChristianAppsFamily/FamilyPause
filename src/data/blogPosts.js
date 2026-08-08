@@ -95,7 +95,9 @@ export const blogPosts = [
     category: "Marriage",
     readTime: "5 min",
     publishDate: "2026-07-22",
-    image: "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?w=800&q=80",
+    image: "/images/blog-underrated-marriage-habit.jpg",
+    imageAlt: "A bright modern dining room with a wooden table, black chairs, and a pendant light ready for a family conversation",
+    imagePosition: "center 35%",
     content: `
     <p>Most couples know the things they're supposed to do to build a healthy marriage.</p>
     <p>Go on date nights. Spend quality time together. Communicate honestly. Show appreciation.</p>
