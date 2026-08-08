@@ -10,9 +10,20 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useEffect, useRef, useState } from "react";
+import { useLocation } from "react-router-dom";
 import SampleCardCarousel from "./SampleCardCarousel.jsx";
 import ExitIntentModal from "./ExitIntentModal.jsx";
 import { supabase } from "../lib/supabase";
+
+const LANDING_SECTION_IDS = new Set(["how", "who", "pricing", "deck"]);
+
+function scrollToLandingSection(id, { smooth = true } = {}) {
+  if (!id || !LANDING_SECTION_IDS.has(id)) return false;
+  const el = document.getElementById(id);
+  if (!el) return false;
+  el.scrollIntoView({ behavior: smooth ? "smooth" : "auto", block: "start" });
+  return true;
+}
 
 const css = `
 .fp-landing {
@@ -584,6 +595,13 @@ const css = `
 .fp-landing .mock .mfoot-bar .mcal {
   font-family: var(--mono); font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase;
   background: var(--terra); color: #fff; border: none; border-radius: var(--r-sm); padding: 9px 14px;
+}
+
+.fp-landing #how,
+.fp-landing #who,
+.fp-landing #pricing,
+.fp-landing #deck {
+  scroll-margin-top: 88px;
 }
 
 /* sections: each band gets its own surface so blocks don't blend */
@@ -1174,6 +1192,7 @@ const css = `
 const stroke = { fill: "none", stroke: "currentColor", strokeWidth: 1.7, strokeLinecap: "round", strokeLinejoin: "round" };
 
 export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
+  const location = useLocation();
   const [scrolled, setScrolled] = useState(false);
   const [familyBilling, setFamilyBilling] = useState("monthly");
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
@@ -1182,6 +1201,32 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
   const [leadStatus, setLeadStatus] = useState("idle");
   const [leadError, setLeadError] = useState("");
   const rootRef = useRef(null);
+
+  // Scroll to /#how, /#who, /#pricing, /#deck after mount (SPA hash nav from blog/footer).
+  useEffect(() => {
+    const id = (location.hash || "").replace(/^#/, "");
+    if (!id) return undefined;
+    let cancelled = false;
+    const run = () => {
+      if (cancelled) return;
+      scrollToLandingSection(id, { smooth: true });
+    };
+    const t1 = window.setTimeout(run, 50);
+    const t2 = window.setTimeout(run, 300);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(t1);
+      window.clearTimeout(t2);
+    };
+  }, [location.hash, location.pathname, location.key]);
+
+  const goToSection = (id) => (event) => {
+    event.preventDefault();
+    if (scrollToLandingSection(id, { smooth: true })) {
+      window.history.replaceState(null, "", `/#${id}`);
+    }
+    setMobileNavOpen(false);
+  };
 
   useEffect(() => {
     const root = rootRef.current;
@@ -1283,10 +1328,10 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
             <span className="word"><b>Family</b>Pause</span>
           </a>
           <nav className="navlinks">
-            <a href="#how">How It Works</a>
-            <a href="#who">Who It&apos;s For</a>
-            <a href="#pricing">Pricing</a>
-            <a href="#deck">Card Deck</a>
+            <a href="/#how" onClick={goToSection("how")}>How It Works</a>
+            <a href="/#who" onClick={goToSection("who")}>Who It&apos;s For</a>
+            <a href="/#pricing" onClick={goToSection("pricing")}>Pricing</a>
+            <a href="/#deck" onClick={goToSection("deck")}>Card Deck</a>
             <a href="/blog">Blog</a>
           </nav>
           <div className="navcta">
@@ -1308,10 +1353,10 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
         <div className={"navmobile" + (mobileNavOpen ? " open" : "")} onClick={() => setMobileNavOpen(false)}>
           <nav className="navmobile-panel" onClick={(e) => e.stopPropagation()}>
             <div className="navmobile-links">
-              <a href="#how" onClick={() => setMobileNavOpen(false)}>How It Works</a>
-              <a href="#who" onClick={() => setMobileNavOpen(false)}>Who It&apos;s For</a>
-              <a href="#pricing" onClick={() => setMobileNavOpen(false)}>Pricing</a>
-              <a href="#deck" onClick={() => setMobileNavOpen(false)}>Card Deck</a>
+              <a href="/#how" onClick={goToSection("how")}>How It Works</a>
+              <a href="/#who" onClick={goToSection("who")}>Who It&apos;s For</a>
+              <a href="/#pricing" onClick={goToSection("pricing")}>Pricing</a>
+              <a href="/#deck" onClick={goToSection("deck")}>Card Deck</a>
               <a href="/blog" onClick={() => setMobileNavOpen(false)}>Blog</a>
             </div>
             <div className="navmobile-actions">
@@ -1660,10 +1705,10 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
             <div className="fcols">
               <div className="fcol">
                 <h4>Product</h4>
-                <a href="#how">How It Works</a>
-                <a href="#who">Who It&apos;s For</a>
-                <a href="#pricing">Pricing</a>
-                <a href="#deck">Card Deck</a>
+                <a href="/#how" onClick={goToSection("how")}>How It Works</a>
+                <a href="/#who" onClick={goToSection("who")}>Who It&apos;s For</a>
+                <a href="/#pricing" onClick={goToSection("pricing")}>Pricing</a>
+                <a href="/#deck" onClick={goToSection("deck")}>Card Deck</a>
               </div>
               <div className="fcol">
                 <h4>Company</h4>
