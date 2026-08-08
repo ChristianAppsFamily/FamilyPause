@@ -1505,7 +1505,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
               <span className="eyebrow">The FamilyPause Conversation Deck</span>
               <h2>Better conversations.<br />Better <em>plans.</em></h2>
               <p>
-                Before you plan the week, start with a real question. Pull a card on marriage, kids, finances, faith, dreams, or home. Talk it through. Then let FamilyPause handle the rest. Every appointment, reminder, and decision from your conversation is automatically added to your calendar.
+                Before you plan the week, start with a real question. Pull a card on marriage, kids, finances, faith, dreams, or home. Talk it through. Then move into planning your week. Every appointment, reminder, and decision from your conversation is automatically added to your calendar.
               </p>
             </div>
             <div className="deck-carousel-wrap reveal">
