@@ -88,11 +88,11 @@ const DECKS = {
     digitalPrice: DIGITAL_DECK_PRICE,
     cards: [
       // FINANCES
-      { id: 1,  category: "Finances",  question: "If our income doubled tomorrow, what's the first thing we'd change, and what would we keep exactly the same?" },
+      { id: 1,  category: "Finances",  question: "If our income doubled or tripled tomorrow, what's the first thing we'd change, and what would we keep exactly the same?" },
       { id: 2,  category: "Finances",  question: "What does financial security actually feel like to you? How close are we to that feeling right now?" },
       { id: 3,  category: "Finances",  question: "Is there a purchase one of us has been wanting that we haven't talked about? What's stopped us from bringing it up?" },
       { id: 4,  category: "Finances",  question: "Where do you think we waste the most money without realizing it? What would you cut first?" },
-      { id: 5,  category: "Finances",  question: "What did money mean in the home you grew up in? How has that shaped the way you handle it now?" },
+      { id: 5,  category: "Finances",  question: "How is your past with money shaping how you handle it today, or is it?" },
       { id: 6,  category: "Finances",  question: "If we had to live on half our current income for a year, what would that actually look like?" },
       { id: 7,  category: "Finances",  question: "Are we giving at the level we want to be? If not, what's in the way?" },
       { id: 8,  category: "Finances",  question: "What's one financial goal you want us to hit before the end of this year that we haven't talked enough about?" },
@@ -121,7 +121,7 @@ const DECKS = {
       { id: 29, category: "Marriage",  question: "What's one specific thing I could do this week that would make you feel deeply valued?" },
       { id: 30, category: "Marriage",  question: "If you had to describe our marriage to a friend in three words, what would they be? What words do you wish they'd be?" },
       // FAITH
-      { id: 31, category: "Faith",     question: "How is your faith actually doing right now, not the Sunday version, the real version?" },
+      { id: 31, category: "Faith",     question: "How are you doing spiritually right now, not the Sunday version, the real version?" },
       { id: 32, category: "Faith",     question: "Is there something God has been putting on your heart that you haven't shared with me yet?" },
       { id: 33, category: "Faith",     question: "Do you feel like we're building a spiritual life as a family or just attending things? What's the difference?" },
       { id: 34, category: "Faith",     question: "What does prayer look like for us right now? Is it what you want it to be?" },
@@ -131,7 +131,7 @@ const DECKS = {
       { id: 38, category: "Faith",     question: "Are we the kind of married couple we'd want our kids to marry someone like? What would we change?" },
       // DREAMS
       { id: 39, category: "Dreams",    question: "What's a dream you had before we got together that you've quietly let go of? Does it still matter?" },
-      { id: 40, category: "Dreams",    question: "If you could design the next five years of our life from scratch, what would they look like?" },
+      { id: 40, category: "Dreams",    question: "If you could design the next five years of our life from scratch, what would the first and last year look like?" },
       { id: 41, category: "Dreams",    question: "Is there something you've always wanted to try, a business, a creative project, a place to live, that we've never seriously discussed?" },
       { id: 42, category: "Dreams",    question: "What does retirement actually look like to you? Are we building toward that picture?" },
       { id: 43, category: "Dreams",    question: "If money and logistics were completely off the table, where would we live and how would we spend our days?" },
