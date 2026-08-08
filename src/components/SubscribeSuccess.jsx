@@ -201,7 +201,7 @@ export default function SubscribeSuccess({ workspace, onWorkspaceUpdate, onConti
           <>
             <div className="ss-offer">
               <div className="ss-offer-label">Today only · Order bump</div>
-              <div className="ss-offer-title">2026 Digital Card Deck</div>
+              <div className="ss-offer-title">2026 Conversation Starter Card Deck</div>
               <div className="ss-prices">
                 <span className="now">{formatDigitalOfferPrice()}</span>
                 <span className="was">{formatDigitalPrice()}</span>
@@ -209,25 +209,25 @@ export default function SubscribeSuccess({ workspace, onWorkspaceUpdate, onConti
               <div className="ss-today">50% off · expires with this checkout</div>
             </div>
             <button type="button" className="ss-btn" onClick={buyOffer} disabled={status === "buying"}>
-              {status === "buying" ? "Opening checkout…" : `Unlock the deck, ${formatDigitalOfferPrice()}`}
+              {status === "buying" ? "Opening checkout…" : `Unlock the Conversation Starter Card Deck, ${formatDigitalOfferPrice()}`}
             </button>
           </>
         )}
 
         {!showOffer && status !== "loading" && reason === "already_unlocked" && (
-          <p className="ss-body">Your card deck is already unlocked. Jump back into your weekly sync.</p>
+          <p className="ss-body">Your Conversation Cards are already unlocked. Jump back into your weekly sync.</p>
         )}
 
         {!showOffer && status !== "loading" && reason !== "already_unlocked" && (
           <p className="ss-body" style={{ fontSize: 15 }}>
-            The today-only deck offer isn&apos;t available on this session. You can unlock the digital deck anytime from Cards at {`$${DIGITAL_DECK_PRICE.toFixed(2)}`}.
+            The today-only deck offer isn&apos;t available on this session. You can unlock the Conversation Starter Card Deck anytime from Cards at {`$${DIGITAL_DECK_PRICE.toFixed(2)}`}.
           </p>
         )}
 
         <button type="button" className="ss-ghost" onClick={onContinue}>
           No thanks, continue
         </button>
-        <p className="ss-note">Physical deck (${24}) stays full price · Digital only</p>
+        <p className="ss-note">Printed Conversation Starter Card Deck (${24}) stays full price · Digital only</p>
       </div>
     </div>
   );

@@ -260,7 +260,7 @@ export default function ExitIntentModal({ onStarted = () => {} }) {
             <ul className="fp-exit-offers">
               <li>
                 <span className="fp-exit-ico fp-exit-ico--olive" aria-hidden="true">✓</span>
-                <span>First 100 founding members receive the digital card deck free, forever.</span>
+                <span>First 100 founding members receive the Conversation Starter Card Deck free, forever.</span>
               </li>
               <li>
                 <span className="fp-exit-ico fp-exit-ico--gold" aria-hidden="true">✓</span>

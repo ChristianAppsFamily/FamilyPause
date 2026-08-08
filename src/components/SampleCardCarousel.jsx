@@ -76,7 +76,7 @@ export function CardBackV2({ year = 2026 }) {
       <div className="cs-cb-center">
         <div className="cs-cb-wordmark">FamilyPause</div>
         <div className="cs-cb-rule" />
-        <div className="cs-cb-meta">Card Deck · {year}</div>
+        <div className="cs-cb-meta">Conversation Cards · {year}</div>
       </div>
     </div>
   );

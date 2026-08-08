@@ -621,7 +621,7 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, marginBottom: 18 }}>
             <div>
               <div className="eyebrow" style={{ marginBottom: 9 }}>Conversation cards</div>
-              <h2 style={{ margin: 0 }}>Card decks</h2>
+              <h2 style={{ margin: 0 }}>Conversation Cards</h2>
             </div>
             {onOpenDecks && (
               <button className="btn btn-primary" onClick={onOpenDecks} style={{ flexShrink: 0, marginTop: 4 }}>
@@ -631,11 +631,11 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
           </div>
           {unlockedDecks.length > 0 ? (
             <div className="set-chips" style={{ marginBottom: 4 }}>
-              {unlockedDecks.map((yr) => <span key={yr} className="set-deckpill">{yr} Deck</span>)}
+              {unlockedDecks.map((yr) => <span key={yr} className="set-deckpill">{yr} Conversation Cards</span>)}
             </div>
           ) : (
             <p className="set-sub" style={{ margin: 0 }}>
-              You haven't unlocked any card decks yet. Unlock the 52-question deck to draw a
+              You haven&apos;t unlocked Conversation Cards yet. Unlock the Conversation Starter Card Deck to draw a
               conversation card together each week.
             </p>
           )}

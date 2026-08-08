@@ -1331,7 +1331,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
             <a href="/#how" onClick={goToSection("how")}>How It Works</a>
             <a href="/#who" onClick={goToSection("who")}>Who It&apos;s For</a>
             <a href="/#pricing" onClick={goToSection("pricing")}>Pricing</a>
-            <a href="/#deck" onClick={goToSection("deck")}>Card Deck</a>
+            <a href="/#deck" onClick={goToSection("deck")}>Conversation Cards</a>
             <a href="/blog">Blog</a>
           </nav>
           <div className="navcta">
@@ -1356,7 +1356,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
               <a href="/#how" onClick={goToSection("how")}>How It Works</a>
               <a href="/#who" onClick={goToSection("who")}>Who It&apos;s For</a>
               <a href="/#pricing" onClick={goToSection("pricing")}>Pricing</a>
-              <a href="/#deck" onClick={goToSection("deck")}>Card Deck</a>
+              <a href="/#deck" onClick={goToSection("deck")}>Conversation Cards</a>
               <a href="/blog" onClick={() => setMobileNavOpen(false)}>Blog</a>
             </div>
             <div className="navmobile-actions">
@@ -1547,7 +1547,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
         <section className="deck-section" id="deck">
           <div className="wrap">
             <div className="shead reveal">
-              <span className="eyebrow">The FamilyPause Conversation Deck</span>
+              <span className="eyebrow">The FamilyPause Conversation Cards</span>
               <h2>Better conversations.<br />Better <em>plans.</em></h2>
               <p>
                 Before you plan the week, start with a real question. Pull a card on marriage, kids, finances, faith, dreams, or home. Talk it through. Then move into planning your week. Every appointment, reminder, and decision from your conversation is automatically added to your calendar.
@@ -1558,11 +1558,11 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
             </div>
             <p className="deck-support reveal">
               7 conversation cards are free for everyone.
-              Upgrade to Family Plan to unlock the complete digital deck, free for our first 100 subscribers. Prefer something you can hold? Join the waitlist for the physical deck!
+              Upgrade to Family Plan to unlock the Conversation Starter Card Deck, free for our first 100 subscribers. Prefer something you can hold? Join the waitlist for the printed deck.
             </p>
             <div className="deck-actions reveal">
               <button type="button" className="btn btn-primary" onClick={() => openLeadModal("deck-waitlist")}>
-                Join The Physical Deck Waitlist
+                Join the Conversation Starter Card Deck Waitlist
               </button>
               <button type="button" className="btn btn-ghost" onClick={onStart}>Create My Family Plan</button>
             </div>
@@ -1643,7 +1643,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                     <li><span className="far">→</span> Organize with family members and custom categories</li>
                     <li><span className="far">→</span> Print or download your plan and itinerary as a PDF</li>
                     <li><span className="far">→</span> Export to Notion, Slack, or anywhere as a formatted list</li>
-                    <li><span className="far">→</span> Unlock the complete digital Conversation Card Deck (free for the first 100 subscribers)</li>
+                    <li><span className="far">→</span> Unlock the Conversation Starter Card Deck (free for the first 100 subscribers)</li>
                   </ul>
                   <button className="btn btn-cream btn-block" onClick={onStart}>Start Your Free Trial</button>
                 </div>
@@ -1708,7 +1708,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                 <a href="/#how" onClick={goToSection("how")}>How It Works</a>
                 <a href="/#who" onClick={goToSection("who")}>Who It&apos;s For</a>
                 <a href="/#pricing" onClick={goToSection("pricing")}>Pricing</a>
-                <a href="/#deck" onClick={goToSection("deck")}>Card Deck</a>
+                <a href="/#deck" onClick={goToSection("deck")}>Conversation Cards</a>
               </div>
               <div className="fcol">
                 <h4>Company</h4>
@@ -1768,10 +1768,10 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                   </>
                 ) : leadModal === "deck-waitlist" ? (
                   <>
-                    <p className="fp-guide-eyebrow">Physical Deck</p>
+                    <p className="fp-guide-eyebrow">Conversation Cards</p>
                     <h2 className="fp-guide-title" id="lead-modal-title">Join the waitlist</h2>
                     <p className="fp-guide-subline">
-                      Be first to know when the printed FamilyPause Conversation Deck is ready.
+                      Be first to know when the printed FamilyPause Conversation Starter Card Deck is ready.
                     </p>
                   </>
                 ) : (

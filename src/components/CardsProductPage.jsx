@@ -154,17 +154,17 @@ export default function CardsProductPage() {
       <style>{css}</style>
       <div className="wrap">
         <Link className="back" to="/">← FamilyPause home</Link>
-        <div className="eyebrow">2026 Conversation Deck</div>
+        <div className="eyebrow">2026 Conversation Cards</div>
         <h1>52 questions for your <em>weekly pause</em></h1>
         <p className="lead">
           One deck per year. Six categories: Connection, Kids, Money, Calendar, Faith, and Fun.
-          Unlock the in-app card draw with digital access now — or join the waitlist for the printed deck.
+          Unlock the Conversation Starter Card Deck digitally now — or join the waitlist for the printed deck.
         </p>
 
         <div className="grid">
           <div className="card">
             <div className="coming">Coming soon</div>
-            <h2>Physical deck</h2>
+            <h2>Conversation Starter Card Deck</h2>
             <ul>
               <li>52 printed conversation cards in a tuck box</li>
               <li>Unlock code inside the box lid (FP-2026-XXXX-0000)</li>
@@ -172,12 +172,12 @@ export default function CardsProductPage() {
             </ul>
             {status === "success" ? (
               <p className="wait-success">
-                You&apos;re on the list. We&apos;ll email you when the printed deck is ready to ship.
+                You&apos;re on the list. We&apos;ll email you when the printed Conversation Starter Card Deck is ready to ship.
               </p>
             ) : (
               <>
                 <p className="wait-copy">
-                  The printed deck isn&apos;t available to buy yet. Join the waitlist and we&apos;ll let you know when it ships.
+                  The printed Conversation Starter Card Deck isn&apos;t available to buy yet. Join the waitlist and we&apos;ll let you know when it ships.
                 </p>
                 <form className="wait-form" onSubmit={joinWaitlist} noValidate>
                   <label className="sr-only" htmlFor="cards-deck-waitlist-email">Email</label>
@@ -217,7 +217,7 @@ export default function CardsProductPage() {
             </ul>
             <div className="btn-row">
               <Link className="btn btn-primary" to={cardsPath("unlock")} style={{ textDecoration: "none" }}>
-                Purchase digital access
+                Unlock the Conversation Starter Card Deck
               </Link>
               <Link className="btn btn-soft" to="/app" style={{ textDecoration: "none" }}>
                 I have a code
@@ -227,7 +227,7 @@ export default function CardsProductPage() {
         </div>
 
         <p className="fineprint" style={{ color: "var(--ink-3)", fontSize: 13 }}>
-          Already in the app? Open Settings → Card decks to enter your unlock code.
+          Already in the app? Open Settings → Conversation Cards to enter your unlock code.
         </p>
       </div>
     </div>

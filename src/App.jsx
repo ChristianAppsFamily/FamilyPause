@@ -208,7 +208,7 @@ function BrandBar({ view, onOpenCards, onOpenSettings, onSignOut, showResolve })
           <div className="brandbar-desktop">
             <StepRail view={view} showResolve={showResolve} />
             <div className="brandbar-tools">
-              <button className="linkish" title="Card deck" onClick={onOpenCards} style={{ display: "inline-flex", padding: 8 }}><Ico d={I.cards} size={16} /></button>
+              <button className="linkish" title="Conversation Cards" onClick={onOpenCards} style={{ display: "inline-flex", padding: 8 }}><Ico d={I.cards} size={16} /></button>
               <button className="linkish" title="Settings" onClick={onOpenSettings} style={{ display: "inline-flex", padding: 8 }}><Ico d={I.gear} size={16} /></button>
               <button className="linkish" title="Sign out" onClick={onSignOut} style={{ display: "inline-flex", padding: 8 }}><Ico d={I.out} size={16} /></button>
             </div>
@@ -231,7 +231,7 @@ function BrandBar({ view, onOpenCards, onOpenSettings, onSignOut, showResolve })
             <div className="brandbar-drawer-label">Weekly sync</div>
             <StepRail view={view} vertical showResolve={showResolve} />
             <div className="brandbar-drawer-links">
-              <button type="button" className="brandbar-drawer-link" onClick={run(onOpenCards)}><Ico d={I.cards} size={16} /> Card deck</button>
+              <button type="button" className="brandbar-drawer-link" onClick={run(onOpenCards)}><Ico d={I.cards} size={16} /> Conversation Cards</button>
               <button type="button" className="brandbar-drawer-link" onClick={run(onOpenSettings)}><Ico d={I.gear} size={16} /> Settings</button>
               <button type="button" className="brandbar-drawer-link brandbar-drawer-link-danger" onClick={run(onSignOut)}><Ico d={I.out} size={16} /> Sign out</button>
             </div>
@@ -382,10 +382,10 @@ function ConversationStartersCard({ workspace, onWorkspaceUpdate, onUnlock }) {
 
   let hint;
   if (trialExhausted && !drawnToday) {
-    hint = "Tap to unlock the full deck";
+    hint = "Tap to unlock the Conversation Starter Card Deck";
   } else if (drawnToday) {
     hint = trialExhausted
-      ? "Sit with today's question · Tap to unlock the full deck"
+      ? "Sit with today's question · Tap to unlock the Conversation Starter Card Deck"
       : "Sit with today's question · Come back tomorrow";
   } else {
     hint = `Tap to draw a starter · ${TRIAL_STARTER_CARDS.length - drawsUsed} of ${TRIAL_STARTER_CARDS.length} free left`;

@@ -381,7 +381,7 @@ function CardBack({ style = {}, year = 2026 }) {
       <div className="cs-cardback-mark" aria-hidden="true">&ldquo;</div>
       <div className="cs-cardback-quote" aria-hidden="true">⁋</div>
       <div className="cs-cardback-title">FamilyPause</div>
-      <div className="cs-cardback-meta">Card Deck · {year}</div>
+      <div className="cs-cardback-meta">Conversation Cards · {year}</div>
     </div>
   );
 }
@@ -440,7 +440,7 @@ function CardDraw({ workspace, meetingDate, onStartSession, onSkip, onUnlock }) 
 
             <div className="cs-fade-2" style={{ marginBottom: 30, width: "100%", maxWidth: 420 }}>
               <SyncDatePill meetingDate={meetingDate} />
-              <div className="cs-eyebrow" style={{ marginBottom: 12 }}>The {previewYear} Deck</div>
+              <div className="cs-eyebrow" style={{ marginBottom: 12 }}>The {previewYear} Conversation Cards</div>
               <h1 className="cs-hl">
                 A question to sit with <em>before you record</em>
               </h1>
@@ -459,7 +459,7 @@ function CardDraw({ workspace, meetingDate, onStartSession, onSkip, onUnlock }) 
                 rel="noreferrer"
                 className="cs-btn-gold"
               >
-                {`Get the card deck, $${PHYSICAL_DECK_PRICE} →`}
+                {`Get the Conversation Starter Card Deck — $${PHYSICAL_DECK_PRICE}`}
               </a>
               <button type="button" className="cs-btn-ghost-lora" onClick={onSkip}>
                 Skip, start session without a card
@@ -604,7 +604,7 @@ function PhysicalDeckWaitlist({ variant = "terra" }) {
       <div className={isGold ? "cs-info-gold" : "cs-physical-waitlist"}>
         <div className={isGold ? "cs-info-gold-title" : "cs-physical-waitlist-eyebrow"}>You're on the list</div>
         <p className={isGold ? undefined : "cs-physical-waitlist-copy"}>
-          Thanks — we'll email you when the printed FamilyPause deck is ready to ship.
+          Thanks — we'll email you when the printed FamilyPause Conversation Starter Card Deck is ready to ship.
         </p>
       </div>
     );
@@ -613,12 +613,12 @@ function PhysicalDeckWaitlist({ variant = "terra" }) {
   return (
     <div className={isGold ? "cs-info-gold" : "cs-physical-waitlist"}>
       <div className={isGold ? "cs-info-gold-title" : "cs-physical-waitlist-eyebrow"}>
-        Physical deck · Coming soon
+        Conversation Starter Card Deck · Coming soon
       </div>
       <p className={isGold ? undefined : "cs-physical-waitlist-copy"}>
         {isGold
-          ? "The printed deck isn't available to buy yet. Join the waitlist and we'll let you know when it ships — it will include a digital unlock code."
-          : "Want the physical experience too? The printed deck isn't for sale yet. Join the waitlist and we'll email you when it's ready."}
+          ? "The printed Conversation Starter Card Deck isn't available to buy yet. Join the waitlist and we'll let you know when it ships — it will include a digital unlock code."
+          : "Want the physical experience too? The printed Conversation Starter Card Deck isn't for sale yet. Join the waitlist and we'll email you when it's ready."}
       </p>
       <form className="cs-physical-waitlist-form" onSubmit={submit}>
         <label className="cs-sr-only" htmlFor="physical-deck-waitlist-email">Email</label>
@@ -747,9 +747,9 @@ function UnlockDeck({ workspace, onSuccess, onClose }) {
         </div>
 
         <div className="cs-unlock-eyebrow cs-fade">Unlock cards</div>
-        <h1 className="cs-unlock-hl cs-fade-1">Add your <em>card deck</em></h1>
+        <h1 className="cs-unlock-hl cs-fade-1">Add your <em>Conversation Cards</em></h1>
         <p className="cs-unlock-sub cs-fade-2">
-          Unlock the weekly card draw feature with a physical deck code, or purchase digital access directly.
+          Unlock the weekly card draw with a Conversation Starter Card Deck code, or purchase digital access directly.
         </p>
 
         <div className="cs-tab-sw cs-fade-2">
@@ -783,7 +783,7 @@ function UnlockDeck({ workspace, onSuccess, onClose }) {
                 onKeyDown={(e) => e.key === "Enter" && handleRedeem()}
               />
               <div className="cs-unlock-hint">
-                Found inside the lid of your FamilyPause Card Deck box.
+                Found inside the lid of your FamilyPause Conversation Starter Card Deck box.
               </div>
             </div>
 
@@ -808,7 +808,7 @@ function UnlockDeck({ workspace, onSuccess, onClose }) {
             <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 14, padding: "26px", marginBottom: 22 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 18 }}>
                 <div>
-                  <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 22, color: T.text, marginBottom: 6 }}>2026 Digital Card Set</div>
+                  <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 22, color: T.text, marginBottom: 6 }}>2026 Conversation Starter Card Deck</div>
                   <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, color: T.muted, letterSpacing: "0.05em" }}>52 cards · Permanent access · No expiration</div>
                 </div>
                 <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 32, color: T.terra }}>{formatDigitalPrice()}</div>
@@ -822,7 +822,7 @@ function UnlockDeck({ workspace, onSuccess, onClose }) {
             </div>
 
             <button type="button" className="cs-btn-primary" style={{ padding: "16px", fontSize: 17 }} onClick={handleDigitalPurchase}>
-              Purchase Digital Access, {formatDigitalPrice()}
+              Unlock the Conversation Starter Card Deck, {formatDigitalPrice()}
             </button>
             <div style={{ textAlign: "center", marginTop: 12, fontSize: 12, color: T.muted, fontFamily: "'JetBrains Mono', monospace" }}>
               Secure payment via Stripe · Instant access
@@ -855,7 +855,7 @@ function DeckLibrary({ workspace, onClose, onUnlock }) {
         <button onClick={onClose} style={{ background: "none", border: "none", color: T.muted, cursor: "pointer", fontSize: 20 }}>←</button>
         <div>
           <div style={{ fontSize: 11, letterSpacing: "0.2em", color: T.muted, fontFamily: "'JetBrains Mono', monospace" }}>MY CARDS</div>
-          <div style={{ fontSize: 20, color: T.text, fontFamily: "'Playfair Display', serif" }}>Card Deck Library</div>
+          <div style={{ fontSize: 20, color: T.text, fontFamily: "'Playfair Display', serif" }}>Conversation Cards</div>
         </div>
       </div>
 
@@ -919,8 +919,8 @@ function DeckLibrary({ workspace, onClose, onUnlock }) {
         ) : (
           <div style={{ textAlign: "center", padding: "40px 0", marginBottom: 32 }}>
             <div style={{ fontSize: 40, marginBottom: 16 }}>🃏</div>
-            <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 22, color: T.text, marginBottom: 8 }}>No decks yet</div>
-            <div style={{ fontSize: 15, color: T.mid, lineHeight: 1.6 }}>Get the FamilyPause Card Deck to unlock the weekly card draw feature.</div>
+            <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 22, color: T.text, marginBottom: 8 }}>No Conversation Cards yet</div>
+            <div style={{ fontSize: 15, color: T.mid, lineHeight: 1.6 }}>Get the FamilyPause Conversation Starter Card Deck to unlock the weekly card draw.</div>
           </div>
         )}
 
@@ -969,7 +969,7 @@ function DeckLibrary({ workspace, onClose, onUnlock }) {
                     transition: "all 0.15s",
                     boxShadow: `0 4px 12px rgba(190,90,55,0.25)`,
                   }}>
-                    Get the {year} Deck →
+                    Get the {year} Conversation Starter Card Deck →
                   </button>
                   <a href="https://familypause.com/cards" target="_blank" rel="noreferrer" style={{
                     background: "transparent",
@@ -979,7 +979,7 @@ function DeckLibrary({ workspace, onClose, onUnlock }) {
                     fontSize: 12, letterSpacing: "0.05em",
                     textDecoration: "none", transition: "all 0.15s",
                   }}>
-                    See the physical deck
+                    See the Conversation Cards
                   </a>
                 </div>
               </div>

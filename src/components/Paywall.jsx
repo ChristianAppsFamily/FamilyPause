@@ -204,13 +204,13 @@ export default function Paywall({ reason = "trial", onClose, workspace, subscrip
         {foundingFree && (
           <div className="pw-offer free" role="status">
             <div className="pw-offer-eyebrow">Founding Member Offer</div>
-            <p className="pw-offer-hl">Get the full digital card deck free when you become a member today.</p>
+            <p className="pw-offer-hl">Get the Conversation Starter Card Deck free when you become a member today.</p>
           </div>
         )}
         {halfOff && (
           <div className="pw-offer half" role="status">
             <div className="pw-offer-eyebrow">Trial Member Offer</div>
-            <p className="pw-offer-hl">Get the full digital card deck at half off when you upgrade today.</p>
+            <p className="pw-offer-hl">Get the Conversation Starter Card Deck at half off when you upgrade today.</p>
           </div>
         )}
 
@@ -233,7 +233,7 @@ export default function Paywall({ reason = "trial", onClose, workspace, subscrip
               <li><Check /> Organize with family members and custom categories</li>
               <li><Check /> Print or download your plan and itinerary as a PDF</li>
               <li><Check /> Export to Notion, Slack, or anywhere as a formatted list</li>
-              <li><Check /> Unlock the complete digital Conversation Card Deck (free for the first 100 subscribers)</li>
+              <li><Check /> Unlock the Conversation Starter Card Deck (free for the first 100 subscribers)</li>
             </ul>
             <div className="pw-cta">
               <button
@@ -244,10 +244,10 @@ export default function Paywall({ reason = "trial", onClose, workspace, subscrip
                 Upgrade Annual, $59/year
               </button>
               {foundingFree && (
-                <p className="pw-deck-note">Digital card deck included free — today only.</p>
+                <p className="pw-deck-note">Conversation Starter Card Deck included free — today only.</p>
               )}
               {halfOff && (
-                <p className="pw-deck-note">Digital Deck: $4.99 (half off today only)</p>
+                <p className="pw-deck-note">Conversation Starter Card Deck: $4.99 (half off today only)</p>
               )}
               <button
                 type="button"
@@ -290,7 +290,7 @@ export default function Paywall({ reason = "trial", onClose, workspace, subscrip
             className="deck"
             onClick={() => openPaymentLink(STRIPE_LINKS.cardDigital || STRIPE_LINKS.digital)}
           >
-            Buy Digital Card Deck, {formatDigitalPrice()}
+            Unlock the Conversation Starter Card Deck, {formatDigitalPrice()}
           </button>
         </div>
       </div>

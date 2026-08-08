@@ -290,7 +290,7 @@ export default function MarketingChrome({ children }) {
             <a href="/#how">How It Works</a>
             <a href="/#who">Who It&apos;s For</a>
             <a href="/#pricing">Pricing</a>
-            <a href="/#deck">Card Deck</a>
+            <a href="/#deck">Conversation Cards</a>
             <a href="/blog">Blog</a>
           </nav>
           <div className="navcta">
@@ -318,7 +318,7 @@ export default function MarketingChrome({ children }) {
               <a href="/#how" onClick={() => setMobileNavOpen(false)}>How It Works</a>
               <a href="/#who" onClick={() => setMobileNavOpen(false)}>Who It&apos;s For</a>
               <a href="/#pricing" onClick={() => setMobileNavOpen(false)}>Pricing</a>
-              <a href="/#deck" onClick={() => setMobileNavOpen(false)}>Card Deck</a>
+              <a href="/#deck" onClick={() => setMobileNavOpen(false)}>Conversation Cards</a>
               <a href="/blog" onClick={() => setMobileNavOpen(false)}>Blog</a>
             </div>
             <div className="navmobile-actions">
@@ -363,7 +363,7 @@ export default function MarketingChrome({ children }) {
                 <a href="/#how">How It Works</a>
                 <a href="/#who">Who It&apos;s For</a>
                 <a href="/#pricing">Pricing</a>
-                <a href="/#deck">Card Deck</a>
+                <a href="/#deck">Conversation Cards</a>
               </div>
               <div className="fcol">
                 <h4>Company</h4>
