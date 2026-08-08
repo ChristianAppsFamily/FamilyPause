@@ -170,7 +170,9 @@ export const blogPosts = [
     category: "Family Planning",
     readTime: "7 min",
     publishDate: "2026-07-22",
-    image: "https://images.unsplash.com/photo-1484712401471-05c7215830eb?w=800&q=80",
+    image: "/images/blog-how-to-run-a-family-meeting.jpg",
+    imageAlt: "A family of four sitting together on a living room couch, engaged in conversation by a bright window",
+    imagePosition: "center 40%",
     content: `
     <p>If you've ever thought, "A weekly family meeting sounds like a good idea, but I have no idea how to actually do one," you're not alone.</p>
     <p>Most families don't avoid weekly meetings because they don't want them. They avoid them because they imagine something formal. An agenda. Someone taking notes. A conversation that drags on for two hours.</p>
@@ -247,7 +249,9 @@ export const blogPosts = [
     category: "Family Planning",
     readTime: "8 min",
     publishDate: "2026-07-22",
-    image: "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=800&q=80",
+    image: "/images/blog-what-to-talk-about.jpg",
+    imageAlt: "A family of three sitting at a bright dining table for a meal and conversation, seen through open French doors",
+    imagePosition: "center 45%",
     content: `
     <p>The most common question couples ask after deciding to start a weekly family meeting is a simple one: What do we actually talk about?</p>
     <p>It sounds like the answer should be obvious. You know your family. You know what is happening in your home. You probably already have a running list of appointments, decisions, responsibilities, and things you have been meaning to discuss.</p>
