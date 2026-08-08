@@ -1720,7 +1720,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
               <div className="fcol">
                 <h4>Get Started</h4>
                 <button className="fp-footer-link" onClick={onSignIn}>Sign In</button>
-                <button className="fp-footer-link" onClick={onStart}>Create My Family Plan</button>
+                <button className="fp-footer-link" onClick={onStart}>Start My Free Trial</button>
               </div>
             </div>
           </div>
