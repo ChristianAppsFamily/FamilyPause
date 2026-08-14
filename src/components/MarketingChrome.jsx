@@ -18,6 +18,7 @@ const chromeCss = `
   background: #FAF7F2;
   color: var(--ink);
   font-family: var(--serif);
+  font-weight: 400;
   -webkit-font-smoothing: antialiased;
 }
 .fp-mkt * { box-sizing: border-box; }
@@ -91,10 +92,10 @@ const chromeCss = `
 }
 .fp-mkt .navcta .signin:hover { color: var(--terra); }
 .fp-mkt .btn {
-  font-family: var(--mono);
-  text-transform: uppercase;
-  letter-spacing: .07em;
-  font-size: 13px;
+  font-family: var(--serif);
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 15px;
   font-weight: 500;
   border: none;
   border-radius: 7px;
@@ -192,13 +193,14 @@ const chromeCss = `
 }
 .fp-mkt .foot .word b { color: var(--terra); }
 .fp-mkt .foot .tag {
-  font-family: var(--mono);
-  font-size: 10px;
+  font-family: var(--display);
+  font-style: italic;
+  font-size: 17px;
   font-weight: 500;
-  letter-spacing: .08em;
-  text-transform: uppercase;
-  color: var(--ink-3);
-  line-height: 1.4;
+  letter-spacing: -.01em;
+  text-transform: none;
+  color: var(--ink-2);
+  line-height: 1.35;
   margin-top: 8px;
   max-width: none;
   white-space: nowrap;
@@ -239,8 +241,11 @@ const chromeCss = `
   margin-top: 44px;
   padding-top: 24px;
   border-top: 1px solid var(--line);
-  font-size: 13px;
-  color: var(--ink-3);
+  font-family: var(--serif);
+  font-size: 15.5px;
+  font-weight: 400;
+  line-height: 1.55;
+  color: var(--ink-2);
 }
 @media (max-width: 900px) {
   .fp-mkt .navlinks,
@@ -250,7 +255,7 @@ const chromeCss = `
   .fp-mkt .foot .fcols { gap: 36px; }
   .fp-mkt .foot .tag {
     white-space: normal;
-    font-size: 9px;
+    font-size: 16px;
   }
 }
 `;
@@ -383,7 +388,7 @@ export default function MarketingChrome({ children }) {
               </div>
             </div>
           </div>
-          <div className="legal fineprint">
+          <div className="legal">
             © 2026 FamilyPause · Built with intention ·{" "}
             <a
               href="https://www.biblegateway.com/passage/?search=Ecclesiastes%204%3A9-12&version=NASB"

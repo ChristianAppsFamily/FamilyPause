@@ -12,6 +12,7 @@ const css = `
   background: #FAF7F2;
   color: var(--ink);
   font-family: var(--serif);
+  font-weight: 400;
 }
 .fp-contact .wrap {
   width: min(1120px, calc(100% - 48px));
@@ -83,10 +84,10 @@ const css = `
 }
 .fp-contact .navcta .signin:hover { color: var(--terra); }
 .fp-contact .btn {
-  font-family: var(--mono);
-  text-transform: uppercase;
-  letter-spacing: .07em;
-  font-size: 13px;
+  font-family: var(--serif);
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 15px;
   font-weight: 500;
   border: none;
   border-radius: var(--r-sm);

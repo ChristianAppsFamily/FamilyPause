@@ -11,6 +11,7 @@ const postCss = `
   max-width: 680px;
   margin: 0 auto;
   padding: 64px 24px 96px;
+  font-weight: 400;
 }
 .fp-post-pill {
   display: inline-block;

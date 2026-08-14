@@ -10,6 +10,7 @@ const css = `
   background: var(--paper);
   color: var(--ink);
   font-family: var(--serif);
+  font-weight: 400;
 }
 .cards-product .wrap { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
 .cards-product h1 {
@@ -61,6 +62,13 @@ const css = `
 .cards-product li { font-size: 15px; color: var(--ink); }
 .cards-product li::before { content: "→ "; color: var(--olive-d); }
 .cards-product .btn-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.cards-product .btn {
+  font-family: var(--serif);
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 15px;
+  font-weight: 500;
+}
 .cards-product .back {
   font-family: var(--mono);
   font-size: 12px;

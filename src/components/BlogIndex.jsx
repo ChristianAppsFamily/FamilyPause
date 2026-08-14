@@ -8,6 +8,7 @@ const blogCss = `
   max-width: 800px;
   margin: 0 auto;
   padding: 64px 24px 96px;
+  font-weight: 400;
 }
 .fp-blog-eyebrow {
   margin: 0 0 14px;

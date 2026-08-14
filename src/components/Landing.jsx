@@ -32,6 +32,7 @@ const css = `
   --shadow-lg: 0 14px 40px rgba(70,45,20,.12), 0 40px 90px rgba(70,45,20,.12);
   --wrap: 1160px;
   font-family: var(--serif);
+  font-weight: 400;
   color: var(--ink);
   background: var(--paper);
   -webkit-font-smoothing: antialiased;
@@ -53,8 +54,8 @@ const css = `
 
 /* buttons */
 .fp-landing .btn {
-  font-family: var(--mono); text-transform: uppercase; letter-spacing: .07em;
-  font-size: 13px; font-weight: 500; border: none; border-radius: var(--r-sm);
+  font-family: var(--serif); text-transform: none; letter-spacing: 0;
+  font-size: 15px; font-weight: 500; border: none; border-radius: var(--r-sm);
   padding: 15px 26px; cursor: pointer; display: inline-flex; align-items: center; gap: 9px;
   transition: transform .12s, box-shadow .22s, background .2s, color .2s; white-space: nowrap;
 }
@@ -65,7 +66,7 @@ const css = `
 .fp-landing .btn-ghost:hover { border-color: var(--terra); color: var(--terra); }
 .fp-landing .btn-cream { background: #fff; color: var(--terra-d); box-shadow: 0 8px 20px rgba(60,40,20,.14); }
 .fp-landing .btn-cream:hover { transform: translateY(-1px); box-shadow: 0 12px 28px rgba(60,40,20,.20); }
-.fp-landing .btn-lg { padding: 17px 32px; font-size: 14px; }
+.fp-landing .btn-lg { padding: 17px 32px; font-size: 16px; }
 .fp-landing .btn-block { width: 100%; justify-content: center; }
 
 .fp-landing .linktext {
@@ -561,7 +562,7 @@ const css = `
 .fp-landing .mcard.olive { border-left-color: var(--olive); }
 .fp-landing .mcard.gold  { border-left-color: var(--gold); }
 .fp-landing .mcard .mtags { display: flex; gap: 7px; margin-bottom: 9px; }
-.fp-landing .mtag { font-family: var(--mono); font-size: 9.5px; letter-spacing: .06em; text-transform: uppercase; padding: 3px 7px; border-radius: 5px; font-weight: 500; }
+.fp-landing .mtag { font-family: var(--serif); font-size: 12px; letter-spacing: 0; text-transform: none; padding: 4px 8px; border-radius: 5px; font-weight: 500; }
 .fp-landing .mtag.spence { background: var(--terra-soft); color: var(--terra-d); }
 .fp-landing .mtag.amanda { background: var(--olive-soft); color: var(--olive-d); }
 .fp-landing .mtag.both   { background: var(--gold-soft); color: #8a6a16; }
@@ -580,7 +581,7 @@ const css = `
 .fp-landing .mcard .mstatus.needs { background: var(--gold-soft); color: #8a6a16; border: 1px solid #e6d29a; }
 .fp-landing .mcard .mstatus.ready { background: var(--olive-soft); color: var(--olive-d); border: 1px solid var(--olive-soft); }
 .fp-landing .mcard .macts { display: flex; gap: 8px; }
-.fp-landing .mbtn { flex: 1; text-align: center; font-family: var(--mono); font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; padding: 9px; border-radius: var(--r-sm); border: none; }
+.fp-landing .mbtn { flex: 1; text-align: center; font-family: var(--serif); font-size: 13px; font-weight: 500; letter-spacing: 0; text-transform: none; padding: 9px; border-radius: var(--r-sm); border: none; }
 .fp-landing .mbtn.keep { background: var(--olive-soft); color: var(--olive-d); }
 .fp-landing .mbtn.disc { background: var(--terra-tint); color: var(--terra-d); }
 .fp-landing .mbtn.cal  { background: var(--gold-soft); color: #8a6a16; }
@@ -593,7 +594,7 @@ const css = `
   font-family: var(--mono); font-size: 10.5px; letter-spacing: .04em; color: var(--ink-3); text-transform: uppercase;
 }
 .fp-landing .mock .mfoot-bar .mcal {
-  font-family: var(--mono); font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase;
+  font-family: var(--serif); font-size: 13px; font-weight: 500; letter-spacing: 0; text-transform: none;
   background: var(--terra); color: #fff; border: none; border-radius: var(--r-sm); padding: 9px 14px;
 }
 
@@ -621,7 +622,7 @@ const css = `
 .fp-landing .quote { text-align: center; max-width: 920px; margin: 0 auto; position: relative; }
 .fp-landing .quote .qmark { font-family: var(--display); font-size: 120px; line-height: .6; color: rgba(255,255,255,.22); height: 56px; display: block; }
 .fp-landing .quote blockquote { font-family: var(--display); font-style: italic; font-weight: 500; font-size: 40px; line-height: 1.28; margin: 0 0 26px; letter-spacing: -.01em; }
-.fp-landing .quote .qby { font-family: var(--mono); font-size: 12.5px; letter-spacing: .18em; text-transform: uppercase; color: rgba(255,255,255,.85); }
+.fp-landing .quote .qby { font-family: var(--serif); font-size: 16px; font-weight: 500; letter-spacing: 0; text-transform: none; color: rgba(255,255,255,.9); }
 
 /* how it works */
 .fp-landing .steps4 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0; }
@@ -702,9 +703,9 @@ const css = `
 .fp-landing .pricegrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
 .fp-landing .tier { background: var(--paper-card); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 34px 30px; display: flex; flex-direction: column; position: relative; }
 .fp-landing .tier.pop { background: linear-gradient(160deg, var(--terra), #B0502C); color: #fff; border: none; box-shadow: var(--shadow-lg); transform: translateY(-10px); }
-.fp-landing .tier .plabel { font-family: var(--mono); font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 18px; }
-.fp-landing .tier.pop .plabel { color: rgba(255,255,255,.8); }
-.fp-landing .popbadge { position: absolute; top: -13px; left: 50%; transform: translateX(-50%); font-family: var(--mono); font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; background: var(--gold); color: #fff; padding: 6px 15px; border-radius: 999px; box-shadow: 0 6px 14px rgba(192,151,64,.4); }
+.fp-landing .tier .plabel { font-family: var(--serif); font-size: 16px; font-weight: 500; letter-spacing: 0; text-transform: none; color: var(--ink-3); margin-bottom: 18px; }
+.fp-landing .tier.pop .plabel { color: rgba(255,255,255,.88); }
+.fp-landing .popbadge { position: absolute; top: -13px; left: 50%; transform: translateX(-50%); font-family: var(--serif); font-size: 13px; font-weight: 500; letter-spacing: 0; text-transform: none; background: var(--gold); color: #fff; padding: 6px 15px; border-radius: 999px; box-shadow: 0 6px 14px rgba(192,151,64,.4); }
 .fp-landing .price { display: flex; align-items: baseline; gap: 4px; margin-bottom: 6px; }
 .fp-landing .price .amt { font-family: var(--display); font-size: 58px; font-weight: 600; line-height: 1; letter-spacing: -.02em; }
 .fp-landing .price .per { font-family: var(--mono); font-size: 12px; color: var(--ink-3); letter-spacing: .04em; }
@@ -717,10 +718,11 @@ const css = `
   margin-bottom: 16px;
 }
 .fp-landing .tier.pop .billing-pill {
-  font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: .1em;
-  text-transform: uppercase;
+  font-family: var(--serif);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
   border: none;
   border-radius: 999px;
   padding: 7px 12px;
@@ -1120,14 +1122,33 @@ const css = `
 .fp-landing .foot .row { display: flex; align-items: flex-start; justify-content: space-between; gap: 30px; flex-wrap: wrap; }
 .fp-landing .foot .word { font-family: var(--display); font-size: 26px; font-weight: 600; }
 .fp-landing .foot .word b { color: var(--terra); }
-.fp-landing .foot .tag { color: var(--ink-3); font-size: 13.5px; line-height: 1.45; margin-top: 6px; max-width: 280px; }
+.fp-landing .foot .tag {
+  font-family: var(--display);
+  font-style: italic;
+  font-weight: 500;
+  font-size: 17px;
+  line-height: 1.35;
+  letter-spacing: -.01em;
+  color: var(--ink-2);
+  margin-top: 8px;
+  max-width: 280px;
+}
 .fp-landing .foot .fcols { display: flex; gap: 64px; }
 .fp-landing .foot .fcol h4 { font-family: var(--mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 14px; font-weight: 500; }
 .fp-landing .foot .fcol a { display: block; font-size: 14.5px; color: var(--ink-2); margin-bottom: 9px; transition: color .15s; }
 .fp-landing .foot .fcol a:hover { color: var(--terra); }
 .fp-landing .fp-footer-link { display: block; font-size: 14.5px; color: var(--ink-2); margin-bottom: 9px; transition: color .15s; background: none; border: none; padding: 0; cursor: pointer; font-family: inherit; text-align: left; }
 .fp-landing .fp-footer-link:hover { color: var(--terra); }
-.fp-landing .foot .legal { margin-top: 44px; padding-top: 24px; border-top: 1px solid var(--line); }
+.fp-landing .foot .legal {
+  margin-top: 44px;
+  padding-top: 24px;
+  border-top: 1px solid var(--line);
+  font-family: var(--serif);
+  font-size: 15.5px;
+  font-weight: 400;
+  line-height: 1.55;
+  color: var(--ink-2);
+}
 
 .fp-landing .reveal { opacity: 1; transform: translateY(22px); transition: opacity .7s cubic-bezier(.2,.7,.2,1), transform .7s cubic-bezier(.2,.7,.2,1); }
 .fp-landing .reveal.in { opacity: 1; transform: none; }
@@ -1143,7 +1164,7 @@ const css = `
   .fp-landing .navlinks { gap: 20px; }
   .fp-landing .navlinks a { font-size: 11px; letter-spacing: .05em; }
   .fp-landing .navcta { gap: 14px; }
-  .fp-landing .navcta .btn { padding: 13px 20px; font-size: 12px; }
+  .fp-landing .navcta .btn { padding: 13px 20px; font-size: 14px; }
 }
 @media (max-width: 960px) {
   .fp-landing .herogrid { grid-template-columns: 1fr; gap: 48px; padding: 60px 0 72px; }
@@ -1615,7 +1636,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                 </div>
 
                 <div className="tier pop">
-                  <span className="popbadge">Most Popular</span>
+                  <span className="popbadge">Most popular</span>
                   <div className="plabel">Family Plan</div>
                   <div className="billing-toggle" role="group" aria-label="Billing period">
                     <button
@@ -1743,7 +1764,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
               </div>
             </div>
           </div>
-          <div className="legal fineprint">© 2026 FamilyPause · Built with intention · <a href="https://www.biblegateway.com/passage/?search=Ecclesiastes%204%3A9-12&version=NASB" target="_blank" rel="noopener noreferrer" style={{ color: "inherit", textDecoration: "underline", textUnderlineOffset: 3 }}>Ecclesiastes 4:9</a></div>
+          <div className="legal">© 2026 FamilyPause · Built with intention · <a href="https://www.biblegateway.com/passage/?search=Ecclesiastes%204%3A9-12&version=NASB" target="_blank" rel="noopener noreferrer" style={{ color: "inherit", textDecoration: "underline", textUnderlineOffset: 3 }}>Ecclesiastes 4:9</a></div>
         </div>
       </footer>
 
