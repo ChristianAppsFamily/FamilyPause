@@ -1,6 +1,7 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
+import { goToSignIn, goToSignUp } from './lib/routes.js'
 import { HelmetProvider } from 'react-helmet-async'
 import './styles/tokens.css'
 import './styles/screens.css'
@@ -16,10 +17,11 @@ import { SubscribeSuccess, SubscribeCancel } from './components/SubscribePages.j
 // Marketing landing at "/". Its CTAs route into the auth + app flow at /app.
 function LandingRoute() {
   const navigate = useNavigate()
+  const location = useLocation()
   return (
     <Landing
-      onSignIn={() => navigate('/app', { replace: true })}
-      onStart={() => navigate('/app?signup=1', { replace: true })}
+      onSignIn={() => goToSignIn(navigate, location)}
+      onStart={() => goToSignUp(navigate, location)}
     />
   )
 }

@@ -6,10 +6,10 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useState, useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { ensureTrialSubscription } from "../lib/subscription";
-import { authPathForScreen, resolveAuthScreen } from "../lib/routes";
+import { authPathForScreen, resolveAuthScreen, leaveAuth } from "../lib/routes";
 import { isExistingAccountSignup } from "../lib/authSignup";
 import { triggerWelcomeEmail } from "../lib/welcomeEmail";
 
@@ -220,6 +220,24 @@ const css = `
   }
 `;
 
+function AuthLogoLink({ className, children, ariaLabel = "Back to previous page" }) {
+  const navigate = useNavigate();
+  const location = useLocation();
+  return (
+    <a
+      href="/"
+      className={className}
+      aria-label={ariaLabel}
+      onClick={(event) => {
+        event.preventDefault();
+        leaveAuth(navigate, location);
+      }}
+    >
+      {children}
+    </a>
+  );
+}
+
 function AuthShell({ children, wide = false }) {
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -260,12 +278,12 @@ function AuthShell({ children, wide = false }) {
         </div>
 
         <div>
-          <a href="/" className="fp-left-logo-link" aria-label="Back to FamilyPause home">
+          <AuthLogoLink className="fp-left-logo-link" ariaLabel="Back to previous page">
             <LogoMark width={17} height={28} fill="#FAF7F2" />
             <div style={{ fontFamily: "'Playfair Display', serif", fontStyle: "italic", fontSize: 22, fontWeight: 400, letterSpacing: "-0.01em" }}>
               <span style={{ color: "#FAF7F2" }}>Family</span><span style={{ color: "rgba(250,247,242,0.72)" }}>Pause</span>
             </div>
-          </a>
+          </AuthLogoLink>
           <div style={{ fontFamily: "'Playfair Display', serif", fontStyle: "italic", fontSize: 32, fontWeight: 400, color: T.bg, lineHeight: 1.25, marginBottom: 20 }}>
             The weekly reset every family needs
           </div>
@@ -502,10 +520,10 @@ function SignIn({ onSwitch, onSuccess, initialEmail = "" }) {
   return (
     <AuthShell>
       <div className="fp-fade" style={{ marginBottom: 8 }}>
-        <a href="/" className="fp-logo-link">
+        <AuthLogoLink className="fp-logo-link">
           <LogoMark width={14} height={22} fill={T.terra} />
           <div className="fp-wordmark" style={{ marginBottom: 0 }}><span className="wf">Family</span><span className="wp">Pause</span></div>
-        </a>
+        </AuthLogoLink>
         <div style={{ fontSize: 11, letterSpacing: "0.25em", color: T.terra, fontFamily: "'JetBrains Mono', monospace", textTransform: "uppercase", marginBottom: 12 }}>
           Welcome back
         </div>
@@ -619,10 +637,10 @@ function SignUp({ onSwitch, onSuccess }) {
   return (
     <AuthShell wide>
       <div className="fp-fade" style={{ marginBottom: 8 }}>
-        <a href="/" className="fp-logo-link">
+        <AuthLogoLink className="fp-logo-link">
           <LogoMark width={14} height={22} fill={T.terra} />
           <div className="fp-wordmark" style={{ marginBottom: 0 }}><span className="wf">Family</span><span className="wp">Pause</span></div>
-        </a>
+        </AuthLogoLink>
         <div style={{ fontSize: 11, letterSpacing: "0.25em", color: T.terra, fontFamily: "'JetBrains Mono', monospace", textTransform: "uppercase", marginBottom: 12 }}>
           7-day free trial
         </div>
@@ -878,11 +896,12 @@ export { AuthShell };
 
 export default function Auth({ onAuthenticated, inviteCode = "" }) {
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams] = useSearchParams();
   const screen = resolveAuthScreen(searchParams, inviteCode);
 
   const onSwitch = (target, email = "") => {
-    navigate(authPathForScreen(target, inviteCode, email));
+    navigate(authPathForScreen(target, inviteCode, email), { state: location.state });
   };
 
   const handleSignInSuccess = async () => {

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
+import { goToSignIn, goToSignUp } from "../lib/routes";
 
 const stroke = {
   fill: "none",
@@ -259,6 +260,7 @@ const chromeCss = `
  */
 export default function MarketingChrome({ children }) {
   const navigate = useNavigate();
+  const location = useLocation();
   const [scrolled, setScrolled] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
@@ -269,8 +271,8 @@ export default function MarketingChrome({ children }) {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const onSignIn = () => navigate("/app", { replace: true });
-  const onStart = () => navigate("/app?signup=1", { replace: true });
+  const onSignIn = () => goToSignIn(navigate, location);
+  const onStart = () => goToSignUp(navigate, location);
 
   return (
     <div className="fp-mkt">

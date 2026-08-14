@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+import { goToSignIn, goToSignUp } from "../lib/routes";
 import { useForm, ValidationError } from "@formspree/react";
 
 /** Formspree form id (from https://formspree.io/f/mojgnkoz). Override via Vercel env if needed. */
@@ -415,6 +416,7 @@ function ContactForm() {
 
 export default function Contact() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [scrolled, setScrolled] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
@@ -425,8 +427,8 @@ export default function Contact() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const onSignIn = () => navigate("/app", { replace: true });
-  const onStart = () => navigate("/app?signup=1", { replace: true });
+  const onSignIn = () => goToSignIn(navigate, location);
+  const onStart = () => goToSignUp(navigate, location);
 
   return (
     <div className="fp-contact">

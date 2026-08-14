@@ -34,6 +34,39 @@ export function authPathForScreen(screen, inviteCode = "", email = "") {
   }
 }
 
+function isAuthPath(path) {
+  return !path || path === "/app" || path.startsWith("/app") || path.startsWith("/join");
+}
+
+/** Remember the marketing page so Sign In / Sign Up can return there. */
+export function marketingReturnPath(location) {
+  const path = `${location?.pathname || ""}${location?.search || ""}${location?.hash || ""}`;
+  return isAuthPath(path) ? "/" : path;
+}
+
+export function goToSignIn(navigate, location) {
+  navigate("/app", { state: { from: marketingReturnPath(location) } });
+}
+
+export function goToSignUp(navigate, location) {
+  navigate("/app?signup=1", { state: { from: marketingReturnPath(location) } });
+}
+
+/** Leave auth for the page the user came from (not a random / leftover history entry). */
+export function leaveAuth(navigate, location) {
+  const from = location?.state?.from;
+  if (typeof from === "string" && !isAuthPath(from)) {
+    navigate(from);
+    return;
+  }
+  const idx = typeof window !== "undefined" ? window.history.state?.idx : undefined;
+  if (typeof idx === "number" && idx > 0) {
+    navigate(-1);
+    return;
+  }
+  navigate("/");
+}
+
 export function resolveAuthScreen(searchParams, inviteCode = "") {
   if (inviteCode || searchParams.get("join") === "1") return "join";
   if (searchParams.get("signup") === "1") return "signup";
