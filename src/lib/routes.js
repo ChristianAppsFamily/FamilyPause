@@ -40,7 +40,9 @@ function isAuthPath(path) {
 
 /** Remember the marketing page so Sign In / Sign Up can return there. */
 export function marketingReturnPath(location) {
-  const path = `${location?.pathname || ""}${location?.search || ""}${location?.hash || ""}`;
+  const path = typeof window !== "undefined"
+    ? `${window.location.pathname}${window.location.search}${window.location.hash}`
+    : `${location?.pathname || ""}${location?.search || ""}${location?.hash || ""}`;
   return isAuthPath(path) ? "/" : path;
 }
 

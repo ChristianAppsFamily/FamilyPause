@@ -1220,12 +1220,31 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
     };
   }, [location.hash, location.pathname, location.key]);
 
+  useEffect(() => {
+    const onPop = () => {
+      const id = (window.location.hash || "").replace(/^#/, "");
+      if (id) scrollToLandingSection(id, { smooth: true });
+      else if (window.location.pathname === "/") window.scrollTo({ top: 0, behavior: "auto" });
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
+
   const goToSection = (id) => (event) => {
     event.preventDefault();
-    if (scrollToLandingSection(id, { smooth: true })) {
-      window.history.replaceState(null, "", `/#${id}`);
-    }
     setMobileNavOpen(false);
+    const hash = `#${id}`;
+    if (window.location.hash === hash) {
+      scrollToLandingSection(id, { smooth: true });
+      return;
+    }
+    const prev = window.history.state || {};
+    window.history.pushState(
+      { ...prev, idx: (typeof prev.idx === "number" ? prev.idx : 0) + 1 },
+      "",
+      `/${hash}`
+    );
+    scrollToLandingSection(id, { smooth: true });
   };
 
   useEffect(() => {
