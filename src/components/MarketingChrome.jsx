@@ -357,7 +357,7 @@ export default function MarketingChrome({ children }) {
                 />
                 <div className="word"><b>Family</b>Pause</div>
               </div>
-              <div className="tag">So much going on. One plan to move forward with.</div>
+              <div className="tag">Less Chaos. More Time.</div>
             </div>
             <div className="fcols">
               <div className="fcol">
