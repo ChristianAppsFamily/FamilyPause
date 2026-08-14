@@ -129,7 +129,8 @@ const css = `
   min-height: 52px;
   padding-left: 22px;
   padding-right: 22px;
-  font-size: 13px;
+  font-size: 16px;
+  font-weight: 600;
   background: transparent;
   border: 1px solid #D8CFC0;
   color: #6A5A40;
