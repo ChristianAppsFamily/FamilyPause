@@ -53,7 +53,7 @@ async function invokeDistill(body) {
       }
     } catch (_) { /* ignore */ }
 
-    if (code === 'SESSION_PACK_REQUIRED' || code === 'DAILY_LIMIT' || status === 402) {
+    if (code === 'SESSION_PACK_REQUIRED' || code === 'DAILY_LIMIT' || code === 'WEEKLY_LIMIT' || status === 402) {
       const err = new Error(detail || 'Session pack required');
       err.code = code || 'SESSION_PACK_REQUIRED';
       err.status = 402;

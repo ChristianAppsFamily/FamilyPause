@@ -20,6 +20,28 @@ const cors = {
 };
 
 const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+const WEEKDAY_INDEX: Record<string, number> = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
+
+/** Sunday of the current Pacific planning week as YYYY-MM-DD. */
+function pacificWeekStartSunday(d = new Date()): string {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/Los_Angeles",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    weekday: "short",
+  }).formatToParts(d);
+  const get = (type: string) => parts.find((p) => p.type === type)?.value;
+  const year = Number(get("year"));
+  const month = Number(get("month"));
+  const day = Number(get("day"));
+  const dayIndex = WEEKDAY_INDEX[get("weekday") ?? "Sun"] ?? 0;
+  const sunday = new Date(Date.UTC(year, month - 1, day, 12, 0, 0) - dayIndex * 86400000);
+  const y = sunday.getUTCFullYear();
+  const m = String(sunday.getUTCMonth() + 1).padStart(2, "0");
+  const dd = String(sunday.getUTCDate()).padStart(2, "0");
+  return `${y}-${m}-${dd}`;
+}
 
 type ExtractionContext = {
   meeting_date?: string;
@@ -158,24 +180,19 @@ Deno.serve(async (req) => {
 
     const plan = sub?.plan || "free";
     const isPaid = sub?.active && (plan === "family" || plan === "pro" || plan === "ministry");
-    const FREE_DAILY_BUILDS = 3;
+    const FREE_WEEKLY_BUILDS = 1;
 
     if (!isPaid) {
-      // Free plan: 3 builds per calendar day (Pacific). Session packs paused for testing.
-      const today = new Intl.DateTimeFormat("en-CA", {
-        timeZone: "America/Los_Angeles",
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-      }).format(new Date());
+      // Free plan: 1 build per Pacific calendar week (Sunday–Saturday).
+      const weekStart = pacificWeekStartSunday();
       const { data: usage } = await admin
         .from("ai_distill_usage")
         .select("count")
         .eq("workspace_id", workspaceId)
-        .eq("usage_date", today)
+        .eq("usage_date", weekStart)
         .maybeSingle();
-      if ((usage?.count || 0) >= FREE_DAILY_BUILDS) {
-        return json({ error: "Daily free limit reached", code: "DAILY_LIMIT" }, 402);
+      if ((usage?.count || 0) >= FREE_WEEKLY_BUILDS) {
+        return json({ error: "Weekly free limit reached", code: "WEEKLY_LIMIT" }, 402);
       }
     }
 

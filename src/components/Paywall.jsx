@@ -117,7 +117,7 @@ function dismissOffer() {
 
 /**
  * @param {{
- *   reason?: "trial"|"daily"|"upgrade",
+ *   reason?: "trial"|"daily"|"weekly"|"upgrade",
  *   onClose?: () => void,
  *   workspace?: object,
  *   subscription?: object,
@@ -127,14 +127,15 @@ export default function Paywall({ reason = "trial", onClose, workspace, subscrip
   const [subscriberCount, setSubscriberCount] = useState(null);
   const [showOffer, setShowOffer] = useState(false);
 
-  const headline = reason === "daily"
-    ? <>You&apos;ve used <em>today&apos;s</em> free builds</>
+  const weeklyLimit = reason === "weekly" || reason === "daily";
+  const headline = weeklyLimit
+    ? <>You&apos;ve used <em>this week&apos;s</em> free plan</>
     : reason === "upgrade"
       ? <>Upgrade when <em>you&apos;re ready</em></>
       : <>Your <em>free trial</em> has ended</>;
 
-  const sub = reason === "daily"
-    ? "You've used your 3 free builds for today. Come back tomorrow, or upgrade for unlimited sessions."
+  const sub = weeklyLimit
+    ? "You've used your free plan for this week. Upgrade to Family Plan for unlimited plans."
     : reason === "upgrade"
       ? "Unlock title editing, exports, unlimited plans, and spouse sync with Family Plan."
       : "We hope the last 7 days brought a little more calm to your week. Keep the rhythm going with editing, exports, unlimited plans, and spouse sync.";
@@ -268,7 +269,7 @@ export default function Paywall({ reason = "trial", onClose, workspace, subscrip
             <p className="pw-tagline">Everything you need to keep creating family plans after your trial.</p>
             <ul className="pw-feats">
               <li><Check /> Type, paste, or record what needs planning</li>
-              <li><Check /> One plan per day</li>
+              <li><Check /> One plan per week</li>
               <li><Check /> Review extracted items before they are scheduled</li>
               <li><Check /> Add approved items to your calendar</li>
               <li><Check /> View your week as a simple itinerary</li>
@@ -277,7 +278,7 @@ export default function Paywall({ reason = "trial", onClose, workspace, subscrip
             </ul>
             <div className="pw-cta">
               <button className="btn btn-ghost btn-block" onClick={handleClose}>
-                {reason === "daily" ? "Come back tomorrow" : "Stay on Free"}
+                {weeklyLimit ? "Come back next week" : "Stay on Free"}
               </button>
             </div>
           </div>

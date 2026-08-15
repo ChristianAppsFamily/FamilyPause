@@ -46,17 +46,17 @@ export function hasFamilyPlanFeatures(subscription) {
   return isPaidPlan(subscription) || isTrialActive(subscription);
 }
 
-/** Free / trial daily Build (distill) allowance while testing. */
-export const FREE_DAILY_BUILDS = 3;
+/** Free / trial Build (distill) allowance: one new plan per Pacific week. */
+export const FREE_WEEKLY_BUILDS = 1;
 
 /**
- * Returns null if plan creation is allowed, or "daily" after Free uses today's builds.
+ * Returns null if plan creation is allowed, or "weekly" after Free uses this week's build.
  * @param {object} subscription
- * @param {{ distillsToday?: number }} opts
+ * @param {{ distillsThisWeek?: number }} opts
  */
-export function paywallReason(subscription, { distillsToday = 0 } = {}) {
+export function paywallReason(subscription, { distillsThisWeek = 0 } = {}) {
   if (isPaidPlan(subscription)) return null;
-  if (distillsToday >= FREE_DAILY_BUILDS) return "daily";
+  if (distillsThisWeek >= FREE_WEEKLY_BUILDS) return "weekly";
   return null;
 }
 

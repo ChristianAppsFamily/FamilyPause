@@ -21,7 +21,7 @@ import Paywall from "./components/Paywall.jsx";
 import PlanView from "./components/PlanView.jsx";
 import UpgradePrompt from "./components/UpgradePrompt.jsx";
 import { hasFamilyPlanFeatures, paywallReason, upgradePaywallReason } from "./lib/subscription";
-import { loadDistillsToday, recordDistillUsage } from "./lib/distillUsage";
+import { loadDistillsThisWeek, recordDistillUsage } from "./lib/distillUsage";
 import { parseAppLocation, syncPath, SYNC_VIEWS, cardsPath } from "./lib/routes";
 import { normalizeCardPeople } from "./lib/familyContext";
 import {
@@ -1341,7 +1341,7 @@ export default function App({ user, workspace, onSignOut }) {
   const [paywallBlock, setPaywallBlock] = useState(null);
   const [subscription, setSubscription] = useState(null);
   const [subscriptionLoaded, setSubscriptionLoaded] = useState(false);
-  const [distillsToday, setDistillsToday] = useState(0);
+  const [distillsThisWeek, setDistillsThisWeek] = useState(0);
   const [calendarBusy, setCalendarBusy] = useState(false);
   const [calendarSyncing, setCalendarSyncing] = useState(false);
   const [unsyncingCardId, setUnsyncingCardId] = useState(null);
@@ -1493,8 +1493,8 @@ export default function App({ user, workspace, onSignOut }) {
         setSubscriptionLoaded(true);
       }
 
-      const todayCount = await loadDistillsToday(ws.id);
-      if (active) setDistillsToday(todayCount);
+      const weekCount = await loadDistillsThisWeek(ws.id);
+      if (active) setDistillsThisWeek(weekCount);
     })();
     return () => { active = false; };
   }, [ws?.id]);
@@ -1631,7 +1631,7 @@ export default function App({ user, workspace, onSignOut }) {
       setSubscriptionLoaded(true);
     }
 
-    const block = paywallReason(currentSubscription, { distillsToday });
+    const block = paywallReason(currentSubscription, { distillsThisWeek });
     if (block) {
       setPaywallBlock(block);
       openOverlay("paywall");
@@ -1672,8 +1672,8 @@ ${text}`;
       try { parsed = JSON.parse(raw.replace(/```json|```/g, "").trim()); }
       catch { const m = raw.match(/\[[\s\S]*\]/); if (m) parsed = JSON.parse(m[0]); }
     } catch (err) {
-      if (err?.code === "DAILY_LIMIT" || err?.status === 402) {
-        setPaywallBlock("daily");
+      if (err?.code === "WEEKLY_LIMIT" || err?.code === "DAILY_LIMIT" || err?.status === 402) {
+        setPaywallBlock("weekly");
         openOverlay("paywall");
         go("capture");
         return;
@@ -1703,7 +1703,7 @@ ${text}`;
     if (!errorMsg && ws?.id && newCards.length > 0) {
       try {
         await recordDistillUsage(ws.id);
-        setDistillsToday((n) => n + 1);
+        setDistillsThisWeek((n) => n + 1);
         const reviewPayload = {
           transcript: text,
           input_mode: mode === "dictate" ? "record" : "paste",
@@ -1923,7 +1923,7 @@ ${text}`;
 
   // ── Overlays ─────────────────────────────────────────────────────────────
   if (overlay === "paywall") {
-    const resolvedReason = paywallBlock || paywallReason(subscription, { distillsToday }) || "upgrade";
+    const resolvedReason = paywallBlock || paywallReason(subscription, { distillsThisWeek }) || "upgrade";
     return (
       <div className="stage" style={{ padding: "48px 24px 80px" }}>
         <Paywall
