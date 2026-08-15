@@ -158,41 +158,24 @@ Deno.serve(async (req) => {
 
     const plan = sub?.plan || "free";
     const isPaid = sub?.active && (plan === "family" || plan === "pro" || plan === "ministry");
-    const trialActive = !!sub?.trial_ends_at && new Date(sub.trial_ends_at) > new Date()
-      && (!plan || plan === "free");
+    const FREE_DAILY_BUILDS = 3;
 
     if (!isPaid) {
-      if (trialActive) {
-        // 1 AI session per calendar day during trial
-        const today = new Date().toISOString().slice(0, 10);
-        const { data: usage } = await admin
-          .from("ai_distill_usage")
-          .select("count")
-          .eq("workspace_id", workspaceId)
-          .eq("usage_date", today)
-          .maybeSingle();
-        if ((usage?.count || 0) >= 1) {
-          return json({ error: "Daily trial limit reached", code: "DAILY_LIMIT" }, 402);
-        }
-      } else {
-        // Trial expired — consume prepaid session pack
-        const { data: ws } = await admin
-          .from("workspaces")
-          .select("sessions_remaining")
-          .eq("id", workspaceId)
-          .maybeSingle();
-        const remaining = ws?.sessions_remaining || 0;
-        if (remaining <= 0) {
-          return json({ error: "Session pack required", code: "SESSION_PACK_REQUIRED" }, 402);
-        }
-        const { error: decErr } = await admin
-          .from("workspaces")
-          .update({ sessions_remaining: remaining - 1 })
-          .eq("id", workspaceId)
-          .eq("sessions_remaining", remaining); // optimistic lock
-        if (decErr) {
-          return json({ error: "Could not reserve session", code: "SESSION_PACK_REQUIRED" }, 402);
-        }
+      // Free plan: 3 builds per calendar day (Pacific). Session packs paused for testing.
+      const today = new Intl.DateTimeFormat("en-CA", {
+        timeZone: "America/Los_Angeles",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      }).format(new Date());
+      const { data: usage } = await admin
+        .from("ai_distill_usage")
+        .select("count")
+        .eq("workspace_id", workspaceId)
+        .eq("usage_date", today)
+        .maybeSingle();
+      if ((usage?.count || 0) >= FREE_DAILY_BUILDS) {
+        return json({ error: "Daily free limit reached", code: "DAILY_LIMIT" }, 402);
       }
     }
 

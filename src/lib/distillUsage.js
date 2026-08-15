@@ -1,11 +1,13 @@
 import { supabase } from "./supabase";
 
-/** Local calendar date as YYYY-MM-DD (workspace timezone = browser). */
+/** Pacific calendar date as YYYY-MM-DD (matches the distill daily limit). */
 export function localUsageDate(d = new Date()) {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Los_Angeles",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(d);
 }
 
 export async function loadDistillsToday(workspaceId) {

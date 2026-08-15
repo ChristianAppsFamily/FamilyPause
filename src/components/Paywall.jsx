@@ -128,13 +128,13 @@ export default function Paywall({ reason = "trial", onClose, workspace, subscrip
   const [showOffer, setShowOffer] = useState(false);
 
   const headline = reason === "daily"
-    ? <>You&apos;ve used <em>today&apos;s</em> free session</>
+    ? <>You&apos;ve used <em>today&apos;s</em> free builds</>
     : reason === "upgrade"
       ? <>Upgrade when <em>you&apos;re ready</em></>
       : <>Your <em>free trial</em> has ended</>;
 
   const sub = reason === "daily"
-    ? "You've used today's free session. Come back tomorrow, or upgrade for unlimited sessions."
+    ? "You've used your 3 free builds for today. Come back tomorrow, or upgrade for unlimited sessions."
     : reason === "upgrade"
       ? "Unlock editing, missing-time resolution, exports, unlimited plans, and spouse sync with Family Plan."
       : "We hope the last 7 days brought a little more calm to your week. Keep the rhythm going with editing, exports, unlimited plans, and spouse sync.";

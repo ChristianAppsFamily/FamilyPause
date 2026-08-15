@@ -46,23 +46,17 @@ export function hasFamilyPlanFeatures(subscription) {
   return isPaidPlan(subscription) || isTrialActive(subscription);
 }
 
+/** Free / trial daily Build (distill) allowance while testing. */
+export const FREE_DAILY_BUILDS = 3;
+
 /**
- * Returns null if plan creation is allowed, or "daily" after Free uses its daily plan.
- * @param {object} subscription
- * @param {{ distillsToday?: number }} opts
- */
-/**
- * Returns null if plan creation is allowed, or a paywall reason.
- * After trial expiry, distill is gated server-side (session packs → 402).
+ * Returns null if plan creation is allowed, or "daily" after Free uses today's builds.
  * @param {object} subscription
  * @param {{ distillsToday?: number }} opts
  */
 export function paywallReason(subscription, { distillsToday = 0 } = {}) {
   if (isPaidPlan(subscription)) return null;
-  if (isTrialActive(subscription)) return null;
-  // Trial expired: free daily limit no longer applies — session packs / upgrade instead.
-  // Keep "daily" unused for expired; client shows SessionPackModal on 402.
-  void distillsToday;
+  if (distillsToday >= FREE_DAILY_BUILDS) return "daily";
   return null;
 }
 
