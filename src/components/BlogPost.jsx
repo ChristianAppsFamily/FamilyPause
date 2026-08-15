@@ -451,7 +451,7 @@ function GuideCaptureBlock() {
     setError("");
     setStatus("loading");
     const { error: invokeError } = await supabase.functions.invoke("capture-lead", {
-      body: { email: trimmed, kind: "guide" },
+      body: { email: trimmed, kind: "guide", source: "plan_guide" },
     });
 
     if (invokeError) {
@@ -468,7 +468,7 @@ function GuideCaptureBlock() {
       <div className="fp-guide-inline" role="status">
         <div className="fp-guide-inline-success">
           <div className="fp-guide-inline-check" aria-hidden="true">✓</div>
-          <p>Check your inbox. It&apos;s on the way.</p>
+          <p>Check your email, your guide is on the way.</p>
         </div>
       </div>
     );

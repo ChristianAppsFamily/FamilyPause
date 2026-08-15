@@ -330,6 +330,7 @@ const css = `
   outline: none;
   transition: border-color .2s, box-shadow .2s;
 }
+.fp-guide-fields { display: flex; flex-direction: column; gap: 10px; }
 .fp-guide-input::placeholder { color: #A09070; }
 .fp-guide-input:focus {
   border-color: var(--terra);
@@ -913,6 +914,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [leadModal, setLeadModal] = useState(null); // "guide" | "waitlist" | "deck-waitlist" | null
   const [leadEmail, setLeadEmail] = useState("");
+  const [leadFirstName, setLeadFirstName] = useState("");
   const [leadStatus, setLeadStatus] = useState("idle");
   const [leadError, setLeadError] = useState("");
   const rootRef = useRef(null);
@@ -1014,6 +1016,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
 
   const openLeadModal = (kind) => {
     setLeadEmail("");
+    setLeadFirstName("");
     setLeadError("");
     setLeadStatus("idle");
     setLeadModal(kind);
@@ -1038,8 +1041,15 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
       : leadModal === "deck-waitlist"
         ? "physical-deck-waitlist"
         : "guide";
+    const source = kind === "guide" ? "plan_guide" : undefined;
+    const firstName = leadFirstName.trim();
     const { error } = await supabase.functions.invoke("capture-lead", {
-      body: { email, kind },
+      body: {
+        email,
+        kind,
+        ...(source ? { source } : {}),
+        ...(firstName ? { first_name: firstName } : {}),
+      },
     });
 
     if (error) {
@@ -1487,7 +1497,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                 <div className="fp-guide-check" aria-hidden="true">✓</div>
                 <h2 id="lead-modal-title">
                   {leadModal === "guide"
-                    ? "Check your inbox. It's on the way."
+                    ? "Check your email, your guide is on the way."
                     : "You're on the list. We'll be in touch."}
                 </h2>
                 <button type="button" className="btn btn-primary btn-block" onClick={closeLeadModal}>
@@ -1534,23 +1544,38 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                     </p>
                   </>
                 )}
-                <input
-                  className="fp-guide-input"
-                  type="email"
-                  inputMode="email"
-                  autoComplete="email"
-                  autoFocus
-                  placeholder="you@example.com"
-                  value={leadEmail}
-                  onChange={(event) => {
-                    setLeadEmail(event.target.value);
-                    if (leadError) setLeadError("");
-                  }}
-                  aria-label="Email address"
-                  aria-invalid={Boolean(leadError)}
-                  aria-describedby={leadError ? "lead-modal-error" : undefined}
-                  disabled={leadStatus === "loading"}
-                />
+                <div className="fp-guide-fields">
+                  {leadModal === "guide" && (
+                    <input
+                      className="fp-guide-input"
+                      type="text"
+                      name="given-name"
+                      autoComplete="given-name"
+                      placeholder="First name (optional)"
+                      value={leadFirstName}
+                      onChange={(event) => setLeadFirstName(event.target.value)}
+                      aria-label="First name"
+                      disabled={leadStatus === "loading"}
+                    />
+                  )}
+                  <input
+                    className="fp-guide-input"
+                    type="email"
+                    inputMode="email"
+                    autoComplete="email"
+                    autoFocus
+                    placeholder="you@example.com"
+                    value={leadEmail}
+                    onChange={(event) => {
+                      setLeadEmail(event.target.value);
+                      if (leadError) setLeadError("");
+                    }}
+                    aria-label="Email address"
+                    aria-invalid={Boolean(leadError)}
+                    aria-describedby={leadError ? "lead-modal-error" : undefined}
+                    disabled={leadStatus === "loading"}
+                  />
+                </div>
                 {leadError && (
                   <p className="fp-guide-error" id="lead-modal-error" role="alert">{leadError}</p>
                 )}
@@ -1561,7 +1586,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                 >
                   {leadStatus === "loading"
                     ? (leadModal === "guide" ? "Sending..." : "Joining...")
-                    : (leadModal === "guide" ? "Get Your Free Copy Today!" : "Join the Waitlist")}
+                    : (leadModal === "guide" ? "Send Me the Guide." : "Join the Waitlist")}
                 </button>
                 {leadModal === "guide" && (
                   <p className="fp-guide-fine">No spam. Unsubscribe anytime.</p>

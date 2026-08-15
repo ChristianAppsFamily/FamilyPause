@@ -1,9 +1,12 @@
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
 // Public lead capture for Free Planning Guide, waitlists, and founding members.
 // Required secrets:
 //   RESEND_API_KEY
+//   SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY (injected)
 // Guide (kind = "guide"):
-//   RESEND_SUNDAY_GUIDE_SEGMENT_ID
-//   SUNDAY_GUIDE_URL
+//   optional RESEND_SUNDAY_GUIDE_SEGMENT_ID
+//   optional SUNDAY_GUIDE_URL (defaults to https://familypause.com/guide.pdf)
 // Waitlists:
 //   RESEND_MINISTRY_WAITLIST_SEGMENT_ID (kind = "ministry-waitlist")
 //   RESEND_PHYSICAL_DECK_WAITLIST_SEGMENT_ID (kind = "physical-deck-waitlist")
@@ -42,6 +45,68 @@ function isEmail(value: unknown): value is string {
     && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 }
 
+const SOURCE_RE = /^[a-z0-9_]{2,80}$/;
+
+function normalizeFirstName(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const cleaned = value.replace(/[\u0000-\u001f]/g, "").trim().slice(0, 80);
+  return cleaned || null;
+}
+
+function defaultSource(kind: string): string {
+  if (kind === "ministry-waitlist") return "enterprise_waitlist";
+  if (kind === "physical-deck-waitlist") return "physical_deck_waitlist";
+  if (kind === "founding-member") return "founding_member";
+  return "plan_guide";
+}
+
+function resolveSource(kind: string, raw: unknown): string {
+  if (typeof raw === "string") {
+    const source = raw.trim().toLowerCase();
+    if (SOURCE_RE.test(source)) return source;
+  }
+  return defaultSource(kind);
+}
+
+function adminClient() {
+  return createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+  );
+}
+
+/** Insert a lead, or keep the existing row on (email, source) and still allow a resend. */
+async function upsertLead(email: string, firstName: string | null, source: string) {
+  const admin = adminClient();
+  const { data: existing, error: lookupError } = await admin
+    .from("leads")
+    .select("id, first_name")
+    .eq("email", email)
+    .eq("source", source)
+    .maybeSingle();
+  if (lookupError) throw lookupError;
+
+  if (existing) {
+    if (firstName && existing.first_name !== firstName) {
+      const { error: updateError } = await admin
+        .from("leads")
+        .update({ first_name: firstName })
+        .eq("id", existing.id);
+      if (updateError) throw updateError;
+    }
+    return { duplicate: true };
+  }
+
+  const { error: insertError } = await admin.from("leads").insert({
+    email,
+    first_name: firstName,
+    source,
+  });
+  if (insertError?.code === "23505") return { duplicate: true };
+  if (insertError) throw insertError;
+  return { duplicate: false };
+}
+
 function guideHtml(guideUrl: string) {
   const safeUrl = guideUrl.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
   return `<!DOCTYPE html>
@@ -50,9 +115,9 @@ function guideHtml(guideUrl: string) {
   <body style="margin:0;padding:0;background:#FAF7F2;font-family:Georgia,'Lora',serif;color:#2E2820;">
     <div style="max-width:560px;margin:0 auto;padding:44px 24px;">
       <p style="margin:0 0 24px;color:#BE5A37;font-size:13px;letter-spacing:.12em;text-transform:uppercase;">FamilyPause</p>
-      <h1 style="margin:0 0 18px;font-size:28px;font-style:italic;font-weight:600;line-height:1.25;">Your One-Plan Guide is here.</h1>
-      <p style="margin:0 0 28px;color:#6A5A40;font-size:16px;line-height:1.65;">A simple weekly planning system for families with too much going on. With care, Spence.</p>
-      <a href="${safeUrl}" style="display:inline-block;padding:13px 20px;border-radius:7px;background:#BE5A37;color:#ffffff;text-decoration:none;font-size:14px;">Open the One-Plan Guide</a>
+      <h1 style="margin:0 0 18px;font-size:28px;font-style:italic;font-weight:600;line-height:1.25;">Your FamilyPause Guide is here.</h1>
+      <p style="margin:0 0 28px;color:#6A5A40;font-size:16px;line-height:1.65;">A simple weekly planning system for families with too much going on. Open the guide, pick one conversation, and give this week a little more room. With care, Spence.</p>
+      <a href="${safeUrl}" style="display:inline-block;padding:13px 20px;border-radius:7px;background:#BE5A37;color:#ffffff;text-decoration:none;font-size:14px;">Download the FamilyPause Guide</a>
     </div>
   </body>
 </html>`;
@@ -148,11 +213,20 @@ async function handleWaitlist(
   apiKey: string,
   from: string,
   email: string,
+  firstName: string | null,
+  source: string,
   segmentEnv: string,
   subject: string,
   html: string,
   label: string,
 ) {
+  try {
+    await upsertLead(email, firstName, source);
+  } catch (error) {
+    console.error(`[capture-lead] ${label} lead save failed`, error);
+    return json(req, { error: "Unable to join waitlist" }, 502);
+  }
+
   const segmentId = Deno.env.get(segmentEnv);
   if (!segmentId) {
     console.error(`[capture-lead] Missing ${segmentEnv}`);
@@ -189,6 +263,7 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const email = typeof body?.email === "string" ? body.email.trim().toLowerCase() : "";
     if (!isEmail(email)) return json(req, { error: "Enter a valid email address" }, 400);
+    const firstName = normalizeFirstName(body?.first_name ?? body?.firstName);
 
     const kind = body?.kind === "ministry-waitlist"
       ? "ministry-waitlist"
@@ -197,6 +272,7 @@ Deno.serve(async (req) => {
         : body?.kind === "founding-member"
           ? "founding-member"
           : "guide";
+    const source = resolveSource(kind, body?.source);
     const apiKey = Deno.env.get("RESEND_API_KEY");
     if (!apiKey) {
       console.error("[capture-lead] Missing RESEND_API_KEY");
@@ -213,6 +289,8 @@ Deno.serve(async (req) => {
         apiKey,
         from,
         email,
+        firstName,
+        source,
         "RESEND_MINISTRY_WAITLIST_SEGMENT_ID",
         "You're on the Church & Ministry waitlist",
         ministryWaitlistHtml(),
@@ -226,6 +304,8 @@ Deno.serve(async (req) => {
         apiKey,
         from,
         email,
+        firstName,
+        source,
         "RESEND_PHYSICAL_DECK_WAITLIST_SEGMENT_ID",
         "You're on the physical deck waitlist",
         physicalDeckWaitlistHtml(),
@@ -234,6 +314,11 @@ Deno.serve(async (req) => {
     }
 
     if (kind === "founding-member") {
+      try {
+        await upsertLead(email, firstName, source);
+      } catch (error) {
+        console.error("[capture-lead] Founding lead save failed", error);
+      }
       // Soft capture: enroll when segment is configured; never block signup on missing segment.
       const segmentId = Deno.env.get("RESEND_FOUNDING_SEGMENT_ID");
       if (segmentId) {
@@ -258,25 +343,28 @@ Deno.serve(async (req) => {
       return json(req, { ok: true });
     }
 
-    const segmentId = Deno.env.get("RESEND_SUNDAY_GUIDE_SEGMENT_ID");
-    const guideUrl = Deno.env.get("SUNDAY_GUIDE_URL");
-    if (!segmentId || !guideUrl) {
-      console.error("[capture-lead] Missing Resend or One-Plan Guide configuration");
-      return json(req, { error: "Guide delivery is not configured" }, 500);
-    }
-
-    const enrolled = await enrollContact(apiKey, email, segmentId);
-    if (!enrolled.ok) {
-      console.error("[capture-lead] Guide enrollment failed", enrolled.stage, enrolled.status, enrolled.data);
+    try {
+      await upsertLead(email, firstName, source);
+    } catch (error) {
+      console.error("[capture-lead] Guide lead save failed", error);
       return json(req, { error: "Unable to save contact" }, 502);
     }
 
+    const segmentId = Deno.env.get("RESEND_SUNDAY_GUIDE_SEGMENT_ID");
+    if (segmentId) {
+      const enrolled = await enrollContact(apiKey, email, segmentId);
+      if (!enrolled.ok) {
+        console.error("[capture-lead] Guide enrollment failed", enrolled.stage, enrolled.status, enrolled.data);
+      }
+    }
+
+    const guideUrl = Deno.env.get("SUNDAY_GUIDE_URL") || "https://familypause.com/guide.pdf";
     const sendRes = await resendRequest("/emails", apiKey, {
       method: "POST",
       body: JSON.stringify({
         from,
         to: [email],
-        subject: "Your One-Plan Guide is here",
+        subject: "Your FamilyPause Guide is here.",
         html: guideHtml(guideUrl),
       }),
     });
