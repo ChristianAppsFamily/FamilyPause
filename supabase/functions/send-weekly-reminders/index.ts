@@ -1,5 +1,6 @@
 // send-weekly-reminders — cron every 30 minutes.
-// Matches workspaces whose Pacific-local reminder_day + reminder_time fall in the current 30-min slot.
+// Matches workspaces whose Pacific-local reminder_day + reminder_time fall in the current 30-min slot
+// (exact :00/:30 times and custom times such as 18:17).
 // Secrets: RESEND_API_KEY, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
 // Optional: REMINDER_CRON_SECRET (Authorization: Bearer <secret>), LEAD_FROM_EMAIL
 //
@@ -112,11 +113,26 @@ Deno.serve(async (req) => {
   const pacific = pacificNow();
   const admin = createClient(supabaseUrl, serviceKey);
 
-  const { data: workspaces, error: wsErr } = await admin
+  // Match exact :00/:30 times and any custom time in this 30-minute slot.
+  const [slotHour] = pacific.time.split(":").map((n) => parseInt(n, 10));
+  const slotMinute = pacific.time.endsWith(":30") ? 30 : 0;
+  const slotStart = pacific.time;
+  const nextHour = slotMinute === 0 ? slotHour : (slotHour + 1) % 24;
+  const slotEndExclusive = slotMinute === 0
+    ? `${String(slotHour).padStart(2, "0")}:30`
+    : (slotHour === 23 ? null : `${String(nextHour).padStart(2, "0")}:00`);
+
+  let reminderQuery = admin
     .from("workspaces")
     .select("id, reminder_day, reminder_time, owner_id")
     .eq("reminder_day", pacific.day)
-    .eq("reminder_time", pacific.time);
+    .gte("reminder_time", slotStart);
+
+  reminderQuery = slotEndExclusive
+    ? reminderQuery.lt("reminder_time", slotEndExclusive)
+    : reminderQuery.lte("reminder_time", "23:59");
+
+  const { data: workspaces, error: wsErr } = await reminderQuery;
 
   if (wsErr) {
     console.error("[send-weekly-reminders] workspace query", wsErr);

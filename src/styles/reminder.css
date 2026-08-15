@@ -80,6 +80,21 @@
   box-shadow: 0 0 0 3px var(--terra-tint);
 }
 
+.fp-reminder-custom-label {
+  display: block;
+  margin: 12px 0 6px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  color: var(--ink-3);
+}
+
+.fp-reminder-time-custom {
+  background-image: none;
+  padding-right: 14px;
+  cursor: text;
+}
+
 .fp-reminder-hint {
   margin: 10px 0 0;
   font-family: var(--mono);
