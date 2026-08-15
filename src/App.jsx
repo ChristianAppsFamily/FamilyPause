@@ -924,7 +924,6 @@ function ResolveTimesView({ cards, setCards, onBack, onContinue }) {
   }, [queueIds, cards]);
 
   const total = queue.length;
-  const resolvedCount = queue.filter((c) => confirmedIds.has(c.id) || (c.date && c.time)).length;
 
   const patchDraft = (id, patch) => {
     setDrafts((prev) => ({ ...prev, [id]: { ...prev[id], ...patch } }));
@@ -942,18 +941,12 @@ function ResolveTimesView({ cards, setCards, onBack, onContinue }) {
   return (
     <div className="view resolve-view">
       <div className="resolve-intro">
-        <div className="eyebrow" style={{ marginBottom: 9 }}>Step 3b · Fill in the times</div>
-        <h1>A few items need a <em>date and time</em> before they can land on your calendar.</h1>
+        <div className="eyebrow" style={{ marginBottom: 9 }}>Step 4 · Fill in the times and dates</div>
         <p style={{ color: "var(--ink-2)", marginTop: 10 }}>
           {total === 0
             ? "Nothing left to schedule — continue to review."
-            : `${total} ${total === 1 ? "item could use" : "items could use"} a date and time. Confirm what you can; skip the rest.`}
+            : "Press confirm when done and move to the next item."}
         </p>
-        {total > 0 && (
-          <p className="resolve-progress">
-            {resolvedCount} of {total} scheduled · Skip anything left — we&apos;ll put it on your meeting day.
-          </p>
-        )}
       </div>
 
       <div className="resolve-list">
@@ -1094,7 +1087,7 @@ function ReviewView({
     <div className="view">
       <div className="revhead">
         <div>
-          <div className="eyebrow" style={{ marginBottom: 9 }}>Step 4 · This week's review</div>
+          <div className="eyebrow" style={{ marginBottom: 9 }}>Step 5 · This week's review</div>
           <h1 className="revtitle">Keep what matters. <em>Discard the rest.</em></h1>
         </div>
         <div className="progresswrap">
