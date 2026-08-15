@@ -273,6 +273,23 @@ const css = `
   margin: 0 auto 10px;
   border-radius: 7px;
 }
+.fp-guide-cover {
+  width: 100%;
+  max-width: 200px;
+  height: auto;
+  display: block;
+  margin: 0 auto 16px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  box-shadow: 0 10px 28px rgba(70, 45, 20, .16);
+  background: #fff;
+}
+.fp-guide-fine {
+  margin: 12px 0 0;
+  font-family: var(--serif);
+  font-size: 12px;
+  color: #A09070;
+}
 .fp-guide-eyebrow {
   margin: 0 0 12px;
   color: #A09070;
@@ -1798,7 +1815,15 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
               </div>
             ) : (
               <form onSubmit={submitLead} noValidate>
-                <img className="fp-guide-brand" src="/uploads/Logo_4.png" alt="" />
+                {leadModal === "guide" ? (
+                  <img
+                    className="fp-guide-cover"
+                    src="/images/familypause-guide-cover.png"
+                    alt="The FamilyPause Guide"
+                  />
+                ) : (
+                  <img className="fp-guide-brand" src="/uploads/Logo_4.png" alt="" />
+                )}
                 {leadModal === "waitlist" ? (
                   <>
                     <p className="fp-guide-eyebrow">Church &amp; Ministry</p>
@@ -1851,8 +1876,11 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                 >
                   {leadStatus === "loading"
                     ? (leadModal === "guide" ? "Sending..." : "Joining...")
-                    : (leadModal === "guide" ? "Get The FamilyPause Guide" : "Join the Waitlist")}
+                    : (leadModal === "guide" ? "Get Free FamilyPause Guide" : "Join the Waitlist")}
                 </button>
+                {leadModal === "guide" && (
+                  <p className="fp-guide-fine">No spam. Unsubscribe anytime.</p>
+                )}
               </form>
             )}
           </div>
