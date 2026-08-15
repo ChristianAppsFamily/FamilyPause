@@ -1876,7 +1876,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                 >
                   {leadStatus === "loading"
                     ? (leadModal === "guide" ? "Sending..." : "Joining...")
-                    : (leadModal === "guide" ? "Get Free FamilyPause Guide" : "Join the Waitlist")}
+                    : (leadModal === "guide" ? "Get Your Free Copy Today!" : "Join the Waitlist")}
                 </button>
                 {leadModal === "guide" && (
                   <p className="fp-guide-fine">No spam. Unsubscribe anytime.</p>
