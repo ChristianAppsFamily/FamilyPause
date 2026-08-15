@@ -16,6 +16,9 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useState, useEffect } from "react";
+
+/** Parked: set true to restore Invite code / spouse join in Settings. */
+const SHOW_INVITE_SPOUSE = false;
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { openStripeCheckout } from "../lib/stripeCheckout";
@@ -671,7 +674,8 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
           </div>
         </section>
 
-        {/* ── INVITE CODE ────────────────────────────────────────────── */}
+        {/* ── INVITE CODE (parked) ───────────────────────────────────── */}
+        {SHOW_INVITE_SPOUSE && (
         <section className="panel set-sec rise">
           <div className="eyebrow">Bring in your spouse</div>
           <h2>Invite code</h2>
@@ -722,6 +726,7 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
             </div>
           )}
         </section>
+        )}
 
         {/* ── WEEKLY REMINDER ────────────────────────────────────────── */}
         <section className="panel set-sec rise">
