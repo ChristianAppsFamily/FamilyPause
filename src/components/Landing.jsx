@@ -721,14 +721,23 @@ const css = `
 .fp-landing .pricegrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
 .fp-landing .tier { background: var(--paper-card); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 34px 30px; display: flex; flex-direction: column; position: relative; }
 .fp-landing .tier.pop { background: linear-gradient(160deg, var(--terra), #B0502C); color: #fff; border: none; box-shadow: var(--shadow-lg); transform: translateY(-10px); }
-.fp-landing .tier .plabel { font-family: var(--serif); font-size: 16px; font-weight: 500; letter-spacing: 0; text-transform: none; color: var(--ink-3); margin-bottom: 18px; }
-.fp-landing .tier.pop .plabel { color: rgba(255,255,255,.88); }
+.fp-landing .tier .plabel {
+  font-family: var(--display);
+  font-style: italic;
+  font-weight: 600;
+  font-size: 22px;
+  letter-spacing: -.01em;
+  text-transform: none;
+  color: var(--ink);
+  margin-bottom: 18px;
+}
+.fp-landing .tier.pop .plabel { color: #fff; }
 .fp-landing .popbadge { position: absolute; top: -13px; left: 50%; transform: translateX(-50%); font-family: var(--serif); font-size: 13px; font-weight: 500; letter-spacing: 0; text-transform: none; background: var(--gold); color: #fff; padding: 6px 15px; border-radius: 999px; box-shadow: 0 6px 14px rgba(192,151,64,.4); }
 .fp-landing .price { display: flex; align-items: baseline; gap: 4px; margin-bottom: 6px; }
 .fp-landing .price .amt { font-family: var(--display); font-size: 58px; font-weight: 600; line-height: 1; letter-spacing: -.02em; }
-.fp-landing .price .per { font-family: var(--mono); font-size: 12px; color: var(--ink-3); letter-spacing: .04em; }
+.fp-landing .price .per { font-family: var(--serif); font-size: 16px; font-weight: 500; color: var(--ink-3); letter-spacing: 0; }
 .fp-landing .tier.pop .price .per { color: rgba(255,255,255,.85); }
-.fp-landing .tier .subprice { font-family: var(--mono); font-size: 12px; letter-spacing: .03em; color: var(--ink-3); margin-bottom: 26px; }
+.fp-landing .tier .subprice { font-family: var(--serif); font-size: 15px; letter-spacing: 0; color: var(--ink-2); margin-bottom: 26px; line-height: 1.45; }
 .fp-landing .tier.pop .subprice { color: rgba(255,255,255,.85); }
 .fp-landing .tier.pop .billing-toggle {
   display: flex;
@@ -776,11 +785,12 @@ const css = `
 .fp-landing .tier.pop .planhint-link:hover { color: #FAF7F2; }
 .fp-landing .tier-includes {
   margin: 0 0 13px;
-  font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: .06em;
-  text-transform: uppercase;
-  color: rgba(255,255,255,.82);
+  font-family: var(--serif);
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  color: rgba(255,255,255,.88);
 }
 .fp-landing .feats { list-style: none; padding: 0; margin: 0 0 28px; display: flex; flex-direction: column; gap: 13px; flex: 1; }
 .fp-landing .feats li { display: flex; gap: 11px; font-size: 15px; line-height: 1.4; color: var(--ink-2); }
@@ -1642,13 +1652,14 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                   <div className="price"><span className="amt">$0</span></div>
                   <div className="subprice">Everything you need to keep creating family plans after your trial.</div>
                   <ul className="feats">
-                    <li><span className="far">→</span> Type, paste, or record what needs planning</li>
-                    <li><span className="far">→</span> One plan per day</li>
-                    <li><span className="far">→</span> Review extracted items before they are scheduled</li>
-                    <li><span className="far">→</span> Add approved items to your calendar</li>
-                    <li><span className="far">→</span> View your week as a simple itinerary</li>
-                    <li><span className="far">→</span> Copy your plan as text into any app</li>
-                    <li><span className="far">→</span> 7 free Conversation Starter Cards</li>
+                    <li><span className="far">→</span> Type, paste, or record what needs planning.</li>
+                    <li><span className="far">→</span> Edit item titles, dates, times.</li>
+                    <li><span className="far">→</span> One plan per day.</li>
+                    <li><span className="far">→</span> Review extracted items before they are scheduled.</li>
+                    <li><span className="far">→</span> Add approved items to your calendar.</li>
+                    <li><span className="far">→</span> View your week as a simple itinerary.</li>
+                    <li><span className="far">→</span> Copy your plan as text into any app.</li>
+                    <li><span className="far">→</span> 7 free Conversation Starter Cards.</li>
                   </ul>
                   <button className="btn btn-ghost btn-block" onClick={onStart}>Continue Free</button>
                 </div>
@@ -1676,7 +1687,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                   </div>
                   <div className="price">
                     <span className="amt">{familyBilling === "monthly" ? "$7" : "$59"}</span>
-                    <span className="per">{familyBilling === "monthly" ? "/ month" : "/ year"}</span>
+                    <span className="per">{familyBilling === "monthly" ? "/month" : "/year"}</span>
                   </div>
                   <p className="planhint">
                     {familyBilling === "monthly" ? (
@@ -1688,32 +1699,31 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                         Or $59/year, less than $5/month
                       </button>
                     ) : (
-                      "less than $5/month"
+                      "Or $59/year, less than $5/month"
                     )}
                   </p>
                   <p className="tier-includes">Everything in Free, plus:</p>
                   <ul className="feats">
-                    <li><span className="far">→</span> Edit titles, dates, times, and family members</li>
-                    <li><span className="far">→</span> Resolve missing dates and times inline</li>
-                    <li><span className="far">→</span> Create unlimited plans</li>
-                    <li><span className="far">→</span> Access your complete plan history</li>
-                    <li><span className="far">→</span> Invite your spouse with real-time syncing</li>
-                    <li><span className="far">→</span> Organize with family members and custom categories</li>
-                    <li><span className="far">→</span> Print or download your plan and itinerary as a PDF</li>
-                    <li><span className="far">→</span> Export to Notion, Slack, or anywhere as a formatted list</li>
-                    <li><span className="far">→</span> Unlock the Conversation Starter Card Deck (free for the first 100 subscribers)</li>
+                    <li><span className="far">→</span> Assign items to family members.</li>
+                    <li><span className="far">→</span> Resolve missing dates and times inline.</li>
+                    <li><span className="far">→</span> Create unlimited plans.</li>
+                    <li><span className="far">→</span> Save unfinished sessions and resume anytime.</li>
+                    <li><span className="far">→</span> Organize family members and custom categories.</li>
+                    <li><span className="far">→</span> Print or download your plan and itinerary as a PDF.</li>
+                    <li><span className="far">→</span> Export to Notion, Slack, or anywhere as a formatted list.</li>
+                    <li><span className="far">→</span> Unlock the Conversation Starter Card Deck (free for the first 100 subscribers).</li>
                   </ul>
                   <button className="btn btn-cream btn-block" onClick={onStart}>Start Your Free Trial</button>
                 </div>
 
                 <div className="tier">
-                  <div className="plabel">Church &amp; Ministry</div>
-                  <div className="subprice" style={{ marginBottom: 18 }}>Help couples, families, and ministry teams plan together with FamilyPause.</div>
+                  <div className="plabel">Enterprise</div>
+                  <div className="subprice" style={{ marginBottom: 18 }}>Help families within your organization save time and plan better with FamilyPause.</div>
                   <ul className="feats">
-                    <li><span className="far">→</span> Multiple private workspaces</li>
-                    <li><span className="far">→</span> Team and staff access</li>
-                    <li><span className="far">→</span> Centralized ministry billing</li>
-                    <li><span className="far">→</span> Everything included in Family Plan</li>
+                    <li><span className="far">→</span> Multiple private workspaces.</li>
+                    <li><span className="far">→</span> Team and staff access.</li>
+                    <li><span className="far">→</span> Centralized billing.</li>
+                    <li><span className="far">→</span> Everything included in Family Plan.</li>
                   </ul>
                   <button
                     type="button"
@@ -1826,10 +1836,10 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                 )}
                 {leadModal === "waitlist" ? (
                   <>
-                    <p className="fp-guide-eyebrow">Church &amp; Ministry</p>
+                    <p className="fp-guide-eyebrow">Enterprise</p>
                     <h2 className="fp-guide-title" id="lead-modal-title">Join the waitlist</h2>
                     <p className="fp-guide-subline">
-                      Be first to bring FamilyPause to your couples, ministry teams, and family programs.
+                      Help families within your organization save time and plan better with FamilyPause.
                     </p>
                   </>
                 ) : leadModal === "deck-waitlist" ? (
