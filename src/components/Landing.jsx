@@ -723,7 +723,7 @@ const css = `
 .fp-landing .tier.pop { background: linear-gradient(160deg, var(--terra), #B0502C); color: #fff; border: none; box-shadow: var(--shadow-lg); transform: translateY(-10px); }
 .fp-landing .tier .plabel {
   font-family: var(--display);
-  font-style: italic;
+  font-style: normal;
   font-weight: 600;
   font-size: 22px;
   letter-spacing: -.01em;
