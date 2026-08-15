@@ -500,7 +500,7 @@ function GuideCaptureBlock() {
           className="fp-guide-inline-btn"
           disabled={status === "loading"}
         >
-          {status === "loading" ? "Sending..." : "Send Me the Guide"}
+          {status === "loading" ? "Sending..." : "Get The FamilyPause Guide"}
         </button>
       </form>
       {error ? <p className="fp-guide-inline-error" role="alert">{error}</p> : null}

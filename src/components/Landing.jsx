@@ -1851,7 +1851,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                 >
                   {leadStatus === "loading"
                     ? (leadModal === "guide" ? "Sending..." : "Joining...")
-                    : (leadModal === "guide" ? "Send Me the Guide" : "Join the Waitlist")}
+                    : (leadModal === "guide" ? "Get The FamilyPause Guide" : "Join the Waitlist")}
                 </button>
               </form>
             )}
