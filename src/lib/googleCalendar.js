@@ -181,6 +181,37 @@ export function clearCardCalendarSync(cards, cardId) {
   ));
 }
 
+/** Google Calendar reminder choices — user-picked, never inferred from card type. */
+export const CALENDAR_REMINDER_OPTIONS = [
+  { value: "none", label: "None" },
+  { value: "0", label: "At time of event" },
+  { value: "5", label: "5 minutes before" },
+  { value: "15", label: "15 minutes before" },
+  { value: "60", label: "1 hour before" },
+  { value: "1440", label: "1 day before" },
+  { value: "custom", label: "Custom" },
+];
+
+/**
+ * Build a Google Calendar reminders override from the user's pick.
+ * Unset → omit (no automatic reminder). None → explicit empty overrides.
+ */
+export function googleRemindersFromCard(card) {
+  const choice = card?.calendar_reminder;
+  if (choice == null || choice === "") return undefined;
+  if (choice === "none") {
+    return { useDefault: false, overrides: [] };
+  }
+  const minutes = choice === "custom"
+    ? Number(card.calendar_reminder_minutes)
+    : Number(choice);
+  if (!Number.isFinite(minutes) || minutes < 0) return undefined;
+  return {
+    useDefault: false,
+    overrides: [{ method: "popup", minutes: Math.round(minutes) }],
+  };
+}
+
 /**
  * Map a kept card to calendar-sync API payload.
  * Timed when date+time present; otherwise all-day on card.date or meetingDate.
@@ -190,6 +221,7 @@ export function clearCardCalendarSync(cards, cardId) {
 export function cardToCalendarEvent(card, opts = {}) {
   const title = calendarTitle(card);
   const description = card.source || card.task || title;
+  const reminders = googleRemindersFromCard(card);
   if (card.date && card.time) {
     return {
       id: card.id,
@@ -200,6 +232,7 @@ export function cardToCalendarEvent(card, opts = {}) {
       duration_minutes: card.duration_minutes ?? 60,
       description,
       recurrence: !!card.recurring,
+      ...(reminders ? { reminders } : {}),
     };
   }
   const date = card.date || opts.meetingDate;
@@ -215,6 +248,7 @@ export function cardToCalendarEvent(card, opts = {}) {
     duration_minutes: null,
     description,
     recurrence: !!card.recurring,
+    ...(reminders ? { reminders } : {}),
   };
 }
 

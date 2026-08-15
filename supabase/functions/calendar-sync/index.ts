@@ -21,6 +21,10 @@ type CalendarEventInput = {
   duration_minutes?: number;
   description?: string;
   recurrence?: boolean;
+  reminders?: {
+    useDefault: boolean;
+    overrides?: Array<{ method: string; minutes: number }>;
+  };
 };
 
 /** Next calendar day YYYY-MM-DD for Google all-day end (exclusive). */
@@ -94,6 +98,9 @@ function buildEventBody(ev: CalendarEventInput, userTimeZone: string) {
     if (ev.recurrence) {
       body.recurrence = ["RRULE:FREQ=WEEKLY"];
     }
+    if (ev.reminders) {
+      body.reminders = ev.reminders;
+    }
     return body;
   }
 
@@ -111,6 +118,9 @@ function buildEventBody(ev: CalendarEventInput, userTimeZone: string) {
   };
   if (ev.recurrence) {
     body.recurrence = [`RRULE:FREQ=WEEKLY;TZID=${userTimeZone}`];
+  }
+  if (ev.reminders) {
+    body.reminders = ev.reminders;
   }
   return body;
 }

@@ -1335,7 +1335,7 @@
 }
 .resolve-row-task { font-size: 16px; line-height: 1.35; color: var(--ink); margin: 0 0 6px; }
 .resolve-row-meta { font-family: var(--mono); font-size: 11px; color: var(--ink-3); display: flex; gap: 10px; flex-wrap: wrap; }
-.resolve-row-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+.resolve-row-fields { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 12px; }
 .resolve-confirm { margin-top: 4px; }
 .resolve-confirmed-label {
   font-family: var(--mono); font-size: 10px; letter-spacing: .06em; text-transform: uppercase;
@@ -1345,17 +1345,22 @@
 .resolve-foot .btn:disabled {
   opacity: 0.5; cursor: not-allowed;
 }
+@media (max-width: 720px) { .resolve-row-fields { grid-template-columns: 1fr 1fr; } }
 @media (max-width: 520px) { .resolve-row-fields { grid-template-columns: 1fr; } }
 .resolve-field label {
   display: block; font-family: var(--mono); font-size: 10px; letter-spacing: .1em;
   text-transform: uppercase; color: var(--ink-3); margin-bottom: 6px;
 }
-.resolve-field input {
+.resolve-field input,
+.resolve-field select {
   width: 100%; font-family: var(--lora); font-size: 15px; padding: 10px 12px;
   border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--paper);
   color: var(--ink);
 }
-.resolve-field input:focus { outline: none; border-color: var(--terra); box-shadow: 0 0 0 3px var(--terra-tint); }
+.resolve-field select { appearance: auto; cursor: pointer; }
+.resolve-field input:focus,
+.resolve-field select:focus { outline: none; border-color: var(--terra); box-shadow: 0 0 0 3px var(--terra-tint); }
+.resolve-custom-minutes { margin-top: 8px; }
 .resolve-foot { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
 
 /* build my week — breathing pulse while calendar sync runs */

@@ -39,6 +39,7 @@ import {
   typeNeedsSchedule,
   unsyncCalendarEvent,
   cardToCalendarEvent,
+  CALENDAR_REMINDER_OPTIONS,
 } from "./lib/googleCalendar";
 import { canRecordAudio, pickRecordingMimeType, transcribeAudioBlob } from "./lib/transcribe";
 import { speechPreviewSupported, startSpeechPreview } from "./lib/speechPreview";
@@ -900,13 +901,70 @@ function EditableCardTitle({
   );
 }
 
+function CardReminderField({
+  id,
+  value,
+  customMinutes,
+  disabled = false,
+  onChange,
+}) {
+  const reminder = value || "";
+  return (
+    <div className="resolve-field">
+      <label htmlFor={id}>Reminder</label>
+      <select
+        id={id}
+        value={reminder}
+        disabled={disabled}
+        onChange={(e) => {
+          const next = e.target.value;
+          onChange({
+            calendar_reminder: next || null,
+            calendar_reminder_minutes: next === "custom" ? customMinutes : null,
+          });
+        }}
+      >
+        <option value="">Select</option>
+        {CALENDAR_REMINDER_OPTIONS.map((o) => (
+          <option key={o.value} value={o.value}>{o.label}</option>
+        ))}
+      </select>
+      {reminder === "custom" && (
+        <input
+          className="resolve-custom-minutes"
+          type="number"
+          min="0"
+          step="1"
+          inputMode="numeric"
+          placeholder="Minutes before"
+          aria-label="Custom reminder minutes before"
+          disabled={disabled}
+          value={customMinutes ?? ""}
+          onChange={(e) => {
+            const raw = e.target.value;
+            onChange({
+              calendar_reminder: "custom",
+              calendar_reminder_minutes: raw === "" ? null : Number(raw),
+            });
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
 // ── RESOLVE TIMES (between Build and Review) ─────────────────────────────────
 function ResolveTimesView({ cards, setCards, onBack, onContinue }) {
   const queue = cards.filter(needsDateTime);
   const [drafts, setDrafts] = useState(() => {
     const initial = {};
     cards.filter(needsDateTime).forEach((c) => {
-      initial[c.id] = { date: c.date || "", time: c.time || "" };
+      initial[c.id] = {
+        date: c.date || "",
+        time: c.time || "",
+        calendar_reminder: c.calendar_reminder || "",
+        calendar_reminder_minutes: c.calendar_reminder_minutes ?? "",
+      };
     });
     return initial;
   });
@@ -917,7 +975,14 @@ function ResolveTimesView({ cards, setCards, onBack, onContinue }) {
     setDrafts((prev) => {
       const next = { ...prev };
       cards.filter(needsDateTime).forEach((c) => {
-        if (!next[c.id]) next[c.id] = { date: c.date || "", time: c.time || "" };
+        if (!next[c.id]) {
+          next[c.id] = {
+            date: c.date || "",
+            time: c.time || "",
+            calendar_reminder: c.calendar_reminder || "",
+            calendar_reminder_minutes: c.calendar_reminder_minutes ?? "",
+          };
+        }
       });
       return next;
     });
@@ -933,7 +998,16 @@ function ResolveTimesView({ cards, setCards, onBack, onContinue }) {
     const draft = drafts[id];
     if (!draft?.date || !draft?.time) return;
     setCards((arr) => arr.map((c) => (
-      c.id === id ? { ...c, date: draft.date, time: draft.time, datetime_confirmed: true } : c
+      c.id === id ? {
+        ...c,
+        date: draft.date,
+        time: draft.time,
+        datetime_confirmed: true,
+        calendar_reminder: draft.calendar_reminder || null,
+        calendar_reminder_minutes: draft.calendar_reminder === "custom"
+          ? (draft.calendar_reminder_minutes === "" ? null : draft.calendar_reminder_minutes)
+          : null,
+      } : c
     )));
     setConfirmedIds((prev) => new Set(prev).add(id));
   };
@@ -951,7 +1025,7 @@ function ResolveTimesView({ cards, setCards, onBack, onContinue }) {
 
       <div className="resolve-list">
         {queue.map((item) => {
-          const draft = drafts[item.id] || { date: "", time: "" };
+          const draft = drafts[item.id] || { date: "", time: "", calendar_reminder: "", calendar_reminder_minutes: "" };
           const done = confirmedIds.has(item.id) || !!(item.date && item.time);
           const canConfirm = !!draft.date && !!draft.time;
           return (
@@ -1006,6 +1080,13 @@ function ResolveTimesView({ cards, setCards, onBack, onContinue }) {
                         onChange={(e) => patchDraft(item.id, { time: e.target.value })}
                       />
                     </div>
+                    <CardReminderField
+                      id={`resolve-reminder-${item.id}`}
+                      value={draft.calendar_reminder}
+                      customMinutes={draft.calendar_reminder_minutes}
+                      disabled={done}
+                      onChange={(patch) => patchDraft(item.id, patch)}
+                    />
                   </div>
                   {!done && (
                     <button
@@ -1146,7 +1227,6 @@ function ReviewView({
             const who = roleOf(it.person);
             const isEvent = it.type === "event";
             const when = formatWhen(it.date, it.time);
-            const needsSchedule = needsDateTime(it);
             const decidedState = it.status === STATUS.KEPT || it.status === STATUS.CALENDARED ? "kept" : it.status === STATUS.DISCARDED ? "discarded" : "";
             return (
               <div key={it.id} className={`revcard ${who} ${decidedState}`}>
@@ -1173,8 +1253,7 @@ function ReviewView({
                 <p className="card-cal-preview">{calendarTitle(it)}</p>
                 {it.source && <div className="cq">"{it.source}"</div>}
                 {when && <div className="cwhen"><Ico d={isEvent ? I.cal : I.clock} size={13} /> {isEvent ? when : "Due · " + when}</div>}
-                {needsSchedule && (
-                  <div className="resolve-row-fields rev-schedule">
+                <div className="resolve-row-fields rev-schedule">
                     <div className="resolve-field">
                       <label htmlFor={`rev-date-${it.id}`}>Date</label>
                       <input
@@ -1193,8 +1272,13 @@ function ReviewView({
                         onChange={(e) => patchSchedule(it.id, { time: e.target.value || null })}
                       />
                     </div>
+                    <CardReminderField
+                      id={`rev-reminder-${it.id}`}
+                      value={it.calendar_reminder}
+                      customMinutes={it.calendar_reminder_minutes}
+                      onChange={(patch) => patchSchedule(it.id, patch)}
+                    />
                   </div>
-                )}
                 <div className="cact">
                   <button className="keepbtn" onClick={() => decide(it.id, STATUS.KEPT)}><Ico d={I.check} size={14} /> Keep</button>
                   <button className="discbtn" onClick={() => decide(it.id, STATUS.DISCARDED)}><Ico d={I.x} size={14} /> Discard</button>
