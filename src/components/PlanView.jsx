@@ -405,9 +405,8 @@ export default function PlanView({
   const Item = ({ it, index, showBadge }) => {
     const synced = it.calendar_synced;
     const badgeAnim = showBadge && synced && badgeDrawn && !staticLayout;
-    const syncOpts = { meetingDate, requireResolved: !hasFamilyFeatures };
+    const syncOpts = { meetingDate };
     const canSync = isSyncEligible(it, syncOpts);
-    const lockedUnresolved = !hasFamilyFeatures && (!it.date || !it.time);
     return (
       <div
         className={
@@ -424,8 +423,7 @@ export default function PlanView({
           <div className="pmeta">
             <span className="ct">{it.category}</span>
             {formatWhen(it.date, it.time) && <span>· {formatWhen(it.date, it.time)}</span>}
-            {!it.time && it.date && hasFamilyFeatures && <span>· All day</span>}
-            {lockedUnresolved && <span className="plan-needs-family">Needs a date · Family Plan</span>}
+            {!it.time && it.date && <span>· All day</span>}
             {synced && (
               <span className={"synced-badge-wrap" + (badgeAnim ? " synced-badge-wrap--pop" : "")}>
                 <span className={"synced-badge" + (unsyncingCardId === it.id ? " synced-badge--busy" : "") + (badgeAnim ? " synced-badge--in" : "")}>

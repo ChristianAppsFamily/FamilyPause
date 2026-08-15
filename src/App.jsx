@@ -1154,7 +1154,6 @@ function ReviewView({
             const isEvent = it.type === "event";
             const when = formatWhen(it.date, it.time);
             const needsSchedule = needsDateTime(it);
-            const freeNeedsSchedule = !hasFamilyFeatures && (!it.date || !it.time);
             const decidedState = it.status === STATUS.KEPT || it.status === STATUS.CALENDARED ? "kept" : it.status === STATUS.DISCARDED ? "discarded" : "";
             return (
               <div key={it.id} className={`revcard ${who} ${decidedState}`}>
@@ -1181,12 +1180,7 @@ function ReviewView({
                 <p className="card-cal-preview">{calendarTitle(it)}</p>
                 {it.source && <div className="cq">"{it.source}"</div>}
                 {when && <div className="cwhen"><Ico d={isEvent ? I.cal : I.clock} size={13} /> {isEvent ? when : "Due · " + when}</div>}
-                {freeNeedsSchedule && (
-                  <button type="button" className="family-plan-needed" onClick={openEditingUpgrade}>
-                    Needs a date · Family Plan
-                  </button>
-                )}
-                {needsSchedule && hasFamilyFeatures && (
+                {needsSchedule && (
                   <div className="resolve-row-fields rev-schedule">
                     <div className="resolve-field">
                       <label htmlFor={`rev-date-${it.id}`}>Date</label>
@@ -1230,9 +1224,9 @@ function ReviewView({
             onClick={onBuild}
           >
             {calendarSyncing ? (
-              <em>Building your week…</em>
+              <em>Syncing to calendar…</em>
             ) : (
-              <><Ico d={I.arrow} size={16} /> Build my week</>
+              <><Ico d={I.arrow} size={16} /> Sync to Calendar</>
             )}
           </button>
         </div>
@@ -1240,7 +1234,7 @@ function ReviewView({
       {showEditingUpgrade && (
         <UpgradePrompt
           title="Editing is a Family Plan feature"
-          body="Fix titles, times, and dates in one tap instead of starting over."
+          body="Fix titles and item types in one tap instead of starting over."
           onUpgrade={onUpgrade}
           onClose={() => setShowEditingUpgrade(false)}
         />
@@ -1431,12 +1425,6 @@ export default function App({ user, workspace, onSignOut }) {
   const familyFeaturesEnabled = hasFamilyPlanFeatures(subscription);
 
   useEffect(() => {
-    if (!subscriptionLoaded || familyFeaturesEnabled || view !== "resolve") return;
-    go("review", { replace: true });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [subscriptionLoaded, familyFeaturesEnabled, view]);
-
-  useEffect(() => {
     if (!ws?.id || !user?.id) {
       setCalendarConnected(false);
       return;
@@ -1566,7 +1554,6 @@ export default function App({ user, workspace, onSignOut }) {
       setSubscriptionLoaded(true);
     }
 
-    const featureAccessForRun = hasFamilyPlanFeatures(currentSubscription);
     const block = paywallReason(currentSubscription, { distillsToday });
     if (block) {
       setPaywallBlock(block);
@@ -1666,7 +1653,7 @@ ${text}`;
       } catch { /* session update is best-effort */ }
     }
 
-    const nextView = featureAccessForRun && newCards.some(needsDateTime) ? "resolve" : "review";
+    const nextView = newCards.some(needsDateTime) ? "resolve" : "review";
     setTimeout(() => go(nextView, { replace: true }), 650); // let the orb finish
   };
 
@@ -1707,7 +1694,6 @@ ${text}`;
       const syncOpts = {
         meetingDate,
         sessionId: sessionIdRef.current ?? undefined,
-        requireResolved: !familyFeaturesEnabled,
       };
       const kept = cards.filter((c) => c.status === STATUS.KEPT || c.status === STATUS.CALENDARED);
       const syncable = kept.filter((c) => isSyncEligible(c, syncOpts) && !c.calendar_synced);
@@ -1764,7 +1750,6 @@ ${text}`;
     const syncOpts = {
       meetingDate,
       sessionId: sessionIdRef.current ?? undefined,
-      requireResolved: !familyFeaturesEnabled,
     };
     if (!card || !isSyncEligible(card, syncOpts)) return;
     setCalendarBusy(true);
@@ -1841,7 +1826,6 @@ ${text}`;
       const syncOpts = {
         meetingDate,
         sessionId: sessionIdRef.current ?? undefined,
-        requireResolved: !familyFeaturesEnabled,
       };
       const pending = snapshot.filter(
         (c) => (c.status === STATUS.KEPT || c.status === STATUS.CALENDARED) && isSyncEligible(c, syncOpts) && !c.calendar_synced,
@@ -1966,7 +1950,7 @@ ${text}`;
         onOpenCards={openCardDeck}
         onOpenSettings={() => openOverlay("settings")}
         onSignOut={onSignOut}
-        showResolve={familyFeaturesEnabled}
+        showResolve
       />
 
       {captureDraft && view !== "capture" && view !== "processing" && view !== "resolve" && view !== "review" && view !== "plan" && (
@@ -2001,7 +1985,7 @@ ${text}`;
         />
       )}
       {view === "processing" && <ProcessingView done={distillDone} familyNames={processingFamilyLabel} />}
-      {view === "resolve" && familyFeaturesEnabled && (
+      {view === "resolve" && (
         <ResolveTimesView
           cards={cards}
           setCards={setCards}

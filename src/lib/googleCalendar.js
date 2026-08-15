@@ -50,7 +50,6 @@ export function needsDateTime(card) {
 
 /**
  * Kept/calendared card can sync — timed if complete, else all-day via meetingDate.
- * Free-tier callers set requireResolved so missing dates or times never sync.
  * @param {object} card
  * @param {{ meetingDate?: string, requireResolved?: boolean }} [opts]
  */

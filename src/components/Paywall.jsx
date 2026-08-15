@@ -136,7 +136,7 @@ export default function Paywall({ reason = "trial", onClose, workspace, subscrip
   const sub = reason === "daily"
     ? "You've used your 3 free builds for today. Come back tomorrow, or upgrade for unlimited sessions."
     : reason === "upgrade"
-      ? "Unlock editing, missing-time resolution, exports, unlimited plans, and spouse sync with Family Plan."
+      ? "Unlock title editing, exports, unlimited plans, and spouse sync with Family Plan."
       : "We hope the last 7 days brought a little more calm to your week. Keep the rhythm going with editing, exports, unlimited plans, and spouse sync.";
 
   useEffect(() => {
