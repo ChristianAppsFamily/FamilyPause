@@ -45,9 +45,9 @@ function hasExitShown() {
 }
 
 /**
- * @param {{ onStarted?: () => void }} props
+ * @param {{ onStarted?: () => void, disabled?: boolean }} props
  */
-export default function ExitIntentModal({ onStarted = () => {} }) {
+export default function ExitIntentModal({ onStarted = () => {}, disabled = false }) {
   const [open, setOpen] = useState(false);
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState("idle"); // idle | loading | success
@@ -88,8 +88,13 @@ export default function ExitIntentModal({ onStarted = () => {} }) {
     return () => { active = false; };
   }, []);
 
+  useEffect(() => {
+    if (disabled) setOpen(false);
+  }, [disabled]);
+
   // Triggers: desktop mouse-exit + mobile scroll-back
   useEffect(() => {
+    if (disabled) return undefined;
     if (signedIn) return undefined;
     if (signedIn === null) return undefined; // wait for auth check
     if (hasExitShown()) return undefined;
@@ -97,7 +102,7 @@ export default function ExitIntentModal({ onStarted = () => {} }) {
     if (spotsRemaining <= 0) return undefined;
 
     const tryShow = () => {
-      if (shownThisPage.current || hasExitShown() || signedIn) return;
+      if (disabled || shownThisPage.current || hasExitShown() || signedIn) return;
       shownThisPage.current = true;
       setOpen(true);
     };
@@ -124,7 +129,7 @@ export default function ExitIntentModal({ onStarted = () => {} }) {
       document.removeEventListener("mouseout", onMouseOut);
       window.removeEventListener("scroll", onScroll);
     };
-  }, [signedIn, spotsRemaining]);
+  }, [signedIn, spotsRemaining, disabled]);
 
   const close = () => {
     markExitShown();
@@ -224,7 +229,7 @@ export default function ExitIntentModal({ onStarted = () => {} }) {
     }, 900);
   };
 
-  if (!open || signedIn || (spotsRemaining !== null && spotsRemaining <= 0)) {
+  if (disabled || !open || signedIn || (spotsRemaining !== null && spotsRemaining <= 0)) {
     return null;
   }
 

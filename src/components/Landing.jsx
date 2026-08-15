@@ -16,6 +16,7 @@ import ExitIntentModal from "./ExitIntentModal.jsx";
 import { supabase } from "../lib/supabase";
 
 const LANDING_SECTION_IDS = new Set(["how", "who", "pricing", "deck"]);
+const GUIDE_COVER_SRC = "/images/familypause-guide-cover.jpg";
 
 function scrollToLandingSection(id, { smooth = true } = {}) {
   if (!id || !LANDING_SECTION_IDS.has(id)) return false;
@@ -276,7 +277,9 @@ const css = `
 .fp-guide-cover {
   width: 100%;
   max-width: 200px;
+  aspect-ratio: 2 / 3;
   height: auto;
+  object-fit: cover;
   display: block;
   margin: 0 auto 16px;
   border-radius: 8px;
@@ -1333,6 +1336,11 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
   }, []);
 
   useEffect(() => {
+    const img = new Image();
+    img.src = GUIDE_COVER_SRC;
+  }, []);
+
+  useEffect(() => {
     if (!leadModal) return undefined;
     const onKeyDown = (event) => {
       if (event.key === "Escape") setLeadModal(null);
@@ -1796,7 +1804,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
         </div>
       </footer>
 
-      <ExitIntentModal onStarted={onStart} />
+      <ExitIntentModal onStarted={onStart} disabled={!!leadModal} />
 
       {leadModal && (
         <div className="fp-guide-backdrop" onMouseDown={closeLeadModal}>
@@ -1828,8 +1836,12 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                 {leadModal === "guide" ? (
                   <img
                     className="fp-guide-cover"
-                    src="/images/familypause-guide-cover.png"
+                    src={GUIDE_COVER_SRC}
                     alt="The FamilyPause Guide"
+                    width={200}
+                    height={300}
+                    decoding="async"
+                    fetchPriority="high"
                   />
                 ) : (
                   <img className="fp-guide-brand" src="/uploads/Logo_4.png" alt="" />
