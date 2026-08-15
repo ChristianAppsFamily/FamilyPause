@@ -1430,7 +1430,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                 <p className="sub">No more typing events into your calendar one by one.<br />Type it, paste it, or record your family talking.<br />FamilyPause handles the rest.</p>
                 <div className="ctas">
                   <button className="btn btn-primary btn-lg" onClick={onStart}>Create My Family Plan</button>
-                  <button className="btn btn-lg guide-trigger" onClick={() => openLeadModal("guide")}>Get My Free Plan Guide</button>
+                  <button className="btn btn-lg guide-trigger" onClick={() => openLeadModal("guide")}>Get Free FamilyPause Guide</button>
                 </div>
                 <p className="fineprint">Starts your free 7-day trial • No credit card required</p>
               </div>
@@ -1818,7 +1818,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                 ) : (
                   <>
                     <p className="fp-guide-eyebrow">Free Planning Guide</p>
-                    <h2 className="fp-guide-title" id="lead-modal-title">The One-Plan Guide</h2>
+                    <h2 className="fp-guide-title" id="lead-modal-title">The FamilyPause Guide</h2>
                     <p className="fp-guide-subline">
                       A simple but effective weekly planning system for families with too much going on.
                     </p>
