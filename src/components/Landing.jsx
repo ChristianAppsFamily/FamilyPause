@@ -337,6 +337,16 @@ const css = `
   max-width: none;
   margin: 0;
 }
+.fp-guide-form-wide .fp-guide-brand {
+  width: 180px;
+  height: 180px;
+  margin: 0 auto;
+  border-radius: 18px;
+  border: 1px solid var(--line);
+  box-shadow: 0 10px 28px rgba(70, 45, 20, .16);
+  background: #fff;
+  object-fit: cover;
+}
 .fp-guide-copy { min-width: 0; }
 .fp-guide-form-wide .fp-guide-subline {
   max-width: none;
@@ -968,6 +978,11 @@ const css = `
     max-width: 180px;
     margin: 0 auto;
   }
+  .fp-guide-form-wide .fp-guide-brand {
+    width: 96px;
+    height: 96px;
+    margin: 0 auto;
+  }
   .fp-guide-form-wide .fp-guide-subline {
     margin-left: auto;
     margin-right: auto;
@@ -1555,7 +1570,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
       {leadModal && (
         <div className="fp-guide-backdrop" onMouseDown={closeLeadModal}>
           <div
-            className={`fp-guide-modal${leadModal === "guide" ? " fp-guide-modal-wide" : ""}`}
+            className="fp-guide-modal fp-guide-modal-wide"
             role="dialog"
             aria-modal="true"
             aria-labelledby="lead-modal-title"
@@ -1579,7 +1594,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
               </div>
             ) : (
               <form
-                className={leadModal === "guide" ? "fp-guide-form-wide" : undefined}
+                className="fp-guide-form-wide"
                 onSubmit={submitLead}
                 noValidate
               >
