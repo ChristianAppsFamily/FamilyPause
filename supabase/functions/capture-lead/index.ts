@@ -5,15 +5,16 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 //   RESEND_API_KEY
 //   SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY (injected)
 // Guide (kind = "guide"):
+//   RESEND_FROM_EMAIL (FamilyPause <hello@mail.familypause.com>)
+//   FAMILYPAUSE_GUIDE_URL (defaults to https://familypause.com/guide.pdf)
 //   optional RESEND_SUNDAY_GUIDE_SEGMENT_ID
-//   optional SUNDAY_GUIDE_URL (defaults to https://familypause.com/guide.pdf)
 // Waitlists:
 //   RESEND_MINISTRY_WAITLIST_SEGMENT_ID (kind = "ministry-waitlist")
 //   RESEND_PHYSICAL_DECK_WAITLIST_SEGMENT_ID (kind = "physical-deck-waitlist")
 // Founding (kind = "founding-member"):
 //   optional RESEND_FOUNDING_SEGMENT_ID
-// Optional:
-//   SUNDAY_GUIDE_FROM_EMAIL / LEAD_FROM_EMAIL
+// Optional fallbacks:
+//   SUNDAY_GUIDE_FROM_EMAIL / LEAD_FROM_EMAIL / SUNDAY_GUIDE_URL
 
 const allowedOrigins = new Set([
   "https://familypause.com",
@@ -115,9 +116,10 @@ function guideHtml(guideUrl: string) {
   <body style="margin:0;padding:0;background:#FAF7F2;font-family:Georgia,'Lora',serif;color:#2E2820;">
     <div style="max-width:560px;margin:0 auto;padding:44px 24px;">
       <p style="margin:0 0 24px;color:#BE5A37;font-size:13px;letter-spacing:.12em;text-transform:uppercase;">FamilyPause</p>
-      <h1 style="margin:0 0 18px;font-size:28px;font-style:italic;font-weight:600;line-height:1.25;">Your FamilyPause Guide is here.</h1>
-      <p style="margin:0 0 28px;color:#6A5A40;font-size:16px;line-height:1.65;">A simple weekly planning system for families with too much going on. Open the guide, pick one conversation, and give this week a little more room. With care, Spence.</p>
-      <a href="${safeUrl}" style="display:inline-block;padding:13px 20px;border-radius:7px;background:#BE5A37;color:#ffffff;text-decoration:none;font-size:14px;">Download the FamilyPause Guide</a>
+      <h1 style="margin:0 0 18px;font-family:Georgia,'Times New Roman',serif;font-size:28px;font-style:italic;font-weight:600;line-height:1.25;color:#2A251D;">Your FamilyPause Guide is here.</h1>
+      <p style="margin:0 0 28px;color:#5B5245;font-size:16px;line-height:1.65;">The FamilyPause Guide is ready for you — a simple weekly planning system for families with too much going on. Download it below, pick one conversation, and give this week a little more room.</p>
+      <a href="${safeUrl}" style="display:inline-block;padding:14px 22px;border-radius:7px;background:#BE5A37;color:#ffffff;text-decoration:none;font-size:15px;letter-spacing:.02em;">Download The FamilyPause Guide</a>
+      <p style="margin:28px 0 0;color:#5B5245;font-size:16px;line-height:1.65;">With care,<br>Spence</p>
     </div>
   </body>
 </html>`;
@@ -279,9 +281,10 @@ Deno.serve(async (req) => {
       return json(req, { error: "Lead capture is not configured" }, 500);
     }
 
-    const from = Deno.env.get("LEAD_FROM_EMAIL")
+    const from = Deno.env.get("RESEND_FROM_EMAIL")
+      || Deno.env.get("LEAD_FROM_EMAIL")
       || Deno.env.get("SUNDAY_GUIDE_FROM_EMAIL")
-      || "FamilyPause <hello@familypause.com>";
+      || "FamilyPause <hello@mail.familypause.com>";
 
     if (kind === "ministry-waitlist") {
       return await handleWaitlist(
@@ -343,22 +346,9 @@ Deno.serve(async (req) => {
       return json(req, { ok: true });
     }
 
-    try {
-      await upsertLead(email, firstName, source);
-    } catch (error) {
-      console.error("[capture-lead] Guide lead save failed", error);
-      return json(req, { error: "Unable to save contact" }, 502);
-    }
-
-    const segmentId = Deno.env.get("RESEND_SUNDAY_GUIDE_SEGMENT_ID");
-    if (segmentId) {
-      const enrolled = await enrollContact(apiKey, email, segmentId);
-      if (!enrolled.ok) {
-        console.error("[capture-lead] Guide enrollment failed", enrolled.stage, enrolled.status, enrolled.data);
-      }
-    }
-
-    const guideUrl = Deno.env.get("SUNDAY_GUIDE_URL") || "https://familypause.com/guide.pdf";
+    const guideUrl = Deno.env.get("FAMILYPAUSE_GUIDE_URL")
+      || Deno.env.get("SUNDAY_GUIDE_URL")
+      || "https://familypause.com/guide.pdf";
     const sendRes = await resendRequest("/emails", apiKey, {
       method: "POST",
       body: JSON.stringify({
@@ -372,6 +362,20 @@ Deno.serve(async (req) => {
     if (!sendRes.ok) {
       console.error("[capture-lead] Delivery failed", sendRes.status, sendData);
       return json(req, { error: "Unable to send guide" }, 502);
+    }
+
+    try {
+      await upsertLead(email, firstName, source);
+    } catch (error) {
+      console.error("[capture-lead] Guide lead save failed after send", error);
+    }
+
+    const segmentId = Deno.env.get("RESEND_SUNDAY_GUIDE_SEGMENT_ID");
+    if (segmentId) {
+      const enrolled = await enrollContact(apiKey, email, segmentId);
+      if (!enrolled.ok) {
+        console.error("[capture-lead] Guide enrollment failed", enrolled.stage, enrolled.status, enrolled.data);
+      }
     }
 
     return json(req, { ok: true });

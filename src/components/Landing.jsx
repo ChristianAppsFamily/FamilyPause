@@ -14,6 +14,7 @@ import { useLocation } from "react-router-dom";
 import SampleCardCarousel from "./SampleCardCarousel.jsx";
 import ExitIntentModal from "./ExitIntentModal.jsx";
 import { supabase } from "../lib/supabase";
+import { isValidEmail, requestFamilyPauseGuide } from "../lib/sendGuide";
 
 const LANDING_SECTION_IDS = new Set(["how", "who", "pricing", "deck"]);
 const GUIDE_COVER_SRC = "/images/familypause-guide-cover.jpg";
@@ -1117,36 +1118,40 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
   const submitLead = async (event) => {
     event.preventDefault();
     const email = leadEmail.trim().toLowerCase();
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    if (!isValidEmail(email)) {
       setLeadError("Enter a valid email address.");
       return;
     }
 
     setLeadError("");
     setLeadStatus("loading");
+    const firstName = leadFirstName.trim();
+
+    if (leadModal === "guide") {
+      const result = await requestFamilyPauseGuide({ email, firstName });
+      if (result.error) {
+        setLeadStatus("idle");
+        setLeadError(result.error);
+        return;
+      }
+      setLeadStatus("success");
+      return;
+    }
+
     const kind = leadModal === "waitlist"
       ? "ministry-waitlist"
-      : leadModal === "deck-waitlist"
-        ? "physical-deck-waitlist"
-        : "guide";
-    const source = kind === "guide" ? "plan_guide" : undefined;
-    const firstName = leadFirstName.trim();
-    const { error } = await supabase.functions.invoke("capture-lead", {
+      : "physical-deck-waitlist";
+    const { data, error } = await supabase.functions.invoke("capture-lead", {
       body: {
         email,
         kind,
-        ...(source ? { source } : {}),
         ...(firstName ? { first_name: firstName } : {}),
       },
     });
 
-    if (error) {
+    if (error || data?.error) {
       setLeadStatus("idle");
-      setLeadError(
-        kind === "guide"
-          ? "We couldn't send the guide. Please try again."
-          : "We couldn't join the waitlist. Please try again.",
-      );
+      setLeadError("We couldn't join the waitlist. Please try again.");
       return;
     }
 
@@ -1659,6 +1664,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                     autoFocus
                     placeholder="you@example.com"
                     value={leadEmail}
+                    required
                     onChange={(event) => {
                       setLeadEmail(event.target.value);
                       if (leadError) setLeadError("");
@@ -1679,7 +1685,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                 >
                   {leadStatus === "loading"
                     ? (leadModal === "guide" ? "Sending..." : "Joining...")
-                    : (leadModal === "guide" ? "Send My Free Guide Now!" : "Join the Waitlist")}
+                    : (leadModal === "guide" ? "Send Me the Guide." : "Join the Waitlist")}
                 </button>
                 {leadModal === "guide" && (
                   <p className="fp-guide-fine">No spam. Unsubscribe anytime.</p>

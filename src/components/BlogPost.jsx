@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { getPostBySlug, getRelatedPosts } from "../data/blogPosts.js";
-import { supabase } from "../lib/supabase";
+import { isValidEmail, requestFamilyPauseGuide } from "../lib/sendGuide";
 import MarketingChrome from "./MarketingChrome.jsx";
 import Seo from "./Seo.jsx";
 import { BlogPostCard } from "./BlogIndex.jsx";
@@ -443,20 +443,18 @@ function GuideCaptureBlock() {
   const submit = async (event) => {
     event.preventDefault();
     const trimmed = email.trim().toLowerCase();
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
+    if (!isValidEmail(trimmed)) {
       setError("Enter a valid email address.");
       return;
     }
 
     setError("");
     setStatus("loading");
-    const { error: invokeError } = await supabase.functions.invoke("capture-lead", {
-      body: { email: trimmed, kind: "guide", source: "plan_guide" },
-    });
+    const result = await requestFamilyPauseGuide({ email: trimmed });
 
-    if (invokeError) {
+    if (result.error) {
       setStatus("idle");
-      setError("We couldn't send the guide. Please try again.");
+      setError(result.error);
       return;
     }
 
