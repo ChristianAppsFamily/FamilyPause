@@ -239,6 +239,17 @@ const css = `
   text-align: center;
   overflow: hidden;
 }
+.fp-guide-modal-wide {
+  max-width: 640px;
+  padding: 32px 32px 26px;
+}
+.fp-guide-form-wide {
+  display: grid;
+  grid-template-columns: 168px minmax(0, 1fr);
+  gap: 28px 32px;
+  align-items: center;
+  text-align: left;
+}
 .fp-guide-modal::before {
   content: "";
   position: absolute;
@@ -286,6 +297,15 @@ const css = `
   border: 1px solid var(--line);
   box-shadow: 0 10px 28px rgba(70, 45, 20, .16);
   background: #fff;
+}
+.fp-guide-form-wide .fp-guide-cover {
+  max-width: none;
+  margin: 0;
+}
+.fp-guide-copy { min-width: 0; }
+.fp-guide-form-wide .fp-guide-subline {
+  max-width: none;
+  margin: 0 0 16px;
 }
 .fp-guide-fine {
   margin: 12px 0 0;
@@ -899,6 +919,19 @@ const css = `
   .fp-landing .steps4 { grid-template-columns: 1fr; }
   .fp-landing .foot .fcols { gap: 36px; flex-wrap: wrap; }
   .fp-guide-modal { padding: 44px 22px 24px; }
+  .fp-guide-form-wide {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    text-align: center;
+  }
+  .fp-guide-form-wide .fp-guide-cover {
+    max-width: 132px;
+    margin: 0 auto;
+  }
+  .fp-guide-form-wide .fp-guide-subline {
+    margin-left: auto;
+    margin-right: auto;
+  }
 }
 @media (max-width: 480px) {
   .fp-landing .navcta .btn:not(.navmenu-btn) { display: none; }
@@ -1482,7 +1515,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
       {leadModal && (
         <div className="fp-guide-backdrop" onMouseDown={closeLeadModal}>
           <div
-            className="fp-guide-modal"
+            className={`fp-guide-modal${leadModal === "guide" ? " fp-guide-modal-wide" : ""}`}
             role="dialog"
             aria-modal="true"
             aria-labelledby="lead-modal-title"
@@ -1505,20 +1538,25 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                 </button>
               </div>
             ) : (
-              <form onSubmit={submitLead} noValidate>
+              <form
+                className={leadModal === "guide" ? "fp-guide-form-wide" : undefined}
+                onSubmit={submitLead}
+                noValidate
+              >
                 {leadModal === "guide" ? (
                   <img
                     className="fp-guide-cover"
                     src={GUIDE_COVER_SRC}
                     alt="The FamilyPause Guide"
-                    width={200}
-                    height={300}
+                    width={168}
+                    height={252}
                     decoding="async"
                     fetchPriority="high"
                   />
                 ) : (
                   <img className="fp-guide-brand" src="/uploads/Logo_4.png" alt="" />
                 )}
+                <div className="fp-guide-copy">
                 {leadModal === "waitlist" ? (
                   <>
                     <p className="fp-guide-eyebrow">Enterprise</p>
@@ -1586,11 +1624,12 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                 >
                   {leadStatus === "loading"
                     ? (leadModal === "guide" ? "Sending..." : "Joining...")
-                    : (leadModal === "guide" ? "Send Me the Guide." : "Join the Waitlist")}
+                    : (leadModal === "guide" ? "Send My Free Guide Now!" : "Join the Waitlist")}
                 </button>
                 {leadModal === "guide" && (
                   <p className="fp-guide-fine">No spam. Unsubscribe anytime.</p>
                 )}
+                </div>
               </form>
             )}
           </div>
