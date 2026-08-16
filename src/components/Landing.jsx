@@ -240,15 +240,50 @@ const css = `
   overflow: hidden;
 }
 .fp-guide-modal-wide {
-  max-width: 640px;
-  padding: 32px 32px 26px;
+  max-width: 960px;
+  padding: 44px 44px 36px;
 }
 .fp-guide-form-wide {
   display: grid;
-  grid-template-columns: 168px minmax(0, 1fr);
-  gap: 28px 32px;
+  grid-template-columns: 280px minmax(0, 1fr);
+  gap: 36px 40px;
   align-items: center;
   text-align: left;
+}
+.fp-guide-modal-wide .fp-guide-eyebrow {
+  font-size: 12px;
+  margin-bottom: 14px;
+}
+.fp-guide-modal-wide .fp-guide-title {
+  font-size: 40px;
+  font-style: normal;
+  line-height: 1.15;
+  margin: 0 0 14px;
+}
+.fp-guide-modal-wide .fp-guide-subline {
+  font-size: 20px;
+  line-height: 1.5;
+  color: var(--ink);
+  max-width: none;
+  margin: 0 0 22px;
+}
+.fp-guide-modal-wide .fp-guide-input {
+  font-size: 18px;
+  padding: 15px 18px;
+}
+.fp-guide-modal-wide .fp-guide-fields { gap: 12px; }
+.fp-guide-modal-wide .fp-guide-submit,
+.fp-guide-modal-wide .btn {
+  font-size: 18px;
+  padding: 17px 28px;
+}
+.fp-guide-modal-wide .fp-guide-fine {
+  font-size: 15px;
+  margin-top: 14px;
+}
+.fp-guide-modal-wide .fp-guide-success h2 {
+  font-size: 36px;
+  font-style: normal;
 }
 .fp-guide-modal::before {
   content: "";
@@ -305,7 +340,6 @@ const css = `
 .fp-guide-copy { min-width: 0; }
 .fp-guide-form-wide .fp-guide-subline {
   max-width: none;
-  margin: 0 0 16px;
 }
 .fp-guide-fine {
   margin: 12px 0 0;
@@ -919,13 +953,19 @@ const css = `
   .fp-landing .steps4 { grid-template-columns: 1fr; }
   .fp-landing .foot .fcols { gap: 36px; flex-wrap: wrap; }
   .fp-guide-modal { padding: 44px 22px 24px; }
+  .fp-guide-modal-wide {
+    max-width: 100%;
+    padding: 36px 22px 24px;
+  }
+  .fp-guide-modal-wide .fp-guide-title { font-size: 32px; }
+  .fp-guide-modal-wide .fp-guide-subline { font-size: 18px; }
   .fp-guide-form-wide {
     grid-template-columns: 1fr;
-    gap: 16px;
+    gap: 18px;
     text-align: center;
   }
   .fp-guide-form-wide .fp-guide-cover {
-    max-width: 132px;
+    max-width: 180px;
     margin: 0 auto;
   }
   .fp-guide-form-wide .fp-guide-subline {
@@ -1548,8 +1588,8 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                     className="fp-guide-cover"
                     src={GUIDE_COVER_SRC}
                     alt="The FamilyPause Guide"
-                    width={168}
-                    height={252}
+                    width={280}
+                    height={420}
                     decoding="async"
                     fetchPriority="high"
                   />
