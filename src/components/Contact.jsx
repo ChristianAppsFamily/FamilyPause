@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { goToSignIn, goToSignUp } from "../lib/routes";
+import { goToSignIn } from "../lib/routes";
 import { useForm, ValidationError } from "@formspree/react";
 
 /** Formspree form id (from https://formspree.io/f/mojgnkoz). Override via Vercel env if needed. */
@@ -429,7 +429,6 @@ export default function Contact() {
   }, []);
 
   const onSignIn = () => goToSignIn(navigate, location);
-  const onStart = () => goToSignUp(navigate, location);
 
   return (
     <div className="fp-contact">
@@ -444,13 +443,12 @@ export default function Contact() {
           <nav className="navlinks">
             <a href="/#how">How It Works</a>
             <a href="/#who">Who It&apos;s For</a>
-            <a href="/#pricing">Pricing</a>
             <a href="/#deck">Conversation Cards</a>
-            <a href="/blog">Blog</a>
+            <a href="/#pricing">Pricing</a>
+            <a href="/#mobile">Mobile</a>
           </nav>
           <div className="navcta">
-            <button type="button" className="signin" onClick={onSignIn}>Sign In</button>
-            <button type="button" className="btn btn-primary" onClick={onStart}>Create My Plan</button>
+            <button type="button" className="btn btn-primary" onClick={onSignIn}>Sign In</button>
             <button
               type="button"
               className="navmenu-btn"
@@ -469,24 +467,17 @@ export default function Contact() {
             <div className="navmobile-links">
               <a href="/#how" onClick={() => setMobileNavOpen(false)}>How It Works</a>
               <a href="/#who" onClick={() => setMobileNavOpen(false)}>Who It&apos;s For</a>
-              <a href="/#pricing" onClick={() => setMobileNavOpen(false)}>Pricing</a>
               <a href="/#deck" onClick={() => setMobileNavOpen(false)}>Conversation Cards</a>
-              <a href="/blog" onClick={() => setMobileNavOpen(false)}>Blog</a>
+              <a href="/#pricing" onClick={() => setMobileNavOpen(false)}>Pricing</a>
+              <a href="/#mobile" onClick={() => setMobileNavOpen(false)}>Mobile</a>
             </div>
             <div className="navmobile-actions">
               <button
                 type="button"
-                className="signin"
+                className="btn btn-primary btn-block"
                 onClick={() => { setMobileNavOpen(false); onSignIn(); }}
               >
                 Sign In
-              </button>
-              <button
-                type="button"
-                className="btn btn-primary btn-block"
-                onClick={() => { setMobileNavOpen(false); onStart(); }}
-              >
-                Create My Plan
               </button>
             </div>
           </nav>

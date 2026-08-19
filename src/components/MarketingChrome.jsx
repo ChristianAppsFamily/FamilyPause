@@ -186,10 +186,29 @@ const chromeCss = `
   gap: 30px;
   flex-wrap: wrap;
 }
+.fp-mkt .foot .brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.fp-mkt .foot .brand-mark {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: block;
+  flex-shrink: 0;
+}
+.fp-mkt .foot .brand-copy {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+}
 .fp-mkt .foot .word {
   font-family: var(--display);
   font-size: 26px;
   font-weight: 600;
+  line-height: 1;
 }
 .fp-mkt .foot .word b { color: var(--terra); }
 .fp-mkt .foot .tag {
@@ -200,8 +219,8 @@ const chromeCss = `
   letter-spacing: -.01em;
   text-transform: none;
   color: var(--ink-2);
-  line-height: 1.35;
-  margin-top: 8px;
+  line-height: 1.2;
+  margin-top: 0;
   max-width: none;
   white-space: nowrap;
 }
@@ -296,13 +315,12 @@ export default function MarketingChrome({ children }) {
           <nav className="navlinks">
             <a href="/#how">How It Works</a>
             <a href="/#who">Who It&apos;s For</a>
-            <a href="/#pricing">Pricing</a>
             <a href="/#deck">Conversation Cards</a>
-            <a href="/blog">Blog</a>
+            <a href="/#pricing">Pricing</a>
+            <a href="/#mobile">Mobile</a>
           </nav>
           <div className="navcta">
-            <button type="button" className="signin" onClick={onSignIn}>Sign In</button>
-            <button type="button" className="btn btn-primary" onClick={onStart}>Create My Plan</button>
+            <button type="button" className="btn btn-primary" onClick={onSignIn}>Sign In</button>
             <button
               type="button"
               className="navmenu-btn"
@@ -324,24 +342,17 @@ export default function MarketingChrome({ children }) {
             <div className="navmobile-links">
               <a href="/#how" onClick={() => setMobileNavOpen(false)}>How It Works</a>
               <a href="/#who" onClick={() => setMobileNavOpen(false)}>Who It&apos;s For</a>
-              <a href="/#pricing" onClick={() => setMobileNavOpen(false)}>Pricing</a>
               <a href="/#deck" onClick={() => setMobileNavOpen(false)}>Conversation Cards</a>
-              <a href="/blog" onClick={() => setMobileNavOpen(false)}>Blog</a>
+              <a href="/#pricing" onClick={() => setMobileNavOpen(false)}>Pricing</a>
+              <a href="/#mobile" onClick={() => setMobileNavOpen(false)}>Mobile</a>
             </div>
             <div className="navmobile-actions">
               <button
                 type="button"
-                className="signin"
+                className="btn btn-primary btn-block"
                 onClick={() => { setMobileNavOpen(false); onSignIn(); }}
               >
                 Sign In
-              </button>
-              <button
-                type="button"
-                className="btn btn-primary btn-block"
-                onClick={() => { setMobileNavOpen(false); onStart(); }}
-              >
-                Create My Plan
               </button>
             </div>
           </nav>
@@ -353,24 +364,21 @@ export default function MarketingChrome({ children }) {
       <footer className="foot">
         <div className="wrap">
           <div className="row">
-            <div>
-              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
-                <img
-                  src="/uploads/Logo_4.png"
-                  alt=""
-                  style={{ width: 32, height: 32, borderRadius: 8, display: "block" }}
-                />
+            <div className="brand">
+              <img className="brand-mark" src="/uploads/Logo_4.png" alt="" />
+              <div className="brand-copy">
                 <div className="word"><b>Family</b>Pause</div>
+                <div className="tag">Less Chaos. More Time.</div>
               </div>
-              <div className="tag">Less Chaos. More Time.</div>
             </div>
             <div className="fcols">
               <div className="fcol">
                 <h4>Product</h4>
                 <a href="/#how">How It Works</a>
                 <a href="/#who">Who It&apos;s For</a>
-                <a href="/#pricing">Pricing</a>
                 <a href="/#deck">Conversation Cards</a>
+                <a href="/#pricing">Pricing</a>
+                <a href="/#mobile">Mobile Apps</a>
               </div>
               <div className="fcol">
                 <h4>Company</h4>

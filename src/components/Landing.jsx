@@ -16,7 +16,7 @@ import ExitIntentModal from "./ExitIntentModal.jsx";
 import { supabase } from "../lib/supabase";
 import { isValidEmail, requestFamilyPauseGuide } from "../lib/sendGuide";
 
-const LANDING_SECTION_IDS = new Set(["how", "who", "pricing", "deck"]);
+const LANDING_SECTION_IDS = new Set(["how", "who", "pricing", "deck", "mobile"]);
 const GUIDE_COVER_SRC = "/images/familypause-guide-cover.jpg";
 
 function scrollToLandingSection(id, { smooth = true } = {}) {
@@ -688,7 +688,8 @@ const css = `
 .fp-landing #how,
 .fp-landing #who,
 .fp-landing #pricing,
-.fp-landing #deck {
+.fp-landing #deck,
+.fp-landing #mobile {
   scroll-margin-top: 88px;
 }
 
@@ -888,18 +889,55 @@ const css = `
   padding: 54px 0 60px;
 }
 .fp-landing .foot .row { display: flex; align-items: flex-start; justify-content: space-between; gap: 30px; flex-wrap: wrap; }
-.fp-landing .foot .word { font-family: var(--display); font-size: 26px; font-weight: 600; }
+.fp-landing .foot .brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.fp-landing .foot .brand-mark {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: block;
+  flex-shrink: 0;
+}
+.fp-landing .foot .brand-copy {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+}
+.fp-landing .foot .word { font-family: var(--display); font-size: 26px; font-weight: 600; line-height: 1; }
 .fp-landing .foot .word b { color: var(--terra); }
 .fp-landing .foot .tag {
   font-family: var(--display);
   font-style: italic;
   font-weight: 500;
   font-size: 17px;
-  line-height: 1.35;
+  line-height: 1.2;
   letter-spacing: -.01em;
   color: var(--ink-2);
-  margin-top: 8px;
-  max-width: 280px;
+  margin-top: 0;
+  max-width: none;
+}
+.fp-landing #mobile .shead { margin-bottom: 28px; }
+.fp-landing .mobile-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.fp-landing .mobile-chip {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 10px 16px;
 }
 .fp-landing .foot .fcols { display: flex; gap: 64px; }
 .fp-landing .foot .fcol h4 { font-family: var(--mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 14px; font-weight: 500; }
@@ -1008,7 +1046,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
   const [leadError, setLeadError] = useState("");
   const rootRef = useRef(null);
 
-  // Scroll to /#how, /#who, /#pricing, /#deck after mount (SPA hash nav from blog/footer).
+  // Scroll to /#how, /#who, /#pricing, /#deck, /#mobile after mount (SPA hash nav from blog/footer).
   useEffect(() => {
     const id = (location.hash || "").replace(/^#/, "");
     if (!id) return undefined;
@@ -1172,13 +1210,12 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
           <nav className="navlinks">
             <a href="/#how" onClick={goToSection("how")}>How It Works</a>
             <a href="/#who" onClick={goToSection("who")}>Who It&apos;s For</a>
-            <a href="/#pricing" onClick={goToSection("pricing")}>Pricing</a>
             <a href="/#deck" onClick={goToSection("deck")}>Conversation Cards</a>
-            <a href="/blog">Blog</a>
+            <a href="/#pricing" onClick={goToSection("pricing")}>Pricing</a>
+            <a href="/#mobile" onClick={goToSection("mobile")}>Mobile</a>
           </nav>
           <div className="navcta">
-            <button type="button" className="signin" onClick={onSignIn}>Sign In</button>
-            <button className="btn btn-primary" onClick={onStart}>Create My Plan</button>
+            <button className="btn btn-primary" onClick={onSignIn}>Sign In</button>
             <button
               type="button"
               className="navmenu-btn"
@@ -1197,24 +1234,17 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
             <div className="navmobile-links">
               <a href="/#how" onClick={goToSection("how")}>How It Works</a>
               <a href="/#who" onClick={goToSection("who")}>Who It&apos;s For</a>
-              <a href="/#pricing" onClick={goToSection("pricing")}>Pricing</a>
               <a href="/#deck" onClick={goToSection("deck")}>Conversation Cards</a>
-              <a href="/blog" onClick={() => setMobileNavOpen(false)}>Blog</a>
+              <a href="/#pricing" onClick={goToSection("pricing")}>Pricing</a>
+              <a href="/#mobile" onClick={goToSection("mobile")}>Mobile</a>
             </div>
             <div className="navmobile-actions">
               <button
                 type="button"
-                className="signin"
+                className="btn btn-primary btn-block"
                 onClick={() => { setMobileNavOpen(false); onSignIn(); }}
               >
                 Sign In
-              </button>
-              <button
-                type="button"
-                className="btn btn-primary btn-block"
-                onClick={() => { setMobileNavOpen(false); onStart(); }}
-              >
-                Create My Plan
               </button>
             </div>
           </nav>
@@ -1531,26 +1561,44 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
             <p className="fineprint">Starts your free 7-day trial • No credit card required</p>
           </div>
         </section>
+
+        <section className="section section-cream" id="mobile">
+          <div className="wrap">
+            <div className="shead reveal">
+              <span className="eyebrow">Mobile Apps</span>
+              <h2>Android and iOS apps.<br /><em>Coming soon.</em></h2>
+              <p>
+                FamilyPause will live on the phone in your pocket — same weekly plan, same calendar sync.
+                Until the stores open, the full web app already works in a phone browser. Tap Sign In and pick up this week from anywhere.
+              </p>
+            </div>
+            <div className="mobile-chips reveal">
+              <span className="mobile-chip">iOS · Coming soon</span>
+              <span className="mobile-chip">Android · Coming soon</span>
+            </div>
+          </div>
+        </section>
       </main>
 
       {/* FOOTER */}
       <footer className="foot">
         <div className="wrap">
           <div className="row">
-            <div>
-              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
-                <img src="/uploads/Logo_4.png" alt="" style={{ width: 32, height: 32, borderRadius: 8, display: "block" }} />
+            <div className="brand">
+              <img className="brand-mark" src="/uploads/Logo_4.png" alt="" />
+              <div className="brand-copy">
                 <div className="word"><b>Family</b>Pause</div>
+                <div className="tag">Less Chaos. More Time.</div>
               </div>
-              <div className="tag">Less Chaos. More Time.</div>
             </div>
             <div className="fcols">
               <div className="fcol">
                 <h4>Product</h4>
                 <a href="/#how" onClick={goToSection("how")}>How It Works</a>
                 <a href="/#who" onClick={goToSection("who")}>Who It&apos;s For</a>
-                <a href="/#pricing" onClick={goToSection("pricing")}>Pricing</a>
                 <a href="/#deck" onClick={goToSection("deck")}>Conversation Cards</a>
+                <a href="/#pricing" onClick={goToSection("pricing")}>Pricing</a>
+                <a href="/#mobile" onClick={goToSection("mobile")}>Mobile Apps</a>
               </div>
               <div className="fcol">
                 <h4>Company</h4>
