@@ -1360,7 +1360,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
             <div className="shead reveal">
               <span className="eyebrow">How it works</span>
               <h2>Start with what you&apos;ve got.<br />End with a <em>plan.</em></h2>
-              <p>No perfect lists, templates, or agendas required. Type it, paste it, or record your family talking it through. FamilyPause finds the appointments, tasks, reminders, and decisions, then organizes everything into a plan you review and approve together before it auto-syncs straight to your calendar.</p>
+              <p>No perfect lists required. Paste it, record it, or type it. FamilyPause finds the appointments, tasks, reminders, then organizes everything into a plan you review before it auto-syncs to your calendar.</p>
             </div>
             <div className="steps4 reveal">
               <div className="stp">
@@ -1460,7 +1460,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
               <span className="eyebrow">The FamilyPause Conversation Cards</span>
               <h2>Better conversations.<br />Better <em>plans.</em></h2>
               <p>
-                Before you plan the week, start with a real question. Pull a card on marriage, kids, finances, faith, dreams, or home. Talk it through. Then move into planning your week. Every appointment, reminder, and decision from your conversation is automatically added to your calendar.
+                Before you plan the week, pull a card on marriage, kids, finances, faith, dreams, or home. Talk it through. Then move into planning your week.
               </p>
             </div>
             <div className="deck-carousel-wrap reveal">
