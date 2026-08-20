@@ -43,10 +43,18 @@ const css = `
   color: inherit;
   flex-shrink: 0;
 }
+.fp-contact .logo img {
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  display: block;
+  flex-shrink: 0;
+}
 .fp-contact .logo .word {
   font-family: var(--display);
-  font-size: 22px;
+  font-size: 21px;
   font-weight: 600;
+  line-height: 1;
 }
 .fp-contact .logo .word b { color: var(--terra); }
 .fp-contact .navlinks {
@@ -437,7 +445,7 @@ export default function Contact() {
       <header className={"nav" + (scrolled ? " scrolled" : "")}>
         <div className="wrap row">
           <a className="logo" href="/">
-            <img src="/uploads/Logo_4.png" alt="FamilyPause" style={{ height: 36, width: 36, borderRadius: 8, display: "block" }} />
+            <img src="/uploads/Logo_4.png" alt="FamilyPause" />
             <span className="word"><b>Family</b>Pause</span>
           </a>
           <nav className="navlinks">

@@ -94,9 +94,16 @@ const css = `
   height: 74px;
   gap: 20px;
 }
-.fp-landing .logo { display: flex; align-items: center; gap: 11px; flex-shrink: 0; line-height: 1; }
+.fp-landing .logo { display: flex; align-items: center; gap: 10px; flex-shrink: 0; line-height: 1; }
 .fp-landing .logo .word { font-family: var(--display); font-size: 21px; font-weight: 600; line-height: 1; }
 .fp-landing .logo .word b { color: var(--terra); font-weight: 600; }
+.fp-landing .logo img {
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  display: block;
+  flex-shrink: 0;
+}
 .fp-landing .navlinks {
   display: flex; align-items: center; justify-content: center;
   gap: 28px; min-width: 0;
@@ -891,36 +898,35 @@ const css = `
 .fp-landing .foot .row { display: flex; align-items: flex-start; justify-content: space-between; gap: 30px; flex-wrap: wrap; }
 .fp-landing .foot .brand {
   display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+.fp-landing .foot .brand-row {
+  display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 .fp-landing .foot .brand-mark {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
   display: block;
   flex-shrink: 0;
 }
-.fp-landing .foot .brand-copy {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 8px;
-  min-width: 0;
-}
-.fp-landing .foot .word { font-family: var(--display); font-size: 26px; font-weight: 600; line-height: 1.1; }
+.fp-landing .foot .word { font-family: var(--display); font-size: 22px; font-weight: 600; line-height: 1; }
 .fp-landing .foot .word b { color: var(--terra); }
 .fp-landing .foot .brand-tag {
   font-family: var(--serif);
   font-style: italic;
   font-weight: 500;
-  font-size: 15px;
+  font-size: 14px;
   line-height: 1.35;
   letter-spacing: 0;
   text-transform: none;
   color: var(--ink-2);
   margin: 0;
-  padding: 0;
+  padding: 0 0 0 36px;
   max-width: none;
   display: block;
   border-radius: 0;
@@ -1210,7 +1216,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
       <header className={"nav" + (scrolled ? " scrolled" : "")}>
         <div className="wrap row">
           <a className="logo" href="#top" onClick={() => setMobileNavOpen(false)}>
-            <img src="/uploads/Logo_4.png" alt="FamilyPause" style={{ height: 36, width: 36, borderRadius: 8, display: "block" }} />
+            <img src="/uploads/Logo_4.png" alt="FamilyPause" />
             <span className="word"><b>Family</b>Pause</span>
           </a>
           <nav className="navlinks">
@@ -1549,6 +1555,23 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
           </div>
         </section>
 
+        <section className="section section-cream" id="mobile">
+          <div className="wrap">
+            <div className="shead reveal">
+              <span className="eyebrow">Mobile Apps</span>
+              <h2>Android and iOS apps.<br /><em>Coming soon.</em></h2>
+              <p>
+                FamilyPause will live on the phone in your pocket — same weekly plan, same calendar sync.
+                Until the stores open, the full web app already works in a phone browser. Tap Sign In and pick up this week from anywhere.
+              </p>
+            </div>
+            <div className="mobile-chips reveal">
+              <span className="mobile-chip">iOS · Coming soon</span>
+              <span className="mobile-chip">Android · Coming soon</span>
+            </div>
+          </div>
+        </section>
+
         {/* FINAL CTA */}
         <section className="section finalcta">
           <div className="wrap">
@@ -1567,23 +1590,6 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
             <p className="fineprint">Starts your free 7-day trial • No credit card required</p>
           </div>
         </section>
-
-        <section className="section section-cream" id="mobile">
-          <div className="wrap">
-            <div className="shead reveal">
-              <span className="eyebrow">Mobile Apps</span>
-              <h2>Android and iOS apps.<br /><em>Coming soon.</em></h2>
-              <p>
-                FamilyPause will live on the phone in your pocket — same weekly plan, same calendar sync.
-                Until the stores open, the full web app already works in a phone browser. Tap Sign In and pick up this week from anywhere.
-              </p>
-            </div>
-            <div className="mobile-chips reveal">
-              <span className="mobile-chip">iOS · Coming soon</span>
-              <span className="mobile-chip">Android · Coming soon</span>
-            </div>
-          </div>
-        </section>
       </main>
 
       {/* FOOTER */}
@@ -1591,11 +1597,11 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
         <div className="wrap">
           <div className="row">
             <div className="brand">
-              <img className="brand-mark" src="/uploads/Logo_4.png" alt="" />
-              <div className="brand-copy">
+              <div className="brand-row">
+                <img className="brand-mark" src="/uploads/Logo_4.png" alt="" />
                 <div className="word"><b>Family</b>Pause</div>
-                <div className="brand-tag">Less Chaos. More Time.</div>
               </div>
+              <div className="brand-tag">Less Chaos. More Time.</div>
             </div>
             <div className="fcols">
               <div className="fcol">

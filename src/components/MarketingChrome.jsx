@@ -53,10 +53,18 @@ const chromeCss = `
   gap: 10px;
   flex-shrink: 0;
 }
+.fp-mkt .logo img {
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  display: block;
+  flex-shrink: 0;
+}
 .fp-mkt .logo .word {
   font-family: var(--display);
-  font-size: 22px;
+  font-size: 21px;
   font-weight: 600;
+  line-height: 1;
 }
 .fp-mkt .logo .word b { color: var(--terra); }
 .fp-mkt .navlinks {
@@ -188,41 +196,40 @@ const chromeCss = `
 }
 .fp-mkt .foot .brand {
   display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+.fp-mkt .foot .brand-row {
+  display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 .fp-mkt .foot .brand-mark {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
   display: block;
   flex-shrink: 0;
 }
-.fp-mkt .foot .brand-copy {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 8px;
-  min-width: 0;
-}
 .fp-mkt .foot .word {
   font-family: var(--display);
-  font-size: 26px;
+  font-size: 22px;
   font-weight: 600;
-  line-height: 1.1;
+  line-height: 1;
 }
 .fp-mkt .foot .word b { color: var(--terra); }
 .fp-mkt .foot .brand-tag {
   font-family: var(--serif);
   font-style: italic;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 500;
   letter-spacing: 0;
   text-transform: none;
   color: var(--ink-2);
   line-height: 1.35;
   margin: 0;
-  padding: 0;
+  padding: 0 0 0 36px;
   max-width: none;
   white-space: nowrap;
   display: block;
@@ -313,7 +320,6 @@ export default function MarketingChrome({ children }) {
             <img
               src="/uploads/Logo_4.png"
               alt="FamilyPause"
-              style={{ height: 36, width: 36, borderRadius: 8, display: "block" }}
             />
             <span className="word"><b>Family</b>Pause</span>
           </a>
@@ -370,11 +376,11 @@ export default function MarketingChrome({ children }) {
         <div className="wrap">
           <div className="row">
             <div className="brand">
-              <img className="brand-mark" src="/uploads/Logo_4.png" alt="" />
-              <div className="brand-copy">
+              <div className="brand-row">
+                <img className="brand-mark" src="/uploads/Logo_4.png" alt="" />
                 <div className="word"><b>Family</b>Pause</div>
-                <div className="brand-tag">Less Chaos. More Time.</div>
               </div>
+              <div className="brand-tag">Less Chaos. More Time.</div>
             </div>
             <div className="fcols">
               <div className="fcol">
