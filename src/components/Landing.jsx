@@ -220,7 +220,7 @@ const css = `
 }
 .fp-landing .hero .wrap { position: relative; z-index: 1; }
 .fp-landing .herogrid { display: grid; grid-template-columns: 1.04fr .96fr; gap: 56px; align-items: center; padding: 84px 0 96px; }
-.fp-landing .hero h1 { font-size: 66px; line-height: 1.02; letter-spacing: -.02em; margin: 0 0 26px; }
+.fp-landing .hero h1 { font-size: 44px; line-height: 1.12; letter-spacing: -.02em; margin: 0 0 22px; }
 .fp-landing .hero h1 em { color: var(--terra); font-style: italic; }
 .fp-landing .hero .sub { font-size: 19px; line-height: 1.6; color: var(--ink-2); max-width: 520px; margin: 0 0 18px; }
 .fp-landing .hero .sub b { color: var(--ink); font-weight: 600; }
@@ -986,7 +986,7 @@ const css = `
 }
 @media (max-width: 960px) {
   .fp-landing .herogrid { grid-template-columns: 1fr; gap: 48px; padding: 60px 0 72px; }
-  .fp-landing .hero h1 { font-size: 52px; }
+  .fp-landing .hero h1 { font-size: 38px; }
   .fp-landing .mock { max-width: 460px; }
   .fp-landing .steps4 { grid-template-columns: 1fr 1fr; gap: 36px 0; }
   .fp-landing .stp { border-left: none; padding: 0 20px; }
@@ -1008,7 +1008,7 @@ const css = `
 }
 @media (max-width: 560px) {
   .fp-landing .wrap { padding: 0 22px; }
-  .fp-landing .hero h1 { font-size: 42px; }
+  .fp-landing .hero h1 { font-size: 32px; }
   .fp-landing .hero .ctas { align-items: stretch; flex-direction: column; flex-wrap: wrap; gap: 12px; }
   .fp-landing .hero .ctas .btn { width: 100%; justify-content: center; }
   .fp-landing .steps4 { grid-template-columns: 1fr; }
@@ -1270,7 +1270,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
             <div className="herogrid">
               <div className="herocopy">
                 <h1>Talk through your plans.<br /><em>FamilyPause automatically adds them to your calendar.</em></h1>
-                <p className="sub">No more typing in events one by one.<br />Type, paste, or record your plans. FamilyPause <b>automatically</b> finds the dates, appointments, and tasks, then syncs them to your calendar.</p>
+                <p className="sub">No more typing in events one by one. Type, paste, or record your plans. FamilyPause <b>automatically</b> syncs them to your calendar.</p>
                 <div className="ctas">
                   <button className="btn btn-primary btn-lg" onClick={onStart}>Create My Family Plan</button>
                   <button className="btn btn-lg guide-trigger" onClick={() => openLeadModal("guide")}>Get Free FamilyPause Guide</button>
