@@ -77,6 +77,23 @@ const css = `
     transition: color .15s, border-color .15s, background .15s;
   }
   .pw-cta .btn-monthly:hover { color: var(--terra); border-color: var(--terra); background: var(--terra-tint); }
+  .pw-toggle {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin: 14px 0 16px;
+  }
+  .pw-toggle .btn-monthly { flex: 1 1 0; }
+  .pw-cta .btn-monthly.selected {
+    background: var(--terra);
+    border-color: var(--terra);
+    color: #fff;
+  }
+  .pw-cta .btn-monthly.selected:hover {
+    background: var(--terra-d);
+    border-color: var(--terra-d);
+    color: #fff;
+  }
   .pw-deck-note {
     font-family: var(--mono); font-size: 10px; letter-spacing: .04em;
     color: var(--ink-3); text-align: center; margin: 0;
@@ -126,6 +143,9 @@ function dismissOffer() {
 export default function Paywall({ reason = "trial", onClose, workspace, subscription }) {
   const [subscriberCount, setSubscriberCount] = useState(null);
   const [showOffer, setShowOffer] = useState(false);
+  // Default to annual ($79/year). Monthly selection should only switch the choice,
+  // and checkout should start from the bottom CTA.
+  const [familyBilling, setFamilyBilling] = useState("family"); // "family" | "family_monthly"
 
   const weeklyLimit = reason === "weekly" || reason === "daily";
   const headline = weeklyLimit
@@ -237,27 +257,36 @@ export default function Paywall({ reason = "trial", onClose, workspace, subscrip
               <li><Check /> Export to Notion, Slack, or anywhere as a formatted list</li>
               <li><Check /> Unlock the Conversation Starter Card Deck (free for the first 100 subscribers)</li>
             </ul>
+            <div className="pw-toggle" aria-label="Billing choice">
+              <button
+                type="button"
+                className={"btn-monthly" + (familyBilling === "family" ? " selected" : "")}
+                onClick={() => setFamilyBilling("family")}
+              >
+                Annual, $79/year
+              </button>
+              <button
+                type="button"
+                className={"btn-monthly" + (familyBilling === "family_monthly" ? " selected" : "")}
+                onClick={() => setFamilyBilling("family_monthly")}
+              >
+                Monthly, $9/month
+              </button>
+            </div>
             <div className="pw-cta">
               <button
                 type="button"
                 className="btn btn-primary btn-lg btn-block"
-                onClick={() => startCheckout("family")}
+                onClick={() => startCheckout(familyBilling)}
               >
-                Upgrade Annual, $79/year
+                {familyBilling === "family" ? "Upgrade Annual, $79/year" : "Upgrade Monthly, $9/month"}
               </button>
               {foundingFree && (
-                <p className="pw-deck-note">Conversation Starter Card Deck included free — today only.</p>
+                <p className="pw-deck-note">Conversation Starter Card Deck included free, today only.</p>
               )}
               {halfOff && (
                 <p className="pw-deck-note">Conversation Starter Card Deck: $4.99 (half off today only)</p>
               )}
-              <button
-                type="button"
-                className="btn-monthly"
-                onClick={() => startCheckout("family_monthly")}
-              >
-                Or Monthly, $9/month
-              </button>
             </div>
           </div>
 
