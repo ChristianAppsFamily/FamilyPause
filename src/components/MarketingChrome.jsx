@@ -250,9 +250,9 @@ const chromeCss = `
   font-size: 11px;
   letter-spacing: .14em;
   text-transform: uppercase;
-  color: var(--ink-3);
+  color: var(--terra);
   margin: 0 0 14px;
-  font-weight: 500;
+  font-weight: 600;
 }
 .fp-mkt .foot .fcol a {
   display: block;

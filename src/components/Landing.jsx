@@ -953,7 +953,7 @@ const css = `
   padding: 10px 16px;
 }
 .fp-landing .foot .fcols { display: flex; gap: 64px; }
-.fp-landing .foot .fcol h4 { font-family: var(--mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 14px; font-weight: 500; }
+.fp-landing .foot .fcol h4 { font-family: var(--mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--terra); margin-bottom: 14px; font-weight: 600; }
 .fp-landing .foot .fcol a { display: block; font-size: 14.5px; color: var(--ink-2); margin-bottom: 9px; transition: color .15s; }
 .fp-landing .foot .fcol a:hover { color: var(--terra); }
 .fp-landing .fp-footer-link { display: block; font-size: 14.5px; color: var(--ink-2); margin-bottom: 9px; transition: color .15s; background: none; border: none; padding: 0; cursor: pointer; font-family: inherit; text-align: left; }
