@@ -748,6 +748,19 @@ const css = `
 
 /* privacy band */
 .fp-landing .band-olive { background: linear-gradient(135deg, var(--olive), #525E2F); color: #fff; }
+.fp-landing .privacy-band {
+  max-width: 960px;
+  margin: 0 auto;
+  text-align: center;
+}
+.fp-landing .privacy-band-photo {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin: 0 auto 40px;
+  border-radius: var(--r-lg);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.22);
+}
 .fp-landing .privacy { text-align: center; max-width: 880px; margin: 0 auto; }
 .fp-landing .privacy p { font-family: var(--display); font-size: 32px; line-height: 1.35; margin: 0; font-weight: 500; }
 .fp-landing .privacy em { font-style: italic; color: #F2E7C9; }
@@ -774,15 +787,6 @@ const css = `
 .fp-landing .deck-carousel-wrap {
   margin: 0 auto 40px;
   max-width: 640px;
-}
-.fp-landing .deck-wall-photo {
-  display: block;
-  width: 100%;
-  max-width: 960px;
-  height: auto;
-  margin: 0 auto 48px;
-  border-radius: var(--r-lg);
-  box-shadow: var(--shadow-lg);
 }
 .fp-landing .deck-actions {
   display: flex;
@@ -1451,8 +1455,19 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
 
         {/* TRUST / PRIVACY BAND */}
         <section className="band band-olive">
-          <div className="wrap privacy reveal">
-            <p>FamilyPause is ad-free. Your family&apos;s conversations and plans stay private. We never sell your information or use it to target you with advertising.</p>
+          <div className="wrap privacy-band reveal">
+            <img
+              className="privacy-band-photo"
+              src="/images/fp-wall-display.png"
+              alt="FamilyPause conversation card on a wall display in a home"
+              loading="lazy"
+              decoding="async"
+              width={1672}
+              height={941}
+            />
+            <div className="privacy">
+              <p>FamilyPause is ad-free. Your family&apos;s conversations and plans stay private. We never sell your information or use it to target you with advertising.</p>
+            </div>
           </div>
         </section>
 
@@ -1465,15 +1480,6 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                 Before you plan the week, start with a real question. Pull a card on marriage, kids, finances, faith, dreams, or home. Talk it through. Then move into planning your week. Every appointment, reminder, and decision from your conversation is automatically added to your calendar.
               </p>
             </div>
-            <img
-              className="deck-wall-photo reveal"
-              src="/images/fp-wall-display.png"
-              alt="FamilyPause conversation card on a wall display in a home"
-              loading="lazy"
-              decoding="async"
-              width={1672}
-              height={941}
-            />
             <div className="deck-carousel-wrap reveal">
               <SampleCardCarousel interactive={false} />
             </div>
