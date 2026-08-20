@@ -775,6 +775,15 @@ const css = `
   margin: 0 auto 40px;
   max-width: 640px;
 }
+.fp-landing .deck-wall-photo {
+  display: block;
+  width: 100%;
+  max-width: 960px;
+  height: auto;
+  margin: 0 auto 48px;
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-lg);
+}
 .fp-landing .deck-actions {
   display: flex;
   gap: 14px;
@@ -1456,6 +1465,15 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                 Before you plan the week, start with a real question. Pull a card on marriage, kids, finances, faith, dreams, or home. Talk it through. Then move into planning your week. Every appointment, reminder, and decision from your conversation is automatically added to your calendar.
               </p>
             </div>
+            <img
+              className="deck-wall-photo reveal"
+              src="/images/fp-wall-display.png"
+              alt="FamilyPause conversation card on a wall display in a home"
+              loading="lazy"
+              decoding="async"
+              width={1672}
+              height={941}
+            />
             <div className="deck-carousel-wrap reveal">
               <SampleCardCarousel interactive={false} />
             </div>
