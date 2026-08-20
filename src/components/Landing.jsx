@@ -1483,7 +1483,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
           <div className="wrap">
             <div className="shead reveal">
               <span className="eyebrow">Pricing</span>
-              <h2>Start with a free trial.<br /><em>Choose what works for your family.</em></h2>
+              <h2>Start with a <em>free</em> trial today.</h2>
               <p>Try every Family Plan feature free for 7 days. No credit card required. When your trial ends, you&apos;ll automatically continue on the Free plan unless you choose to upgrade.</p>
             </div>
             <div className="pricewrap reveal">
