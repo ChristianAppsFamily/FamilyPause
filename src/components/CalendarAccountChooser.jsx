@@ -10,23 +10,23 @@ export default function CalendarAccountChooser({
 }) {
   return (
     <div className={`cal-acct-chooser${compact ? " cal-acct-chooser--compact" : ""}`}>
-      <p className="cal-acct-chooser__body">
-        Connect a Google account to add dated items from your weekly plan directly to your calendar.
-        Your FamilyPause login and your Google account can be different, you&apos;ll choose which Google account to link.
-      </p>
-      <p className="cal-acct-chooser__body">
-        Planning together? Connect the Google account tied to a calendar you both already have access to.
-        Don&apos;t have one set up together yet?{" "}
-        <a
-          className="cal-acct-chooser__link"
-          href="https://support.google.com/calendar/answer/37082"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Here&apos;s how to share a calendar in Google Calendar
-        </a>{" "}
-        in under a minute.
-      </p>
+      <ul className="cal-acct-chooser__bullets">
+        <li>Connect a Google account you want to sync your events directly to.</li>
+        <li>Your FamilyPause login and your Google account can be different, you&apos;ll choose which Google account to link.</li>
+        <li>Planning together? Connect the Google account tied to a calendar you both already have access to.</li>
+        <li>
+          Don&apos;t have one set up together yet?{" "}
+          <a
+            className="cal-acct-chooser__link"
+            href="https://support.google.com/calendar/answer/37082"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Here&apos;s how to share a calendar in Google Calendar
+          </a>{" "}
+          in under a minute.
+        </li>
+      </ul>
       <div className="cal-acct-chooser__actions">
         <button
           type="button"

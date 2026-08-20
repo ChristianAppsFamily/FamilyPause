@@ -55,6 +55,15 @@ const css = `
     text-underline-offset: 3px;
   }
   .set-inline-link:hover { color: var(--terra); }
+  .set-cal-bullets {
+    margin: 0 0 16px;
+    padding: 0 0 0 1.15em;
+    color: var(--ink-2);
+    font-size: 15px;
+    line-height: 1.55;
+  }
+  .set-cal-bullets li { margin: 0 0 8px; }
+  .set-cal-bullets li:last-child { margin-bottom: 0; }
   .set-grouplbl {
     font-family: var(--mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase;
     color: var(--ink-3); margin-bottom: 10px;
@@ -817,23 +826,25 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
         {/* ── GOOGLE CALENDAR ─────────────────────────────────────────── */}
         <section className="panel set-sec rise">
           <div className="eyebrow">Integrations</div>
-          <h2>Google Calendar</h2>
+          <h2>Connect Google Calendar</h2>
           {!calendarChooserOpen && (
-            <p className="set-sub">
-              Connect a Google account to add dated items from your weekly plan directly to your calendar.
-              Your FamilyPause login and your Google account can be different, you&apos;ll choose which Google account to link.
-              {" "}Planning together? Connect the Google account tied to a calendar you both already have access to.
-              Don&apos;t have one set up together yet?{" "}
-              <a
-                className="set-inline-link"
-                href="https://support.google.com/calendar/answer/37082"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Here&apos;s how to share a calendar in Google Calendar
-              </a>{" "}
-              in under a minute.
-            </p>
+            <ul className="set-cal-bullets">
+              <li>Connect a Google account you want to sync your events directly to.</li>
+              <li>Your FamilyPause login and your Google account can be different, you&apos;ll choose which Google account to link.</li>
+              <li>Planning together? Connect the Google account tied to a calendar you both already have access to.</li>
+              <li>
+                Don&apos;t have one set up together yet?{" "}
+                <a
+                  className="set-inline-link"
+                  href="https://support.google.com/calendar/answer/37082"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Here&apos;s how to share a calendar in Google Calendar
+                </a>{" "}
+                in under a minute.
+              </li>
+            </ul>
           )}
           {calendarNotice && (
             <p className="set-sub" style={{

@@ -1438,9 +1438,16 @@
   margin: 0 0 14px;
   line-height: 1.55;
 }
-.cal-acct-chooser__body:last-of-type {
-  margin-bottom: 18px;
+.cal-acct-chooser__bullets {
+  font-family: var(--serif);
+  font-size: 14px;
+  color: var(--ink-2);
+  margin: 0 0 18px;
+  padding: 0 0 0 1.15em;
+  line-height: 1.55;
 }
+.cal-acct-chooser__bullets li { margin: 0 0 8px; }
+.cal-acct-chooser__bullets li:last-child { margin-bottom: 0; }
 .cal-acct-chooser__link {
   color: inherit;
   font: inherit;
