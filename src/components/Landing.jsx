@@ -219,7 +219,7 @@ const css = `
               radial-gradient(760px 520px at 4% 18%, #FBEFE0, transparent 58%);
 }
 .fp-landing .hero .wrap { position: relative; z-index: 1; }
-.fp-landing .herogrid { display: grid; grid-template-columns: 1.04fr .96fr; gap: 56px; align-items: center; padding: 40px 0 96px; }
+.fp-landing .herogrid { display: grid; grid-template-columns: 1.04fr .96fr; gap: 56px; align-items: start; padding: 28px 0 96px; }
 .fp-landing .hero h1 { font-size: 44px; line-height: 1.12; letter-spacing: -.02em; margin: 0 0 22px; }
 .fp-landing .hero h1 em { color: var(--terra); font-style: italic; }
 .fp-landing .hero .sub { font-size: 19px; line-height: 1.6; color: var(--ink-2); max-width: 520px; margin: 0 0 18px; }
@@ -1002,7 +1002,7 @@ const css = `
   .fp-landing .navcta .btn { padding: 13px 20px; font-size: 14px; }
 }
 @media (max-width: 960px) {
-  .fp-landing .herogrid { grid-template-columns: 1fr; gap: 48px; padding: 32px 0 72px; }
+  .fp-landing .herogrid { grid-template-columns: 1fr; gap: 48px; padding: 24px 0 72px; }
   .fp-landing .hero h1 { font-size: 38px; }
   .fp-landing .mock { max-width: 460px; }
   .fp-landing .steps4 { grid-template-columns: 1fr 1fr; gap: 36px 0; }
