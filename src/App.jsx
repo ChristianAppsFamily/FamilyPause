@@ -1169,7 +1169,7 @@ function ReviewView({
       <div className="revhead">
         <div>
           <div className="eyebrow" style={{ marginBottom: 9 }}>Step 5 · This week's review</div>
-          <h1 className="revtitle">Keep or Discard</h1>
+          <h1 className="revtitle">Keep or <em>Discard</em></h1>
         </div>
         <div className="progresswrap">
           <span className="chip chip-soft fw">{decided}/{total} reviewed</span>
