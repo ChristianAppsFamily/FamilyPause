@@ -1404,7 +1404,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
             <div className="shead reveal">
               <span className="eyebrow">Who it&apos;s for</span>
               <h2>Built for families with full schedules to manage.</h2>
-              <p>Whether you&apos;re coordinating busy schedules, raising kids, or simply trying to stay on the same page, FamilyPause helps you turn your events into a plan everyone can follow.</p>
+              <p>Whether you&apos;re coordinating for multiple kids, homeschooling, and running a small business. FamilyPause helps you turn your events and reminders into a plan that keeps everyone in the loop.</p>
             </div>
             <div className="audgrid reveal">
               <div className="aud">
