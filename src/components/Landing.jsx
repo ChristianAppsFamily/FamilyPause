@@ -782,7 +782,7 @@ const css = `
   max-width: 640px;
   margin: 0 auto 28px;
   text-align: center;
-  font-size: 16.5px;
+  font-size: 17px;
   color: var(--ink-2);
   line-height: 1.55;
 }
