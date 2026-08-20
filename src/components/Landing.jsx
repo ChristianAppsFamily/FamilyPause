@@ -1022,7 +1022,7 @@ const css = `
 }
 @media (max-width: 560px) {
   .fp-landing .wrap { padding: 0 22px; }
-  .fp-landing .hero h1 { font-size: 32px; }
+  .fp-landing .hero h1 { font-size: 29px; line-height: 1.1; }
   .fp-landing .hero .ctas { align-items: stretch; flex-direction: column; flex-wrap: wrap; gap: 12px; }
   .fp-landing .hero .ctas .btn { width: 100%; justify-content: center; }
   .fp-landing .steps4 { grid-template-columns: 1fr; }
