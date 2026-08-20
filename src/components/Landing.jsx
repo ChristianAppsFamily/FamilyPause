@@ -905,14 +905,17 @@ const css = `
 .fp-landing .foot .brand-row {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 11px;
+  line-height: 1;
 }
 .fp-landing .foot .brand-mark {
-  width: 26px;
-  height: 26px;
-  border-radius: 7px;
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
   display: block;
   flex-shrink: 0;
+  object-fit: contain;
+  transform: translateY(1px);
 }
 .fp-landing .foot .word { font-family: var(--display); font-size: 22px; font-weight: 600; line-height: 1; }
 .fp-landing .foot .word b { color: var(--terra); }
@@ -926,7 +929,7 @@ const css = `
   text-transform: none;
   color: var(--ink-2);
   margin: 0;
-  padding: 0 0 0 36px;
+  padding: 0 0 0 45px;
   max-width: none;
   display: block;
   border-radius: 0;

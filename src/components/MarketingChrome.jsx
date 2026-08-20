@@ -203,14 +203,17 @@ const chromeCss = `
 .fp-mkt .foot .brand-row {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 11px;
+  line-height: 1;
 }
 .fp-mkt .foot .brand-mark {
-  width: 26px;
-  height: 26px;
-  border-radius: 7px;
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
   display: block;
   flex-shrink: 0;
+  object-fit: contain;
+  transform: translateY(1px);
 }
 .fp-mkt .foot .word {
   font-family: var(--display);
@@ -229,7 +232,7 @@ const chromeCss = `
   color: var(--ink-2);
   line-height: 1.35;
   margin: 0;
-  padding: 0 0 0 36px;
+  padding: 0 0 0 45px;
   max-width: none;
   white-space: nowrap;
   display: block;
