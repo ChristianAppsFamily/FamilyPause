@@ -933,8 +933,12 @@ const css = `
   border-bottom: none;
 }
 .fp-landing #mobile .eyebrow { color: #F2E7C9; }
-.fp-landing #mobile .shead h2 { color: #fff; }
-.fp-landing #mobile .shead h2 em { color: #F2E7C9; }
+.fp-landing #mobile .shead h2 {
+  color: #fff;
+  font-size: clamp(28px, 7.2vw, 50px);
+  line-height: 1.12;
+}
+.fp-landing #mobile .shead h2 em { color: var(--terra); }
 .fp-landing #mobile .shead p { color: rgba(255,255,255,.9); }
 .fp-landing .mobile-chips {
   display: flex;
@@ -948,21 +952,26 @@ const css = `
   font-size: 12px;
   letter-spacing: .08em;
   text-transform: uppercase;
-  color: var(--terra);
-  background: #fff;
-  border: 1px solid rgba(255,255,255,.55);
+  color: var(--ink);
+  background: var(--cream);
+  border: 1px solid rgba(242, 231, 201, .55);
   border-radius: 999px;
   padding: 12px 20px;
   cursor: pointer;
   box-shadow: 0 8px 18px rgba(42, 37, 29, .16);
   transition: transform .12s, box-shadow .2s, background .2s, color .2s;
 }
+.fp-landing .mobile-chip .soon {
+  color: var(--terra);
+  font-weight: 600;
+}
 .fp-landing .mobile-chip:hover {
-  color: var(--terra-d);
-  background: var(--paper-card);
+  color: var(--ink);
+  background: var(--paper-2);
   transform: translateY(-1px);
   box-shadow: 0 12px 22px rgba(42, 37, 29, .2);
 }
+.fp-landing .mobile-chip:hover .soon { color: var(--terra-d); }
 .fp-landing .mobile-chip:active { transform: translateY(1px); }
 .fp-landing .foot .fcols { display: flex; gap: 64px; }
 .fp-landing .foot .fcol h4 { font-family: var(--mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--terra); margin-bottom: 14px; font-weight: 600; }
@@ -1593,10 +1602,10 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
             </div>
             <div className="mobile-chips reveal">
               <button type="button" className="mobile-chip" onClick={() => openLeadModal("mobile-waitlist")}>
-                iOS · Coming soon
+                iOS · <span className="soon">Coming soon</span>
               </button>
               <button type="button" className="mobile-chip" onClick={() => openLeadModal("mobile-waitlist")}>
-                Android · Coming soon
+                Android · <span className="soon">Coming soon</span>
               </button>
             </div>
           </div>
