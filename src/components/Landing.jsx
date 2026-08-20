@@ -219,7 +219,7 @@ const css = `
               radial-gradient(760px 520px at 4% 18%, #FBEFE0, transparent 58%);
 }
 .fp-landing .hero .wrap { position: relative; z-index: 1; }
-.fp-landing .herogrid { display: grid; grid-template-columns: 1.04fr .96fr; gap: 56px; align-items: center; padding: 84px 0 96px; }
+.fp-landing .herogrid { display: grid; grid-template-columns: 1.04fr .96fr; gap: 56px; align-items: center; padding: 56px 0 96px; }
 .fp-landing .hero h1 { font-size: 44px; line-height: 1.12; letter-spacing: -.02em; margin: 0 0 22px; }
 .fp-landing .hero h1 em { color: var(--terra); font-style: italic; }
 .fp-landing .hero .sub { font-size: 19px; line-height: 1.6; color: var(--ink-2); max-width: 520px; margin: 0 0 18px; }
@@ -934,10 +934,15 @@ const css = `
 }
 .fp-landing #mobile .shead { margin-bottom: 28px; }
 .fp-landing #mobile {
-  background: var(--olive-tint);
-  border-top: 1px solid var(--olive-soft);
-  border-bottom: 1px solid var(--olive-soft);
+  background: linear-gradient(135deg, var(--olive), #525E2F);
+  color: #fff;
+  border-top: none;
+  border-bottom: none;
 }
+.fp-landing #mobile .eyebrow { color: #F2E7C9; }
+.fp-landing #mobile .shead h2 { color: #fff; }
+.fp-landing #mobile .shead h2 em { color: #F2E7C9; }
+.fp-landing #mobile .shead p { color: rgba(255,255,255,.9); }
 .fp-landing .mobile-chips {
   display: flex;
   flex-wrap: wrap;
@@ -950,9 +955,9 @@ const css = `
   font-size: 12px;
   letter-spacing: .08em;
   text-transform: uppercase;
-  color: var(--olive-d);
-  background: var(--paper-card);
-  border: 1px solid var(--olive-soft);
+  color: #fff;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,.4);
   border-radius: 999px;
   padding: 10px 16px;
 }
@@ -990,7 +995,7 @@ const css = `
   .fp-landing .navcta .btn { padding: 13px 20px; font-size: 14px; }
 }
 @media (max-width: 960px) {
-  .fp-landing .herogrid { grid-template-columns: 1fr; gap: 48px; padding: 60px 0 72px; }
+  .fp-landing .herogrid { grid-template-columns: 1fr; gap: 48px; padding: 44px 0 72px; }
   .fp-landing .hero h1 { font-size: 38px; }
   .fp-landing .mock { max-width: 460px; }
   .fp-landing .steps4 { grid-template-columns: 1fr 1fr; gap: 36px 0; }
@@ -1274,7 +1279,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
           <div className="wrap">
             <div className="herogrid">
               <div className="herocopy">
-                <h1>Talk through your plans.<br /><em>FamilyPause automatically adds them to your calendar.</em></h1>
+                <h1>Talk through your plans.<br />FamilyPause <em>automatically</em> adds them to your calendar.</h1>
                 <p className="sub">No more manually typing in events one by one. Instead record, paste, or speak your plans. FamilyPause <b>automatically</b> syncs them to your calendar.</p>
                 <div className="ctas">
                   <button className="btn btn-primary btn-lg" onClick={onStart}>Create My Family Plan</button>
