@@ -900,7 +900,7 @@ const css = `
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 6px;
+  gap: 2px;
 }
 .fp-landing .foot .brand-row {
   display: flex;
@@ -924,7 +924,7 @@ const css = `
   font-style: italic;
   font-weight: 500;
   font-size: 14px;
-  line-height: 1.35;
+  line-height: 1.15;
   letter-spacing: 0;
   text-transform: none;
   color: var(--ink-2);

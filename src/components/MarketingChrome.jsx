@@ -198,7 +198,7 @@ const chromeCss = `
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 6px;
+  gap: 2px;
 }
 .fp-mkt .foot .brand-row {
   display: flex;
@@ -230,7 +230,7 @@ const chromeCss = `
   letter-spacing: 0;
   text-transform: none;
   color: var(--ink-2);
-  line-height: 1.35;
+  line-height: 1.15;
   margin: 0;
   padding: 0 0 0 45px;
   max-width: none;
