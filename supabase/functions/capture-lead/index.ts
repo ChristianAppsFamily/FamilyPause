@@ -11,6 +11,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 // Waitlists:
 //   RESEND_MINISTRY_WAITLIST_SEGMENT_ID (kind = "ministry-waitlist")
 //   RESEND_PHYSICAL_DECK_WAITLIST_SEGMENT_ID (kind = "physical-deck-waitlist")
+//   optional RESEND_MOBILE_APP_WAITLIST_SEGMENT_ID (kind = "mobile-app-waitlist")
 // Founding (kind = "founding-member"):
 //   optional RESEND_FOUNDING_SEGMENT_ID
 // Optional fallbacks:
@@ -57,6 +58,7 @@ function normalizeFirstName(value: unknown): string | null {
 function defaultSource(kind: string): string {
   if (kind === "ministry-waitlist") return "enterprise_waitlist";
   if (kind === "physical-deck-waitlist") return "physical_deck_waitlist";
+  if (kind === "mobile-app-waitlist") return "mobile_app_waitlist";
   if (kind === "founding-member") return "founding_member";
   return "plan_guide";
 }
@@ -153,6 +155,20 @@ function physicalDeckWaitlistHtml() {
 </html>`;
 }
 
+function mobileAppWaitlistHtml() {
+  return `<!DOCTYPE html>
+<html>
+  <head><meta charset="utf-8"><meta name="viewport" content="width=device-width"></head>
+  <body style="margin:0;padding:0;background:#FAF7F2;font-family:Georgia,'Lora',serif;color:#2E2820;">
+    <div style="max-width:560px;margin:0 auto;padding:44px 24px;">
+      <p style="margin:0 0 24px;color:#BE5A37;font-size:13px;letter-spacing:.12em;text-transform:uppercase;">FamilyPause</p>
+      <h1 style="margin:0 0 18px;font-size:28px;font-style:italic;font-weight:600;line-height:1.25;">You're on the iOS and Android waitlist.</h1>
+      <p style="margin:0;color:#6A5A40;font-size:16px;line-height:1.65;">Thanks for joining. We'll let you know when FamilyPause is on the App Store and Google Play. Until then, the full web app works in a phone browser. With care, Spence.</p>
+    </div>
+  </body>
+</html>`;
+}
+
 function foundingMemberHtml() {
   return `<!DOCTYPE html>
 <html>
@@ -221,6 +237,7 @@ async function handleWaitlist(
   subject: string,
   html: string,
   label: string,
+  segmentRequired = true,
 ) {
   try {
     await upsertLead(email, firstName, source);
@@ -231,14 +248,16 @@ async function handleWaitlist(
 
   const segmentId = Deno.env.get(segmentEnv);
   if (!segmentId) {
-    console.error(`[capture-lead] Missing ${segmentEnv}`);
-    return json(req, { error: "Waitlist is not configured" }, 500);
-  }
-
-  const enrolled = await enrollContact(apiKey, email, segmentId);
-  if (!enrolled.ok) {
-    console.error(`[capture-lead] ${label} enrollment failed`, enrolled.stage, enrolled.status, enrolled.data);
-    return json(req, { error: "Unable to join waitlist" }, 502);
+    if (segmentRequired) {
+      console.error(`[capture-lead] Missing ${segmentEnv}`);
+      return json(req, { error: "Waitlist is not configured" }, 500);
+    }
+  } else {
+    const enrolled = await enrollContact(apiKey, email, segmentId);
+    if (!enrolled.ok) {
+      console.error(`[capture-lead] ${label} enrollment failed`, enrolled.stage, enrolled.status, enrolled.data);
+      return json(req, { error: "Unable to join waitlist" }, 502);
+    }
   }
 
   const sendRes = await resendRequest("/emails", apiKey, {
@@ -271,9 +290,11 @@ Deno.serve(async (req) => {
       ? "ministry-waitlist"
       : body?.kind === "physical-deck-waitlist"
         ? "physical-deck-waitlist"
-        : body?.kind === "founding-member"
-          ? "founding-member"
-          : "guide";
+        : body?.kind === "mobile-app-waitlist"
+          ? "mobile-app-waitlist"
+          : body?.kind === "founding-member"
+            ? "founding-member"
+            : "guide";
     const source = resolveSource(kind, body?.source);
     const apiKey = Deno.env.get("RESEND_API_KEY");
     if (!apiKey) {
@@ -313,6 +334,22 @@ Deno.serve(async (req) => {
         "You're on the physical deck waitlist",
         physicalDeckWaitlistHtml(),
         "Physical deck waitlist",
+      );
+    }
+
+    if (kind === "mobile-app-waitlist") {
+      return await handleWaitlist(
+        req,
+        apiKey,
+        from,
+        email,
+        firstName,
+        source,
+        "RESEND_MOBILE_APP_WAITLIST_SEGMENT_ID",
+        "You're on the iOS and Android waitlist",
+        mobileAppWaitlistHtml(),
+        "Mobile app waitlist",
+        false,
       );
     }
 

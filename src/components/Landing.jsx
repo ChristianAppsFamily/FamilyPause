@@ -948,12 +948,22 @@ const css = `
   font-size: 12px;
   letter-spacing: .08em;
   text-transform: uppercase;
-  color: #fff;
-  background: transparent;
-  border: 1px solid rgba(255,255,255,.4);
+  color: var(--terra);
+  background: #fff;
+  border: 1px solid rgba(255,255,255,.55);
   border-radius: 999px;
-  padding: 10px 16px;
+  padding: 12px 20px;
+  cursor: pointer;
+  box-shadow: 0 8px 18px rgba(42, 37, 29, .16);
+  transition: transform .12s, box-shadow .2s, background .2s, color .2s;
 }
+.fp-landing .mobile-chip:hover {
+  color: var(--terra-d);
+  background: var(--paper-card);
+  transform: translateY(-1px);
+  box-shadow: 0 12px 22px rgba(42, 37, 29, .2);
+}
+.fp-landing .mobile-chip:active { transform: translateY(1px); }
 .fp-landing .foot .fcols { display: flex; gap: 64px; }
 .fp-landing .foot .fcol h4 { font-family: var(--mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--terra); margin-bottom: 14px; font-weight: 600; }
 .fp-landing .foot .fcol a { display: block; font-size: 14.5px; color: var(--ink-2); margin-bottom: 9px; transition: color .15s; }
@@ -1055,7 +1065,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
   const [scrolled, setScrolled] = useState(false);
   const [familyBilling, setFamilyBilling] = useState("monthly");
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
-  const [leadModal, setLeadModal] = useState(null); // "guide" | "waitlist" | "deck-waitlist" | null
+  const [leadModal, setLeadModal] = useState(null); // "guide" | "waitlist" | "deck-waitlist" | "mobile-waitlist" | null
   const [leadEmail, setLeadEmail] = useState("");
   const [leadFirstName, setLeadFirstName] = useState("");
   const [leadStatus, setLeadStatus] = useState("idle");
@@ -1194,7 +1204,9 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
 
     const kind = leadModal === "waitlist"
       ? "ministry-waitlist"
-      : "physical-deck-waitlist";
+      : leadModal === "mobile-waitlist"
+        ? "mobile-app-waitlist"
+        : "physical-deck-waitlist";
     const { data, error } = await supabase.functions.invoke("capture-lead", {
       body: {
         email,
@@ -1583,8 +1595,12 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
               </p>
             </div>
             <div className="mobile-chips reveal">
-              <span className="mobile-chip">iOS · Coming soon</span>
-              <span className="mobile-chip">Android · Coming soon</span>
+              <button type="button" className="mobile-chip" onClick={() => openLeadModal("mobile-waitlist")}>
+                iOS · Coming soon
+              </button>
+              <button type="button" className="mobile-chip" onClick={() => openLeadModal("mobile-waitlist")}>
+                Android · Coming soon
+              </button>
             </div>
           </div>
         </section>
@@ -1691,6 +1707,14 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                     <h2 className="fp-guide-title" id="lead-modal-title">Join the waitlist</h2>
                     <p className="fp-guide-subline">
                       Be first to know when the printed FamilyPause Conversation Starter Card Deck is ready.
+                    </p>
+                  </>
+                ) : leadModal === "mobile-waitlist" ? (
+                  <>
+                    <p className="fp-guide-eyebrow">Mobile Apps</p>
+                    <h2 className="fp-guide-title" id="lead-modal-title">Join the waitlist</h2>
+                    <p className="fp-guide-subline">
+                      Be first to know when FamilyPause is on the App Store and Google Play. Same weekly plan, same calendar sync, on the phone in your pocket.
                     </p>
                   </>
                 ) : (
