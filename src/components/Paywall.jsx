@@ -220,12 +220,13 @@ export default function Paywall({ reason = "trial", onClose, workspace, subscrip
             <span className="pw-badge">Most families pick this</span>
             <div className="pw-name">Family Plan</div>
             <div className="pw-price">
-              <span className="amt">$59</span>
+              <span className="amt">$79</span>
               <span className="per">/ year</span>
             </div>
-            <p className="pw-tagline">Everything your weekly FamilyPause needs, all year. Or $7/month.</p>
+            <p className="pw-tagline">Everything your weekly FamilyPause needs, all year. Or $9/month.</p>
             <p className="pw-includes">Everything in Free, plus:</p>
             <ul className="pw-feats">
+              <li><Check /> Works with the Google Calendar you already share</li>
               <li><Check /> Edit titles, dates, times, and family members</li>
               <li><Check /> Resolve missing dates and times inline</li>
               <li><Check /> Create unlimited plans</li>
@@ -242,7 +243,7 @@ export default function Paywall({ reason = "trial", onClose, workspace, subscrip
                 className="btn btn-primary btn-lg btn-block"
                 onClick={() => startCheckout("family")}
               >
-                Upgrade Annual, $59/year
+                Upgrade Annual, $79/year
               </button>
               {foundingFree && (
                 <p className="pw-deck-note">Conversation Starter Card Deck included free — today only.</p>
@@ -255,7 +256,7 @@ export default function Paywall({ reason = "trial", onClose, workspace, subscrip
                 className="btn-monthly"
                 onClick={() => startCheckout("family_monthly")}
               >
-                Or Monthly, $7/month
+                Or Monthly, $9/month
               </button>
             </div>
           </div>

@@ -65,7 +65,7 @@ export default function SessionPackModal({ onClose, onOpenPaywall }) {
         <button type="button" className="sp-x" onClick={onClose} aria-label="Close">×</button>
         <div className="sp-eyebrow">Need more sessions</div>
         <h2 className="sp-hl" id="session-pack-title">Get unlimited sessions.</h2>
-        <p className="sp-sub">Upgrade to Family Plan for unlimited builds, $7/month.</p>
+        <p className="sp-sub">Upgrade to Family Plan for unlimited builds, $9/month.</p>
         <button
           type="button"
           className="btn btn-primary btn-lg btn-block sp-upgrade"

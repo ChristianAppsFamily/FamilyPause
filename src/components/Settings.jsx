@@ -597,7 +597,7 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
                     </button>
                   </div>
                   <div className="set-upgrade-price">
-                    <span className="amt">{familyBilling === "monthly" ? "$7" : "$59"}</span>
+                    <span className="amt">{familyBilling === "monthly" ? "$9" : "$79"}</span>
                     <span className="per">{familyBilling === "monthly" ? "/ month" : "/ year"}</span>
                   </div>
                   <button
@@ -610,8 +610,8 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
                     }}
                   >
                     {familyBilling === "monthly"
-                      ? "Continue with Monthly, $7"
-                      : "Continue with Yearly, $59"}
+                      ? "Continue with Monthly, $9"
+                      : "Continue with Yearly, $79"}
                   </button>
                 </div>
               )}

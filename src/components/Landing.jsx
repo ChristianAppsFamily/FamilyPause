@@ -1517,7 +1517,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                     </button>
                   </div>
                   <div className="price">
-                    <span className="amt">{familyBilling === "monthly" ? "$7" : "$59"}</span>
+                    <span className="amt">{familyBilling === "monthly" ? "$9" : "$79"}</span>
                     <span className="per">{familyBilling === "monthly" ? "/month" : "/year"}</span>
                   </div>
                   <p className="planhint">
@@ -1527,14 +1527,15 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                         className="planhint-link"
                         onClick={() => setFamilyBilling("annual")}
                       >
-                        Or $59/year, less than $5/month
+                        Or $79/year, less than $7/month
                       </button>
                     ) : (
-                      "Or $59/year, less than $5/month"
+                      "Or $79/year, less than $7/month"
                     )}
                   </p>
                   <p className="tier-includes">Everything in Free, plus:</p>
                   <ul className="feats">
+                    <li><span className="far">→</span> Works with the Google Calendar you already share.</li>
                     <li><span className="far">→</span> Assign items to family members.</li>
                     <li><span className="far">→</span> Resolve missing dates and times inline.</li>
                     <li><span className="far">→</span> Create unlimited plans.</li>

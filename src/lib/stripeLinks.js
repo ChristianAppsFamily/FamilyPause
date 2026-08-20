@@ -25,10 +25,10 @@ const digital12 = (env.VITE_STRIPE_DIGITAL_12 || "").trim();
 export const STRIPE_PUBLISHABLE_KEY = (env.VITE_STRIPE_PUBLISHABLE_KEY || "").trim();
 
 export const STRIPE_LINKS = {
-  /** Family Plan $59/year */
+  /** Family Plan $79/year */
   family: familyAnnual,
   familyAnnual,
-  /** Family Plan $7/month */
+  /** Family Plan $9/month */
   familyMonthly,
   pro: familyPro,
   cardDigital,
