@@ -242,7 +242,7 @@ const css = `
   width: 100%;
   max-width: 420px;
   border-radius: 16px;
-  background: #FAF7F2;
+  background: #fff;
   box-shadow: 0 24px 70px rgba(70, 45, 20, .26);
   padding: 48px 40px 28px;
   text-align: center;
@@ -350,11 +350,12 @@ const css = `
   width: 180px;
   height: 180px;
   margin: 0 auto;
-  border-radius: 18px;
-  border: 1px solid var(--line);
+  border-radius: 22px;
+  border: none;
   box-shadow: 0 10px 28px rgba(70, 45, 20, .16);
-  background: #fff;
+  background: var(--terra);
   object-fit: cover;
+  overflow: hidden;
 }
 .fp-guide-copy { min-width: 0; }
 .fp-guide-form-wide .fp-guide-subline {
