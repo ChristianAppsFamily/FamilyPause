@@ -546,7 +546,6 @@ export default function PlanView({
         {showCalendarConnect && (
           <div style={{ marginBottom: 20 }}>
             <CalendarAccountChooser
-              familyPauseEmail={familyPauseEmail}
               onConfirm={onConfirmCalendarConnect}
               onCancel={onCancelCalendarConnect}
               busy={calendarBusy}

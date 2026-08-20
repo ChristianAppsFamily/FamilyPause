@@ -48,6 +48,13 @@ const css = `
   .set-sec .eyebrow { margin-bottom: 9px; }
   .set-sec > h2 { font-size: 23px; margin-bottom: 18px; }
   .set-sub { color: var(--ink-2); font-size: 15px; line-height: 1.55; margin: 0 0 16px; }
+  .set-inline-link {
+    color: inherit;
+    font: inherit;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .set-inline-link:hover { color: var(--terra); }
   .set-grouplbl {
     font-family: var(--mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase;
     color: var(--ink-3); margin-bottom: 10px;
@@ -811,11 +818,23 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
         <section className="panel set-sec rise">
           <div className="eyebrow">Integrations</div>
           <h2>Google Calendar</h2>
-          <p className="set-sub">
-            Connect a Google account to add dated items from your weekly plan directly to your calendar.
-            Your FamilyPause login and your Google account can be different. You&apos;ll choose which
-            Google account to link.
-          </p>
+          {!calendarChooserOpen && (
+            <p className="set-sub">
+              Connect a Google account to add dated items from your weekly plan directly to your calendar.
+              Your FamilyPause login and your Google account can be different, you&apos;ll choose which Google account to link.
+              {" "}Planning together? Connect the Google account tied to a calendar you both already have access to.
+              Don&apos;t have one set up together yet?{" "}
+              <a
+                className="set-inline-link"
+                href="https://support.google.com/calendar/answer/37082"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Here&apos;s how to share a calendar in Google Calendar
+              </a>{" "}
+              in under a minute.
+            </p>
+          )}
           {calendarNotice && (
             <p className="set-sub" style={{
               margin: "0 0 12px",
@@ -868,7 +887,6 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
             </div>
           ) : calendarChooserOpen ? (
             <CalendarAccountChooser
-              familyPauseEmail={user?.email}
               onConfirm={connectCalendar}
               onCancel={() => setCalendarChooserOpen(false)}
               busy={calendarConnecting}

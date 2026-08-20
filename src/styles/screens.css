@@ -1431,19 +1431,24 @@
   padding: 20px 22px;
 }
 .cal-acct-chooser--compact { padding: 18px 20px; }
-.cal-acct-chooser__lead {
-  font-family: var(--body);
-  font-size: 15px;
-  color: var(--ink);
-  margin: 0 0 10px;
-  line-height: 1.5;
-}
 .cal-acct-chooser__body {
-  font-family: var(--body);
+  font-family: var(--serif);
   font-size: 14px;
   color: var(--ink-2);
-  margin: 0 0 18px;
+  margin: 0 0 14px;
   line-height: 1.55;
+}
+.cal-acct-chooser__body:last-of-type {
+  margin-bottom: 18px;
+}
+.cal-acct-chooser__link {
+  color: inherit;
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.cal-acct-chooser__link:hover {
+  color: var(--terra);
 }
 .cal-acct-chooser__actions {
   display: flex;

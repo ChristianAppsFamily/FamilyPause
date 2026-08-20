@@ -1,10 +1,8 @@
 /**
  * Pre-connect step before Google Calendar OAuth.
- * Explains that FamilyPause login and Google Calendar can use different accounts,
- * then sends the user to Google's account picker.
+ * Explains account choice and shared-calendar setup for couples.
  */
 export default function CalendarAccountChooser({
-  familyPauseEmail,
   onConfirm,
   onCancel,
   busy = false,
@@ -12,14 +10,22 @@ export default function CalendarAccountChooser({
 }) {
   return (
     <div className={`cal-acct-chooser${compact ? " cal-acct-chooser--compact" : ""}`}>
-      <p className="cal-acct-chooser__lead">
-        You&apos;re signed into FamilyPause as{" "}
-        <strong>{familyPauseEmail || "your account"}</strong>.
+      <p className="cal-acct-chooser__body">
+        Connect a Google account to add dated items from your weekly plan directly to your calendar.
+        Your FamilyPause login and your Google account can be different, you&apos;ll choose which Google account to link.
       </p>
       <p className="cal-acct-chooser__body">
-        Next, Google will ask you to <em>choose which Google account</em> to link.
-        It does not have to match your FamilyPause email. Pick the calendar where
-        you want family events to appear.
+        Planning together? Connect the Google account tied to a calendar you both already have access to.
+        Don&apos;t have one set up together yet?{" "}
+        <a
+          className="cal-acct-chooser__link"
+          href="https://support.google.com/calendar/answer/37082"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Here&apos;s how to share a calendar in Google Calendar
+        </a>{" "}
+        in under a minute.
       </p>
       <div className="cal-acct-chooser__actions">
         <button
