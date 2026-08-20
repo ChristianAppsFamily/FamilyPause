@@ -1285,8 +1285,8 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
           <div className="wrap">
             <div className="herogrid">
               <div className="herocopy">
-                <h1>Input your family&apos;s plans &amp; events.<br />FamilyPause <em>auto-syncs</em> them to your calendar.</h1>
-                <p className="sub">No more manually typing in events one by one. Instead record, paste, or speak your plans. FamilyPause <b>automatically</b> syncs them to your calendar.</p>
+                <h1>Input your family&apos;s plans.<br />FamilyPause <em>auto-syncs</em> them to your calendar.</h1>
+                <p className="sub">No more manually typing in events one by one. Instead record, paste, or speak your plans. FamilyPause <b>automatically</b> adds them to your calendar.</p>
                 <div className="ctas">
                   <button className="btn btn-primary btn-lg" onClick={onStart}>Start My Free Trial</button>
                   <button className="btn btn-lg guide-trigger" onClick={() => openLeadModal("guide")}>Get Free FamilyPause Guide</button>
