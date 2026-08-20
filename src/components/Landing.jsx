@@ -785,6 +785,7 @@ const css = `
   color: var(--ink-2);
   line-height: 1.55;
 }
+.fp-landing .deck-support b { color: var(--ink); font-weight: 600; }
 
 /* pricing */
 .fp-landing .section-pricing {
@@ -1454,8 +1455,9 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
               <SampleCardCarousel interactive={false} />
             </div>
             <p className="deck-support reveal">
-              7 conversation cards are free for everyone.
-              Upgrade to Family Plan to unlock the Conversation Starter Card Deck, free for our first 100 subscribers. Prefer something you can hold? Join the waitlist for the printed deck.
+              7 conversation cards are free for everyone.{" "}
+              <b>Upgrade to Family Plan to unlock the Conversation Starter Card Deck, free for our first 100 subscribers.</b>{" "}
+              Prefer something you can hold? Join the waitlist for the printed deck.
             </p>
             <div className="deck-actions reveal">
               <button type="button" className="btn btn-primary" onClick={() => openLeadModal("deck-waitlist")}>
