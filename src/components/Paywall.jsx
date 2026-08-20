@@ -237,40 +237,52 @@ export default function Paywall({ reason = "trial", onClose, workspace, subscrip
 
         <div className="pw-grid">
           <div className="pw-card feat">
-            <span className="pw-badge">Most families pick this</span>
+            <span className="pw-badge">Most popular</span>
             <div className="pw-name">Family Plan</div>
             <div className="pw-price">
-              <span className="amt">$79</span>
-              <span className="per">/ year</span>
+              <span className="amt">{familyBilling === "family_monthly" ? "$9" : "$79"}</span>
+              <span className="per">{familyBilling === "family_monthly" ? "/month" : "/year"}</span>
             </div>
-            <p className="pw-tagline">Everything your weekly FamilyPause needs, all year. Or $9/month.</p>
+            <p className="pw-tagline">
+              {familyBilling === "family_monthly" ? (
+                <button
+                  type="button"
+                  className="btn-monthly"
+                  style={{ padding: 0, border: "none", background: "none", textTransform: "none", letterSpacing: 0, fontFamily: "inherit", fontSize: "inherit", color: "var(--terra)", cursor: "pointer" }}
+                  onClick={() => setFamilyBilling("family")}
+                >
+                  Or $79/year, less than $7/month
+                </button>
+              ) : (
+                "Or $79/year, less than $7/month"
+              )}
+            </p>
             <p className="pw-includes">Everything in Free, plus:</p>
             <ul className="pw-feats">
-              <li><Check /> Works with the Google Calendar you already share</li>
-              <li><Check /> Edit titles, dates, times, and family members</li>
-              <li><Check /> Resolve missing dates and times inline</li>
-              <li><Check /> Create unlimited plans</li>
-              <li><Check /> Access your complete plan history</li>
-              <li><Check /> Invite your spouse with real-time syncing</li>
-              <li><Check /> Organize with family members and custom categories</li>
-              <li><Check /> Print or download your plan and itinerary as a PDF</li>
-              <li><Check /> Export to Notion, Slack, or anywhere as a formatted list</li>
-              <li><Check /> Unlock the Conversation Starter Card Deck (free for the first 100 subscribers)</li>
+              <li><Check /> Works with the Google Calendar you already share.</li>
+              <li><Check /> Assign items to family members.</li>
+              <li><Check /> Resolve missing dates and times inline.</li>
+              <li><Check /> Create unlimited plans.</li>
+              <li><Check /> Save unfinished sessions and resume anytime.</li>
+              <li><Check /> Organize family members and custom categories.</li>
+              <li><Check /> Print or download your plan and itinerary as a PDF.</li>
+              <li><Check /> Export to Notion, Slack, or anywhere as a formatted list.</li>
+              <li><Check /> Unlock the Conversation Starter Card Deck (free for the first 100 subscribers).</li>
             </ul>
             <div className="pw-toggle" aria-label="Billing choice">
-              <button
-                type="button"
-                className={"btn-monthly" + (familyBilling === "family" ? " selected" : "")}
-                onClick={() => setFamilyBilling("family")}
-              >
-                Annual, $79/year
-              </button>
               <button
                 type="button"
                 className={"btn-monthly" + (familyBilling === "family_monthly" ? " selected" : "")}
                 onClick={() => setFamilyBilling("family_monthly")}
               >
-                Monthly, $9/month
+                Monthly
+              </button>
+              <button
+                type="button"
+                className={"btn-monthly" + (familyBilling === "family" ? " selected" : "")}
+                onClick={() => setFamilyBilling("family")}
+              >
+                Annual
               </button>
             </div>
             <div className="pw-cta">
@@ -294,21 +306,21 @@ export default function Paywall({ reason = "trial", onClose, workspace, subscrip
             <div className="pw-name">Free</div>
             <div className="pw-price">
               <span className="amt">$0</span>
-              <span className="per">/ forever</span>
             </div>
             <p className="pw-tagline">Everything you need to keep creating family plans after your trial.</p>
             <ul className="pw-feats">
-              <li><Check /> Type, paste, or record what needs planning</li>
-              <li><Check /> One plan per week</li>
-              <li><Check /> Review extracted items before they are scheduled</li>
-              <li><Check /> Add approved items to your calendar</li>
-              <li><Check /> View your week as a simple itinerary</li>
-              <li><Check /> Copy your plan as text into any app</li>
-              <li><Check /> 7 free Conversation Starter Cards</li>
+              <li><Check /> Type, paste, or record what needs planning.</li>
+              <li><Check /> Edit item titles, dates, times.</li>
+              <li><Check /> One plan per week.</li>
+              <li><Check /> Review extracted items before they are scheduled.</li>
+              <li><Check /> Add approved items to your calendar.</li>
+              <li><Check /> View your week as a simple itinerary.</li>
+              <li><Check /> Copy your plan as text into any app.</li>
+              <li><Check /> 7 free Conversation Starter Cards.</li>
             </ul>
             <div className="pw-cta">
               <button className="btn btn-ghost btn-block" onClick={handleClose}>
-                {weeklyLimit ? "Come back next week" : "Stay on Free"}
+                {weeklyLimit ? "Come back next week" : "Continue Free"}
               </button>
             </div>
           </div>
