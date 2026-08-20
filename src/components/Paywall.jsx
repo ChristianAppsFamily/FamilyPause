@@ -151,13 +151,13 @@ export default function Paywall({ reason = "trial", onClose, workspace, subscrip
   const headline = weeklyLimit
     ? <>You&apos;ve used <em>this week&apos;s</em> free plan</>
     : reason === "upgrade"
-      ? <>Upgrade when <em>you&apos;re ready</em></>
+      ? <>Upgrade <em>Today!</em></>
       : <>Your <em>free trial</em> has ended</>;
 
   const sub = weeklyLimit
     ? "You've used your free plan for this week. Upgrade to Family Plan for unlimited plans."
     : reason === "upgrade"
-      ? "Unlock title editing, exports, unlimited plans, and spouse sync with Family Plan."
+      ? "Unlock title editing, exports, unlimited plans, and family member categories on the Family Plan."
       : "We hope the last 7 days brought a little more calm to your week. Keep the rhythm going with editing, exports, unlimited plans, and spouse sync.";
 
   useEffect(() => {
@@ -217,7 +217,7 @@ export default function Paywall({ reason = "trial", onClose, workspace, subscrip
 
       <div className="pw-wrap">
         <div className="pw-head">
-          <div className="eyebrow">Keep the rhythm</div>
+          <div className="eyebrow">{reason === "upgrade" ? "Enjoying FamilyPause" : "Keep the rhythm"}</div>
           <h1>{headline}</h1>
           <p>{sub}</p>
         </div>
