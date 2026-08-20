@@ -933,6 +933,10 @@ const css = `
   background: none;
 }
 .fp-landing #mobile .shead { margin-bottom: 28px; }
+.fp-landing #mobile {
+  background: var(--paper);
+  border-top: 1px solid var(--line-2);
+}
 .fp-landing .mobile-chips {
   display: flex;
   flex-wrap: wrap;
@@ -1555,13 +1559,13 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
           </div>
         </section>
 
-        <section className="section section-cream" id="mobile">
+        <section className="section" id="mobile">
           <div className="wrap">
             <div className="shead reveal">
               <span className="eyebrow">Mobile Apps</span>
               <h2>Android and iOS apps.<br /><em>Coming soon.</em></h2>
               <p>
-                FamilyPause will live on the phone in your pocket — same weekly plan, same calendar sync.
+                FamilyPause will live on the phone in your pocket. Same weekly plan, same calendar sync.
                 Until the stores open, the full web app already works in a phone browser. Tap Sign In and pick up this week from anywhere.
               </p>
             </div>
