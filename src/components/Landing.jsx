@@ -1349,7 +1349,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
         <section className="band band-terra">
           <div className="wrap quote reveal">
             <span className="qmark">&ldquo;</span>
-            <blockquote>We put everything we had going on into FamilyPause, and within minutes our week finally made sense.</blockquote>
+            <blockquote>It was the time we spent, typing all the dates into the calendar manually. It felt like an extra chore, thus FamilyPause was born, saving us so much time now by auto-syncing it all for us.</blockquote>
             <div className="qby">Spencer &amp; Amanda, Founders and First Users</div>
           </div>
         </section>
