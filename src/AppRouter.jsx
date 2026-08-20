@@ -25,7 +25,7 @@ import SubscribeSuccess from "./components/SubscribeSuccess";
 import App from "./App";
 
 const T = {
-  bg:    "#FAF7F2",
+  bg:    "#FFFFFF",
   terra: "#B85C38",
   text:  "#2E2820",
   mid:   "#6A5A40",
@@ -71,6 +71,11 @@ export default function AppRouter() {
   const bootstrapped = useRef(false);
 
   const inviteCodeFromUrl = inviteCodeFromPath(location.pathname);
+
+  useEffect(() => {
+    document.body.classList.add("fp-app");
+    return () => document.body.classList.remove("fp-app");
+  }, []);
 
   // ── Bootstrap session on mount ─────────────────────────────────────────────
   useEffect(() => {

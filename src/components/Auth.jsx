@@ -30,7 +30,7 @@ function friendlyAuthError(err) {
 // ── TERRA & CREAM PALETTE ─────────────────────────────────────────────────────
 // Palette mapped to the design bundle (src/styles/tokens.css): source of truth.
 const T = {
-  bg:        "#FBF6EC",  // --paper
+  bg:        "#FFFFFF",
   surface:   "#FCF8F0",  // --paper-card
   border:    "#E6D9C4",  // --line
   text:      "#2A251D",  // --ink
