@@ -198,13 +198,18 @@ const chromeCss = `
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 2px;
 }
 .fp-mkt .foot .brand-row {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 11px;
   line-height: 1;
+}
+.fp-mkt .foot .brand-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
 }
 .fp-mkt .foot .brand-mark {
   width: 34px;
@@ -213,13 +218,13 @@ const chromeCss = `
   display: block;
   flex-shrink: 0;
   object-fit: contain;
-  transform: translateY(1px);
 }
 .fp-mkt .foot .word {
   font-family: var(--display);
   font-size: 22px;
   font-weight: 600;
   line-height: 1;
+  margin-top: -1px;
 }
 .fp-mkt .foot .word b { color: var(--terra); }
 .fp-mkt .foot .brand-tag {
@@ -232,7 +237,7 @@ const chromeCss = `
   color: var(--ink-2);
   line-height: 1.15;
   margin: 0;
-  padding: 0 0 0 45px;
+  padding: 0;
   max-width: none;
   white-space: nowrap;
   display: block;
@@ -381,9 +386,11 @@ export default function MarketingChrome({ children }) {
             <div className="brand">
               <div className="brand-row">
                 <img className="brand-mark" src="/uploads/Logo_4.png" alt="" />
-                <div className="word"><b>Family</b>Pause</div>
+                <div className="brand-copy">
+                  <div className="word"><b>Family</b>Pause</div>
+                  <div className="brand-tag">Less Chaos. More Time.</div>
+                </div>
               </div>
-              <div className="brand-tag">Less Chaos. More Time.</div>
             </div>
             <div className="fcols">
               <div className="fcol">

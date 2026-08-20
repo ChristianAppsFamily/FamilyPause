@@ -900,13 +900,18 @@ const css = `
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 2px;
 }
 .fp-landing .foot .brand-row {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 11px;
   line-height: 1;
+}
+.fp-landing .foot .brand-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
 }
 .fp-landing .foot .brand-mark {
   width: 34px;
@@ -915,9 +920,8 @@ const css = `
   display: block;
   flex-shrink: 0;
   object-fit: contain;
-  transform: translateY(1px);
 }
-.fp-landing .foot .word { font-family: var(--display); font-size: 22px; font-weight: 600; line-height: 1; }
+.fp-landing .foot .word { font-family: var(--display); font-size: 22px; font-weight: 600; line-height: 1; margin-top: -1px; }
 .fp-landing .foot .word b { color: var(--terra); }
 .fp-landing .foot .brand-tag {
   font-family: var(--serif);
@@ -929,7 +933,7 @@ const css = `
   text-transform: none;
   color: var(--ink-2);
   margin: 0;
-  padding: 0 0 0 45px;
+  padding: 0;
   max-width: none;
   display: block;
   border-radius: 0;
@@ -1612,9 +1616,11 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
             <div className="brand">
               <div className="brand-row">
                 <img className="brand-mark" src="/uploads/Logo_4.png" alt="" />
-                <div className="word"><b>Family</b>Pause</div>
+                <div className="brand-copy">
+                  <div className="word"><b>Family</b>Pause</div>
+                  <div className="brand-tag">Less Chaos. More Time.</div>
+                </div>
               </div>
-              <div className="brand-tag">Less Chaos. More Time.</div>
             </div>
             <div className="fcols">
               <div className="fcol">
