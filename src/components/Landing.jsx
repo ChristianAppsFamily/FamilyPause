@@ -584,23 +584,6 @@ const css = `
   line-height: 1.5;
 }
 
-/* final CTA lifestyle photo */
-.fp-landing .finalcta-photo {
-  display: block;
-  width: 100%;
-  max-width: 880px;
-  height: 380px;
-  margin: 0 auto 40px;
-  object-fit: cover;
-  object-position: center 35%;
-  border-radius: 16px;
-  box-shadow: 0 8px 28px rgba(46, 40, 32, 0.12);
-  background: var(--paper-3);
-}
-@media (max-width: 720px) {
-  .fp-landing .finalcta-photo { height: 220px; }
-}
-
 /* hero mockup */
 .fp-landing .mock { background: var(--paper-card); border: 1px solid var(--line); border-radius: var(--r-xl); box-shadow: var(--shadow-lg); padding: 20px; position: relative; transform: rotate(.4deg); }
 .fp-landing .mock.mock-live {
@@ -890,19 +873,6 @@ const css = `
 .fp-landing .tier.pop .feats li .far { color: #F2E7C9; }
 .fp-landing .pricefoot { text-align: center; margin-top: 26px; }
 
-/* final cta */
-.fp-landing .finalcta {
-  text-align: center; position: relative; overflow: hidden;
-  background: var(--paper);
-  border-top: 1px solid var(--line-2);
-}
-.fp-landing .finalcta::before { content: ""; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(700px 380px at 50% 0%, var(--terra-tint), transparent 65%); }
-.fp-landing .finalcta .wrap { position: relative; }
-.fp-landing .finalcta h2 { font-size: 64px; line-height: 1.04; letter-spacing: -.02em; max-width: 880px; margin: 0 auto 24px; }
-.fp-landing .finalcta h2 em { color: var(--terra); display: block; }
-.fp-landing .finalcta p { font-size: 19px; color: var(--ink-2); max-width: 560px; margin: 0 auto 34px; }
-.fp-landing .finalcta .fineprint { margin-top: 22px; }
-
 /* footer */
 .fp-landing .foot {
   border-top: 1px solid var(--line-2);
@@ -1026,7 +996,7 @@ const css = `
   .fp-landing .audgrid { grid-template-columns: 1fr; }
   .fp-landing .pricegrid { grid-template-columns: 1fr; }
   .fp-landing .tier.pop { transform: none; }
-  .fp-landing .shead h2, .fp-landing .finalcta h2 { font-size: 40px; }
+  .fp-landing .shead h2 { font-size: 40px; }
   .fp-landing .quote blockquote { font-size: 30px; }
   .fp-landing .privacy p { font-size: 26px; }
 }
@@ -1612,25 +1582,6 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
               <span className="mobile-chip">iOS · Coming soon</span>
               <span className="mobile-chip">Android · Coming soon</span>
             </div>
-          </div>
-        </section>
-
-        {/* FINAL CTA */}
-        <section className="section finalcta">
-          <div className="wrap">
-            <img
-              className="finalcta-photo reveal"
-              src="/images/fp-final-cta.png"
-              alt="A couple having their weekly FamilyPause conversation at the kitchen table"
-              loading="lazy"
-              decoding="async"
-              width={1672}
-              height={941}
-            />
-            <h2>So much going on.<br /><em>One plan to move forward with.</em></h2>
-            <p>Stop manually entering every event one by one. Type it, paste it, or record your family talking it through. FamilyPause finds everything, you approve it together, then it auto-syncs straight to your calendar.</p>
-            <button className="btn btn-primary btn-lg" onClick={onStart}>Create My Family Plan</button>
-            <p className="fineprint">Starts your free 7-day trial • No credit card required</p>
           </div>
         </section>
       </main>
