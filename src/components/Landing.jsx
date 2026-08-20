@@ -905,20 +905,26 @@ const css = `
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 2px;
+  gap: 8px;
+  min-width: 0;
 }
-.fp-landing .foot .word { font-family: var(--display); font-size: 26px; font-weight: 600; line-height: 1; }
+.fp-landing .foot .word { font-family: var(--display); font-size: 26px; font-weight: 600; line-height: 1.1; }
 .fp-landing .foot .word b { color: var(--terra); }
-.fp-landing .foot .tag {
-  font-family: var(--display);
+.fp-landing .foot .brand-tag {
+  font-family: var(--serif);
   font-style: italic;
   font-weight: 500;
-  font-size: 17px;
-  line-height: 1.2;
-  letter-spacing: -.01em;
+  font-size: 15px;
+  line-height: 1.35;
+  letter-spacing: 0;
+  text-transform: none;
   color: var(--ink-2);
-  margin-top: 0;
+  margin: 0;
+  padding: 0;
   max-width: none;
+  display: block;
+  border-radius: 0;
+  background: none;
 }
 .fp-landing #mobile .shead { margin-bottom: 28px; }
 .fp-landing .mobile-chips {
@@ -1588,7 +1594,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
               <img className="brand-mark" src="/uploads/Logo_4.png" alt="" />
               <div className="brand-copy">
                 <div className="word"><b>Family</b>Pause</div>
-                <div className="tag">Less Chaos. More Time.</div>
+                <div className="brand-tag">Less Chaos. More Time.</div>
               </div>
             </div>
             <div className="fcols">

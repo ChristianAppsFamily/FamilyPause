@@ -202,27 +202,32 @@ const chromeCss = `
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 2px;
+  gap: 8px;
+  min-width: 0;
 }
 .fp-mkt .foot .word {
   font-family: var(--display);
   font-size: 26px;
   font-weight: 600;
-  line-height: 1;
+  line-height: 1.1;
 }
 .fp-mkt .foot .word b { color: var(--terra); }
-.fp-mkt .foot .tag {
-  font-family: var(--display);
+.fp-mkt .foot .brand-tag {
+  font-family: var(--serif);
   font-style: italic;
-  font-size: 17px;
+  font-size: 15px;
   font-weight: 500;
-  letter-spacing: -.01em;
+  letter-spacing: 0;
   text-transform: none;
   color: var(--ink-2);
-  line-height: 1.2;
-  margin-top: 0;
+  line-height: 1.35;
+  margin: 0;
+  padding: 0;
   max-width: none;
   white-space: nowrap;
+  display: block;
+  border-radius: 0;
+  background: none;
 }
 .fp-mkt .foot .fcols { display: flex; gap: 64px; flex-wrap: wrap; }
 .fp-mkt .foot .fcol h4 {
@@ -272,9 +277,9 @@ const chromeCss = `
   .fp-mkt .navcta .btn:not(.navmenu-btn) { display: none; }
   .fp-mkt .navmenu-btn { display: inline-flex; }
   .fp-mkt .foot .fcols { gap: 36px; }
-  .fp-mkt .foot .tag {
+  .fp-mkt .foot .brand-tag {
     white-space: normal;
-    font-size: 16px;
+    font-size: 14px;
   }
 }
 `;
@@ -368,7 +373,7 @@ export default function MarketingChrome({ children }) {
               <img className="brand-mark" src="/uploads/Logo_4.png" alt="" />
               <div className="brand-copy">
                 <div className="word"><b>Family</b>Pause</div>
-                <div className="tag">Less Chaos. More Time.</div>
+                <div className="brand-tag">Less Chaos. More Time.</div>
               </div>
             </div>
             <div className="fcols">
