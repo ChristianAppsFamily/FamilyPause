@@ -938,7 +938,7 @@ const css = `
   font-size: clamp(28px, 7.2vw, 50px);
   line-height: 1.12;
 }
-.fp-landing #mobile .shead h2 em { color: var(--terra); }
+.fp-landing #mobile .shead h2 em { color: #F2E7C9; }
 .fp-landing #mobile .shead p { color: rgba(255,255,255,.9); }
 .fp-landing .mobile-chips {
   display: flex;
@@ -961,17 +961,12 @@ const css = `
   box-shadow: 0 8px 18px rgba(42, 37, 29, .16);
   transition: transform .12s, box-shadow .2s, background .2s, color .2s;
 }
-.fp-landing .mobile-chip .soon {
-  color: var(--terra);
-  font-weight: 600;
-}
 .fp-landing .mobile-chip:hover {
   color: var(--ink);
   background: var(--paper-2);
   transform: translateY(-1px);
   box-shadow: 0 12px 22px rgba(42, 37, 29, .2);
 }
-.fp-landing .mobile-chip:hover .soon { color: var(--terra-d); }
 .fp-landing .mobile-chip:active { transform: translateY(1px); }
 .fp-landing .foot .fcols { display: flex; gap: 64px; }
 .fp-landing .foot .fcol h4 { font-family: var(--mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--terra); margin-bottom: 14px; font-weight: 600; }
@@ -1596,16 +1591,16 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
               <span className="eyebrow">Mobile Apps</span>
               <h2>Android and iOS apps.<br /><em>Coming soon.</em></h2>
               <p>
-                FamilyPause will live on the phone in your pocket. Same weekly plan, same calendar sync.
-                Until the stores open, the full web app already works in a phone browser. Tap Sign In and pick up this week from anywhere.
+                FamilyPause is coming to your pocket soon. Same weekly plan, same calendar sync.
+                Until then, you can use your mobile browser to plan out your week from anywhere.
               </p>
             </div>
             <div className="mobile-chips reveal">
               <button type="button" className="mobile-chip" onClick={() => openLeadModal("mobile-waitlist")}>
-                iOS · <span className="soon">Coming soon</span>
+                iOS · Coming soon
               </button>
               <button type="button" className="mobile-chip" onClick={() => openLeadModal("mobile-waitlist")}>
-                Android · <span className="soon">Coming soon</span>
+                Android · Coming soon
               </button>
             </div>
           </div>
