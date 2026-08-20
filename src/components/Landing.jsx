@@ -934,8 +934,9 @@ const css = `
 }
 .fp-landing #mobile .shead { margin-bottom: 28px; }
 .fp-landing #mobile {
-  background: var(--paper);
-  border-top: 1px solid var(--line-2);
+  background: var(--olive-tint);
+  border-top: 1px solid var(--olive-soft);
+  border-bottom: 1px solid var(--olive-soft);
 }
 .fp-landing .mobile-chips {
   display: flex;
@@ -949,9 +950,9 @@ const css = `
   font-size: 12px;
   letter-spacing: .08em;
   text-transform: uppercase;
-  color: var(--ink-2);
-  background: var(--paper);
-  border: 1px solid var(--line);
+  color: var(--olive-d);
+  background: var(--paper-card);
+  border: 1px solid var(--olive-soft);
   border-radius: 999px;
   padding: 10px 16px;
 }
