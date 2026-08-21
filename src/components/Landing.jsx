@@ -713,6 +713,15 @@ const css = `
 /* who it's for */
 .fp-landing #who.section { padding: 72px 0; }
 .fp-landing #who .shead { margin-bottom: 0; }
+.fp-landing #who .who-photo {
+  display: block;
+  width: 100%;
+  max-width: 960px;
+  height: auto;
+  margin: 0 auto 40px;
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow);
+}
 
 /* privacy band */
 .fp-landing .band-olive { background: linear-gradient(135deg, var(--olive), #525E2F); color: #fff; }
@@ -1351,6 +1360,15 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
         {/* WHO IT'S FOR */}
         <section className="section section-paper" id="who">
           <div className="wrap">
+            <img
+              className="who-photo reveal"
+              src="/images/fp-hero.jpg"
+              alt="Spencer and Amanda at the table with FamilyPause cards and the weekly plan on a tablet"
+              loading="lazy"
+              decoding="async"
+              width={1024}
+              height={576}
+            />
             <div className="shead reveal">
               <span className="eyebrow">Who it&apos;s for</span>
               <h2>Built for families with full schedules to manage.</h2>
