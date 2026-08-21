@@ -92,7 +92,7 @@ export default function ExitIntentModal({ onStarted = () => {}, disabled = false
     if (disabled) setOpen(false);
   }, [disabled]);
 
-  // Triggers: desktop mouse-exit + mobile scroll-back
+  // Triggers: desktop mouse-exit only (mobile scroll-back trapped users who couldn't close)
   useEffect(() => {
     if (disabled) return undefined;
     if (signedIn) return undefined;
@@ -100,6 +100,12 @@ export default function ExitIntentModal({ onStarted = () => {}, disabled = false
     if (hasExitShown()) return undefined;
     if (spotsRemaining === null) return undefined;
     if (spotsRemaining <= 0) return undefined;
+
+    // Skip exit-intent on touch / coarse-pointer phones
+    const isTouch =
+      (typeof window !== "undefined" && window.matchMedia("(hover: none), (pointer: coarse)").matches)
+      || (typeof navigator !== "undefined" && navigator.maxTouchPoints > 0);
+    if (isTouch) return undefined;
 
     const tryShow = () => {
       if (disabled || shownThisPage.current || hasExitShown() || signedIn) return;
@@ -113,21 +119,9 @@ export default function ExitIntentModal({ onStarted = () => {}, disabled = false
       tryShow();
     };
 
-    let maxScroll = 0;
-    const onScroll = () => {
-      const y = window.scrollY || 0;
-      if (y > maxScroll) maxScroll = y;
-      // Mobile scroll-back: deep scroll then reverse upward
-      if (maxScroll > 380 && y < maxScroll - 140) {
-        tryShow();
-      }
-    };
-
     document.addEventListener("mouseout", onMouseOut);
-    window.addEventListener("scroll", onScroll, { passive: true });
     return () => {
       document.removeEventListener("mouseout", onMouseOut);
-      window.removeEventListener("scroll", onScroll);
     };
   }, [signedIn, spotsRemaining, disabled]);
 

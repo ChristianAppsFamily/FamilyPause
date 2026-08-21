@@ -233,21 +233,47 @@ const css = `
   z-index: 120;
   display: grid;
   place-items: center;
-  padding: 16px;
+  padding: max(12px, env(safe-area-inset-top)) 16px max(12px, env(safe-area-inset-bottom));
   background: rgba(46, 40, 32, .46);
   backdrop-filter: blur(3px);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 .fp-guide-modal {
   position: relative;
   width: 100%;
   max-width: 420px;
+  max-height: min(88dvh, 880px);
   border-radius: 16px;
   background: #fff;
   box-shadow: 0 24px 70px rgba(70, 45, 20, .26);
   padding: 48px 40px 28px;
   text-align: center;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
 }
+.fp-guide-close {
+  position: sticky;
+  top: 0;
+  float: right;
+  z-index: 5;
+  width: 44px;
+  height: 44px;
+  margin: -12px -12px 0 0;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: #F4EAD8;
+  color: #5B5245;
+  cursor: pointer;
+  font-size: 26px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.fp-guide-close:hover { color: var(--terra); background: var(--terra-tint); }
 .fp-guide-modal-wide {
   max-width: 960px;
   padding: 44px 44px 36px;
@@ -305,23 +331,6 @@ const css = `
   border-radius: 0 0 3px 3px;
   background: var(--terra);
 }
-.fp-guide-close {
-  position: absolute;
-  top: 14px;
-  right: 14px;
-  width: 34px;
-  height: 34px;
-  display: grid;
-  place-items: center;
-  border: 0;
-  border-radius: 50%;
-  background: transparent;
-  color: #A09070;
-  cursor: pointer;
-  font-size: 23px;
-  line-height: 1;
-}
-.fp-guide-close:hover { color: var(--terra); background: var(--terra-tint); }
 .fp-guide-brand {
   width: 30px;
   height: 30px;
@@ -452,22 +461,29 @@ const css = `
   background: rgba(42, 37, 29, 0.45);
   display: flex; align-items: center; justify-content: center;
   padding: 20px; backdrop-filter: blur(2px);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 .fp-exit-modal {
   position: relative;
   width: min(100%, 440px);
+  max-height: min(88dvh, 880px);
   background: var(--paper-card, #FCF8F0);
   border: 1px solid var(--line, #E6D9C4);
   border-radius: 18px;
   padding: 36px 28px 28px;
   box-shadow: 0 18px 50px rgba(70, 45, 20, 0.18);
   text-align: center;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
 }
 .fp-exit-x {
-  position: absolute; top: 12px; right: 12px;
-  width: 36px; height: 36px; border: none; border-radius: 8px;
-  background: transparent; color: var(--ink-3);
-  font-size: 22px; line-height: 1; cursor: pointer;
+  position: absolute; top: 10px; right: 10px;
+  width: 44px; height: 44px; border: none; border-radius: 50%;
+  background: #F4EAD8; color: var(--ink-3);
+  font-size: 26px; line-height: 1; cursor: pointer;
+  z-index: 2;
 }
 .fp-exit-x:hover { color: var(--terra); background: var(--terra-tint); }
 .fp-exit-pill {
@@ -1002,30 +1018,73 @@ const css = `
   .fp-landing .hero .ctas { align-items: stretch; flex-direction: column; flex-wrap: wrap; gap: 12px; }
   .fp-landing .hero .ctas .btn { width: 100%; justify-content: center; }
   .fp-landing .foot .fcols { gap: 36px; flex-wrap: wrap; }
-  .fp-guide-modal { padding: 44px 22px 24px; }
+  .fp-guide-backdrop {
+    align-items: flex-start;
+    place-items: start center;
+    padding: max(10px, env(safe-area-inset-top)) 12px max(16px, env(safe-area-inset-bottom));
+  }
+  .fp-guide-modal {
+    max-height: none;
+    margin: 8px 0 24px;
+    padding: 20px 18px 22px;
+  }
   .fp-guide-modal-wide {
     max-width: 100%;
-    padding: 36px 22px 24px;
+    padding: 20px 18px 22px;
   }
-  .fp-guide-modal-wide .fp-guide-title { font-size: 32px; }
-  .fp-guide-modal-wide .fp-guide-subline { font-size: 18px; }
+  .fp-guide-close {
+    position: sticky;
+    top: 0;
+    float: right;
+    margin: -4px -4px 8px 0;
+    width: 48px;
+    height: 48px;
+    font-size: 28px;
+    background: #F4EAD8;
+  }
+  .fp-guide-cover {
+    max-width: 120px;
+    margin-bottom: 12px;
+  }
+  .fp-guide-modal-wide .fp-guide-title { font-size: 28px; }
+  .fp-guide-modal-wide .fp-guide-subline { font-size: 16px; margin-bottom: 14px; }
   .fp-guide-form-wide {
     grid-template-columns: 1fr;
-    gap: 18px;
+    gap: 12px;
     text-align: center;
   }
   .fp-guide-form-wide .fp-guide-cover {
-    max-width: 180px;
+    max-width: 120px;
     margin: 0 auto;
   }
   .fp-guide-form-wide .fp-guide-brand {
-    width: 96px;
-    height: 96px;
+    width: 72px;
+    height: 72px;
     margin: 0 auto;
   }
   .fp-guide-form-wide .fp-guide-subline {
     margin-left: auto;
     margin-right: auto;
+  }
+  .fp-exit-backdrop {
+    align-items: flex-start;
+    padding: max(10px, env(safe-area-inset-top)) 12px max(16px, env(safe-area-inset-bottom));
+    overflow-y: auto;
+  }
+  .fp-exit-modal {
+    max-height: none;
+    margin: 8px 0 24px;
+    overflow-y: visible;
+    padding: 24px 18px 20px;
+  }
+  .fp-exit-x {
+    width: 48px;
+    height: 48px;
+    top: 6px;
+    right: 6px;
+    font-size: 28px;
+    background: #F4EAD8;
+    border-radius: 50%;
   }
 }
 @media (max-width: 480px) {
