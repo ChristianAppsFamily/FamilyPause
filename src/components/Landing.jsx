@@ -711,16 +711,8 @@ const css = `
 .fp-landing #how .shead p { font-size: 17px; }
 
 /* who it's for */
-.fp-landing .audgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
-.fp-landing .aud { background: var(--paper-card); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 34px 34px 36px; transition: transform .2s, box-shadow .25s, border-color .2s; }
-.fp-landing .aud:hover { transform: translateY(-3px); box-shadow: var(--shadow); border-color: var(--line-2); }
-.fp-landing .aud .aico { width: 46px; height: 46px; border-radius: 12px; display: grid; place-items: center; margin-bottom: 22px; background: var(--terra-tint); color: var(--terra-d); border: 1px solid var(--terra-soft); }
-.fp-landing .aud:nth-child(2) .aico { background: var(--gold-soft); color: #8a6a16; border-color: #e6d29a; }
-.fp-landing .aud:nth-child(3) .aico { background: var(--olive-tint); color: var(--olive-d); border-color: var(--olive-soft); }
-.fp-landing .aud:nth-child(4) .aico { background: var(--paper-3); color: var(--ink-2); border-color: var(--line-2); }
-.fp-landing .aud:nth-child(5) .aico { background: var(--terra-tint); color: var(--terra-d); border-color: var(--terra-soft); }
-.fp-landing .aud h3 { font-size: 25px; margin-bottom: 12px; }
-.fp-landing .aud p { font-size: 16px; color: var(--ink-2); margin: 0; line-height: 1.62; }
+.fp-landing #who.section { padding: 72px 0; }
+.fp-landing #who .shead { margin-bottom: 0; }
 
 /* privacy band */
 .fp-landing .band-olive { background: linear-gradient(135deg, var(--olive), #525E2F); color: #fff; }
@@ -998,7 +990,6 @@ const css = `
   .fp-landing .herocopy { align-self: start; }
   .fp-landing .hero h1 { font-size: 38px; }
   .fp-landing .mock { max-width: 460px; }
-  .fp-landing .audgrid { grid-template-columns: 1fr; }
   .fp-landing .pricegrid { grid-template-columns: 1fr; }
   .fp-landing .tier.pop { transform: none; }
   .fp-landing .shead h2 { font-size: 40px; }
@@ -1364,33 +1355,6 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
               <span className="eyebrow">Who it&apos;s for</span>
               <h2>Built for families with full schedules to manage.</h2>
               <p>Whether you&apos;re coordinating for multiple kids, homeschooling, or running a small business. FamilyPause helps turn events and reminders into a plan that keeps everyone in the loop.</p>
-            </div>
-            <div className="audgrid reveal">
-              <div className="aud">
-                <div className="aico"><svg width="24" height="24" viewBox="0 0 24 24" {...stroke}><path d="M3 11.5 12 4l9 7.5" /><path d="M5 10v9h14v-9" /><path d="M10 19v-5h4v5" /></svg></div>
-                <h3>Married Couples</h3>
-                <p>Two schedules. Shared responsibilities. Endless things to remember. FamilyPause helps you create one shared plan so everyone knows what&apos;s happening, who&apos;s responsible, and what comes next.</p>
-              </div>
-              <div className="aud">
-                <div className="aico"><svg width="24" height="24" viewBox="0 0 24 24" {...stroke}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" /></svg></div>
-                <h3>Busy Parents</h3>
-                <p>School emails, appointments, practices, errands, and last-minute changes don&apos;t arrive in order. FamilyPause gathers everything into one place and turns the chaos into a clear plan.</p>
-              </div>
-              <div className="aud">
-                <div className="aico"><svg width="24" height="24" viewBox="0 0 24 24" {...stroke} strokeWidth={1.8}><path d="M12 3v18M7 8h10" /></svg></div>
-                <h3>Families Who Pause Together</h3>
-                <p>Start your weekly planning with a conversation. Pull a card, talk about what matters, and let FamilyPause capture the appointments, decisions, reminders, and next steps so nothing gets forgotten.</p>
-              </div>
-              <div className="aud">
-                <div className="aico"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8z" /></svg></div>
-                <h3>Entrepreneur Households</h3>
-                <p>When work and family constantly overlap, details can easily slip through the cracks. FamilyPause helps you capture those conversations and turn them into calendar-ready actions.</p>
-              </div>
-              <div className="aud">
-                <div className="aico"><svg width="24" height="24" viewBox="0 0 24 24" {...stroke}><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H12v16H6.5A2.5 2.5 0 0 0 4 21.5z" /><path d="M20 5.5A2.5 2.5 0 0 0 17.5 3H12v16h5.5a2.5 2.5 0 0 1 2.5 2.5z" /></svg></div>
-                <h3>Homeschool Families</h3>
-                <p>Lessons, activities, appointments, and family life all compete for attention. FamilyPause helps you organize the week without adding another complicated planning system.</p>
-              </div>
             </div>
           </div>
         </section>
