@@ -705,17 +705,21 @@ const css = `
 .fp-landing .quote .qby { font-family: var(--serif); font-size: 16px; font-weight: 500; letter-spacing: 0; text-transform: none; color: rgba(255,255,255,.9); }
 
 /* how it works */
-.fp-landing .steps4 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0; }
-.fp-landing .stp { padding: 8px 22px; border-left: 1px solid var(--line); }
+.fp-landing #how.section { padding: 72px 0; }
+.fp-landing #how .shead { margin-bottom: 36px; }
+.fp-landing #how .shead h2 { font-size: 42px; margin: 12px 0 14px; }
+.fp-landing #how .shead p { font-size: 17px; }
+.fp-landing .steps4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; }
+.fp-landing .stp { padding: 4px 18px; border-left: 1px solid var(--line); }
 .fp-landing .stp:first-child { padding-left: 0; border-left: none; }
 .fp-landing .stp:last-child { padding-right: 0; }
-.fp-landing .stp .sico { width: 30px; height: 30px; color: var(--ink); margin-bottom: 26px; }
-.fp-landing .stp .snum { font-family: var(--display); font-size: 52px; font-weight: 600; color: var(--terra-soft); line-height: 1; margin-bottom: 14px; }
-.fp-landing .stp h3 { font-size: 23px; margin-bottom: 12px; }
-.fp-landing .stp p { font-size: 15.5px; color: var(--ink-2); line-height: 1.6; margin: 0; }
+.fp-landing .stp .sico { width: 26px; height: 26px; color: var(--ink); margin-bottom: 18px; }
+.fp-landing .stp .snum { font-family: var(--display); font-size: 42px; font-weight: 600; color: var(--terra-soft); line-height: 1; margin-bottom: 10px; }
+.fp-landing .stp h3 { font-size: 20px; margin-bottom: 8px; }
+.fp-landing .stp p { font-size: 14.5px; color: var(--ink-2); line-height: 1.55; margin: 0; }
 .fp-landing .how-reassure {
-  margin: 40px 0 0; text-align: center;
-  font-family: var(--serif); font-size: 16px; color: var(--ink-2); font-style: italic;
+  margin: 28px 0 0; text-align: center;
+  font-family: var(--serif); font-size: 15px; color: var(--ink-2); font-style: italic;
 }
 
 /* who it's for */
@@ -1380,20 +1384,14 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                 <p>FamilyPause finds the appointments, tasks, reminders, and decisions, and organizes them by person and category.</p>
               </div>
               <div className="stp">
-                <svg className="sico" viewBox="0 0 24 24" {...stroke}><path d="M5 12.5 10 17.5 19.5 6.5" /></svg>
-                <div className="snum">03</div>
-                <h3>Review and schedule together</h3>
-                <p>Check every item before it goes anywhere. Confirm what&apos;s known and choose dates, times, and reminders for anything that&apos;s missing.</p>
-              </div>
-              <div className="stp">
                 <svg className="sico" viewBox="0 0 24 24" {...stroke}><path d="M7 3h7l4 4v14a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z" /><path d="M14 3v4h4" /><path d="M9 13h6M9 16.5h4" /></svg>
-                <div className="snum">04</div>
+                <div className="snum">03</div>
                 <h3>Add it to your calendar</h3>
                 <p>Approve what matters and everything auto-syncs straight to Google Calendar. A clean family plan organized by person and type, already there when you need it.</p>
               </div>
               <div className="stp">
                 <svg className="sico" viewBox="0 0 24 24" {...stroke}><path d="M12 3v12" /><path d="M8 11l4 4 4-4" /><path d="M5 19h14" /></svg>
-                <div className="snum">05</div>
+                <div className="snum">04</div>
                 <h3>Take it anywhere</h3>
                 <p>Print your plan as a PDF, save it to your clipboard, or copy and paste it straight into Notion or Slack.</p>
               </div>
