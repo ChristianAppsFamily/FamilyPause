@@ -12,6 +12,7 @@ import CardsProductPage from './components/CardsProductPage.jsx'
 import BlogIndex from './components/BlogIndex.jsx'
 import BlogPost from './components/BlogPost.jsx'
 import Contact from './components/Contact.jsx'
+import Mobile from './components/Mobile.jsx'
 import { SubscribeSuccess, SubscribeCancel } from './components/SubscribePages.jsx'
 
 // Marketing landing at "/". Its CTAs route into the auth + app flow at /app.
@@ -36,6 +37,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           <Route path="/blog" element={<BlogIndex />} />
           <Route path="/blog/:slug" element={<BlogPost />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/mobile" element={<Mobile />} />
           <Route path="/subscribe/success" element={<SubscribeSuccess />} />
           <Route path="/subscribe/cancel" element={<SubscribeCancel />} />
           <Route path="/app/*" element={<AppRouter />} />

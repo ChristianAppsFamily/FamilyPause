@@ -16,7 +16,7 @@ import ExitIntentModal from "./ExitIntentModal.jsx";
 import { supabase } from "../lib/supabase";
 import { isValidEmail, requestFamilyPauseGuide } from "../lib/sendGuide";
 
-const LANDING_SECTION_IDS = new Set(["how", "who", "pricing", "deck", "mobile"]);
+const LANDING_SECTION_IDS = new Set(["how", "who", "pricing", "deck"]);
 const GUIDE_COVER_SRC = "/images/familypause-guide-cover.jpg";
 
 function scrollToLandingSection(id, { smooth = true } = {}) {
@@ -680,8 +680,7 @@ const css = `
 .fp-landing #how,
 .fp-landing #who,
 .fp-landing #pricing,
-.fp-landing #deck,
-.fp-landing #mobile {
+.fp-landing #deck {
   scroll-margin-top: 88px;
 }
 
@@ -945,49 +944,6 @@ const css = `
   border-radius: 0;
   background: none;
 }
-.fp-landing #mobile .shead { margin-bottom: 28px; }
-.fp-landing #mobile {
-  background: linear-gradient(135deg, var(--olive), #525E2F);
-  color: #fff;
-  border-top: none;
-  border-bottom: none;
-}
-.fp-landing #mobile .eyebrow { color: #F2E7C9; }
-.fp-landing #mobile .shead h2 {
-  color: #fff;
-  font-size: clamp(28px, 7.2vw, 50px);
-  line-height: 1.12;
-}
-.fp-landing #mobile .shead h2 em { color: #F2E7C9; }
-.fp-landing #mobile .shead p { color: rgba(255,255,255,.9); }
-.fp-landing .mobile-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-.fp-landing .mobile-chip {
-  display: inline-flex;
-  align-items: center;
-  font-family: var(--mono);
-  font-size: 12px;
-  letter-spacing: .08em;
-  text-transform: uppercase;
-  color: var(--ink);
-  background: var(--cream);
-  border: 1px solid rgba(242, 231, 201, .55);
-  border-radius: 999px;
-  padding: 12px 20px;
-  cursor: pointer;
-  box-shadow: 0 8px 18px rgba(42, 37, 29, .16);
-  transition: transform .12s, box-shadow .2s, background .2s, color .2s;
-}
-.fp-landing .mobile-chip:hover {
-  color: var(--ink);
-  background: var(--paper-2);
-  transform: translateY(-1px);
-  box-shadow: 0 12px 22px rgba(42, 37, 29, .2);
-}
-.fp-landing .mobile-chip:active { transform: translateY(1px); }
 .fp-landing .foot .fcols { display: flex; gap: 64px; }
 .fp-landing .foot .fcol h4 { font-family: var(--mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--terra); margin-bottom: 14px; font-weight: 600; }
 .fp-landing .foot .fcol a { display: block; font-size: 14.5px; color: var(--ink-2); margin-bottom: 9px; transition: color .15s; }
@@ -1084,14 +1040,14 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
   const [scrolled, setScrolled] = useState(false);
   const [familyBilling, setFamilyBilling] = useState("monthly");
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
-  const [leadModal, setLeadModal] = useState(null); // "guide" | "waitlist" | "deck-waitlist" | "mobile-waitlist" | null
+  const [leadModal, setLeadModal] = useState(null); // "guide" | "waitlist" | "deck-waitlist" | null
   const [leadEmail, setLeadEmail] = useState("");
   const [leadFirstName, setLeadFirstName] = useState("");
   const [leadStatus, setLeadStatus] = useState("idle");
   const [leadError, setLeadError] = useState("");
   const rootRef = useRef(null);
 
-  // Scroll to /#how, /#who, /#pricing, /#deck, /#mobile after mount (SPA hash nav from blog/footer).
+  // Scroll to /#how, /#who, /#pricing, /#deck after mount (SPA hash nav from blog/footer).
   useEffect(() => {
     const id = (location.hash || "").replace(/^#/, "");
     if (!id) return undefined;
@@ -1223,9 +1179,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
 
     const kind = leadModal === "waitlist"
       ? "ministry-waitlist"
-      : leadModal === "mobile-waitlist"
-        ? "mobile-app-waitlist"
-        : "physical-deck-waitlist";
+      : "physical-deck-waitlist";
     const { data, error } = await supabase.functions.invoke("capture-lead", {
       body: {
         email,
@@ -1259,7 +1213,6 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
             <a href="/#who" onClick={goToSection("who")}>Who It&apos;s For</a>
             <a href="/#deck" onClick={goToSection("deck")}>Conversation Cards</a>
             <a href="/#pricing" onClick={goToSection("pricing")}>Pricing</a>
-            <a href="/#mobile" onClick={goToSection("mobile")}>Mobile</a>
           </nav>
           <div className="navcta">
             <button className="btn btn-primary" onClick={onSignIn}>Sign In</button>
@@ -1283,7 +1236,6 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
               <a href="/#who" onClick={goToSection("who")}>Who It&apos;s For</a>
               <a href="/#deck" onClick={goToSection("deck")}>Conversation Cards</a>
               <a href="/#pricing" onClick={goToSection("pricing")}>Pricing</a>
-              <a href="/#mobile" onClick={goToSection("mobile")}>Mobile</a>
             </div>
             <div className="navmobile-actions">
               <button
@@ -1558,27 +1510,6 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
             </div>
           </div>
         </section>
-
-        <section className="section" id="mobile">
-          <div className="wrap">
-            <div className="shead reveal">
-              <span className="eyebrow">Mobile Apps</span>
-              <h2>Android and iOS apps.<br /><em>Coming soon.</em></h2>
-              <p>
-                FamilyPause is coming to your pocket soon. Same weekly plan, same calendar sync.
-                Until then, you can use your mobile browser to plan out your week from anywhere.
-              </p>
-            </div>
-            <div className="mobile-chips reveal">
-              <button type="button" className="mobile-chip" onClick={() => openLeadModal("mobile-waitlist")}>
-                iOS · Coming soon
-              </button>
-              <button type="button" className="mobile-chip" onClick={() => openLeadModal("mobile-waitlist")}>
-                Android · Coming soon
-              </button>
-            </div>
-          </div>
-        </section>
       </main>
 
       {/* FOOTER */}
@@ -1601,7 +1532,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                 <a href="/#who" onClick={goToSection("who")}>Who It&apos;s For</a>
                 <a href="/#deck" onClick={goToSection("deck")}>Conversation Cards</a>
                 <a href="/#pricing" onClick={goToSection("pricing")}>Pricing</a>
-                <a href="/#mobile" onClick={goToSection("mobile")}>Mobile Apps</a>
+                <a href="/mobile">Mobile Apps</a>
               </div>
               <div className="fcol">
                 <h4>Company</h4>
@@ -1682,14 +1613,6 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                     <h2 className="fp-guide-title" id="lead-modal-title">Join the waitlist</h2>
                     <p className="fp-guide-subline">
                       Be first to know when the printed FamilyPause Conversation Starter Card Deck is ready.
-                    </p>
-                  </>
-                ) : leadModal === "mobile-waitlist" ? (
-                  <>
-                    <p className="fp-guide-eyebrow">Mobile Apps</p>
-                    <h2 className="fp-guide-title" id="lead-modal-title">Join the waitlist</h2>
-                    <p className="fp-guide-subline">
-                      Be first to know when FamilyPause is on the App Store and Google Play. Same weekly plan, same calendar sync, on the phone in your pocket.
                     </p>
                   </>
                 ) : (
