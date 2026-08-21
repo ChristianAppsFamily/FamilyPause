@@ -706,21 +706,9 @@ const css = `
 
 /* how it works */
 .fp-landing #how.section { padding: 72px 0; }
-.fp-landing #how .shead { margin-bottom: 36px; }
+.fp-landing #how .shead { margin-bottom: 0; }
 .fp-landing #how .shead h2 { font-size: 42px; margin: 12px 0 14px; }
 .fp-landing #how .shead p { font-size: 17px; }
-.fp-landing .steps4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; }
-.fp-landing .stp { padding: 4px 18px; border-left: 1px solid var(--line); }
-.fp-landing .stp:first-child { padding-left: 0; border-left: none; }
-.fp-landing .stp:last-child { padding-right: 0; }
-.fp-landing .stp .sico { width: 26px; height: 26px; color: var(--ink); margin-bottom: 18px; }
-.fp-landing .stp .snum { font-family: var(--display); font-size: 42px; font-weight: 600; color: var(--terra-soft); line-height: 1; margin-bottom: 10px; }
-.fp-landing .stp h3 { font-size: 20px; margin-bottom: 8px; }
-.fp-landing .stp p { font-size: 14.5px; color: var(--ink-2); line-height: 1.55; margin: 0; }
-.fp-landing .how-reassure {
-  margin: 28px 0 0; text-align: center;
-  font-family: var(--serif); font-size: 15px; color: var(--ink-2); font-style: italic;
-}
 
 /* who it's for */
 .fp-landing .audgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
@@ -1010,9 +998,6 @@ const css = `
   .fp-landing .herocopy { align-self: start; }
   .fp-landing .hero h1 { font-size: 38px; }
   .fp-landing .mock { max-width: 460px; }
-  .fp-landing .steps4 { grid-template-columns: 1fr 1fr; gap: 36px 0; }
-  .fp-landing .stp { border-left: none; padding: 0 20px; }
-  .fp-landing .stp:nth-child(odd) { padding-left: 0; }
   .fp-landing .audgrid { grid-template-columns: 1fr; }
   .fp-landing .pricegrid { grid-template-columns: 1fr; }
   .fp-landing .tier.pop { transform: none; }
@@ -1033,7 +1018,6 @@ const css = `
   .fp-landing .hero h1 { font-size: 29px; line-height: 1.1; }
   .fp-landing .hero .ctas { align-items: stretch; flex-direction: column; flex-wrap: wrap; gap: 12px; }
   .fp-landing .hero .ctas .btn { width: 100%; justify-content: center; }
-  .fp-landing .steps4 { grid-template-columns: 1fr; }
   .fp-landing .foot .fcols { gap: 36px; flex-wrap: wrap; }
   .fp-guide-modal { padding: 44px 22px 24px; }
   .fp-guide-modal-wide {
@@ -1370,33 +1354,6 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
               <h2>Start with what you&apos;ve got.<br />End with a <em>plan.</em></h2>
               <p>No perfect lists required. Paste it, record it, or type it. FamilyPause finds the appointments, tasks, reminders, then organizes everything into a plan you review before it auto-syncs to your calendar.</p>
             </div>
-            <div className="steps4 reveal">
-              <div className="stp">
-                <svg className="sico" viewBox="0 0 24 24" {...stroke}><path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3z" /><path d="M5 11a7 7 0 0 0 14 0" /><path d="M12 18v3" /></svg>
-                <div className="snum">01</div>
-                <h3>Add what&apos;s going on</h3>
-                <p>Type a messy list, paste a message or schedule, or record your family talking. It doesn&apos;t need to be organized, and it doesn&apos;t need to be a formal meeting.</p>
-              </div>
-              <div className="stp">
-                <svg className="sico" viewBox="0 0 24 24" {...stroke}><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3z" /></svg>
-                <div className="snum">02</div>
-                <h3>Create your plan</h3>
-                <p>FamilyPause finds the appointments, tasks, reminders, and decisions, and organizes them by person and category.</p>
-              </div>
-              <div className="stp">
-                <svg className="sico" viewBox="0 0 24 24" {...stroke}><path d="M7 3h7l4 4v14a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z" /><path d="M14 3v4h4" /><path d="M9 13h6M9 16.5h4" /></svg>
-                <div className="snum">03</div>
-                <h3>Add it to your calendar</h3>
-                <p>Approve what matters and everything auto-syncs straight to Google Calendar. A clean family plan organized by person and type, already there when you need it.</p>
-              </div>
-              <div className="stp">
-                <svg className="sico" viewBox="0 0 24 24" {...stroke}><path d="M12 3v12" /><path d="M8 11l4 4 4-4" /><path d="M5 19h14" /></svg>
-                <div className="snum">04</div>
-                <h3>Take it anywhere</h3>
-                <p>Print your plan as a PDF, save it to your clipboard, or copy and paste it straight into Notion or Slack.</p>
-              </div>
-            </div>
-            <p className="how-reassure reveal">Nothing reaches your calendar until you approve it.</p>
           </div>
         </section>
 
