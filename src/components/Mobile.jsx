@@ -58,9 +58,9 @@ const css = `
   font-size: 12px;
   letter-spacing: .08em;
   text-transform: uppercase;
-  color: var(--ink);
-  background: var(--cream);
-  border: 1px solid rgba(242, 231, 201, .55);
+  color: #2A251D;
+  background: #FBF6EC;
+  border: 1px solid #E6D9C4;
   border-radius: 999px;
   padding: 12px 20px;
   cursor: pointer;
@@ -68,8 +68,8 @@ const css = `
   transition: transform .12s, box-shadow .2s, background .2s, color .2s;
 }
 .fp-mobile-page .chip:hover {
-  color: var(--ink);
-  background: var(--paper-2);
+  color: #2A251D;
+  background: #F4EAD8;
   transform: translateY(-1px);
   box-shadow: 0 12px 22px rgba(42, 37, 29, .2);
 }
