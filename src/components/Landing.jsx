@@ -1377,7 +1377,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
           </div>
         </section>
 
-        {/* TRUST / PRIVACY BAND */}
+        {/* TRUST / PRIVACY BAND — parked for now
         <section className="band band-olive">
           <div className="wrap privacy-band reveal">
             <img
@@ -1394,6 +1394,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
             </div>
           </div>
         </section>
+        */}
 
         <section className="deck-section" id="deck">
           <div className="wrap">
