@@ -706,9 +706,24 @@ const css = `
 
 /* how it works */
 .fp-landing #how.section { padding: 72px 0; }
-.fp-landing #how .shead { margin-bottom: 0; }
+.fp-landing #how .shead {
+  max-width: 760px;
+  margin: 0 auto 36px;
+  text-align: center;
+}
 .fp-landing #how .shead h2 { font-size: 42px; margin: 12px 0 14px; }
 .fp-landing #how .shead p { font-size: 17px; }
+.fp-landing #how .how-photo {
+  display: block;
+  width: 100%;
+  max-width: 720px;
+  height: auto;
+  margin: 0 auto;
+  border-radius: var(--r-lg);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+  background: #fff;
+}
 
 /* who it's for */
 .fp-landing #who.section {
@@ -1366,6 +1381,15 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
               <h2>Start with what you&apos;ve got.<br />End with a <em>plan.</em></h2>
               <p>No perfect lists required. Paste it, record it, or type it. FamilyPause finds the appointments, tasks, reminders, then organizes everything into a plan you review before it auto-syncs to your calendar.</p>
             </div>
+            <img
+              className="how-photo reveal"
+              src="/images/fp-how-capture.png"
+              alt="FamilyPause Capture screen where you type, paste, or speak to build your plan"
+              loading="lazy"
+              decoding="async"
+              width={1024}
+              height={758}
+            />
           </div>
         </section>
 
