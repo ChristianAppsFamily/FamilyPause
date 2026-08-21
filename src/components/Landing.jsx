@@ -711,16 +711,28 @@ const css = `
 .fp-landing #how .shead p { font-size: 17px; }
 
 /* who it's for */
-.fp-landing #who.section { padding: 72px 0; }
-.fp-landing #who .shead { margin-bottom: 0; }
+.fp-landing #who.section {
+  padding: 72px 0;
+  background: linear-gradient(135deg, var(--olive), #525E2F);
+  color: #fff;
+}
+.fp-landing #who .shead {
+  max-width: 760px;
+  margin: 0 auto 36px;
+  text-align: center;
+}
+.fp-landing #who .eyebrow { color: #F2E7C9; }
+.fp-landing #who .shead h2 { color: #fff; }
+.fp-landing #who .shead h2 em { color: #F2E7C9; }
+.fp-landing #who .shead p { color: rgba(255,255,255,.9); }
 .fp-landing #who .who-photo {
   display: block;
   width: 100%;
   max-width: 960px;
   height: auto;
-  margin: 0 auto 40px;
+  margin: 0 auto;
   border-radius: var(--r-lg);
-  box-shadow: var(--shadow);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.22);
 }
 
 /* privacy band */
@@ -1358,8 +1370,13 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
         </section>
 
         {/* WHO IT'S FOR */}
-        <section className="section section-paper" id="who">
+        <section className="section" id="who">
           <div className="wrap">
+            <div className="shead reveal">
+              <span className="eyebrow">Who it&apos;s for</span>
+              <h2>Built for families with full schedules to manage.</h2>
+              <p>Whether you&apos;re coordinating for multiple kids, homeschooling, or running a small business. FamilyPause helps turn events and reminders into a plan that keeps everyone in the loop.</p>
+            </div>
             <img
               className="who-photo reveal"
               src="/images/fp-hero.jpg"
@@ -1369,11 +1386,6 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
               width={1024}
               height={576}
             />
-            <div className="shead reveal">
-              <span className="eyebrow">Who it&apos;s for</span>
-              <h2>Built for families with full schedules to manage.</h2>
-              <p>Whether you&apos;re coordinating for multiple kids, homeschooling, or running a small business. FamilyPause helps turn events and reminders into a plan that keeps everyone in the loop.</p>
-            </div>
           </div>
         </section>
 
