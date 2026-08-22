@@ -813,13 +813,16 @@ const css = `
   align-items: center;
   flex-wrap: wrap;
 }
-.fp-landing .deck-actions .btn-primary {
-  padding: 12px 18px;
-  font-size: 14px;
-  white-space: normal;
-  max-width: 280px;
+.fp-landing .deck-actions .btn {
+  min-width: 220px;
+  max-width: 220px;
+  padding: 15px 20px;
+  font-size: 15px;
+  justify-content: center;
   text-align: center;
-  line-height: 1.3;
+  white-space: normal;
+  line-height: 1.25;
+  box-sizing: border-box;
 }
 .fp-landing .deck-support {
   max-width: 640px;
