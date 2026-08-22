@@ -247,7 +247,7 @@ const css = `
   border-radius: 16px;
   background: #fff;
   box-shadow: 0 24px 70px rgba(70, 45, 20, .26);
-  padding: 48px 40px 28px;
+  padding: 52px 28px 28px;
   text-align: center;
   overflow-x: hidden;
   overflow-y: auto;
@@ -255,13 +255,13 @@ const css = `
   overscroll-behavior: contain;
 }
 .fp-guide-close {
-  position: sticky;
-  top: 0;
-  float: right;
+  position: absolute;
+  top: 10px;
+  right: 10px;
   z-index: 5;
   width: 44px;
   height: 44px;
-  margin: -12px -12px 0 0;
+  margin: 0;
   display: grid;
   place-items: center;
   border: 0;
@@ -271,7 +271,6 @@ const css = `
   cursor: pointer;
   font-size: 26px;
   line-height: 1;
-  flex-shrink: 0;
 }
 .fp-guide-close:hover { color: var(--terra); background: var(--terra-tint); }
 .fp-guide-modal-wide {
@@ -1026,32 +1025,38 @@ const css = `
   .fp-guide-modal {
     max-height: none;
     margin: 8px 0 24px;
-    padding: 20px 18px 22px;
+    padding: 52px 20px 22px;
   }
   .fp-guide-modal-wide {
     max-width: 100%;
-    padding: 20px 18px 22px;
+    padding: 52px 20px 22px;
   }
   .fp-guide-close {
-    position: sticky;
-    top: 0;
-    float: right;
-    margin: -4px -4px 8px 0;
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    float: none;
+    margin: 0;
     width: 48px;
     height: 48px;
     font-size: 28px;
     background: #F4EAD8;
   }
-  .fp-guide-cover {
-    max-width: 120px;
-    margin-bottom: 12px;
-  }
-  .fp-guide-modal-wide .fp-guide-title { font-size: 28px; }
-  .fp-guide-modal-wide .fp-guide-subline { font-size: 16px; margin-bottom: 14px; }
   .fp-guide-form-wide {
     grid-template-columns: 1fr;
     gap: 12px;
     text-align: center;
+    width: 100%;
+    margin: 0 auto;
+  }
+  .fp-guide-copy,
+  .fp-guide-fields,
+  .fp-guide-submit,
+  .fp-guide-form-wide .btn {
+    width: 100%;
+    max-width: 100%;
+    margin-left: auto;
+    margin-right: auto;
   }
   .fp-guide-form-wide .fp-guide-cover {
     max-width: 120px;
