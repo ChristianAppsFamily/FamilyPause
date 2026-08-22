@@ -810,7 +810,16 @@ const css = `
   display: flex;
   gap: 14px;
   justify-content: center;
+  align-items: center;
   flex-wrap: wrap;
+}
+.fp-landing .deck-actions .btn-primary {
+  padding: 12px 18px;
+  font-size: 14px;
+  white-space: normal;
+  max-width: 280px;
+  text-align: center;
+  line-height: 1.3;
 }
 .fp-landing .deck-support {
   max-width: 640px;
@@ -1465,7 +1474,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
             </p>
             <div className="deck-actions reveal">
               <button type="button" className="btn btn-primary" onClick={() => openLeadModal("deck-waitlist")}>
-                Join the Conversation Starter Card Deck Waitlist
+                Join Physical Card Deck Waitlist
               </button>
               <button type="button" className="btn btn-ghost" onClick={onStart}>Create My Family Plan</button>
             </div>
