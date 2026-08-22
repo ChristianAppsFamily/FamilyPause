@@ -810,19 +810,28 @@ const css = `
   display: flex;
   gap: 14px;
   justify-content: center;
-  align-items: center;
+  align-items: stretch;
   flex-wrap: wrap;
 }
 .fp-landing .deck-actions .btn {
-  min-width: 220px;
-  max-width: 220px;
-  padding: 15px 20px;
+  flex: 0 0 auto;
+  width: 300px;
+  padding: 15px 18px;
   font-size: 15px;
   justify-content: center;
   text-align: center;
-  white-space: normal;
-  line-height: 1.25;
+  white-space: nowrap;
+  line-height: 1.2;
   box-sizing: border-box;
+}
+@media (max-width: 560px) {
+  .fp-landing .deck-actions {
+    flex-direction: column;
+    align-items: center;
+  }
+  .fp-landing .deck-actions .btn {
+    width: min(300px, 100%);
+  }
 }
 .fp-landing .deck-support {
   max-width: 640px;
