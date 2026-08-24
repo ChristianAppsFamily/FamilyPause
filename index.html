@@ -19,8 +19,34 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400;1,500&family=Lora:ital,wght@0,400;0,500;1,400&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet" />
     <title data-rh="true">FamilyPause</title>
+    <style>
+      #fp-static-fallback {
+        font-family: Georgia, "Times New Roman", serif;
+        max-width: 40rem;
+        margin: 2.5rem auto;
+        padding: 0 1.5rem;
+        color: #2A251D;
+      }
+      #fp-static-fallback h1 {
+        font-size: 2rem;
+        margin: 0 0 0.75rem;
+      }
+      #fp-static-fallback p {
+        font-size: 1.05rem;
+        line-height: 1.55;
+        margin: 0 0 0.85rem;
+      }
+      body.fp-hydrated #fp-static-fallback {
+        display: none !important;
+      }
+    </style>
   </head>
   <body>
+    <div id="fp-static-fallback">
+      <h1>FamilyPause</h1>
+      <p>FamilyPause helps families turn weekly conversations, events, and reminders into a shared plan. After you review and approve each item, FamilyPause can add it to the Google Calendar you connect.</p>
+      <p>Connect Google Calendar only if you want approved plans synced as events. You can disconnect at any time in Settings.</p>
+    </div>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

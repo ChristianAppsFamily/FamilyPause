@@ -50,6 +50,9 @@ ReactDOM.createRoot(document.getElementById('root')).render(
   </React.StrictMode>
 )
 
+document.body.classList.add("fp-hydrated")
+document.getElementById("fp-static-fallback")?.setAttribute("hidden", "")
+
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js').catch(() => {})
