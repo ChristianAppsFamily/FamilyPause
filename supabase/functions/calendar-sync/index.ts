@@ -21,10 +21,19 @@ type CalendarEventInput = {
   duration_minutes?: number;
   description?: string;
   recurrence?: boolean;
+  googleEventId?: string | null;
   reminders?: {
     useDefault: boolean;
     overrides?: Array<{ method: string; minutes: number }>;
   };
+};
+
+type ItemResult = {
+  id: number | string;
+  success: boolean;
+  googleEventId?: string;
+  code?: string;
+  error?: string;
 };
 
 /** Next calendar day YYYY-MM-DD for Google all-day end (exclusive). */
@@ -85,6 +94,39 @@ function addDurationToLocal(
   };
 }
 
+function fail(code: string, message: string, status: number, requestId: string) {
+  console.error("[calendar-sync]", { requestId, code, status });
+  return json({ code, message }, status);
+}
+
+function itemFail(id: number | string, code: string, error: string): ItemResult {
+  return { id, success: false, code, error };
+}
+
+async function readJson(res: Response): Promise<Record<string, unknown>> {
+  const text = await res.text();
+  if (!text) return {};
+  try {
+    return JSON.parse(text) as Record<string, unknown>;
+  } catch {
+    return {};
+  }
+}
+
+function providerMessage(data: Record<string, unknown>, fallback: string): string {
+  const err = data.error;
+  if (err && typeof err === "object" && "message" in err && typeof (err as { message: unknown }).message === "string") {
+    const msg = (err as { message: string }).message;
+    if (/invalid_grant|invalid credentials|unauthorized/i.test(msg)) {
+      return "Reconnect Google Calendar in Settings, then try again.";
+    }
+    if (/rateLimitExceeded|backendError|internalError|unavailable/i.test(msg)) {
+      return "Temporary calendar error. Try again.";
+    }
+  }
+  return fallback;
+}
+
 function buildEventBody(ev: CalendarEventInput, userTimeZone: string) {
   const useAllDay = ev.allDay === true || !ev.time;
 
@@ -137,8 +179,39 @@ async function createGoogleEvent(accessToken: string, eventBody: Record<string, 
       body: JSON.stringify(eventBody),
     },
   );
-  const data = await res.json();
+  const data = await readJson(res);
   return { ok: res.ok, status: res.status, data };
+}
+
+async function patchGoogleEvent(accessToken: string, eventId: string, eventBody: Record<string, unknown>) {
+  const res = await fetch(
+    `https://www.googleapis.com/calendar/v3/calendars/primary/events/${encodeURIComponent(eventId)}`,
+    {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(eventBody),
+    },
+  );
+  const data = await readJson(res);
+  return { ok: res.ok, status: res.status, data };
+}
+
+async function upsertGoogleEvent(
+  accessToken: string,
+  eventBody: Record<string, unknown>,
+  existingId?: string | null,
+) {
+  if (existingId) {
+    const patched = await patchGoogleEvent(accessToken, existingId, eventBody);
+    if (patched.status === 404) {
+      return createGoogleEvent(accessToken, eventBody);
+    }
+    return patched;
+  }
+  return createGoogleEvent(accessToken, eventBody);
 }
 
 async function deleteGoogleEvent(accessToken: string, eventId: string) {
@@ -149,6 +222,10 @@ async function deleteGoogleEvent(accessToken: string, eventId: string) {
       headers: { Authorization: `Bearer ${accessToken}` },
     },
   );
+  if (res.status === 204 || res.status === 200) {
+    return { ok: true, status: res.status };
+  }
+  await readJson(res);
   return { ok: res.ok, status: res.status };
 }
 
@@ -193,13 +270,33 @@ async function patchSessionCards(
     .eq("workspace_id", workspaceId);
 }
 
+function refreshCode(err: unknown): { code: string; message: string; status: number } {
+  const raw = err instanceof Error ? err.message : String(err);
+  if (/not configured/i.test(raw)) {
+    return { code: "CONFIG", message: "Calendar is not configured.", status: 503 };
+  }
+  if (/invalid_grant/i.test(raw)) {
+    return {
+      code: "RECONNECT_REQUIRED",
+      message: "Reconnect Google Calendar in Settings, then try again.",
+      status: 401,
+    };
+  }
+  return {
+    code: "RECONNECT_REQUIRED",
+    message: "Reconnect Google Calendar in Settings, then try again.",
+    status: 401,
+  };
+}
+
 Deno.serve(async (req) => {
+  const requestId = crypto.randomUUID();
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
-  if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
+  if (req.method !== "POST") return fail("METHOD_NOT_ALLOWED", "Method not allowed", 405, requestId);
 
   try {
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) return json({ error: "Unauthorized" }, 401);
+    if (!authHeader) return fail("UNAUTHORIZED", "Sign in to sync your calendar.", 401, requestId);
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
@@ -207,9 +304,9 @@ Deno.serve(async (req) => {
       { global: { headers: { Authorization: authHeader } } },
     );
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return json({ error: "Unauthorized" }, 401);
+    if (!user) return fail("UNAUTHORIZED", "Sign in to sync your calendar.", 401, requestId);
 
-    const body = await req.json() as {
+    let body: {
       action?: string;
       workspace_id?: string;
       event_id?: string;
@@ -218,9 +315,14 @@ Deno.serve(async (req) => {
       time_zone?: string;
       events?: CalendarEventInput[];
     };
+    try {
+      body = await req.json();
+    } catch {
+      return fail("INVALID_PAYLOAD", "That request could not be read.", 400, requestId);
+    }
 
     const { workspace_id } = body;
-    if (!workspace_id) return json({ error: "Missing workspace_id" }, 400);
+    if (!workspace_id) return fail("INVALID_PAYLOAD", "Missing workspace.", 400, requestId);
 
     const { data: member } = await supabase
       .from("workspace_members")
@@ -228,7 +330,7 @@ Deno.serve(async (req) => {
       .eq("workspace_id", workspace_id)
       .eq("user_id", user.id)
       .maybeSingle();
-    if (!member) return json({ error: "Not a workspace member" }, 403);
+    if (!member) return fail("FORBIDDEN", "Not a workspace member.", 403, requestId);
 
     const admin = createClient(
       Deno.env.get("SUPABASE_URL")!,
@@ -241,8 +343,8 @@ Deno.serve(async (req) => {
       .eq("workspace_id", workspace_id)
       .maybeSingle();
     if (subscriptionError) {
-      console.error("[calendar-sync] Subscription lookup failed", subscriptionError);
-      return json({ error: "Could not verify plan access" }, 500);
+      console.error("[calendar-sync]", { requestId, code: "PLAN_LOOKUP", stage: "subscription" });
+      return fail("PLAN_LOOKUP", "Could not verify plan access. Try again.", 503, requestId);
     }
     const familyFeatures = hasFamilyFeatures(subscription as Subscription | null);
 
@@ -254,7 +356,7 @@ Deno.serve(async (req) => {
       .single();
 
     if (rowErr || !row?.google_calendar_refresh_token) {
-      return json({ error: "Google Calendar not connected" }, 400);
+      return fail("NOT_CONNECTED", "Connect Google Calendar in Settings, then try again.", 400, requestId);
     }
 
     let accessToken = row.google_calendar_token as string;
@@ -270,7 +372,7 @@ Deno.serve(async (req) => {
 
     if (body.action === "delete") {
       const { event_id, session_id, card_id } = body;
-      if (!event_id) return json({ error: "Missing event_id" }, 400);
+      if (!event_id) return fail("INVALID_PAYLOAD", "Missing event.", 400, requestId);
 
       let attempt = await deleteGoogleEvent(accessToken, event_id);
       if (attempt.status === 401) {
@@ -278,28 +380,26 @@ Deno.serve(async (req) => {
           await ensureFreshToken();
           attempt = await deleteGoogleEvent(accessToken, event_id);
         } catch (refreshErr) {
-          return json({
-            success: false,
-            error: refreshErr instanceof Error ? refreshErr.message : "Token refresh failed",
-          }, 400);
+          const mapped = refreshCode(refreshErr);
+          return fail(mapped.code, mapped.message, mapped.status, requestId);
         }
       }
 
       const gone = attempt.status === 404;
       if (!attempt.ok && !gone) {
-        return json({ success: false, error: "Failed to delete calendar event" }, 400);
+        return fail("PROVIDER_ERROR", "Couldn't remove that calendar event. Try again.", 502, requestId);
       }
 
       if (session_id && card_id != null) {
         await patchSessionCards(admin, session_id, workspace_id, [{ cardId: card_id, unsync: true }]);
       }
 
-      return json({ success: true, notFound: gone });
+      return json({ success: true, notFound: gone, code: "OK" });
     }
 
     const { events, session_id, time_zone: timeZoneRaw } = body;
     if (!Array.isArray(events) || !events.length) {
-      return json({ error: "Missing events" }, 400);
+      return fail("INVALID_PAYLOAD", "Missing events.", 400, requestId);
     }
 
     const userTimeZone =
@@ -307,59 +407,81 @@ Deno.serve(async (req) => {
         ? timeZoneRaw.trim()
         : DEFAULT_TIME_ZONE;
 
-    const results: { id: number | string; success: boolean; googleEventId?: string; error?: string }[] = [];
-    const sessionPatches: Array<{ cardId: number | string; googleEventId: string }> = [];
+    const results: ItemResult[] = [];
 
     for (const ev of events) {
-      if (!familyFeatures && (!ev.date || !ev.time || ev.allDay === true)) {
-        results.push({
-          id: ev.id,
-          success: false,
-          error: "A date and time are required on the Free plan",
-        });
-        continue;
-      }
-
-      const eventBody = buildEventBody(ev, userTimeZone);
-      console.log("[calendar-sync] Google event start:", JSON.stringify(eventBody.start));
-      if (eventBody.recurrence) {
-        console.log("[calendar-sync] recurrence:", JSON.stringify(eventBody.recurrence));
-      }
-      let attempt = await createGoogleEvent(accessToken, eventBody);
-
-      if (attempt.status === 401) {
-        try {
-          await ensureFreshToken();
-          attempt = await createGoogleEvent(accessToken, eventBody);
-        } catch (refreshErr) {
-          results.push({
-            id: ev.id,
-            success: false,
-            error: refreshErr instanceof Error ? refreshErr.message : "Token refresh failed",
-          });
+      try {
+        if (!familyFeatures && (!ev.date || !ev.time || ev.allDay === true)) {
+          results.push(itemFail(ev.id, "PLAN_REQUIRED", "A date and time are required on the Free plan."));
           continue;
         }
-      }
 
-      if (attempt.ok && attempt.data?.id) {
-        results.push({ id: ev.id, success: true, googleEventId: attempt.data.id as string });
-        sessionPatches.push({ cardId: ev.id, googleEventId: attempt.data.id as string });
-      } else {
-        results.push({
-          id: ev.id,
-          success: false,
-          error: attempt.data?.error?.message || "Failed to create event",
+        const eventBody = buildEventBody(ev, userTimeZone);
+        const existingId = typeof ev.googleEventId === "string" && ev.googleEventId
+          ? ev.googleEventId
+          : null;
+        let attempt = await upsertGoogleEvent(accessToken, eventBody, existingId);
+
+        if (attempt.status === 401) {
+          try {
+            await ensureFreshToken();
+            attempt = await upsertGoogleEvent(accessToken, eventBody, existingId);
+          } catch (refreshErr) {
+            const mapped = refreshCode(refreshErr);
+            results.push(itemFail(ev.id, mapped.code, mapped.message));
+            continue;
+          }
+        }
+
+        const googleId = typeof attempt.data.id === "string"
+          ? attempt.data.id
+          : existingId || undefined;
+
+        if (attempt.ok && googleId) {
+          results.push({ id: ev.id, success: true, googleEventId: googleId, code: "OK" });
+          if (session_id) {
+            await patchSessionCards(admin, session_id, workspace_id, [
+              { cardId: ev.id, googleEventId: googleId },
+            ]);
+          }
+        } else {
+          const status = attempt.status;
+          const code = status >= 500 ? "PROVIDER_UNAVAILABLE" : status === 401 || status === 403
+            ? "RECONNECT_REQUIRED"
+            : "PROVIDER_ERROR";
+          const error = providerMessage(
+            attempt.data,
+            status >= 500
+              ? "Temporary calendar error. Try again."
+              : "Couldn't add this to the calendar. Try again.",
+          );
+          console.error("[calendar-sync]", { requestId, code, status, itemId: ev.id });
+          results.push(itemFail(ev.id, code, error));
+        }
+      } catch (itemErr) {
+        console.error("[calendar-sync]", {
+          requestId,
+          code: "PROVIDER_ERROR",
+          itemId: ev.id,
+          stage: "item",
         });
+        results.push(itemFail(
+          ev.id,
+          "PROVIDER_ERROR",
+          "Couldn't add this to the calendar. Try again.",
+        ));
+        void itemErr;
       }
     }
 
-    if (session_id && sessionPatches.length) {
-      await patchSessionCards(admin, session_id, workspace_id, sessionPatches);
-    }
-
-    return json({ results });
+    return json({ results, code: "OK" });
   } catch (e) {
-    console.error("[calendar-sync]", e);
-    return json({ error: e instanceof Error ? e.message : String(e) }, 500);
+    console.error("[calendar-sync]", {
+      requestId,
+      code: "INTERNAL",
+      stage: "unhandled",
+    });
+    void e;
+    return json({ code: "INTERNAL", message: "Couldn't sync the calendar. Try again." }, 500);
   }
 });

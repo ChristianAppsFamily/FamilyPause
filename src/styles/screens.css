@@ -770,7 +770,7 @@
   color: var(--terra); background: none; border: none; padding: 0; cursor: pointer;
   text-decoration: underline; text-underline-offset: 2px;
 }
-.plan-cal-retry:hover, .plan-cal-add:hover { color: var(--terra-d); }
+.plan-cal-retry:disabled, .plan-cal-add:disabled { opacity: 0.45; cursor: not-allowed; }
 .plan-cal-hint {
   font-family: var(--mono); font-size: 9px; letter-spacing: .04em; color: var(--ink-3); font-style: italic;
 }
@@ -1079,6 +1079,23 @@
   width: 52px; height: 52px; border-radius: 50%; margin: 0 auto 14px;
   display: grid; place-items: center; background: var(--olive); color: #fff;
   box-shadow: 0 8px 20px rgba(94,107,55,.28);
+  font-family: var(--display); font-size: 28px; font-weight: 600; line-height: 1;
+}
+.plan-summary-seal--partial {
+  background: var(--gold);
+  box-shadow: 0 8px 20px rgba(192,151,64,.28);
+}
+.plan-summary-seal--failed {
+  background: var(--red);
+  box-shadow: 0 8px 20px rgba(192,64,47,.28);
+}
+.plan-sync-retry-all {
+  margin: 16px auto 0;
+  min-width: 220px;
+}
+.plan-cal-pending {
+  font-family: var(--mono); font-size: 9px; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--ink-3);
 }
 .plan-summary-eyebrow {
   font-family: var(--mono); font-size: 10px; letter-spacing: .18em; text-transform: uppercase;

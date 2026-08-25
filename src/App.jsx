@@ -26,8 +26,10 @@ import { parseAppLocation, syncPath, SYNC_VIEWS, cardsPath } from "./lib/routes"
 import { normalizeCardPeople } from "./lib/familyContext";
 import {
   applySyncResults,
+  calendarSyncOutcome,
   calendarTitle,
   CARD_TYPES,
+  CalendarSyncError,
   clearCardCalendarSync,
   getCalendarConnection,
   isSyncEligible,
@@ -40,6 +42,7 @@ import {
   unsyncCalendarEvent,
   cardToCalendarEvent,
   CALENDAR_REMINDER_OPTIONS,
+  userMessageForSyncCode,
 } from "./lib/googleCalendar";
 import { canRecordAudio, pickRecordingMimeType, transcribeAudioBlob } from "./lib/transcribe";
 import { speechPreviewSupported, startSpeechPreview } from "./lib/speechPreview";
@@ -1344,8 +1347,10 @@ export default function App({ user, workspace, onSignOut }) {
   const [distillsThisWeek, setDistillsThisWeek] = useState(0);
   const [calendarBusy, setCalendarBusy] = useState(false);
   const [calendarSyncing, setCalendarSyncing] = useState(false);
+  const [retryingCardId, setRetryingCardId] = useState(null);
   const [unsyncingCardId, setUnsyncingCardId] = useState(null);
   const [calendarConnected, setCalendarConnected] = useState(false);
+  const [calendarSyncNotice, setCalendarSyncNotice] = useState(null);
   const [planArrivalPhase, setPlanArrivalPhase] = useState("done");
   const [planArrivalMode, setPlanArrivalMode] = useState("static");
   const [showPlanConfetti, setShowPlanConfetti] = useState(false);
@@ -1766,6 +1771,7 @@ ${text}`;
     const reduced = prefersReducedMotion();
     const isFirstCelebration = !ws?.first_session_completed;
     const arrivalMode = reduced ? "static" : isFirstCelebration ? "full" : "quick";
+    let syncedAll = true;
 
     if (calendarConnected && ws?.id) {
       const syncOpts = {
@@ -1776,16 +1782,25 @@ ${text}`;
       const syncable = kept.filter((c) => isSyncEligible(c, syncOpts) && !c.calendar_synced);
       if (syncable.length > 0) {
         setCalendarSyncing(true);
+        setCalendarSyncNotice(null);
         try {
           const { updatedCards } = await syncCardsToCalendar(ws.id, cards, syncOpts);
           setCards(updatedCards);
+          const outcome = calendarSyncOutcome(updatedCards, syncOpts);
+          syncedAll = outcome.state === "succeeded" || outcome.state === "idle";
+          if (outcome.state === "failed" || outcome.state === "partial") {
+            const failed = updatedCards.find((c) => c.calendar_sync_failed);
+            setCalendarSyncNotice(userMessageForSyncCode(failed?.calendar_sync_error));
+          }
         } catch (e) {
-          console.error("[Build week] calendar sync", e);
+          const code = e instanceof CalendarSyncError ? e.code : e?.code;
+          setCalendarSyncNotice(e?.message || userMessageForSyncCode(code));
+          syncedAll = false;
           setCards((prev) => prev.map((c) => (
             isSyncEligible(c, syncOpts)
             && (c.status === STATUS.KEPT || c.status === STATUS.CALENDARED)
             && !c.calendar_synced
-              ? { ...c, calendar_sync_failed: true }
+              ? { ...c, calendar_sync_failed: true, calendar_sync_error: code || "INTERNAL" }
               : c
           )));
         } finally {
@@ -1797,7 +1812,7 @@ ${text}`;
     if (!reduced) playPlanChime(soundsEnabledForWorkspace(ws));
 
     setPlanArrivalMode(arrivalMode);
-    setShowPlanConfetti(isFirstCelebration && !reduced);
+    setShowPlanConfetti(isFirstCelebration && !reduced && syncedAll);
     setPlanArrivalPhase(arrivalMode === "full" ? "interstitial" : arrivalMode === "quick" ? "revealing" : "done");
 
     go("plan");
@@ -1822,22 +1837,63 @@ ${text}`;
   const keptCards = cards.filter((c) => c.status === STATUS.KEPT || c.status === STATUS.CALENDARED);
 
   const retryCardSync = async (cardId) => {
-    if (!ws?.id) return;
+    if (!ws?.id || calendarBusy || retryingCardId != null) return;
     const card = cards.find((c) => c.id === cardId);
     const syncOpts = {
       meetingDate,
       sessionId: sessionIdRef.current ?? undefined,
     };
-    if (!card || !isSyncEligible(card, syncOpts)) return;
+    if (!card || card.calendar_synced || !isSyncEligible(card, syncOpts)) return;
+    setRetryingCardId(cardId);
     setCalendarBusy(true);
+    setCalendarSyncNotice(null);
     try {
       const { results } = await syncCalendarEvents(ws.id, [cardToCalendarEvent(card, syncOpts)], syncOpts);
       setCards((prev) => applySyncResults(prev, results));
+      const failed = (results || []).find((r) => !r.success);
+      if (failed) {
+        setCalendarSyncNotice(failed.error || userMessageForSyncCode(failed.code));
+      }
     } catch (e) {
-      console.error("[Plan] retry sync", e);
+      const code = e instanceof CalendarSyncError ? e.code : e?.code;
+      setCalendarSyncNotice(e?.message || userMessageForSyncCode(code));
       setCards((prev) => prev.map((c) => (
-        c.id === cardId ? { ...c, calendar_sync_failed: true } : c
+        c.id === cardId ? { ...c, calendar_sync_failed: true, calendar_sync_error: code || "INTERNAL" } : c
       )));
+    } finally {
+      setRetryingCardId(null);
+      setCalendarBusy(false);
+    }
+  };
+
+  const retryFailedSync = async () => {
+    if (!ws?.id || calendarBusy || retryingCardId != null) return;
+    const syncOpts = {
+      meetingDate,
+      sessionId: sessionIdRef.current ?? undefined,
+    };
+    const failedIds = cards
+      .filter((c) => (
+        (c.status === STATUS.KEPT || c.status === STATUS.CALENDARED)
+        && isSyncEligible(c, syncOpts)
+        && !c.calendar_synced
+        && c.calendar_sync_failed
+      ))
+      .map((c) => c.id);
+    if (!failedIds.length) return;
+    setCalendarBusy(true);
+    setCalendarSyncNotice(null);
+    try {
+      const { updatedCards } = await syncCardsToCalendar(ws.id, cards, { ...syncOpts, cardIds: failedIds });
+      setCards(updatedCards);
+      const outcome = calendarSyncOutcome(updatedCards, syncOpts);
+      if (outcome.failed > 0) {
+        const failed = updatedCards.find((c) => c.calendar_sync_failed);
+        setCalendarSyncNotice(userMessageForSyncCode(failed?.calendar_sync_error));
+      }
+    } catch (e) {
+      const code = e instanceof CalendarSyncError ? e.code : e?.code;
+      setCalendarSyncNotice(e?.message || userMessageForSyncCode(code));
     } finally {
       setCalendarBusy(false);
     }
@@ -1862,8 +1918,7 @@ ${text}`;
       }
       setCards((prev) => clearCardCalendarSync(prev, cardId));
     } catch (e) {
-      console.error("[Plan] unsync", e);
-      if (/404|not found|notFound/i.test(e?.message || "")) {
+      if (/404|not found|notFound/i.test(e?.message || e?.code || "")) {
         setCards((prev) => clearCardCalendarSync(prev, cardId));
       }
     } finally {
@@ -1913,7 +1968,15 @@ ${text}`;
         const { updatedCards } = await syncCardsToCalendar(ws.id, snapshot, syncOpts);
         if (active) setCards(updatedCards);
       } catch (e) {
-        console.error("[Plan] post-connect sync", e);
+        const code = e instanceof CalendarSyncError ? e.code : e?.code;
+        setCalendarSyncNotice(e?.message || userMessageForSyncCode(code));
+        if (active) {
+          setCards((prev) => prev.map((c) => (
+            pending.some((p) => p.id === c.id)
+              ? { ...c, calendar_sync_failed: true, calendar_sync_error: code || "INTERNAL" }
+              : c
+          )));
+        }
       } finally {
         if (active) setCalendarBusy(false);
       }
@@ -2091,12 +2154,14 @@ ${text}`;
           onRestart={restart}
           calendarConnected={calendarConnected}
           calendarBusy={calendarBusy}
+          retryingCardId={retryingCardId}
           unsyncingCardId={unsyncingCardId}
           showCalendarConnect={calendarConnectPrompt}
           onConfirmCalendarConnect={confirmCalendarConnect}
           onCancelCalendarConnect={() => setCalendarConnectPrompt(false)}
           familyPauseEmail={user?.email}
           onRetrySync={retryCardSync}
+          onRetryFailed={retryFailedSync}
           onAddToCal={handlePlanAddToCal}
           onUnsync={unsyncCard}
           meetingDate={meetingDate}
@@ -2105,6 +2170,7 @@ ${text}`;
           showFirstConfetti={showPlanConfetti}
           hasFamilyFeatures={familyFeaturesEnabled}
           onUpgrade={openFeatureUpgrade}
+          calendarSyncNotice={calendarSyncNotice}
         />
       )}
     </div>

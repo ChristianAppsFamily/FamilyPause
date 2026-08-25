@@ -131,6 +131,54 @@ export function getUserTimeZone() {
   }
 }
 
+export class CalendarSyncError extends Error {
+  constructor(code, message) {
+    super(message || userMessageForSyncCode(code));
+    this.name = "CalendarSyncError";
+    this.code = code || "INTERNAL";
+  }
+}
+
+export function userMessageForSyncCode(code) {
+  switch (code) {
+    case "NOT_CONNECTED":
+    case "RECONNECT_REQUIRED":
+      return "Reconnect Google Calendar in Settings, then try again.";
+    case "PLAN_REQUIRED":
+      return "A date and time are required on the Free plan.";
+    case "PROVIDER_ERROR":
+    case "PROVIDER_UNAVAILABLE":
+      return "Temporary calendar error. Try again.";
+    case "INVALID_PAYLOAD":
+      return "That item isn't ready to add to the calendar yet.";
+    case "UNAUTHORIZED":
+    case "FORBIDDEN":
+      return "Sign in again, then try calendar sync.";
+    default:
+      return "Couldn't add this to the calendar. Try again.";
+  }
+}
+
+async function readFunctionBody(data, error) {
+  if (data && typeof data === "object") return data;
+  const ctx = error?.context;
+  if (!ctx || typeof ctx.json !== "function") return null;
+  try {
+    return await ctx.json();
+  } catch {
+    return null;
+  }
+}
+
+function throwFromSyncBody(body, fallbackMessage) {
+  const code = body?.code || (typeof body?.error === "string" ? "INTERNAL" : "INTERNAL");
+  const message = body?.message
+    || (typeof body?.error === "string" ? body.error : null)
+    || userMessageForSyncCode(code)
+    || fallbackMessage;
+  throw new CalendarSyncError(code, message);
+}
+
 /**
  * @param {string} workspaceId
  * @param {object[]} events
@@ -146,9 +194,14 @@ export async function syncCalendarEvents(workspaceId, events, opts = {}) {
   const { data, error } = await supabase.functions.invoke("calendar-sync", {
     body: payload,
   });
-  if (error) throw new Error(error.message || "Calendar sync failed");
-  if (data?.error) throw new Error(data.error);
-  return data;
+  const body = await readFunctionBody(data, error);
+  if (body?.results && Array.isArray(body.results)) {
+    return body;
+  }
+  if (error || body?.code || body?.error) {
+    throwFromSyncBody(body, error?.message || "Calendar sync failed");
+  }
+  throw new CalendarSyncError("INTERNAL", "Calendar sync failed");
 }
 
 /**
@@ -167,16 +220,19 @@ export async function unsyncCalendarEvent(workspaceId, eventId, opts = {}) {
   if (opts.sessionId) payload.session_id = opts.sessionId;
   if (opts.cardId != null) payload.card_id = opts.cardId;
   const { data, error } = await supabase.functions.invoke("calendar-sync", { body: payload });
-  if (error) throw new Error(error.message || "Calendar unsync failed");
-  if (data?.error) throw new Error(data.error);
-  return data;
+  const body = await readFunctionBody(data, error);
+  if (body?.success) return body;
+  if (error || body?.code || body?.error) {
+    throwFromSyncBody(body, error?.message || "Calendar unsync failed");
+  }
+  throw new CalendarSyncError("INTERNAL", "Calendar unsync failed");
 }
 
 /** Clear calendar sync fields on a single card (client state). */
 export function clearCardCalendarSync(cards, cardId) {
   return cards.map((c) => (
     c.id === cardId
-      ? { ...c, calendar_synced: false, google_event_id: null, calendar_sync_failed: false }
+      ? { ...c, calendar_synced: false, google_event_id: null, calendar_sync_failed: false, calendar_sync_error: null }
       : c
   ));
 }
@@ -232,6 +288,7 @@ export function cardToCalendarEvent(card, opts = {}) {
       duration_minutes: card.duration_minutes ?? 60,
       description,
       recurrence: !!card.recurring,
+      ...(card.google_event_id ? { googleEventId: card.google_event_id } : {}),
       ...(reminders ? { reminders } : {}),
     };
   }
@@ -248,13 +305,14 @@ export function cardToCalendarEvent(card, opts = {}) {
     duration_minutes: null,
     description,
     recurrence: !!card.recurring,
+    ...(card.google_event_id ? { googleEventId: card.google_event_id } : {}),
     ...(reminders ? { reminders } : {}),
   };
 }
 
 /** Apply calendar-sync edge function results onto card list. */
 export function applySyncResults(cards, results) {
-  const byId = Object.fromEntries(results.map((r) => [String(r.id), r]));
+  const byId = Object.fromEntries((results || []).map((r) => [String(r.id), r]));
   return cards.map((c) => {
     const r = byId[String(c.id)];
     if (!r) return c;
@@ -262,24 +320,55 @@ export function applySyncResults(cards, results) {
       return {
         ...c,
         calendar_synced: true,
-        google_event_id: r.googleEventId,
+        google_event_id: r.googleEventId || c.google_event_id,
         calendar_sync_failed: false,
+        calendar_sync_error: null,
       };
     }
-    return { ...c, calendar_sync_failed: true };
+    return {
+      ...c,
+      calendar_sync_failed: true,
+      calendar_sync_error: r.code || r.error || "PROVIDER_ERROR",
+    };
   });
+}
+
+/**
+ * Aggregate calendar sync state for the Plan page.
+ * @param {object[]} cards
+ * @param {{ meetingDate?: string, syncing?: boolean }} [opts]
+ */
+export function calendarSyncOutcome(cards, opts = {}) {
+  const eligible = (cards || []).filter(
+    (c) => (c.status === "kept" || c.status === "calendared") && isSyncEligible(c, opts),
+  );
+  const synced = eligible.filter((c) => c.calendar_synced).length;
+  const failed = eligible.filter((c) => !c.calendar_synced && c.calendar_sync_failed).length;
+  const pending = Math.max(0, eligible.length - synced - failed);
+  let state = "idle";
+  if (opts.syncing) state = "syncing";
+  else if (!eligible.length) state = "idle";
+  else if (synced === eligible.length) state = "succeeded";
+  else if (failed > 0 && synced === 0) state = "failed";
+  else if (failed > 0 && synced > 0) state = "partial";
+  return { state, synced, failed, pending, eligible: eligible.length };
 }
 
 /**
  * Batch-sync eligible kept cards that are not already synced.
  * @param {string} workspaceId
  * @param {object[]} cards
- * @param {{ sessionId?: string, meetingDate?: string }} [opts]
+ * @param {{ sessionId?: string, meetingDate?: string, cardIds?: Array<number|string> }} [opts]
  * @returns {Promise<{ results: object[], updatedCards: object[] }>}
  */
 export async function syncCardsToCalendar(workspaceId, cards, opts = {}) {
   const kept = cards.filter((c) => c.status === "kept" || c.status === "calendared");
-  const toSync = kept.filter((c) => isSyncEligible(c, opts) && !c.calendar_synced);
+  const idSet = opts.cardIds ? new Set(opts.cardIds.map(String)) : null;
+  const toSync = kept.filter((c) => (
+    isSyncEligible(c, opts)
+    && !c.calendar_synced
+    && (!idSet || idSet.has(String(c.id)))
+  ));
   if (!toSync.length) return { results: [], updatedCards: cards };
   const events = toSync.map((c) => cardToCalendarEvent(c, { meetingDate: opts.meetingDate }));
   const { results } = await syncCalendarEvents(workspaceId, events, opts);

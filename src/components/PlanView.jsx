@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { prefersReducedMotion } from "../lib/motion";
 import { eventDayIndices, getPlanningWeekDates, weekStripLabels } from "../lib/planWeek";
-import { calendarTitle, isSyncEligible } from "../lib/googleCalendar";
+import { calendarTitle, calendarSyncOutcome, isSyncEligible, userMessageForSyncCode } from "../lib/googleCalendar";
 import { buildPlanMarkdown } from "../lib/planExport";
 import {
   buildItinerary,
@@ -43,17 +43,17 @@ function FamilyMark() {
   );
 }
 
-export function PlanInterstitial({ active, exiting }) {
+export function PlanInterstitial({ active, exiting, line = "Your week is built.", ariaLabel }) {
   if (!active && !exiting) return null;
   return (
     <div
       className={"plan-interstitial" + (exiting ? " plan-interstitial--exit" : "")}
       role="status"
       aria-live="polite"
-      aria-label="Your week is built"
+      aria-label={ariaLabel || line}
     >
       <FamilyMark />
-      <p className="plan-interstitial-line">Your week is built.</p>
+      <p className="plan-interstitial-line">{line}</p>
     </div>
   );
 }
@@ -321,12 +321,14 @@ export default function PlanView({
   onRestart,
   calendarConnected,
   calendarBusy,
+  retryingCardId,
   unsyncingCardId,
   showCalendarConnect,
   onConfirmCalendarConnect,
   onCancelCalendarConnect,
   familyPauseEmail,
   onRetrySync,
+  onRetryFailed,
   onAddToCal,
   onUnsync,
   meetingDate,
@@ -335,6 +337,7 @@ export default function PlanView({
   showFirstConfetti = false,
   hasFamilyFeatures = false,
   onUpgrade,
+  calendarSyncNotice = null,
 }) {
   const reduced = prefersReducedMotion();
   const staticLayout = arrivalMode === "static" || reduced;
@@ -352,6 +355,60 @@ export default function PlanView({
   const [pdfBusy, setPdfBusy] = useState(false);
   const [showExportUpgrade, setShowExportUpgrade] = useState(false);
   const [planMode, setPlanMode] = useState("plan"); // "plan" | "itinerary"
+
+  const outcome = useMemo(
+    () => calendarSyncOutcome(keptCards, { meetingDate, syncing: calendarBusy }),
+    [keptCards, meetingDate, calendarBusy],
+  );
+
+  const syncCopy = (() => {
+    if (!calendarConnected) {
+      return {
+        seal: "ok",
+        eyebrow: "Step 5 · Your week is built",
+        sub: "A clean plan, organized by person. Appointments timed, actions owned, nothing forgotten.",
+        interstitial: "Your week is built.",
+      };
+    }
+    if (outcome.state === "syncing") {
+      return {
+        seal: "ok",
+        eyebrow: "Step 5 · Adding to calendar",
+        sub: "Adding your kept items to Google Calendar…",
+        interstitial: "Adding to your calendar.",
+      };
+    }
+    if (outcome.state === "succeeded") {
+      return {
+        seal: "ok",
+        eyebrow: "Step 5 · Your week is built",
+        sub: "A clean plan, organized by person. Appointments timed, actions owned, nothing forgotten.",
+        interstitial: "Your week is built.",
+      };
+    }
+    if (outcome.state === "partial") {
+      return {
+        seal: "partial",
+        eyebrow: "Step 5 · Needs attention",
+        sub: `${outcome.synced} added to Google Calendar. ${outcome.failed} ${outcome.failed === 1 ? "needs" : "need"} another try.`,
+        interstitial: "Your week is built — some calendar items need attention.",
+      };
+    }
+    if (outcome.state === "failed") {
+      return {
+        seal: "failed",
+        eyebrow: "Step 5 · Calendar sync didn't finish",
+        sub: calendarSyncNotice || userMessageForSyncCode(null),
+        interstitial: "Your week is built — calendar items were not added.",
+      };
+    }
+    return {
+      seal: "ok",
+      eyebrow: "Step 5 · Your week is built",
+      sub: "A clean plan, organized by person. Appointments timed, actions owned, nothing forgotten.",
+      interstitial: "Your week is built.",
+    };
+  })();
 
 
   const isAdult = (p) => adults.some((a) => a.toLowerCase() === (p || "").toLowerCase());
@@ -404,9 +461,14 @@ export default function PlanView({
 
   const Item = ({ it, index, showBadge }) => {
     const synced = it.calendar_synced;
-    const badgeAnim = showBadge && synced && badgeDrawn && !staticLayout;
     const syncOpts = { meetingDate };
     const canSync = isSyncEligible(it, syncOpts);
+    const adding = !synced && canSync && (
+      retryingCardId === it.id
+      || (calendarBusy && !!it.calendar_sync_failed)
+    );
+    const badgeAnim = showBadge && synced && badgeDrawn && !staticLayout;
+    const retryLocked = calendarBusy || retryingCardId != null;
     return (
       <div
         className={
@@ -428,7 +490,7 @@ export default function PlanView({
               <span className={"synced-badge-wrap" + (badgeAnim ? " synced-badge-wrap--pop" : "")}>
                 <span className={"synced-badge" + (unsyncingCardId === it.id ? " synced-badge--busy" : "") + (badgeAnim ? " synced-badge--in" : "")}>
                   <SyncedCheckIcon draw={badgeAnim} />
-                  {unsyncingCardId === it.id ? "Removing…" : "Synced"}
+                  {unsyncingCardId === it.id ? "Removing…" : "Added"}
                 </span>
                 <button
                   type="button"
@@ -441,19 +503,27 @@ export default function PlanView({
                 </button>
               </span>
             )}
-            {!synced && it.calendar_sync_failed && canSync && (
-              <button type="button" className="plan-cal-retry" disabled={calendarBusy} onClick={() => onRetrySync(it.id)}>
+            {!synced && adding && canSync && (
+              <span className="plan-cal-pending">Adding</span>
+            )}
+            {!synced && !adding && it.calendar_sync_failed && canSync && (
+              <button
+                type="button"
+                className="plan-cal-retry"
+                disabled={retryLocked}
+                onClick={() => onRetrySync(it.id)}
+              >
                 Retry
               </button>
             )}
-            {!synced && !it.calendar_sync_failed && canSync && (
+            {!synced && !adding && !it.calendar_sync_failed && canSync && (
               <button
                 type="button"
                 className="plan-cal-add"
-                disabled={calendarBusy || unsyncingCardId === it.id}
+                disabled={retryLocked || unsyncingCardId === it.id}
                 onClick={() => (calendarConnected ? onRetrySync(it.id) : onAddToCal(it.id))}
               >
-                Add to Cal
+                {calendarConnected ? "Pending" : "Add to Cal"}
               </button>
             )}
           </div>
@@ -488,8 +558,12 @@ export default function PlanView({
 
   return (
     <>
-      <PlanInterstitial active={interstitialActive} exiting={interstitialExiting} />
-      {showFirstConfetti && !reduced && revealing && <LeafConfetti active />}
+      <PlanInterstitial
+        active={interstitialActive}
+        exiting={interstitialExiting}
+        line={syncCopy.interstitial}
+      />
+      {showFirstConfetti && !reduced && revealing && outcome.state === "succeeded" && <LeafConfetti active />}
 
       <div
         className={
@@ -531,16 +605,28 @@ export default function PlanView({
             + (summaryVisible || staticLayout ? " plan-summary-card--in" : "")
           }
         >
-          <div className="plan-summary-seal"><Ico d={I.check} size={22} /></div>
-          <p className="plan-summary-eyebrow">Step 5 · Your week is built</p>
+          <div className={"plan-summary-seal" + (syncCopy.seal !== "ok" ? ` plan-summary-seal--${syncCopy.seal}` : "")}>
+            {syncCopy.seal === "ok" ? <Ico d={I.check} size={22} /> : <span aria-hidden="true">!</span>}
+          </div>
+          <p className="plan-summary-eyebrow">{syncCopy.eyebrow}</p>
           <h1 className="plan-summary-title">
             <AnimatedCount target={keptCards.length} animate={countAnim && !staticLayout} duration={quick ? 500 : 800} />
             {" "}
             {keptCards.length === 1 ? "item" : "items"} routed for your family
           </h1>
           <p className="plan-summary-sub">
-            A clean plan, organized by person. Appointments timed, actions owned, nothing forgotten.
+            {syncCopy.sub}
           </p>
+          {(outcome.state === "partial" || outcome.state === "failed") && onRetryFailed && (
+            <button
+              type="button"
+              className="btn btn-primary plan-sync-retry-all"
+              disabled={calendarBusy || retryingCardId != null}
+              onClick={onRetryFailed}
+            >
+              {calendarBusy ? "Retrying…" : outcome.state === "partial" ? "Retry failed items" : "Retry calendar sync"}
+            </button>
+          )}
         </div>
 
         {showCalendarConnect && (
@@ -623,8 +709,13 @@ export default function PlanView({
             </button>
             <button
               type="button"
-              className="plan-btn-primary"
+              className={outcome.synced > 0 ? "plan-btn-primary" : "plan-btn-ghost"}
               onClick={() => window.open("https://calendar.google.com", "_blank", "noopener,noreferrer")}
+              aria-label={
+                outcome.synced > 0
+                  ? "Open Google Calendar"
+                  : "Open Google Calendar. Items from this plan were not added."
+              }
             >
               Open Calendar
             </button>
