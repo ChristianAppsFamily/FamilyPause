@@ -10,6 +10,30 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Lora:wght@400;500&family=Playfair+Display:wght@600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/legal.css" />
+  <!-- Google tag (gtag.js). Page path only — no query strings, forms, or personal data. -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-BXTJCRTW30"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('consent', 'default', {
+      ad_storage: 'denied',
+      ad_user_data: 'denied',
+      ad_personalization: 'denied',
+      analytics_storage: 'granted'
+    });
+    gtag('config', 'G-BXTJCRTW30', {
+      anonymize_ip: true,
+      allow_google_signals: false,
+      allow_ad_personalization_signals: false,
+      send_page_view: false
+    });
+    gtag('event', 'page_view', {
+      page_location: location.origin + location.pathname,
+      page_path: location.pathname,
+      page_title: document.title
+    });
+  </script>
 </head>
 <body>
   <p class="back"><a href="/">← FamilyPause</a></p>

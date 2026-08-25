@@ -14,6 +14,7 @@ import BlogPost from './components/BlogPost.jsx'
 import Contact from './components/Contact.jsx'
 import Mobile from './components/Mobile.jsx'
 import { SubscribeSuccess, SubscribeCancel } from './components/SubscribePages.jsx'
+import { AnalyticsRouteListener } from './lib/analytics.js'
 
 // Marketing landing at "/". Its CTAs route into the auth + app flow at /app.
 function LandingRoute() {
@@ -31,6 +32,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <HelmetProvider>
       <BrowserRouter>
+        <AnalyticsRouteListener />
         <Routes>
           <Route path="/" element={<LandingRoute />} />
           <Route path="/cards" element={<CardsProductPage />} />

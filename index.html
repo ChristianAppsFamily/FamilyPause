@@ -19,6 +19,30 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400;1,500&family=Lora:ital,wght@0,400;0,500;1,400&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet" />
     <title data-rh="true">FamilyPause</title>
+    <!-- Google tag (gtag.js). Page path only — no query strings, forms, or personal data. -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-BXTJCRTW30"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('consent', 'default', {
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        analytics_storage: 'granted'
+      });
+      gtag('config', 'G-BXTJCRTW30', {
+        anonymize_ip: true,
+        allow_google_signals: false,
+        allow_ad_personalization_signals: false,
+        send_page_view: false
+      });
+      gtag('event', 'page_view', {
+        page_location: location.origin + location.pathname,
+        page_path: location.pathname,
+        page_title: document.title
+      });
+    </script>
     <style>
       #fp-static-fallback {
         font-family: Georgia, "Times New Roman", serif;

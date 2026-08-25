@@ -10,11 +10,35 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Lora:wght@400;500&family=Playfair+Display:wght@600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/legal.css" />
+  <!-- Google tag (gtag.js). Page path only — no query strings, forms, or personal data. -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-BXTJCRTW30"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('consent', 'default', {
+      ad_storage: 'denied',
+      ad_user_data: 'denied',
+      ad_personalization: 'denied',
+      analytics_storage: 'granted'
+    });
+    gtag('config', 'G-BXTJCRTW30', {
+      anonymize_ip: true,
+      allow_google_signals: false,
+      allow_ad_personalization_signals: false,
+      send_page_view: false
+    });
+    gtag('event', 'page_view', {
+      page_location: location.origin + location.pathname,
+      page_path: location.pathname,
+      page_title: document.title
+    });
+  </script>
 </head>
 <body>
   <p class="back"><a href="/">← FamilyPause</a></p>
   <h1>Privacy Policy</h1>
-  <p class="meta">Last updated July 2026</p>
+  <p class="meta">Last updated August 2026</p>
   <p>FamilyPause helps families organize their week by turning conversations, notes, and transcripts into a shared plan that auto-syncs to their calendar. Your family's conversations are private. They always will be.</p>
 
   <h2>What we collect</h2>
@@ -26,8 +50,11 @@
   <h2>Google Calendar integration</h2>
   <p>If you connect Google Calendar, FamilyPause uses your authorization token to create calendar events only for items you explicitly approve. We request only the minimum permission needed: the ability to create and manage events FamilyPause creates on your behalf. We do not read your existing calendar events. You can disconnect Google Calendar at any time from Settings, which removes our access and deletes your stored tokens.</p>
 
+  <h2>Analytics</h2>
+  <p>We use Google Analytics to understand aggregate site traffic, such as which pages are visited and how often. It is configured so it does not receive form entries, conversations, calendar information, names, email addresses, or other personal data. Page paths are sent without query strings. We do not use analytics for advertising.</p>
+
   <h2>Data storage and sharing</h2>
-  <p>Your data is stored securely on Supabase infrastructure with encryption at rest. Workspace data, your plans, family member names, and session content, is visible only to members of your workspace. We share content with Anthropic solely for AI processing under their privacy terms. We do not share your data with any other third parties except as required by law.</p>
+  <p>Your data is stored securely on Supabase infrastructure with encryption at rest. Workspace data, your plans, family member names, and session content, is visible only to members of your workspace. We share content with Anthropic solely for AI processing under their privacy terms. We use Google Analytics for aggregate traffic measurement as described above. We do not share your data with any other third parties except as required by law.</p>
 
   <h2>Your workspace</h2>
   <p>FamilyPause workspaces are private by default. Only people you explicitly invite can access your workspace. You can remove workspace members, delete your workspace, or request deletion of all your data at any time by emailing <a href="mailto:hello@familypause.com">hello@familypause.com</a>. We will process deletion requests within 30 days.</p>
