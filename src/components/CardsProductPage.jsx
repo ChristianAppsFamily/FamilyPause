@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { cardsPath } from "../lib/routes";
 import { formatDigitalPrice } from "../lib/deckPricing";
-import { supabase } from "../lib/supabase";
+import { joinWaitlist } from "../lib/sendGuide";
 
 const css = `
 .cards-product {
@@ -137,8 +137,9 @@ export default function CardsProductPage() {
   const [status, setStatus] = useState("idle"); // idle | loading | success
   const [error, setError] = useState("");
 
-  const joinWaitlist = async (event) => {
+  const joinPrintedWaitlist = async (event) => {
     event.preventDefault();
+    if (status === "loading") return;
     const trimmed = email.trim().toLowerCase();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
       setError("Enter a valid email address.");
@@ -146,15 +147,13 @@ export default function CardsProductPage() {
     }
     setError("");
     setStatus("loading");
-    const { error: invokeErr } = await supabase.functions.invoke("capture-lead", {
-      body: { email: trimmed, kind: "physical-deck-waitlist" },
-    });
-    if (invokeErr) {
+    const result = await joinWaitlist({ email: trimmed, kind: "physical-deck-waitlist" });
+    if (!result.ok) {
       setStatus("idle");
-      setError("We couldn't join the waitlist. Please try again.");
+      setError(result.error);
       return;
     }
-    setStatus("success");
+    setStatus(result.alreadyOnList ? "already" : "success");
   };
 
   return (
@@ -178,16 +177,18 @@ export default function CardsProductPage() {
               <li>Unlock code inside the box lid (FP-2026-XXXX-0000)</li>
               <li>Digital access included for your whole workspace</li>
             </ul>
-            {status === "success" ? (
-              <p className="wait-success">
-                You&apos;re on the list. We&apos;ll email you when the printed Conversation Starter Card Deck is ready to ship.
+            {status === "success" || status === "already" ? (
+              <p className="wait-success" role="status">
+                {status === "already"
+                  ? "You're already on the list. We'll email you when the printed Conversation Starter Card Deck is ready to ship."
+                  : "You're on the list. We'll email you when the printed Conversation Starter Card Deck is ready to ship."}
               </p>
             ) : (
               <>
                 <p className="wait-copy">
                   The printed Conversation Starter Card Deck isn&apos;t available to buy yet. Join the waitlist and we&apos;ll let you know when it ships.
                 </p>
-                <form className="wait-form" onSubmit={joinWaitlist} noValidate>
+                <form className="wait-form" onSubmit={joinPrintedWaitlist} noValidate aria-busy={status === "loading"}>
                   <label className="sr-only" htmlFor="cards-deck-waitlist-email">Email</label>
                   <input
                     id="cards-deck-waitlist-email"

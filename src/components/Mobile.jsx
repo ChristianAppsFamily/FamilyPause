@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import MarketingChrome from "./MarketingChrome.jsx";
 import Seo from "./Seo.jsx";
-import { supabase } from "../lib/supabase";
-import { isValidEmail } from "../lib/sendGuide";
+import { isValidEmail, joinWaitlist } from "../lib/sendGuide";
 
 const css = `
 .fp-mobile-page {
@@ -186,6 +185,7 @@ export default function Mobile() {
 
   const submitWaitlist = async (event) => {
     event.preventDefault();
+    if (status === "loading") return;
     const nextEmail = email.trim().toLowerCase();
     if (!isValidEmail(nextEmail)) {
       setError("Enter a valid email address.");
@@ -193,15 +193,13 @@ export default function Mobile() {
     }
     setError("");
     setStatus("loading");
-    const { data, error: invokeError } = await supabase.functions.invoke("capture-lead", {
-      body: { email: nextEmail, kind: "mobile-app-waitlist" },
-    });
-    if (invokeError || data?.error) {
+    const result = await joinWaitlist({ email: nextEmail, kind: "mobile-app-waitlist" });
+    if (!result.ok) {
       setStatus("idle");
-      setError("We couldn't join the waitlist. Please try again.");
+      setError(result.error);
       return;
     }
-    setStatus("success");
+    setStatus(result.alreadyOnList ? "already" : "success");
   };
 
   return (
@@ -246,19 +244,23 @@ export default function Mobile() {
             <button type="button" className="close" aria-label="Close" onClick={() => setWaitlistOpen(false)}>
               ×
             </button>
-            {status === "success" ? (
+            {status === "success" || status === "already" ? (
               <>
                 <span className="eyebrow">You&apos;re on the list</span>
-                <h2 id="mobile-waitlist-title">We&apos;ll let you know</h2>
+                <h2 id="mobile-waitlist-title">
+                  {status === "already" ? "You're already on the list" : "We'll let you know"}
+                </h2>
                 <p className="subline">
-                  Thanks for joining. We&apos;ll email you when FamilyPause is ready on the App Store and Google Play.
+                  {status === "already"
+                    ? "Thanks — you're already on this waitlist. We'll email you when FamilyPause is ready on the App Store and Google Play."
+                    : "Thanks for joining. We'll email you when FamilyPause is ready on the App Store and Google Play."}
                 </p>
                 <button type="button" className="btn" onClick={() => setWaitlistOpen(false)}>
                   Done
                 </button>
               </>
             ) : (
-              <form onSubmit={submitWaitlist}>
+              <form onSubmit={submitWaitlist} noValidate aria-busy={status === "loading"}>
                 <span className="eyebrow">Mobile Apps</span>
                 <h2 id="mobile-waitlist-title">Join the waitlist</h2>
                 <p className="subline">

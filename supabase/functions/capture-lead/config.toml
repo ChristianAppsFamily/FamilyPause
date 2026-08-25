@@ -1,1 +1,3 @@
+# Public form — must stay JWT-free. Deploy with:
+#   supabase functions deploy capture-lead --no-verify-jwt
 verify_jwt = false

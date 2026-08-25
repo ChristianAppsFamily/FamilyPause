@@ -13,8 +13,7 @@ import { useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import SampleCardCarousel from "./SampleCardCarousel.jsx";
 import ExitIntentModal from "./ExitIntentModal.jsx";
-import { supabase } from "../lib/supabase";
-import { isValidEmail, requestFamilyPauseGuide } from "../lib/sendGuide";
+import { isValidEmail, joinWaitlist, requestFamilyPauseGuide } from "../lib/sendGuide";
 
 const LANDING_SECTION_IDS = new Set(["how", "who", "pricing", "deck"]);
 const GUIDE_COVER_SRC = "/images/familypause-guide-cover.jpg";
@@ -1241,6 +1240,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
 
   const submitLead = async (event) => {
     event.preventDefault();
+    if (leadStatus === "loading") return;
     const email = leadEmail.trim().toLowerCase();
     if (!isValidEmail(email)) {
       setLeadError("Enter a valid email address.");
@@ -1265,21 +1265,19 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
     const kind = leadModal === "waitlist"
       ? "ministry-waitlist"
       : "physical-deck-waitlist";
-    const { data, error } = await supabase.functions.invoke("capture-lead", {
-      body: {
-        email,
-        kind,
-        ...(firstName ? { first_name: firstName } : {}),
-      },
+    const result = await joinWaitlist({
+      email,
+      kind,
+      firstName,
     });
 
-    if (error || data?.error) {
+    if (!result.ok) {
       setLeadStatus("idle");
-      setLeadError("We couldn't join the waitlist. Please try again.");
+      setLeadError(result.error);
       return;
     }
 
-    setLeadStatus("success");
+    setLeadStatus(result.alreadyOnList ? "already" : "success");
   };
 
   return (
@@ -1652,13 +1650,15 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
               ×
             </button>
 
-            {leadStatus === "success" ? (
-              <div className="fp-guide-success">
+            {leadStatus === "success" || leadStatus === "already" ? (
+              <div className="fp-guide-success" role="status" aria-live="polite">
                 <div className="fp-guide-check" aria-hidden="true">✓</div>
                 <h2 id="lead-modal-title">
                   {leadModal === "guide"
                     ? "Check your email, your guide is on the way."
-                    : "You're on the list. We'll be in touch."}
+                    : leadStatus === "already"
+                      ? "You're already on the list. We'll be in touch."
+                      : "You're on the list. We'll be in touch."}
                 </h2>
                 <button type="button" className="btn btn-primary btn-block" onClick={closeLeadModal}>
                   All set
@@ -1669,6 +1669,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                 className="fp-guide-form-wide"
                 onSubmit={submitLead}
                 noValidate
+                aria-busy={leadStatus === "loading"}
               >
                 {leadModal === "guide" ? (
                   <img

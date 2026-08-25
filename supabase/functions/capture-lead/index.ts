@@ -8,9 +8,9 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 //   RESEND_FROM_EMAIL (FamilyPause <hello@mail.familypause.com>)
 //   FAMILYPAUSE_GUIDE_URL (defaults to https://familypause.com/guide.pdf)
 //   optional RESEND_SUNDAY_GUIDE_SEGMENT_ID
-// Waitlists:
-//   RESEND_MINISTRY_WAITLIST_SEGMENT_ID (kind = "ministry-waitlist")
-//   RESEND_PHYSICAL_DECK_WAITLIST_SEGMENT_ID (kind = "physical-deck-waitlist")
+// Waitlists (lead row is the source of truth; Resend is best-effort):
+//   optional RESEND_MINISTRY_WAITLIST_SEGMENT_ID (kind = "ministry-waitlist")
+//   optional RESEND_PHYSICAL_DECK_WAITLIST_SEGMENT_ID (kind = "physical-deck-waitlist")
 //   optional RESEND_MOBILE_APP_WAITLIST_SEGMENT_ID (kind = "mobile-app-waitlist")
 // Founding (kind = "founding-member"):
 //   optional RESEND_FOUNDING_SEGMENT_ID
@@ -226,51 +226,77 @@ async function enrollContact(apiKey: string, email: string, segmentId: string) {
   return { ok: true as const };
 }
 
+const WAITLIST_META: Record<string, { segmentEnv: string; subject: string; html: () => string }> = {
+  "ministry-waitlist": {
+    segmentEnv: "RESEND_MINISTRY_WAITLIST_SEGMENT_ID",
+    subject: "You're on the Church & Ministry waitlist",
+    html: ministryWaitlistHtml,
+  },
+  "physical-deck-waitlist": {
+    segmentEnv: "RESEND_PHYSICAL_DECK_WAITLIST_SEGMENT_ID",
+    subject: "You're on the physical deck waitlist",
+    html: physicalDeckWaitlistHtml,
+  },
+  "mobile-app-waitlist": {
+    segmentEnv: "RESEND_MOBILE_APP_WAITLIST_SEGMENT_ID",
+    subject: "You're on the iOS and Android waitlist",
+    html: mobileAppWaitlistHtml,
+  },
+};
+
+function fail(req: Request, requestId: string, code: string, error: string, status: number) {
+  console.error(`[capture-lead] ${requestId} ${code}`);
+  return json(req, { ok: false, code, error, requestId }, status);
+}
+
 async function handleWaitlist(
   req: Request,
-  apiKey: string,
-  from: string,
   email: string,
   firstName: string | null,
   source: string,
-  segmentEnv: string,
-  subject: string,
-  html: string,
-  label: string,
-  segmentRequired = true,
+  kind: keyof typeof WAITLIST_META,
+  requestId: string,
 ) {
+  let duplicate = false;
   try {
-    await upsertLead(email, firstName, source);
-  } catch (error) {
-    console.error(`[capture-lead] ${label} lead save failed`, error);
-    return json(req, { error: "Unable to join waitlist" }, 502);
+    const saved = await upsertLead(email, firstName, source);
+    duplicate = saved.duplicate;
+  } catch {
+    return fail(req, requestId, "lead_save_failed", "Unable to join waitlist", 502);
   }
 
-  const segmentId = Deno.env.get(segmentEnv);
-  if (!segmentId) {
-    if (segmentRequired) {
-      console.error(`[capture-lead] Missing ${segmentEnv}`);
-      return json(req, { error: "Waitlist is not configured" }, 500);
-    }
+  const meta = WAITLIST_META[kind];
+  const apiKey = Deno.env.get("RESEND_API_KEY");
+  const from = Deno.env.get("RESEND_FROM_EMAIL")
+    || Deno.env.get("LEAD_FROM_EMAIL")
+    || Deno.env.get("SUNDAY_GUIDE_FROM_EMAIL")
+    || "FamilyPause <hello@mail.familypause.com>";
+  const segmentId = Deno.env.get(meta.segmentEnv);
+
+  if (!apiKey) {
+    console.error(`[capture-lead] ${requestId} missing_resend_key`);
   } else {
-    const enrolled = await enrollContact(apiKey, email, segmentId);
-    if (!enrolled.ok) {
-      console.error(`[capture-lead] ${label} enrollment failed`, enrolled.stage, enrolled.status, enrolled.data);
-      return json(req, { error: "Unable to join waitlist" }, 502);
+    if (segmentId) {
+      const enrolled = await enrollContact(apiKey, email, segmentId);
+      if (!enrolled.ok) {
+        console.error(`[capture-lead] ${requestId} enrollment_failed stage=${enrolled.stage} status=${enrolled.status}`);
+      }
+    } else {
+      console.error(`[capture-lead] ${requestId} missing_segment`);
+    }
+    if (!duplicate) {
+      const sendRes = await resendRequest("/emails", apiKey, {
+        method: "POST",
+        body: JSON.stringify({ from, to: [email], subject: meta.subject, html: meta.html() }),
+      });
+      if (!sendRes.ok) {
+        console.error(`[capture-lead] ${requestId} confirmation_failed status=${sendRes.status}`);
+      }
     }
   }
 
-  const sendRes = await resendRequest("/emails", apiKey, {
-    method: "POST",
-    body: JSON.stringify({ from, to: [email], subject, html }),
-  });
-  const sendData = await sendRes.json().catch(() => ({}));
-  if (!sendRes.ok) {
-    console.error(`[capture-lead] ${label} confirmation failed`, sendRes.status, sendData);
-    return json(req, { error: "Unable to confirm waitlist" }, 502);
-  }
-
-  return json(req, { ok: true });
+  const code = duplicate ? "already_on_list" : "joined";
+  return json(req, { ok: true, code, alreadyOnList: duplicate, requestId });
 }
 
 Deno.serve(async (req) => {
@@ -281,9 +307,12 @@ Deno.serve(async (req) => {
     const contentLength = Number(req.headers.get("content-length") || 0);
     if (contentLength > 2048) return json(req, { error: "Request too large" }, 413);
 
+    const requestId = crypto.randomUUID();
     const body = await req.json();
     const email = typeof body?.email === "string" ? body.email.trim().toLowerCase() : "";
-    if (!isEmail(email)) return json(req, { error: "Enter a valid email address" }, 400);
+    if (!isEmail(email)) {
+      return fail(req, requestId, "invalid_email", "Enter a valid email address", 400);
+    }
     const firstName = normalizeFirstName(body?.first_name ?? body?.firstName);
 
     const kind = body?.kind === "ministry-waitlist"
@@ -296,62 +325,20 @@ Deno.serve(async (req) => {
             ? "founding-member"
             : "guide";
     const source = resolveSource(kind, body?.source);
+
+    if (kind === "ministry-waitlist" || kind === "physical-deck-waitlist" || kind === "mobile-app-waitlist") {
+      return await handleWaitlist(req, email, firstName, source, kind, requestId);
+    }
+
     const apiKey = Deno.env.get("RESEND_API_KEY");
     if (!apiKey) {
-      console.error("[capture-lead] Missing RESEND_API_KEY");
-      return json(req, { error: "Lead capture is not configured" }, 500);
+      return fail(req, requestId, "not_configured", "Lead capture is not configured", 500);
     }
 
     const from = Deno.env.get("RESEND_FROM_EMAIL")
       || Deno.env.get("LEAD_FROM_EMAIL")
       || Deno.env.get("SUNDAY_GUIDE_FROM_EMAIL")
       || "FamilyPause <hello@mail.familypause.com>";
-
-    if (kind === "ministry-waitlist") {
-      return await handleWaitlist(
-        req,
-        apiKey,
-        from,
-        email,
-        firstName,
-        source,
-        "RESEND_MINISTRY_WAITLIST_SEGMENT_ID",
-        "You're on the Church & Ministry waitlist",
-        ministryWaitlistHtml(),
-        "Ministry waitlist",
-      );
-    }
-
-    if (kind === "physical-deck-waitlist") {
-      return await handleWaitlist(
-        req,
-        apiKey,
-        from,
-        email,
-        firstName,
-        source,
-        "RESEND_PHYSICAL_DECK_WAITLIST_SEGMENT_ID",
-        "You're on the physical deck waitlist",
-        physicalDeckWaitlistHtml(),
-        "Physical deck waitlist",
-      );
-    }
-
-    if (kind === "mobile-app-waitlist") {
-      return await handleWaitlist(
-        req,
-        apiKey,
-        from,
-        email,
-        firstName,
-        source,
-        "RESEND_MOBILE_APP_WAITLIST_SEGMENT_ID",
-        "You're on the iOS and Android waitlist",
-        mobileAppWaitlistHtml(),
-        "Mobile app waitlist",
-        false,
-      );
-    }
 
     if (kind === "founding-member") {
       try {
@@ -417,7 +404,7 @@ Deno.serve(async (req) => {
 
     return json(req, { ok: true });
   } catch (error) {
-    console.error("[capture-lead] Unexpected failure", error);
-    return json(req, { error: "Something went wrong" }, 500);
+    console.error("[capture-lead] unexpected_failure");
+    return json(req, { ok: false, code: "temporary_failure", error: "Something went wrong" }, 500);
   }
 });

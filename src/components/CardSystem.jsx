@@ -18,6 +18,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "../lib/supabase";
+import { joinWaitlist } from "../lib/sendGuide";
 import { playCardFlip, soundsEnabledForWorkspace } from "../lib/sounds";
 import { openPaymentLink, STRIPE_LINKS } from "../lib/stripeLinks";
 import { DIGITAL_DECK_PRICE, formatDigitalPrice, PHYSICAL_DECK_PRICE } from "../lib/deckPricing";
@@ -581,6 +582,7 @@ function PhysicalDeckWaitlist({ variant = "terra" }) {
 
   const submit = async (e) => {
     e.preventDefault();
+    if (status === "loading") return;
     const trimmed = email.trim().toLowerCase();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
       setError("Enter a valid email address.");
@@ -588,23 +590,25 @@ function PhysicalDeckWaitlist({ variant = "terra" }) {
     }
     setError("");
     setStatus("loading");
-    const { error: invokeErr } = await supabase.functions.invoke("capture-lead", {
-      body: { email: trimmed, kind: "physical-deck-waitlist" },
-    });
-    if (invokeErr) {
+    const result = await joinWaitlist({ email: trimmed, kind: "physical-deck-waitlist" });
+    if (!result.ok) {
       setStatus("idle");
-      setError("We couldn't join the waitlist. Please try again.");
+      setError(result.error);
       return;
     }
-    setStatus("success");
+    setStatus(result.alreadyOnList ? "already" : "success");
   };
 
-  if (status === "success") {
+  if (status === "success" || status === "already") {
     return (
-      <div className={isGold ? "cs-info-gold" : "cs-physical-waitlist"}>
-        <div className={isGold ? "cs-info-gold-title" : "cs-physical-waitlist-eyebrow"}>You're on the list</div>
+      <div className={isGold ? "cs-info-gold" : "cs-physical-waitlist"} role="status">
+        <div className={isGold ? "cs-info-gold-title" : "cs-physical-waitlist-eyebrow"}>
+          {status === "already" ? "You're already on the list" : "You're on the list"}
+        </div>
         <p className={isGold ? undefined : "cs-physical-waitlist-copy"}>
-          Thanks — we'll email you when the printed FamilyPause Conversation Starter Card Deck is ready to ship.
+          {status === "already"
+            ? "Thanks — you're already on this waitlist. We'll email you when the printed FamilyPause Conversation Starter Card Deck is ready to ship."
+            : "Thanks — we'll email you when the printed FamilyPause Conversation Starter Card Deck is ready to ship."}
         </p>
       </div>
     );
@@ -643,7 +647,7 @@ function PhysicalDeckWaitlist({ variant = "terra" }) {
           {status === "loading" ? "Joining…" : "Join waitlist"}
         </button>
       </form>
-      {error && <p className="cs-physical-waitlist-error">{error}</p>}
+      {error && <p className="cs-physical-waitlist-error" role="alert">{error}</p>}
     </div>
   );
 }
