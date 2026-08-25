@@ -146,6 +146,8 @@ export default function Paywall({ reason = "trial", onClose, workspace, subscrip
   // Default to annual ($79/year). Monthly selection should only switch the choice,
   // and checkout should start from the bottom CTA.
   const [familyBilling, setFamilyBilling] = useState("family"); // "family" | "family_monthly"
+  const [checkoutBusy, setCheckoutBusy] = useState(false);
+  const [checkoutError, setCheckoutError] = useState("");
 
   const weeklyLimit = reason === "weekly" || reason === "daily";
   const headline = weeklyLimit
@@ -192,12 +194,20 @@ export default function Paywall({ reason = "trial", onClose, workspace, subscrip
   const foundingFree = showOffer && subscriberCount !== null && subscriberCount < 100;
   const halfOff = showOffer && subscriberCount !== null && subscriberCount >= 100;
 
-  const startCheckout = (product) => {
-    void openStripeCheckout(product, {
-      successPath: "/subscribe/success?session_id={CHECKOUT_SESSION_ID}",
-      cancelPath: "/subscribe/cancel",
-      includeTrialDeckOffer: showOffer,
-    });
+  const startCheckout = async (product) => {
+    if (checkoutBusy) return;
+    setCheckoutBusy(true);
+    setCheckoutError("");
+    try {
+      await openStripeCheckout(product, {
+        successPath: "/subscribe/success?session_id={CHECKOUT_SESSION_ID}",
+        cancelPath: "/subscribe/cancel",
+        includeTrialDeckOffer: showOffer,
+      });
+    } catch (e) {
+      setCheckoutError(e?.message || "Checkout is unavailable. Try again.");
+      setCheckoutBusy(false);
+    }
   };
 
   return (
@@ -273,6 +283,7 @@ export default function Paywall({ reason = "trial", onClose, workspace, subscrip
               <button
                 type="button"
                 className={"btn-monthly" + (familyBilling === "family_monthly" ? " selected" : "")}
+                disabled={checkoutBusy}
                 onClick={() => setFamilyBilling("family_monthly")}
               >
                 Monthly
@@ -280,6 +291,7 @@ export default function Paywall({ reason = "trial", onClose, workspace, subscrip
               <button
                 type="button"
                 className={"btn-monthly" + (familyBilling === "family" ? " selected" : "")}
+                disabled={checkoutBusy}
                 onClick={() => setFamilyBilling("family")}
               >
                 Annual
@@ -289,10 +301,16 @@ export default function Paywall({ reason = "trial", onClose, workspace, subscrip
               <button
                 type="button"
                 className="btn btn-primary btn-lg btn-block"
+                disabled={checkoutBusy}
                 onClick={() => startCheckout(familyBilling)}
               >
-                {familyBilling === "family" ? "Upgrade Annual, $79/year" : "Upgrade Monthly, $9/month"}
+                {checkoutBusy
+                  ? "Redirecting…"
+                  : familyBilling === "family" ? "Upgrade Annual, $79/year" : "Upgrade Monthly, $9/month"}
               </button>
+              {checkoutError && (
+                <p className="pw-deck-note" role="alert" style={{ color: "var(--red)" }}>{checkoutError}</p>
+              )}
               {foundingFree && (
                 <p className="pw-deck-note">Conversation Starter Card Deck included free, today only.</p>
               )}

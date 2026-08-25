@@ -1,5 +1,43 @@
 import { supabase } from "./supabase";
 
+/**
+ * Entitlements (server row is source of truth; never grant paid access from a success URL):
+ * - subscribed: plan is family | pro | ministry AND active
+ * - trialing: plan is free AND trial_ends_at is in the future AND active
+ * - past_due / unpaid: still treated as subscribed until Stripe sends subscription.deleted
+ * - canceled / incomplete / paused: plan free (webhook clears stripe_sub_id)
+ */
+
+export const SUBSCRIPTION_SELECT = "*";
+
+/** Load the workspace subscription row from Supabase. */
+export async function fetchWorkspaceSubscription(workspaceId) {
+  if (!workspaceId) return null;
+  const { data, error } = await supabase
+    .from("subscriptions")
+    .select(SUBSCRIPTION_SELECT)
+    .eq("workspace_id", workspaceId)
+    .maybeSingle();
+  if (error) throw error;
+  return data || null;
+}
+
+/**
+ * Poll until the webhook has written a paid plan, or time out.
+ * Used after Checkout — do not treat the success URL as entitlement.
+ */
+export async function pollUntilPaid(workspaceId, { timeoutMs = 18000, intervalMs = 1200 } = {}) {
+  const started = Date.now();
+  let subscription = await fetchWorkspaceSubscription(workspaceId);
+  if (isPaidPlan(subscription)) return { subscription, verified: true };
+  while (Date.now() - started < timeoutMs) {
+    await new Promise((resolve) => setTimeout(resolve, intervalMs));
+    subscription = await fetchWorkspaceSubscription(workspaceId);
+    if (isPaidPlan(subscription)) return { subscription, verified: true };
+  }
+  return { subscription, verified: false };
+}
+
 /** Create a 7-day trial subscription row for a new workspace (owner only). */
 export async function ensureTrialSubscription(workspaceId) {
   if (!workspaceId) return;

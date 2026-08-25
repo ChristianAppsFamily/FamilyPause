@@ -21,8 +21,8 @@ import { useState, useEffect } from "react";
 const SHOW_INVITE_SPOUSE = false;
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "../lib/supabase";
-import { openStripeCheckout } from "../lib/stripeCheckout";
-import { trialDaysRemaining as getTrialDaysRemaining, isPaidPlan } from "../lib/subscription";
+import { openBillingPortal, openStripeCheckout } from "../lib/stripeCheckout";
+import { fetchWorkspaceSubscription, isPaidPlan, pollUntilPaid, trialDaysRemaining as getTrialDaysRemaining } from "../lib/subscription";
 import {
   setLocalSoundsEnabled,
   soundsEnabledForWorkspace,
@@ -243,6 +243,7 @@ function NameList({ label, items, tone, onAdd, onRemove, placeholder, emptyNote 
 export default function Settings({ workspace, user, onSignOut, onClose, onOpenDecks, onWorkspaceUpdate }) {
   const [searchParams, setSearchParams] = useSearchParams();
   const checkoutSuccess = searchParams.get("checkout") === "success";
+  const billingUpdated = searchParams.get("billing") === "updated";
   const fc = workspace?.family_context || {};
   const initialKids = Array.isArray(fc.kids) ? fc.kids : [];
   // "people" stores adults + kids together; derive adults by removing kids.
@@ -259,9 +260,12 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
 
   const [subscription, setSubscription] = useState(null);
   const [subLoading, setSubLoading] = useState(true);
-  const [checkoutNotice, setCheckoutNotice] = useState(false);
+  const [checkoutNotice, setCheckoutNotice] = useState("");
   const [upgradeOpen, setUpgradeOpen] = useState(false);
   const [familyBilling, setFamilyBilling] = useState("monthly");
+  const [upgradeBusy, setUpgradeBusy] = useState(false);
+  const [upgradeError, setUpgradeError] = useState("");
+  const [portalBusy, setPortalBusy] = useState(false);
   const [calendarConn, setCalendarConn] = useState({
     connected: false, connectedAt: null, memberId: null, googleEmail: null,
   });
@@ -320,14 +324,8 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
     if (!workspace?.id) { setSubLoading(false); return; }
     setSubLoading(true);
     try {
-      const { data } = await supabase
-        .from("subscriptions")
-        .select("*")
-        .eq("workspace_id", workspace.id)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      setSubscription(data || null);
+      const data = await fetchWorkspaceSubscription(workspace.id);
+      setSubscription(data);
     } catch { /* offline / no subscription row: fall back to free plan */ }
     finally { setSubLoading(false); }
   };
@@ -337,17 +335,33 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
   }, [workspace?.id]);
 
   useEffect(() => {
-    if (!checkoutSuccess) return;
-    setCheckoutNotice(true);
-    loadSubscription();
-    if (onWorkspaceUpdate && workspace?.id) {
-      supabase.from("workspaces").select("*").eq("id", workspace.id).single()
-        .then(({ data }) => { if (data) onWorkspaceUpdate(data); });
-    }
-    const next = new URLSearchParams(searchParams);
-    next.delete("checkout");
-    setSearchParams(next, { replace: true });
-  }, [checkoutSuccess]);
+    if (!checkoutSuccess && !billingUpdated) return;
+    let cancelled = false;
+    setCheckoutNotice(checkoutSuccess ? "Confirming your plan…" : "Checking billing…");
+    (async () => {
+      if (workspace?.id) {
+        const { subscription: next, verified } = await pollUntilPaid(workspace.id);
+        if (cancelled) return;
+        setSubscription(next);
+        setCheckoutNotice(
+          verified
+            ? "Your Family Plan is active."
+            : checkoutSuccess
+              ? "Plan update may take a moment. Refresh Settings if it doesn't show yet."
+              : "Billing was updated. Refresh if your plan doesn't match yet.",
+        );
+      }
+      if (onWorkspaceUpdate && workspace?.id) {
+        supabase.from("workspaces").select("*").eq("id", workspace.id).single()
+          .then(({ data }) => { if (data) onWorkspaceUpdate(data); });
+      }
+      const next = new URLSearchParams(searchParams);
+      next.delete("checkout");
+      next.delete("billing");
+      setSearchParams(next, { replace: true });
+    })();
+    return () => { cancelled = true; };
+  }, [checkoutSuccess, billingUpdated]);
 
   useEffect(() => {
     setSoundsEnabled(soundsEnabledForWorkspace(workspace));
@@ -507,6 +521,32 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
 
   const trialDaysRemaining = getTrialDaysRemaining(subscription);
 
+  const startUpgrade = async () => {
+    if (upgradeBusy) return;
+    setUpgradeBusy(true);
+    setUpgradeError("");
+    try {
+      await openStripeCheckout(
+        familyBilling === "monthly" ? "family_monthly" : "family",
+      );
+    } catch (e) {
+      setUpgradeError(e?.message || "Checkout is unavailable. Try again.");
+      setUpgradeBusy(false);
+    }
+  };
+
+  const startPortal = async () => {
+    if (portalBusy) return;
+    setPortalBusy(true);
+    setUpgradeError("");
+    try {
+      await openBillingPortal();
+    } catch (e) {
+      setUpgradeError(e?.message || "Could not open billing. Try again.");
+      setPortalBusy(false);
+    }
+  };
+
   const unlockedDecks = Array.isArray(workspace?.unlocked_deck_years) ? workspace.unlocked_deck_years : [];
 
   // ── Delete workspace ───────────────────────────────────────────────────────
@@ -552,15 +592,26 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
               <div className="eyebrow" style={{ marginBottom: 9 }}>Your plan</div>
               <h2 style={{ margin: 0 }}>Subscription</h2>
             </div>
-            {!isPaidPlan(subscription) && (
+            {!isPaidPlan(subscription) ? (
               <button
                 type="button"
                 className="btn btn-primary"
                 style={{ flexShrink: 0, marginTop: 4 }}
                 aria-expanded={upgradeOpen}
+                disabled={upgradeBusy}
                 onClick={() => setUpgradeOpen((o) => !o)}
               >
                 {upgradeOpen ? "Close" : "Upgrade"}
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="btn btn-ghost"
+                style={{ flexShrink: 0, marginTop: 4 }}
+                disabled={portalBusy}
+                onClick={() => void startPortal()}
+              >
+                {portalBusy ? "Opening…" : "Manage billing"}
               </button>
             )}
           </div>
@@ -574,7 +625,12 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
               </div>
               {checkoutNotice && (
                 <p className="set-sub" style={{ margin: "0 0 12px", color: "var(--olive-d)" }}>
-                  Thanks, your plan should update shortly.
+                  {checkoutNotice}
+                </p>
+              )}
+              {upgradeError && (
+                <p className="set-sub" style={{ margin: "0 0 12px", color: "var(--red)" }} role="alert">
+                  {upgradeError}
                 </p>
               )}
               {(subscription?.plan === "free" || !subscription) && !isPaidPlan(subscription) && trialDaysRemaining !== null && (
@@ -619,15 +675,14 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
                   <button
                     type="button"
                     className="btn btn-primary btn-block"
-                    onClick={() => {
-                      void openStripeCheckout(
-                        familyBilling === "monthly" ? "family_monthly" : "family",
-                      );
-                    }}
+                    disabled={upgradeBusy}
+                    onClick={() => void startUpgrade()}
                   >
-                    {familyBilling === "monthly"
-                      ? "Continue with Monthly, $9"
-                      : "Continue with Yearly, $79"}
+                    {upgradeBusy
+                      ? "Redirecting…"
+                      : familyBilling === "monthly"
+                        ? "Continue with Monthly, $9"
+                        : "Continue with Yearly, $79"}
                   </button>
                 </div>
               )}

@@ -106,6 +106,40 @@ async function verifyParentSession(
   return { ok: true as const, session };
 }
 
+function appOriginFromUrl(successUrl?: string): string {
+  try {
+    if (successUrl) return new URL(successUrl).origin;
+  } catch { /* ignore */ }
+  return "https://familypause.com";
+}
+
+async function billingPortalUrl(
+  stripe: Stripe,
+  customerId: string | null,
+  subscriptionId: string | null,
+  returnUrl: string,
+): Promise<string | null> {
+  let customer = customerId;
+  if (!customer && subscriptionId) {
+    try {
+      const sub = await stripe.subscriptions.retrieve(subscriptionId);
+      customer = typeof sub.customer === "string" ? sub.customer : sub.customer?.id ?? null;
+    } catch {
+      return null;
+    }
+  }
+  if (!customer) return null;
+  try {
+    const portal = await stripe.billingPortal.sessions.create({
+      customer,
+      return_url: returnUrl,
+    });
+    return portal.url ?? null;
+  } catch {
+    return null;
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
@@ -140,6 +174,26 @@ Deno.serve(async (req) => {
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
     const admin = adminClient();
+
+    if (body.action === "portal") {
+      const { data: sub } = await admin
+        .from("subscriptions")
+        .select("stripe_customer_id, stripe_sub_id")
+        .eq("workspace_id", workspaceId)
+        .maybeSingle();
+      if (!sub?.stripe_customer_id && !sub?.stripe_sub_id) {
+        return json({ error: "No billing account yet", code: "no_customer" }, 400);
+      }
+      const origin = appOriginFromUrl(body.successUrl);
+      const url = await billingPortalUrl(
+        stripe,
+        sub.stripe_customer_id,
+        sub.stripe_sub_id,
+        body.successUrl || `${origin}/app/settings?billing=updated`,
+      );
+      if (!url) return json({ error: "Could not open billing portal", code: "portal_failed" }, 502);
+      return json({ url, portal: true });
+    }
 
     // ── Verify post-subscribe deck offer eligibility ───────────────────────
     if (body.action === "verify_deck_offer") {
@@ -201,6 +255,35 @@ Deno.serve(async (req) => {
     const origin = successUrl ? new URL(successUrl).origin : "https://familypause.com";
     const isSubscription = product === "family" || product === "family_monthly" || product === "pro";
     const isPack = product === "pack_1" || product === "pack_3" || product === "pack_5";
+
+    if (isSubscription) {
+      const { data: existingSub } = await admin
+        .from("subscriptions")
+        .select("plan, active, stripe_sub_id, stripe_customer_id")
+        .eq("workspace_id", workspaceId)
+        .maybeSingle();
+      if (existingSub?.stripe_sub_id) {
+        const url = await billingPortalUrl(
+          stripe,
+          existingSub.stripe_customer_id,
+          existingSub.stripe_sub_id,
+          `${origin}/app/settings?billing=updated`,
+        );
+        if (url) {
+          return json({
+            url,
+            portal: true,
+            already_subscribed: true,
+            code: "already_subscribed",
+            message: "You already have a Family Plan. Manage billing from Settings.",
+          });
+        }
+        return json({
+          error: "You already have a Family Plan. Manage billing from Settings.",
+          code: "already_subscribed",
+        }, 409);
+      }
+    }
     const defaultSuccess = isSubscription
       ? `${origin}/subscribe/success?session_id={CHECKOUT_SESSION_ID}`
       : isPack

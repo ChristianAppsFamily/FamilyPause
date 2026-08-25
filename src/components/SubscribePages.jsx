@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import Seo from "./Seo.jsx";
+import { pollUntilPaid } from "../lib/subscription";
 
 const css = `
 .fp-sub {
@@ -68,6 +69,7 @@ const css = `
   transition: background .15s, transform .12s;
 }
 .fp-sub-btn:hover { background: var(--terra-d); transform: translateY(-1px); }
+.fp-sub-btn:disabled { opacity: 0.6; cursor: wait; transform: none; }
 .fp-sub-ghost {
   display: inline-flex;
   align-items: center;
@@ -96,8 +98,8 @@ const css = `
 }
 `;
 
-/** Refresh the signed-in user's workspace subscription row from Supabase. */
-async function refreshSubscriptionStatus() {
+/** Resolve the signed-in user's workspace id for subscription polling. */
+async function workspaceIdForUser() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { ok: false, reason: "signed_out" };
 
@@ -109,57 +111,80 @@ async function refreshSubscriptionStatus() {
     .maybeSingle();
 
   if (!membership?.workspace_id) return { ok: false, reason: "no_workspace" };
-
-  const { data: subscription, error } = await supabase
-    .from("subscriptions")
-    .select("*")
-    .eq("workspace_id", membership.workspace_id)
-    .maybeSingle();
-
-  if (error) return { ok: false, reason: "query_failed", error };
-  return { ok: true, subscription, workspaceId: membership.workspace_id };
+  return { ok: true, workspaceId: membership.workspace_id };
 }
 
 export function SubscribeSuccess() {
   const navigate = useNavigate();
+  const [phase, setPhase] = useState("verifying"); // verifying | active | delayed | signed_out
   const [statusNote, setStatusNote] = useState("Confirming your plan…");
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const result = await refreshSubscriptionStatus();
+      const located = await workspaceIdForUser();
       if (cancelled) return;
-      if (result.ok && result.subscription?.plan && result.subscription.plan !== "free") {
+      if (!located.ok) {
+        if (located.reason === "signed_out") {
+          setPhase("signed_out");
+          setStatusNote("Sign in to see your plan in the app.");
+        } else {
+          setPhase("delayed");
+          setStatusNote("You can continue to your app anytime.");
+        }
+        return;
+      }
+      const { verified } = await pollUntilPaid(located.workspaceId);
+      if (cancelled) return;
+      if (verified) {
+        setPhase("active");
         setStatusNote("Subscription active.");
-      } else if (result.ok) {
-        setStatusNote("Plan update may take a moment. You can continue to your app.");
-      } else if (result.reason === "signed_out") {
-        setStatusNote("Sign in to see your plan in the app.");
       } else {
-        setStatusNote("You can continue to your app anytime.");
+        setPhase("delayed");
+        setStatusNote("Plan update may take a moment. You can continue to your app.");
       }
     })();
     return () => { cancelled = true; };
   }, []);
 
+  const verifying = phase === "verifying";
+  const title = phase === "active"
+    ? "You're all set."
+    : phase === "verifying"
+      ? "Confirming your plan…"
+      : phase === "signed_out"
+        ? "Sign in to finish."
+        : "You're almost there.";
+  const body = phase === "active"
+    ? "Your Family Plan is now active. Welcome to FamilyPause."
+    : phase === "verifying"
+      ? "We're confirming payment with Stripe. This usually takes a few seconds."
+      : phase === "signed_out"
+        ? "Sign in to confirm your Family Plan in the app."
+        : "Checkout succeeded. Your plan will show as Family as soon as the confirmation lands.";
+  const seoTitle = phase === "active"
+    ? "You're all set — FamilyPause"
+    : "Confirming your plan — FamilyPause";
+
   return (
     <div className="fp-sub">
       <Seo
-        title="You're all set — FamilyPause"
+        title={seoTitle}
         description="Your Family Plan is now active. Welcome to FamilyPause."
         canonical="https://familypause.com/subscribe/success"
       />
       <style>{css}</style>
       <div className="fp-sub-card">
         <img className="fp-sub-mark" src="/uploads/Logo_4.png" alt="" />
-        <h1 className="fp-sub-title">You&apos;re all set.</h1>
-        <p className="fp-sub-body">Your Family Plan is now active. Welcome to FamilyPause.</p>
+        <h1 className="fp-sub-title">{title}</h1>
+        <p className="fp-sub-body">{body}</p>
         <button
           type="button"
           className="fp-sub-btn"
+          disabled={verifying}
           onClick={() => navigate("/app", { replace: true })}
         >
-          Go to My Plan
+          {verifying ? "Confirming…" : "Go to My Plan"}
         </button>
         <p className="fp-sub-note">{statusNote}</p>
       </div>

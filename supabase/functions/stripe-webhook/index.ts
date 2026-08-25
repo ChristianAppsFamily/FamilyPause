@@ -18,6 +18,7 @@ function adminClient() {
 function planFromPriceId(priceId: string | undefined): Product | null {
   if (!priceId) return null;
   if (priceId === Deno.env.get("STRIPE_PRICE_FAMILY")) return "family";
+  if (priceId === Deno.env.get("STRIPE_PRICE_FAMILY_MONTHLY")) return "family";
   if (priceId === Deno.env.get("STRIPE_PRICE_PRO")) return "pro";
   if (priceId === Deno.env.get("STRIPE_PRICE_DIGITAL")) return "digital";
   if (priceId === Deno.env.get("STRIPE_PRICE_DIGITAL_OFFER")) return "digital_offer";
@@ -308,12 +309,24 @@ Deno.serve(async (req) => {
       case "checkout.session.completed":
         await handleCheckoutCompleted(admin, event.data.object as Stripe.Checkout.Session);
         break;
+      case "customer.subscription.created":
       case "customer.subscription.updated":
-        await handleSubscriptionChange(admin, event.data.object as Stripe.Subscription);
-        break;
       case "customer.subscription.deleted":
         await handleSubscriptionChange(admin, event.data.object as Stripe.Subscription);
         break;
+      case "invoice.paid":
+      case "invoice.payment_failed": {
+        const invoice = event.data.object as Stripe.Invoice;
+        const subId = typeof invoice.subscription === "string"
+          ? invoice.subscription
+          : invoice.subscription?.id;
+        if (subId) {
+          const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, { apiVersion: "2023-10-16" });
+          const sub = await stripe.subscriptions.retrieve(subId);
+          await handleSubscriptionChange(admin, sub);
+        }
+        break;
+      }
       default:
         break;
     }

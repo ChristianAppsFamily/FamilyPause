@@ -20,7 +20,7 @@ import CardSystem from "./components/CardSystem.jsx";
 import Paywall from "./components/Paywall.jsx";
 import PlanView from "./components/PlanView.jsx";
 import UpgradePrompt from "./components/UpgradePrompt.jsx";
-import { hasFamilyPlanFeatures, paywallReason, upgradePaywallReason } from "./lib/subscription";
+import { fetchWorkspaceSubscription, hasFamilyPlanFeatures, paywallReason, upgradePaywallReason } from "./lib/subscription";
 import { loadDistillsThisWeek, recordDistillUsage } from "./lib/distillUsage";
 import { parseAppLocation, syncPath, SYNC_VIEWS, cardsPath } from "./lib/routes";
 import { normalizeCardPeople } from "./lib/familyContext";
@@ -1488,21 +1488,24 @@ export default function App({ user, workspace, onSignOut }) {
     let active = true;
     setSubscriptionLoaded(false);
     (async () => {
-      const { data: sub } = await supabase
-        .from("subscriptions")
-        .select("*")
-        .eq("workspace_id", ws.id)
-        .maybeSingle();
-      if (active) {
-        setSubscription(sub);
-        setSubscriptionLoaded(true);
+      try {
+        const sub = await fetchWorkspaceSubscription(ws.id);
+        if (active) setSubscription(sub);
+      } catch {
+        if (active) setSubscription(null);
       }
+      if (active) setSubscriptionLoaded(true);
 
       const weekCount = await loadDistillsThisWeek(ws.id);
       if (active) setDistillsThisWeek(weekCount);
     })();
     return () => { active = false; };
   }, [ws?.id]);
+
+  useEffect(() => {
+    if (overlay !== null || !ws?.id) return;
+    fetchWorkspaceSubscription(ws.id).then((sub) => setSubscription(sub)).catch(() => {});
+  }, [overlay, ws?.id]);
 
   const familyFeaturesEnabled = hasFamilyPlanFeatures(subscription);
 
@@ -1626,13 +1629,12 @@ export default function App({ user, workspace, onSignOut }) {
   const runDistill = async (text, mode = "paste") => {
     let currentSubscription = subscription;
     if (!subscriptionLoaded && ws?.id) {
-      const { data: loadedSubscription } = await supabase
-        .from("subscriptions")
-        .select("*")
-        .eq("workspace_id", ws.id)
-        .maybeSingle();
-      currentSubscription = loadedSubscription;
-      setSubscription(loadedSubscription);
+      try {
+        currentSubscription = await fetchWorkspaceSubscription(ws.id);
+      } catch {
+        currentSubscription = null;
+      }
+      setSubscription(currentSubscription);
       setSubscriptionLoaded(true);
     }
 
