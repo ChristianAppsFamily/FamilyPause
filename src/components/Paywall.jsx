@@ -133,7 +133,7 @@ function dismissOffer() {
 
 /**
  * @param {{
- *   reason?: "trial"|"daily"|"weekly"|"upgrade",
+ *   reason?: "trial"|"daily"|"weekly"|"sessions"|"upgrade",
  *   onClose?: () => void,
  *   workspace?: object,
  *   subscription?: object,
@@ -148,15 +148,15 @@ export default function Paywall({ reason = "trial", onClose, workspace, subscrip
   const [checkoutBusy, setCheckoutBusy] = useState(false);
   const [checkoutError, setCheckoutError] = useState("");
 
-  const weeklyLimit = reason === "weekly" || reason === "daily";
+  const weeklyLimit = reason === "weekly" || reason === "daily" || reason === "sessions";
   const headline = weeklyLimit
-    ? <>You&apos;ve used <em>this week&apos;s</em> free plan</>
+    ? <>You&apos;ve used your <em>5 free plans</em></>
     : reason === "upgrade"
       ? <>Upgrade <em>Today!</em></>
       : <>Your <em>free trial</em> has ended</>;
 
   const sub = weeklyLimit
-    ? "You've used your free plan for this week. Upgrade to Family Plan for unlimited plans."
+    ? "Rebuild this plan as many times as you need. Start a new weekly sync with Family Plan."
     : reason === "upgrade"
       ? "Unlock title editing, exports, unlimited plans, and family member categories on the Family Plan."
       : "We hope the last 7 days brought a little more calm to your week. Keep the rhythm going with editing, exports, unlimited plans, and spouse sync.";

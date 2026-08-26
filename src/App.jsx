@@ -21,7 +21,7 @@ import Paywall from "./components/Paywall.jsx";
 import PlanView from "./components/PlanView.jsx";
 import UpgradePrompt from "./components/UpgradePrompt.jsx";
 import { fetchWorkspaceSubscription, hasFamilyPlanFeatures, paywallReason, upgradePaywallReason } from "./lib/subscription";
-import { loadDistillsThisWeek, recordDistillUsage } from "./lib/distillUsage";
+import { loadFreeSessionCount } from "./lib/distillUsage";
 import { parseAppLocation, syncPath, SYNC_VIEWS, cardsPath } from "./lib/routes";
 import { normalizeCardPeople } from "./lib/familyContext";
 import {
@@ -94,8 +94,8 @@ async function callAI(prompt, systemOverride, { faithMode = false, familyName = 
   return callFamilyPauseAI({ prompt, systemOverride, faithMode, familyName });
 }
 
-async function callDistillAI(prompt, extraction) {
-  return callDistillExtraction({ prompt, extraction });
+async function callDistillAI(prompt, extraction, sessionId) {
+  return callDistillExtraction({ prompt, extraction, sessionId });
 }
 
 // ── UTILITIES ─────────────────────────────────────────────────────────────────
@@ -1384,7 +1384,8 @@ export default function App({ user, workspace, onSignOut }) {
   const [paywallBlock, setPaywallBlock] = useState(null);
   const [subscription, setSubscription] = useState(null);
   const [subscriptionLoaded, setSubscriptionLoaded] = useState(false);
-  const [distillsThisWeek, setDistillsThisWeek] = useState(0);
+  const [freeSessionsUsed, setFreeSessionsUsed] = useState(0);
+  const [activeSessionId, setActiveSessionId] = useState(null);
   const [calendarBusy, setCalendarBusy] = useState(false);
   const [calendarSyncing, setCalendarSyncing] = useState(false);
   const [retryingCardId, setRetryingCardId] = useState(null);
@@ -1410,6 +1411,11 @@ export default function App({ user, workspace, onSignOut }) {
 
   const sessionIdRef = useRef(null);
   const savedRef = useRef(false);
+
+  const setSessionId = (id) => {
+    sessionIdRef.current = id;
+    setActiveSessionId(id);
+  };
   const postConnectSyncRef = useRef(false);
   const familyNudgeShownRef = useRef(false);
   const inviteNudgeShownRef = useRef(false);
@@ -1499,7 +1505,7 @@ export default function App({ user, workspace, onSignOut }) {
   };
 
   const openFeatureUpgrade = () => {
-    setPaywallBlock(upgradePaywallReason(subscription));
+    setPaywallBlock(upgradePaywallReason(subscription, { freeSessionsUsed }));
     openOverlay("paywall");
   };
 
@@ -1536,8 +1542,8 @@ export default function App({ user, workspace, onSignOut }) {
       }
       if (active) setSubscriptionLoaded(true);
 
-      const weekCount = await loadDistillsThisWeek(ws.id);
-      if (active) setDistillsThisWeek(weekCount);
+      const used = await loadFreeSessionCount(ws.id);
+      if (active) setFreeSessionsUsed(used);
     })();
     return () => { active = false; };
   }, [ws?.id]);
@@ -1547,7 +1553,10 @@ export default function App({ user, workspace, onSignOut }) {
     fetchWorkspaceSubscription(ws.id).then((sub) => setSubscription(sub)).catch(() => {});
   }, [overlay, ws?.id]);
 
-  const familyFeaturesEnabled = hasFamilyPlanFeatures(subscription);
+  const familyFeaturesEnabled = hasFamilyPlanFeatures(subscription, {
+    freeSessionsUsed,
+    sessionInProgress: !!activeSessionId,
+  });
 
   useEffect(() => {
     if (!ws?.id || !user?.id) {
@@ -1655,7 +1664,7 @@ export default function App({ user, workspace, onSignOut }) {
 
   const clearActiveSession = async () => {
     const id = sessionIdRef.current;
-    sessionIdRef.current = null;
+    setSessionId(null);
     clearLocalCaptureDraft();
     if (!id) return;
     try {
@@ -1678,7 +1687,10 @@ export default function App({ user, workspace, onSignOut }) {
       setSubscriptionLoaded(true);
     }
 
-    const block = paywallReason(currentSubscription, { distillsThisWeek });
+    const block = paywallReason(currentSubscription, {
+      freeSessionsUsed,
+      sessionInProgress: !!sessionIdRef.current,
+    });
     if (block) {
       setPaywallBlock(block);
       openOverlay("paywall");
@@ -1690,7 +1702,6 @@ export default function App({ user, workspace, onSignOut }) {
     setDistillError(null);
     setCards([]);
     clearLocalCaptureDraft();
-    sessionIdRef.current = null;
     go("processing");
     savedRef.current = false;
 
@@ -1715,12 +1726,12 @@ ${text}`;
         businesses: context.businesses || [],
         categories: context.categories || [],
         topic_hint: topicHint,
-      });
+      }, sessionIdRef.current);
       try { parsed = JSON.parse(raw.replace(/```json|```/g, "").trim()); }
       catch { const m = raw.match(/\[[\s\S]*\]/); if (m) parsed = JSON.parse(m[0]); }
     } catch (err) {
-      if (err?.code === "WEEKLY_LIMIT" || err?.code === "DAILY_LIMIT" || err?.status === 402) {
-        setPaywallBlock("weekly");
+      if (err?.code === "FREE_SESSION_LIMIT" || err?.code === "WEEKLY_LIMIT" || err?.code === "DAILY_LIMIT" || err?.status === 402) {
+        setPaywallBlock("sessions");
         openOverlay("paywall");
         go("capture");
         return;
@@ -1749,8 +1760,6 @@ ${text}`;
 
     if (!errorMsg && ws?.id && newCards.length > 0) {
       try {
-        await recordDistillUsage(ws.id);
-        setDistillsThisWeek((n) => n + 1);
         const reviewPayload = {
           transcript: text,
           input_mode: mode === "dictate" ? "record" : "paste",
@@ -1771,9 +1780,11 @@ ${text}`;
             ...reviewPayload,
           }).select().single();
           if (!error && data) {
-            sessionIdRef.current = data.id;
+            setSessionId(data.id);
           }
         }
+        const used = await loadFreeSessionCount(ws.id);
+        setFreeSessionsUsed(used);
       } catch { /* session update is best-effort */ }
     }
 
@@ -2032,7 +2043,10 @@ ${text}`;
 
   // ── Overlays ─────────────────────────────────────────────────────────────
   if (overlay === "paywall") {
-    const resolvedReason = paywallBlock || paywallReason(subscription, { distillsThisWeek }) || "upgrade";
+    const resolvedReason = paywallBlock || paywallReason(subscription, {
+      freeSessionsUsed,
+      sessionInProgress: !!activeSessionId,
+    }) || "upgrade";
     return (
       <div className="stage" style={{ padding: "48px 24px 80px" }}>
         <Paywall

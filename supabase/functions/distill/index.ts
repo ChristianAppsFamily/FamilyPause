@@ -20,28 +20,9 @@ const cors = {
 };
 
 const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-const WEEKDAY_INDEX: Record<string, number> = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
 
-/** Sunday of the current Pacific planning week as YYYY-MM-DD. */
-function pacificWeekStartSunday(d = new Date()): string {
-  const parts = new Intl.DateTimeFormat("en-US", {
-    timeZone: "America/Los_Angeles",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    weekday: "short",
-  }).formatToParts(d);
-  const get = (type: string) => parts.find((p) => p.type === type)?.value;
-  const year = Number(get("year"));
-  const month = Number(get("month"));
-  const day = Number(get("day"));
-  const dayIndex = WEEKDAY_INDEX[get("weekday") ?? "Sun"] ?? 0;
-  const sunday = new Date(Date.UTC(year, month - 1, day, 12, 0, 0) - dayIndex * 86400000);
-  const y = sunday.getUTCFullYear();
-  const m = String(sunday.getUTCMonth() + 1).padStart(2, "0");
-  const dd = String(sunday.getUTCDate()).padStart(2, "0");
-  return `${y}-${m}-${dd}`;
-}
+const FREE_SESSION_BUILDS = 5;
+const LIFETIME_USAGE_DATE = "1970-01-01";
 
 type ExtractionContext = {
   meeting_date?: string;
@@ -131,6 +112,42 @@ Return only the JSON array.`;
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { ...cors, "Content-Type": "application/json" } });
 
+async function countFreeSessions(
+  admin: ReturnType<typeof createClient>,
+  workspaceId: string,
+): Promise<number> {
+  const { data } = await admin
+    .from("ai_distill_usage")
+    .select("count")
+    .eq("workspace_id", workspaceId);
+  return (data || []).reduce((sum: number, row: { count?: number }) => sum + (row.count || 0), 0);
+}
+
+async function incrementFreeSessions(
+  admin: ReturnType<typeof createClient>,
+  workspaceId: string,
+): Promise<void> {
+  const { data: row } = await admin
+    .from("ai_distill_usage")
+    .select("count")
+    .eq("workspace_id", workspaceId)
+    .eq("usage_date", LIFETIME_USAGE_DATE)
+    .maybeSingle();
+  if (row) {
+    await admin
+      .from("ai_distill_usage")
+      .update({ count: (row.count || 0) + 1 })
+      .eq("workspace_id", workspaceId)
+      .eq("usage_date", LIFETIME_USAGE_DATE);
+  } else {
+    await admin.from("ai_distill_usage").insert({
+      workspace_id: workspaceId,
+      usage_date: LIFETIME_USAGE_DATE,
+      count: 1,
+    });
+  }
+}
+
 function logRawResponse(rawText: string, stopReason: string | undefined, outputTokens: number, meetingDate?: string) {
   console.log("[distill] meeting_date:", meetingDate ?? "n/a");
   console.log("[distill] stop_reason:", stopReason ?? "unknown", "output_tokens:", outputTokens);
@@ -182,26 +199,33 @@ Deno.serve(async (req) => {
       .eq("workspace_id", workspaceId)
       .maybeSingle();
 
-    const plan = sub?.plan || "free";
-    const isPaid = sub?.active && (plan === "family" || plan === "pro" || plan === "ministry");
-    const FREE_WEEKLY_BUILDS = 1;
+    const { prompt, system, cacheSystem = false, extraction, session_id: sessionId } = await req.json();
+    if (!prompt) return json({ error: "Missing prompt" }, 400);
 
-    if (!isPaid) {
-      // Free plan: 1 build per Pacific calendar week (Sunday–Saturday).
-      const weekStart = pacificWeekStartSunday();
-      const { data: usage } = await admin
-        .from("ai_distill_usage")
-        .select("count")
+    const isExtraction = !!extraction;
+    let recapture = false;
+    if (typeof sessionId === "string" && sessionId) {
+      const { data: sess } = await admin
+        .from("sessions")
+        .select("id")
+        .eq("id", sessionId)
         .eq("workspace_id", workspaceId)
-        .eq("usage_date", weekStart)
         .maybeSingle();
-      if ((usage?.count || 0) >= FREE_WEEKLY_BUILDS) {
-        return json({ error: "Weekly free limit reached", code: "WEEKLY_LIMIT" }, 402);
-      }
+      recapture = !!sess;
     }
 
-    const { prompt, system, cacheSystem = false, extraction } = await req.json();
-    if (!prompt) return json({ error: "Missing prompt" }, 400);
+    const plan = sub?.plan || "free";
+    const isPaid = sub?.active && (plan === "family" || plan === "pro" || plan === "ministry");
+
+    if (!isPaid && isExtraction && !recapture) {
+      const used = await countFreeSessions(admin, workspaceId);
+      if (used >= FREE_SESSION_BUILDS) {
+        return json({
+          error: "You've used your 5 free plans. Rebuild this one anytime, or upgrade for more.",
+          code: "FREE_SESSION_LIMIT",
+        }, 402);
+      }
+    }
 
     const apiKey = Deno.env.get("ANTHROPIC_API_KEY");
     if (!apiKey) return json({ error: "ANTHROPIC_API_KEY not configured" }, 500);
@@ -243,6 +267,10 @@ Deno.serve(async (req) => {
     const outputTokens = u.output_tokens ?? 0;
 
     logRawResponse(rawText, stopReason, outputTokens, extraction?.meeting_date);
+
+    if (!isPaid && isExtraction && !recapture) {
+      await incrementFreeSessions(admin, workspaceId);
+    }
 
     return json({
       text: rawText,

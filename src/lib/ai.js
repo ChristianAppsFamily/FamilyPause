@@ -53,7 +53,7 @@ async function invokeDistill(body) {
       }
     } catch (_) { /* ignore */ }
 
-    if (code === 'SESSION_PACK_REQUIRED' || code === 'DAILY_LIMIT' || code === 'WEEKLY_LIMIT' || status === 402) {
+    if (code === 'SESSION_PACK_REQUIRED' || code === 'DAILY_LIMIT' || code === 'WEEKLY_LIMIT' || code === 'FREE_SESSION_LIMIT' || status === 402) {
       const err = new Error(detail || 'Session pack required');
       err.code = code || 'SESSION_PACK_REQUIRED';
       err.status = 402;
@@ -87,8 +87,13 @@ async function invokeDistill(body) {
 /**
  * Weekly-sync transcript extraction — system prompt built server-side.
  */
-export async function callDistillExtraction({ prompt, extraction }) {
-  return invokeDistill({ prompt, cacheSystem: true, extraction });
+export async function callDistillExtraction({ prompt, extraction, sessionId }) {
+  return invokeDistill({
+    prompt,
+    cacheSystem: true,
+    extraction,
+    ...(sessionId ? { session_id: sessionId } : {}),
+  });
 }
 
 /** General AI call with optional system override (non-extraction). */

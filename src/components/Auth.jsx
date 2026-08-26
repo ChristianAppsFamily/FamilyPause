@@ -642,7 +642,7 @@ function SignUp({ onSwitch, onSuccess }) {
           <div className="fp-wordmark" style={{ marginBottom: 0 }}><span className="wf">Family</span><span className="wp">Pause</span></div>
         </AuthLogoLink>
         <div style={{ fontSize: 11, letterSpacing: "0.25em", color: T.terra, fontFamily: "'JetBrains Mono', monospace", textTransform: "uppercase", marginBottom: 12 }}>
-          7-day free trial
+          5 free plans
         </div>
         <h1 className="form-hl">Create your account</h1>
         <p className="form-sub">

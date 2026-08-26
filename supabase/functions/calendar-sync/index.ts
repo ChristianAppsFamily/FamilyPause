@@ -53,20 +53,19 @@ type Subscription = {
   trial_ends_at?: string | null;
 };
 
-function hasFamilyFeatures(subscription: Subscription | null): boolean {
+function hasFamilyFeatures(
+  subscription: Subscription | null,
+  { freeSessionsUsed = 0, sessionInProgress = false } = {},
+): boolean {
   const paid = subscription?.active === true
     && (
       subscription.plan === "family"
       || subscription.plan === "pro"
       || subscription.plan === "ministry"
     );
-  const trialEnd = subscription?.trial_ends_at
-    ? new Date(subscription.trial_ends_at).getTime()
-    : 0;
-  const trial = subscription?.active === true
-    && subscription.plan === "free"
-    && trialEnd > Date.now();
-  return paid || trial;
+  if (paid) return true;
+  if (freeSessionsUsed < 5) return true;
+  return sessionInProgress && freeSessionsUsed <= 5;
 }
 
 function normalizeTime(time: string): string {
@@ -364,7 +363,28 @@ Deno.serve(async (req) => {
       console.error("[calendar-sync]", { requestId, code: "PLAN_LOOKUP", stage: "subscription" });
       return fail("PLAN_LOOKUP", "Could not verify plan access. Try again.", 503, requestId);
     }
-    const familyFeatures = hasFamilyFeatures(subscription as Subscription | null);
+    const { data: usageRows } = await admin
+      .from("ai_distill_usage")
+      .select("count")
+      .eq("workspace_id", workspace_id);
+    const freeSessionsUsed = (usageRows || []).reduce(
+      (sum: number, row: { count?: number }) => sum + (row.count || 0),
+      0,
+    );
+    let sessionInProgress = false;
+    if (typeof body.session_id === "string" && body.session_id) {
+      const { data: sess } = await admin
+        .from("sessions")
+        .select("id")
+        .eq("id", body.session_id)
+        .eq("workspace_id", workspace_id)
+        .maybeSingle();
+      sessionInProgress = !!sess;
+    }
+    const familyFeatures = hasFamilyFeatures(subscription as Subscription | null, {
+      freeSessionsUsed,
+      sessionInProgress,
+    });
 
     const { data: row, error: rowErr } = await admin
       .from("workspace_members")

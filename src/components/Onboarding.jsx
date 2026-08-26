@@ -56,7 +56,7 @@ function StepPrimer({ displayName, workspaceId, onComplete }) {
           </svg>
         </div>
       </div>
-      <div className="ob-anim" style={{ "--d": "80ms" }}><div className="ob-eyebrow">You&apos;re in · 7-day free trial</div></div>
+        <div className="ob-anim" style={{ "--d": "80ms" }}><div className="ob-eyebrow">You&apos;re in · 5 free plans</div></div>
       <h1 className="ob-anim ob-hl" style={{ "--d": "160ms" }}>
         Welcome to FamilyPause,<br /><em>{first}</em>
       </h1>

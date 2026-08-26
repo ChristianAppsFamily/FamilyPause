@@ -1,4 +1,7 @@
 import { supabase } from "./supabase";
+import { FREE_SESSION_BUILDS } from "./distillUsage";
+
+export { FREE_SESSION_BUILDS };
 
 /**
  * Entitlements (server row is source of truth; never grant paid access from a success URL):
@@ -79,28 +82,33 @@ export function isTrialActive(subscription) {
   return new Date(subscription.trial_ends_at) > new Date();
 }
 
-/** Full Family Plan features are available to paid plans and active trials. */
-export function hasFamilyPlanFeatures(subscription) {
-  return isPaidPlan(subscription) || isTrialActive(subscription);
+/**
+ * Full Family Plan features: paid, or still inside the 5 free new sessions.
+ * Recapture of an in-progress free session keeps features even after the 5th distill.
+ */
+export function hasFamilyPlanFeatures(subscription, { freeSessionsUsed = 0, sessionInProgress = false } = {}) {
+  if (isPaidPlan(subscription)) return true;
+  if (freeSessionsUsed < FREE_SESSION_BUILDS) return true;
+  return sessionInProgress && freeSessionsUsed <= FREE_SESSION_BUILDS;
 }
 
-/** Free / trial Build (distill) allowance: one new plan per Pacific week. */
-export const FREE_WEEKLY_BUILDS = 1;
-
 /**
- * Returns null if plan creation is allowed, or "weekly" after Free uses this week's build.
+ * Returns null if a new Build is allowed.
+ * Recapture (same session) is never blocked — only a 6th new session is.
  * @param {object} subscription
- * @param {{ distillsThisWeek?: number }} opts
+ * @param {{ freeSessionsUsed?: number, sessionInProgress?: boolean, distillsThisWeek?: number }} opts
  */
-export function paywallReason(subscription, { distillsThisWeek = 0 } = {}) {
+export function paywallReason(subscription, { freeSessionsUsed, sessionInProgress = false, distillsThisWeek } = {}) {
   if (isPaidPlan(subscription)) return null;
-  if (distillsThisWeek >= FREE_WEEKLY_BUILDS) return "weekly";
+  if (sessionInProgress) return null;
+  const used = freeSessionsUsed ?? distillsThisWeek ?? 0;
+  if (used >= FREE_SESSION_BUILDS) return "sessions";
   return null;
 }
 
 /** Reason for opening the full Paywall overlay from Settings / upgrade CTAs. */
-export function upgradePaywallReason(subscription) {
+export function upgradePaywallReason(subscription, { freeSessionsUsed = 0 } = {}) {
   if (isPaidPlan(subscription)) return "upgrade";
-  if (isTrialActive(subscription)) return "upgrade";
-  return "trial";
+  if (freeSessionsUsed >= FREE_SESSION_BUILDS) return "sessions";
+  return "upgrade";
 }

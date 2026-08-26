@@ -22,7 +22,8 @@ const SHOW_INVITE_SPOUSE = false;
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { openBillingPortal, openStripeCheckout } from "../lib/stripeCheckout";
-import { fetchWorkspaceSubscription, isPaidPlan, pollUntilPaid, trialDaysRemaining as getTrialDaysRemaining } from "../lib/subscription";
+import { fetchWorkspaceSubscription, isPaidPlan, pollUntilPaid, FREE_SESSION_BUILDS } from "../lib/subscription";
+import { loadFreeSessionCount } from "../lib/distillUsage";
 import {
   setLocalSoundsEnabled,
   soundsEnabledForWorkspace,
@@ -250,6 +251,7 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
   const [copied, setCopied] = useState(false);
 
   const [subscription, setSubscription] = useState(null);
+  const [freeSessionsUsed, setFreeSessionsUsed] = useState(0);
   const [subLoading, setSubLoading] = useState(true);
   const [checkoutNotice, setCheckoutNotice] = useState("");
   const [upgradeOpen, setUpgradeOpen] = useState(false);
@@ -317,6 +319,8 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
     try {
       const data = await fetchWorkspaceSubscription(workspace.id);
       setSubscription(data);
+      const used = await loadFreeSessionCount(workspace.id);
+      setFreeSessionsUsed(used);
     } catch { /* offline / no subscription row: fall back to free plan */ }
     finally { setSubLoading(false); }
   };
@@ -510,7 +514,7 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
     return { free: "Free", family: "Family Plan", pro: "Family Pro", ministry: "Church / Ministry" }[p] || p;
   })();
 
-  const trialDaysRemaining = getTrialDaysRemaining(subscription);
+  const remainingFree = Math.max(0, FREE_SESSION_BUILDS - freeSessionsUsed);
 
   const startUpgrade = async () => {
     if (upgradeBusy) return;
@@ -624,15 +628,12 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
                   {upgradeError}
                 </p>
               )}
-              {(subscription?.plan === "free" || !subscription) && !isPaidPlan(subscription) && trialDaysRemaining !== null && (
+              {(subscription?.plan === "free" || !subscription) && !isPaidPlan(subscription) && (
                 <p className="set-sub" style={{ margin: 0 }}>
-                  {trialDaysRemaining > 0
-                    ? `${trialDaysRemaining} trial day${trialDaysRemaining === 1 ? "" : "s"} remaining.`
-                    : "Your free trial has ended. Upgrade for unlimited AI sessions, or use manual review."}
+                  {remainingFree > 0
+                    ? `${remainingFree} of ${FREE_SESSION_BUILDS} free plans remaining. Rebuild a plan as often as you need — only a new weekly sync counts.`
+                    : "You've used your 5 free plans. Upgrade for unlimited AI sessions, or rebuild the current plan."}
                 </p>
-              )}
-              {!subscription && trialDaysRemaining === null && (
-                <p className="set-sub" style={{ margin: 0 }}>You&apos;re on the free plan. Upgrade for unlimited AI sessions.</p>
               )}
 
               {upgradeOpen && !isPaidPlan(subscription) && (
