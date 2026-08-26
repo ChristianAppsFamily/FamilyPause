@@ -24,7 +24,7 @@ import { fetchWorkspaceSubscription, hasFamilyPlanFeatures, paywallReason, upgra
 import { loadFreeSessionCount } from "./lib/distillUsage";
 import { parseAppLocation, syncPath, SYNC_VIEWS, cardsPath } from "./lib/routes";
 import { normalizeCardPeople } from "./lib/familyContext";
-import { foldCalendarReminders } from "./lib/foldCalendarReminders";
+import { stripReminderSatellites } from "./lib/foldCalendarReminders";
 import {
   applySyncResults,
   calendarSyncOutcome,
@@ -1752,7 +1752,7 @@ ${text}`;
         status: STATUS.OPEN,
       };
     });
-    const newCards = normalizeCardPeople(foldCalendarReminders(mapped), context);
+    const newCards = normalizeCardPeople(stripReminderSatellites(mapped), context);
     setCards(newCards);
     setDistillError(errorMsg);
     setDistillDone(true);

@@ -62,14 +62,10 @@ You still return a "task" string and a "type" field — the app may add a type p
 
 YOUR JOB: Extract EVERY actionable item, appointment, errand, decision, task, or commitment — exhaustively. Do not skip, merge, or summarize away distinct people or appointments. If the transcript names 3 appointments, return 3 cards. Do not invent filler notes.
 
-CALENDAR REMINDERS (critical — do not create extra cards):
-Phrases like "set a reminder", "remind me 1 day before", "30 minutes before" are Google Calendar notifications ON THE APPOINTMENT. They are not separate cards. Never emit a second item titled "Reminder: …". Never use type:note or type:action for a reminder offset.
-Put the offset on the same event:
-  "calendar_reminder": "0" | "5" | "15" | "30" | "60" | "1440" | "custom" | null
-  "calendar_reminder_minutes": integer when custom, else null
-Map: at time of event→"0", 5 min→"5", 15 min→"15", 30 min→"30", 1 hour→"60", 1 day→"1440". Other offsets: "custom" plus calendar_reminder_minutes.
+IGNORE CALENDAR REMINDER PHRASES (critical):
+Phrases like "set a reminder", "remind me 1 day before", "30 minutes before", "1 week before" are NOT items. The family sets calendar alerts manually later in the app. Never emit a card titled "Reminder: …". Never invent a separate note/action for a reminder offset. Never return calendar_reminder or calendar_reminder_minutes fields.
 Example — transcript: "John has a barber appointment at 5pm on Monday 8/31. Set reminder for 1 day before. Jackie has a dental appointment at 8pm on Tuesday 9/1. Set reminder for 1 hour before."
-Return TWO event cards (not four): John's barber 17:00 on that Monday with calendar_reminder "1440"; Jackie's dental 20:00 on that Tuesday with calendar_reminder "60". Titles are the appointments, not "Reminder: …".
+Return TWO event cards only (John's barber, Jackie's dental) with date/time. Ignore both set-reminder phrases.
 
 Return ONLY a valid JSON array. No markdown, no backticks, no commentary.
 
@@ -86,9 +82,7 @@ Each item object:
   "recurring": true | false,
   "date_only": true | false,
   "byday": ["MO"|"TU"|"WE"|"TH"|"FR"|"SA"|"SU"] or omit,
-  "duration_minutes": integer or null,
-  "calendar_reminder": "0"|"5"|"15"|"30"|"60"|"1440"|"custom"|null,
-  "calendar_reminder_minutes": integer or null
+  "duration_minutes": integer or null
 }
 
 TASK TITLES (person name in the title — important):
@@ -110,7 +104,7 @@ DATE & TIME EXTRACTION (critical):
 - Birthdays, due dates, and deadlines with a calendar date but no clock time: set date_only:true and leave time null. Do not invent a clock time (no 10:00, no midnight).
 - Set recurring:true only when the transcript says the commitment continues every week (or similar) after this week — "every Tuesday", "weekly", "each week". Optionally include byday with Google weekday codes (MO TU WE TH FR SA SU) on that single series card.
 - If the same commitment is named on more than one day THIS week (soccer Tuesday and Thursday; project work Monday, Wednesday, and Thursday), emit ONE CARD PER DATE with the same task text. Do not merge those days into one card. Set recurring:false unless they also said it continues every week after. Never drop a day's occurrence because the title matches another card.
-- Set type:"event" for appointments with a person, place, or clock time (barber, dental, massage, school, doctor). type:"action" for tasks and errands; type:"decision" when the family agreed on a choice; type:"note" only for context that is not a task and not a calendar reminder.
+- Set type:"event" for appointments with a person, place, or clock time (barber, dental, massage, school, doctor). type:"action" for tasks and errands; type:"decision" when the family agreed on a choice; type:"note" only for context that is not a task. Never use note/action for "set reminder" phrases.
 - ONLY leave date null when no day/date is mentioned at all. ONLY leave time null when no specific clock time is mentioned. Null date/time is expected for many actions, decisions, and notes.
 
 EXHAUSTIVE EXTRACTION RULES:
