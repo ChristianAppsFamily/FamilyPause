@@ -13,6 +13,7 @@ import { useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import SampleCardCarousel from "./SampleCardCarousel.jsx";
 import ExitIntentModal from "./ExitIntentModal.jsx";
+import AuthHeaderCta from "./AuthHeaderCta.jsx";
 import { isValidEmail, joinWaitlist, requestFamilyPauseGuide } from "../lib/sendGuide";
 
 const LANDING_SECTION_IDS = new Set(["how", "who", "pricing", "deck"]);
@@ -128,6 +129,10 @@ const css = `
 }
 .fp-landing .navcta .signin:hover { color: var(--terra); }
 .fp-landing .navcta .btn { line-height: 1; white-space: nowrap; }
+.fp-landing .navcta .auth-cta-placeholder {
+  visibility: hidden;
+  pointer-events: none;
+}
 .fp-landing .hero .ctas { display: flex; align-items: center; gap: 14px; margin: 30px 0 22px; flex-wrap: nowrap; }
 .fp-landing .hero .ctas .btn {
   white-space: nowrap;
@@ -1029,7 +1034,11 @@ const css = `
   .fp-landing .navcta .btn:not(.navmenu-btn) { display: none; }
   .fp-landing .navmenu-btn { display: inline-flex; }
   .fp-landing .navmobile { inset: 64px 0 0 0; }
-  .fp-landing .nav .row { height: 64px; }
+  .fp-landing .nav .row {
+    height: 64px;
+    grid-template-columns: 1fr auto;
+  }
+  .fp-landing .navcta { margin-left: auto; }
 }
 @media (max-width: 560px) {
   .fp-landing .wrap { padding: 0 22px; }
@@ -1298,7 +1307,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
             <a href="/#pricing" onClick={goToSection("pricing")}>Pricing</a>
           </nav>
           <div className="navcta">
-            <button className="btn btn-primary" onClick={onSignIn}>Sign In</button>
+            <AuthHeaderCta onSignIn={onSignIn} />
             <button
               type="button"
               className="navmenu-btn"
@@ -1321,13 +1330,11 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
               <a href="/#pricing" onClick={goToSection("pricing")}>Pricing</a>
             </div>
             <div className="navmobile-actions">
-              <button
-                type="button"
+              <AuthHeaderCta
+                onSignIn={onSignIn}
                 className="btn btn-primary btn-block"
-                onClick={() => { setMobileNavOpen(false); onSignIn(); }}
-              >
-                Sign In
-              </button>
+                onNavigate={() => setMobileNavOpen(false)}
+              />
             </div>
           </nav>
         </div>

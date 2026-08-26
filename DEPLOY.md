@@ -75,6 +75,16 @@ from an old dev setup).
 The `#access_token` in the URL means Google auth worked; fixing the allow list sends
 users back to your running app instead of a dead localhost port.
 
+### Password reset emails (custom SMTP)
+
+Auth emails are sent by Supabase. To brand them like FamilyPause (Terra & cream, Playfair-style headline):
+
+1. **SMTP** — Supabase Dashboard → **Project Settings** → **Authentication** → **SMTP Settings**. Enable custom SMTP with Resend on the verified domain `mail.familypause.com`. Sender name **FamilyPause**, sender email **`no-reply@mail.familypause.com`**. SMTP host/port/user/password live in Resend (do not commit them).
+2. **Reset template** — copy `docs/password-reset-email.html` into **Authentication** → **Email Templates** → **Reset password**. Keep `{{ .ConfirmationURL }}` as the button href. Subject: `Reset your FamilyPause password`.
+3. **Redirects** — Site URL and Redirect URLs must include `/reset-password` (listed above). Settings and Auth both send `redirectTo` to `/reset-password`, not `/app`.
+
+Do not put SMTP passwords or API keys in this repo.
+
 
 ## 2 — Anthropic API key (AI distillation) ~2 min
 

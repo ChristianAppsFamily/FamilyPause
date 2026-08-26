@@ -94,6 +94,8 @@ Each item object:
   "time": "HH:MM" 24-hour or null,
   "type": "action" | "event" | "decision" | "note",
   "recurring": true | false,
+  "date_only": true | false,
+  "byday": ["MO"|"TU"|"WE"|"TH"|"FR"|"SA"|"SU"] or omit,
   "duration_minutes": integer or null
 }
 
@@ -112,13 +114,15 @@ DATE & TIME EXTRACTION (critical):
 - Resolve "the 19th", "March 5", "next Tuesday" to concrete YYYY-MM-DD relative to the meeting date (use the month of the meeting date unless another month is stated).
 - Parse times into 24h HH:MM: "6:30pm"→18:30, "1pm"→13:00, "8pm"→20:00, "4:15"→16:15 (assume PM for bare afternoon hours 1–6 without am/pm).
 - Vague periods without a clock time leave time null: "Saturday morning", "Sunday afternoon", "evening" without a number.
-- Set recurring:true when the transcript says "every", "weekly", "each week", "recurring", or similar for a repeating commitment.
+- Birthdays, due dates, and deadlines with a calendar date but no clock time: set date_only:true and leave time null. Do not invent a clock time (no 10:00, no midnight).
+- Set recurring:true only when the transcript says the commitment continues every week (or similar) after this week — "every Tuesday", "weekly", "each week". Optionally include byday with Google weekday codes (MO TU WE TH FR SA SU) on that single series card.
+- If the same commitment is named on more than one day THIS week (soccer Tuesday and Thursday; project work Monday, Wednesday, and Thursday), emit ONE CARD PER DATE with the same task text. Do not merge those days into one card. Set recurring:false unless they also said it continues every week after. Never drop a day's occurrence because the title matches another card.
 - Set type:"event" for appointments with a fixed place/time on the calendar; type:"action" for tasks and errands; type:"decision" when the family agreed on a choice; type:"note" for context worth remembering that is not a task.
 - ONLY leave date null when no day/date is mentioned at all. ONLY leave time null when no specific clock time is mentioned. Null date/time is expected for many actions, decisions, and notes.
 
 EXHAUSTIVE EXTRACTION RULES:
 - Include errands ("oil change on the van"), kid tasks ("pick the summer camp"), scheduling items, and follow-ups — even if brief.
-- One card per distinct commitment. Do not combine unrelated items.
+- One card per distinct commitment, including each dated occurrence this week. Do not combine unrelated items or collapse multiple days into one card.
 - Map nicknames to the closest Known person. Use "Both" for shared couple tasks, "Family" for whole-household items.
 
 Return only the JSON array.`;

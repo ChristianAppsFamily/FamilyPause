@@ -32,13 +32,32 @@ export function typeNeedsSchedule(type) {
   return type === "event" || type === "action" || type === "decision";
 }
 
+const BYDAY_CODES = new Set(["MO", "TU", "WE", "TH", "FR", "SA", "SU"]);
+
+/** @param {unknown} raw */
+export function normalizeByday(raw) {
+  if (!Array.isArray(raw)) return null;
+  const days = [...new Set(
+    raw
+      .map((d) => String(d || "").toUpperCase().replace(/[^A-Z]/g, "").slice(0, 2))
+      .filter((d) => BYDAY_CODES.has(d)),
+  )];
+  return days.length ? days : null;
+}
+
+export function isScheduleResolved(card) {
+  if (!card?.date) return false;
+  if (card.time) return true;
+  return !!card.date_only;
+}
+
 /**
  * Calendar-bound card missing date or time — offer in Times / Review schedule row.
  * Notes only appear if they already have a partial schedule.
  */
 export function needsDateTime(card) {
   if (!card) return false;
-  if (card.date && card.time) return false;
+  if (isScheduleResolved(card)) return false;
   if (card.type === "note") {
     return !!(card.date || card.time);
   }
@@ -55,8 +74,9 @@ export function needsDateTime(card) {
  */
 export function isSyncEligible(card, opts = {}) {
   if (!(card.status === "kept" || card.status === "calendared")) return false;
-  if (opts.requireResolved && (!card.date || !card.time)) return false;
+  if (opts.requireResolved) return isScheduleResolved(card);
   if (card.date && card.time) return true;
+  if (card.date && card.date_only) return true;
   const fallbackDate = card.date || opts.meetingDate;
   return !!fallbackDate;
 }
@@ -278,7 +298,14 @@ export function cardToCalendarEvent(card, opts = {}) {
   const title = calendarTitle(card);
   const description = card.source || card.task || title;
   const reminders = googleRemindersFromCard(card);
-  if (card.date && card.time) {
+  const byday = normalizeByday(card.byday);
+  const extra = {
+    recurrence: !!card.recurring,
+    ...(byday ? { byday } : {}),
+    ...(card.google_event_id ? { googleEventId: card.google_event_id } : {}),
+    ...(reminders ? { reminders } : {}),
+  };
+  if (card.date && card.time && !card.date_only) {
     return {
       id: card.id,
       title,
@@ -287,9 +314,7 @@ export function cardToCalendarEvent(card, opts = {}) {
       allDay: false,
       duration_minutes: card.duration_minutes ?? 60,
       description,
-      recurrence: !!card.recurring,
-      ...(card.google_event_id ? { googleEventId: card.google_event_id } : {}),
-      ...(reminders ? { reminders } : {}),
+      ...extra,
     };
   }
   const date = card.date || opts.meetingDate;
@@ -304,9 +329,7 @@ export function cardToCalendarEvent(card, opts = {}) {
     allDay: true,
     duration_minutes: null,
     description,
-    recurrence: !!card.recurring,
-    ...(card.google_event_id ? { googleEventId: card.google_event_id } : {}),
-    ...(reminders ? { reminders } : {}),
+    ...extra,
   };
 }
 

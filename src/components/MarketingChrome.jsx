@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { goToSignIn, goToSignUp } from "../lib/routes";
+import AuthHeaderCta from "./AuthHeaderCta";
 
 const stroke = {
   fill: "none",
@@ -99,6 +100,10 @@ const chromeCss = `
   padding: 0;
 }
 .fp-mkt .navcta .signin:hover { color: var(--terra); }
+.fp-mkt .navcta .auth-cta-placeholder {
+  visibility: hidden;
+  pointer-events: none;
+}
 .fp-mkt .btn {
   font-family: var(--serif);
   text-transform: none;
@@ -126,14 +131,15 @@ const chromeCss = `
   display: none;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: transparent;
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 0;
+  background: none;
   color: var(--ink);
   cursor: pointer;
   padding: 0;
+  flex-shrink: 0;
 }
 .fp-mkt .navmobile {
   display: none;
@@ -291,6 +297,7 @@ const chromeCss = `
   .fp-mkt .navcta .signin,
   .fp-mkt .navcta .btn:not(.navmenu-btn) { display: none; }
   .fp-mkt .navmenu-btn { display: inline-flex; }
+  .fp-mkt .navcta { margin-left: auto; }
   .fp-mkt .foot .fcols { gap: 36px; }
   .fp-mkt .foot .brand-tag {
     white-space: normal;
@@ -338,7 +345,7 @@ export default function MarketingChrome({ children }) {
             <a href="/#pricing">Pricing</a>
           </nav>
           <div className="navcta">
-            <button type="button" className="btn btn-primary" onClick={onSignIn}>Sign In</button>
+            <AuthHeaderCta onSignIn={onSignIn} />
             <button
               type="button"
               className="navmenu-btn"
@@ -364,13 +371,11 @@ export default function MarketingChrome({ children }) {
               <a href="/#pricing" onClick={() => setMobileNavOpen(false)}>Pricing</a>
             </div>
             <div className="navmobile-actions">
-              <button
-                type="button"
+              <AuthHeaderCta
+                onSignIn={onSignIn}
                 className="btn btn-primary btn-block"
-                onClick={() => { setMobileNavOpen(false); onSignIn(); }}
-              >
-                Sign In
-              </button>
+                onNavigate={() => setMobileNavOpen(false)}
+              />
             </div>
           </nav>
         </div>

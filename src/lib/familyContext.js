@@ -1,3 +1,5 @@
+import { normalizeByday } from "./googleCalendar";
+
 /**
  * Map AI-extracted person names to workspace family_context people.
  */
@@ -33,13 +35,23 @@ export function normalizePersonField(rawPerson, context = {}) {
 /** @param {object[]} cards @param {{ people?: string[], kids?: string[] }} context */
 export function normalizeCardPeople(cards, context) {
   if (!Array.isArray(cards) || !cards.length) return cards;
-  return cards.map((c) => ({
-    ...c,
-    person: normalizePersonField(c.person, context),
-    recurring: !!c.recurring,
-    duration_minutes: c.duration_minutes ?? (c.date ? 60 : null),
-    calendar_synced: !!c.calendar_synced,
-    calendar_sync_failed: !!c.calendar_sync_failed,
-    google_event_id: c.google_event_id ?? null,
-  }));
+  return cards.map((c) => {
+    const dateOnly = !!c.date_only;
+    const byday = normalizeByday(c.byday);
+    const next = {
+      ...c,
+      person: normalizePersonField(c.person, context),
+      recurring: !!c.recurring,
+      date_only: dateOnly,
+      duration_minutes: dateOnly
+        ? null
+        : (c.duration_minutes ?? (c.date && c.time ? 60 : null)),
+      calendar_synced: !!c.calendar_synced,
+      calendar_sync_failed: !!c.calendar_sync_failed,
+      google_event_id: c.google_event_id ?? null,
+    };
+    if (byday) next.byday = byday;
+    else delete next.byday;
+    return next;
+  });
 }

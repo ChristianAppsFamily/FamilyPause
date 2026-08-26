@@ -22,6 +22,7 @@ type CalendarEventInput = {
   description?: string;
   recurrence?: boolean;
   googleEventId?: string | null;
+  byday?: string[] | null;
   reminders?: {
     useDefault: boolean;
     overrides?: Array<{ method: string; minutes: number }>;
@@ -127,6 +128,25 @@ function providerMessage(data: Record<string, unknown>, fallback: string): strin
   return fallback;
 }
 
+const BYDAY_CODES = new Set(["MO", "TU", "WE", "TH", "FR", "SA", "SU"]);
+
+function sanitizeByday(raw: unknown): string[] {
+  if (!Array.isArray(raw)) return [];
+  return [...new Set(
+    raw
+      .map((d) => String(d || "").toUpperCase().replace(/[^A-Z]/g, "").slice(0, 2))
+      .filter((d) => BYDAY_CODES.has(d)),
+  )];
+}
+
+function recurrenceLines(ev: CalendarEventInput, userTimeZone: string, timed: boolean): string[] | undefined {
+  if (!ev.recurrence) return undefined;
+  const by = sanitizeByday(ev.byday);
+  const byPart = by.length ? `;BYDAY=${by.join(",")}` : "";
+  if (timed) return [`RRULE:FREQ=WEEKLY${byPart};TZID=${userTimeZone}`];
+  return [`RRULE:FREQ=WEEKLY${byPart}`];
+}
+
 function buildEventBody(ev: CalendarEventInput, userTimeZone: string) {
   const useAllDay = ev.allDay === true || !ev.time;
 
@@ -137,16 +157,15 @@ function buildEventBody(ev: CalendarEventInput, userTimeZone: string) {
       start: { date: ev.date },
       end: { date: nextDayIso(ev.date) },
     };
-    if (ev.recurrence) {
-      body.recurrence = ["RRULE:FREQ=WEEKLY"];
-    }
+    const rec = recurrenceLines(ev, userTimeZone, false);
+    if (rec) body.recurrence = rec;
     if (ev.reminders) {
       body.reminders = ev.reminders;
     }
     return body;
   }
 
-  const time = normalizeTime(ev.time || "10:00");
+  const time = normalizeTime(ev.time);
   const duration = ev.duration_minutes ?? 60;
   const startDateTime = `${ev.date}T${time}:00`;
   const endLocal = addDurationToLocal(ev.date, time, duration);
@@ -158,9 +177,8 @@ function buildEventBody(ev: CalendarEventInput, userTimeZone: string) {
     start: { dateTime: startDateTime, timeZone: userTimeZone },
     end: { dateTime: endDateTime, timeZone: userTimeZone },
   };
-  if (ev.recurrence) {
-    body.recurrence = [`RRULE:FREQ=WEEKLY;TZID=${userTimeZone}`];
-  }
+  const rec = recurrenceLines(ev, userTimeZone, true);
+  if (rec) body.recurrence = rec;
   if (ev.reminders) {
     body.reminders = ev.reminders;
   }

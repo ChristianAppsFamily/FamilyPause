@@ -85,11 +85,19 @@ body {
 h1, h2, h3 { font-family: var(--display); font-weight: 600; margin: 0; letter-spacing: -.01em; color: var(--ink); }
 
 #root { min-height: 100vh; }
+#root:has(.capwrap) {
+  min-height: 100dvh;
+  background: var(--paper);
+}
 
 .stage {
   max-width: 1080px;
   margin: 0 auto;
   padding: 34px 28px 80px;
+}
+.stage:has(.capwrap) {
+  min-height: 100dvh;
+  background: var(--paper);
 }
 @media (max-width: 600px) {
   .stage { padding: 18px 16px 60px; }
@@ -126,25 +134,37 @@ h1, h2, h3 { font-family: var(--display); font-weight: 600; margin: 0; letter-sp
 .steps {
   display: flex;
   align-items: center;
-  gap: 0;
+  gap: 2px;
   font-family: var(--mono);
   font-size: 10.5px;
   letter-spacing: .12em;
   text-transform: uppercase;
   color: var(--ink-3);
+  flex-wrap: nowrap;
 }
-.steps .step { display: flex; align-items: center; gap: 8px; padding: 0 13px; }
+.steps .step { display: flex; align-items: center; gap: 8px; padding: 0 10px; white-space: nowrap; }
 .steps .dot {
   width: 21px; height: 21px; border-radius: 50%;
   display: grid; place-items: center;
   border: 1.5px solid var(--line-2);
   font-size: 10px; color: var(--ink-3);
   background: var(--paper-card);
+  flex-shrink: 0;
 }
 .steps .step.done .dot { background: var(--olive); border-color: var(--olive); color: #fff; }
 .steps .step.active .dot { background: var(--terra); border-color: var(--terra); color: #fff; }
 .steps .step.active { color: var(--ink); }
-.steps .sep { width: 22px; height: 1.5px; background: var(--line-2); }
+.steps .sep { width: 16px; height: 1.5px; background: var(--line-2); flex-shrink: 0; }
+@media (min-width: 1100px) {
+  .steps .step { padding: 0 16px; gap: 8px; }
+  .steps .sep { width: 28px; }
+}
+@media (max-width: 428px) {
+  .steps { font-size: 9px; letter-spacing: .08em; }
+  .steps .step { padding: 0 6px; gap: 4px; }
+  .steps .sep { width: 8px; }
+  .steps .dot { width: 18px; height: 18px; font-size: 9px; }
+}
 
 /* brand bar — desktop tools + mobile drawer */
 .brandbar-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
@@ -267,6 +287,33 @@ h1, h2, h3 { font-family: var(--display); font-weight: 600; margin: 0; letter-sp
 .btn-block { width: 100%; justify-content: center; }
 .btn:disabled { opacity: .45; cursor: default; }
 
+.billing-period {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px;
+  background: var(--paper-2);
+  border-radius: 999px;
+}
+.billing-period button {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  border: none;
+  background: transparent;
+  color: var(--ink-3);
+  padding: 8px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+.billing-period button.on {
+  background: var(--paper-card);
+  color: var(--terra-d);
+  box-shadow: var(--shadow-sm);
+  font-weight: 500;
+}
+.billing-period button:disabled { opacity: .55; cursor: default; }
+
 .linkish {
   font-family: var(--mono);
   font-size: 12px;
@@ -345,6 +392,10 @@ h1, h2, h3 { font-family: var(--display); font-weight: 600; margin: 0; letter-sp
 body.fp-app {
   background: #fff;
   background-image: none;
+}
+
+body.fp-app:has(.capwrap) {
+  background: var(--paper);
 }
 
 body.fp-app .ob-page,

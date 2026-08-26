@@ -52,13 +52,6 @@ export async function downloadPlanPdf(sections, meetingDate) {
   };
   paintPage();
 
-  const ensureSpace = (need) => {
-    if (y + need <= pageH - margin) return;
-    doc.addPage();
-    paintPage();
-    y = margin;
-  };
-
   const logo = await loadLogoDataUrl();
   if (logo) {
     try {
@@ -85,9 +78,7 @@ export async function downloadPlanPdf(sections, meetingDate) {
   doc.line(margin, y, pageW - margin, y);
   y += 28;
 
-  for (const sec of sections) {
-    if (!sec.items?.length) continue;
-    ensureSpace(56);
+  const drawPersonHeader = (sec) => {
     const rgb = WHO_RGB[sec.who] || TERRA;
     doc.setFillColor(...rgb);
     doc.circle(margin + 5, y - 3, 5, "F");
@@ -96,13 +87,29 @@ export async function downloadPlanPdf(sections, meetingDate) {
     doc.setTextColor(...INK);
     doc.text(String(sec.name).toUpperCase(), margin + 18, y);
     y += 18;
+  };
+
+  for (const sec of sections) {
+    if (!sec.items?.length) continue;
+    if (y + 56 > pageH - margin) {
+      doc.addPage();
+      paintPage();
+      y = margin;
+    }
+    drawPersonHeader(sec);
 
     for (const it of sec.items) {
       const title = calendarTitle(it);
       const when = formatPlanItemWhen(it);
       const titleLines = doc.splitTextToSize(title, contentW - 12);
       const blockH = 14 + titleLines.length * 13 + (when ? 12 : 0) + (it.category ? 16 : 0) + 10;
-      ensureSpace(blockH);
+
+      if (y + blockH > pageH - margin) {
+        doc.addPage();
+        paintPage();
+        y = margin;
+        drawPersonHeader(sec);
+      }
 
       doc.setFont("helvetica", "normal");
       doc.setFontSize(11);

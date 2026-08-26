@@ -41,8 +41,18 @@ export function formatItineraryDayHeader(isoDate) {
     .toUpperCase();
 }
 
-/** "6:30pm" */
-export function formatItineraryTime(time) {
+/** "6:30pm" / "All day" / "Choose a start time" */
+export function formatItineraryTime(cardOrTime) {
+  if (cardOrTime && typeof cardOrTime === "object") {
+    if (cardOrTime.date_only || (!cardOrTime.time && cardOrTime.date)) {
+      return cardOrTime.date_only ? "All day" : "Choose a start time";
+    }
+    return formatClock(cardOrTime.time);
+  }
+  return formatClock(cardOrTime);
+}
+
+function formatClock(time) {
   if (!time) return "";
   const dt = new Date(`1970-01-01T${time}:00`);
   return dt
@@ -51,28 +61,31 @@ export function formatItineraryTime(time) {
     .toLowerCase();
 }
 
-function timeSortKey(time) {
-  if (!time || typeof time !== "string") return 9999;
+function timeSortKey(card) {
+  const time = typeof card === "string" ? card : card?.time;
+  if (!time || typeof time !== "string") return card?.date_only ? 0 : 9999;
   const [h, m] = time.split(":").map(Number);
   if (!Number.isFinite(h)) return 9999;
   return h * 60 + (Number.isFinite(m) ? m : 0);
 }
 
 /**
- * Build itinerary days (Mon–Sun, empty days omitted) + recurring section.
- * Items without a confirmed time are excluded.
+ * Build itinerary days (Mon–Sun, empty days omitted) + recurring + unscheduled.
+ * Dated items stay visible even without a clock time.
  * @param {object[]} cards
  * @param {string} meetingDate
  */
 export function buildItinerary(cards, meetingDate) {
   const week = getMondaySundayWeek(meetingDate);
   const inWeek = new Set(week);
-  const timed = (cards || []).filter((c) => c?.date && c?.time);
+  const list = cards || [];
+  const dated = list.filter((c) => c?.date);
+  const unscheduled = list.filter((c) => !c?.date);
 
   const byDate = Object.fromEntries(week.map((iso) => [iso, []]));
   const recurring = [];
 
-  for (const card of timed) {
+  for (const card of dated) {
     if (card.recurring) {
       recurring.push(card);
     }
@@ -82,9 +95,9 @@ export function buildItinerary(cards, meetingDate) {
   }
 
   for (const iso of week) {
-    byDate[iso].sort((a, b) => timeSortKey(a.time) - timeSortKey(b.time));
+    byDate[iso].sort((a, b) => timeSortKey(a) - timeSortKey(b));
   }
-  recurring.sort((a, b) => timeSortKey(a.time) - timeSortKey(b.time));
+  recurring.sort((a, b) => timeSortKey(a) - timeSortKey(b));
 
   const days = week
     .filter((iso) => byDate[iso].length > 0)
@@ -94,7 +107,7 @@ export function buildItinerary(cards, meetingDate) {
       items: byDate[iso],
     }));
 
-  return { weekRange: formatItineraryWeekRange(meetingDate), days, recurring };
+  return { weekRange: formatItineraryWeekRange(meetingDate), days, recurring, unscheduled };
 }
 
 /**
@@ -103,14 +116,14 @@ export function buildItinerary(cards, meetingDate) {
  * @param {string} meetingDate
  */
 export function buildItineraryText(cards, meetingDate) {
-  const { weekRange, days, recurring } = buildItinerary(cards, meetingDate);
+  const { weekRange, days, recurring, unscheduled } = buildItinerary(cards, meetingDate);
   const lines = [`FamilyPause - Week of ${weekRange}`, ""];
 
   for (const day of days) {
     lines.push(day.header);
     for (const it of day.items) {
       const who = it.person ? `  (${it.person})` : "";
-      lines.push(`${formatItineraryTime(it.time)}  ${calendarTitle(it)}${who}`);
+      lines.push(`${formatItineraryTime(it)}  ${calendarTitle(it)}${who}`);
     }
     lines.push("");
   }
@@ -119,7 +132,16 @@ export function buildItineraryText(cards, meetingDate) {
     lines.push("RECURRING");
     for (const it of recurring) {
       const who = it.person ? `  (${it.person})` : "";
-      lines.push(`Weekly · ${formatItineraryTime(it.time)}  ${calendarTitle(it)}${who}`);
+      lines.push(`Weekly · ${formatItineraryTime(it)}  ${calendarTitle(it)}${who}`);
+    }
+    lines.push("");
+  }
+
+  if (unscheduled.length) {
+    lines.push("UNSCHEDULED");
+    for (const it of unscheduled) {
+      const who = it.person ? `  (${it.person})` : "";
+      lines.push(`${calendarTitle(it)}${who}`);
     }
     lines.push("");
   }

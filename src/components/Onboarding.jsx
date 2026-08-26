@@ -63,6 +63,7 @@ function StepPrimer({ displayName, workspaceId, onComplete }) {
       <p className="ob-anim ob-body" style={{ "--d": "230ms" }}>
         Here&apos;s how a session works. Sit down together, and let the app handle the rest. No credit card required.
       </p>
+      <div className="ob-primer-stack">
       <div className="ob-anim ob-how-card" style={{ "--d": "300ms" }}>
         {[
           ["🎙️", "Speech to text to transcribe your meeting"],
@@ -92,6 +93,7 @@ function StepPrimer({ displayName, workspaceId, onComplete }) {
         <button type="button" className="ob-btn-primary" onClick={handleStart} disabled={saving}>
           {saving ? "Saving…" : "Start my first FamilyPause →"}
         </button>
+      </div>
       </div>
     </div>
   );

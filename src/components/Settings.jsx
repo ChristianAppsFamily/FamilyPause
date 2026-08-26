@@ -33,6 +33,7 @@ import {
   disconnectGoogleCalendar,
 } from "../lib/googleCalendar";
 import CalendarAccountChooser from "./CalendarAccountChooser";
+import BillingPeriodToggle from "./BillingPeriodToggle";
 import ReminderPicker, {
   DEFAULT_REMINDER_DAY,
   DEFAULT_REMINDER_TIME,
@@ -118,17 +119,7 @@ const css = `
     line-height: 1.45; margin: 0 0 14px;
   }
   .set-billing {
-    display: inline-flex; gap: 4px; padding: 4px;
-    background: var(--paper-2); border-radius: 999px; margin-bottom: 14px;
-  }
-  .set-billing button {
-    font-family: var(--mono); font-size: 11px; letter-spacing: .06em;
-    text-transform: uppercase; border: none; background: transparent;
-    color: var(--ink-3); padding: 8px 14px; border-radius: 999px; cursor: pointer;
-  }
-  .set-billing button.on {
-    background: var(--paper-card); color: var(--terra-d);
-    box-shadow: var(--shadow-sm); font-weight: 500;
+    margin-bottom: 14px;
   }
   .set-upgrade-price {
     display: flex; align-items: baseline; gap: 6px; margin-bottom: 14px;
@@ -312,7 +303,7 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
     if (!user?.email) return;
     setPwSending(true);
     await supabase.auth.resetPasswordForEmail(user.email, {
-      redirectTo: `${window.location.origin}/app`,
+      redirectTo: `${window.location.origin}/reset-password`,
     });
     setPwSending(false);
     setPwSent(true);
@@ -650,24 +641,12 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
                   <p className="set-upgrade-sub">
                     Unlimited AI sessions, spouse sync, plan history, and PDF exports.
                   </p>
-                  <div className="set-billing" role="group" aria-label="Billing period">
-                    <button
-                      type="button"
-                      className={familyBilling === "monthly" ? "on" : ""}
-                      aria-pressed={familyBilling === "monthly"}
-                      onClick={() => setFamilyBilling("monthly")}
-                    >
-                      Monthly
-                    </button>
-                    <button
-                      type="button"
-                      className={familyBilling === "annual" ? "on" : ""}
-                      aria-pressed={familyBilling === "annual"}
-                      onClick={() => setFamilyBilling("annual")}
-                    >
-                      Yearly
-                    </button>
-                  </div>
+                  <BillingPeriodToggle
+                    className="set-billing"
+                    value={familyBilling}
+                    onChange={setFamilyBilling}
+                    disabled={upgradeBusy}
+                  />
                   <div className="set-upgrade-price">
                     <span className="amt">{familyBilling === "monthly" ? "$9" : "$79"}</span>
                     <span className="per">{familyBilling === "monthly" ? "/ month" : "/ year"}</span>

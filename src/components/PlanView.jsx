@@ -26,11 +26,15 @@ const I = {
   lock: ["M7 11V8a5 5 0 0 1 10 0v3", "M6 11h12v10H6z"],
 };
 
-function formatWhen(date, time) {
+function formatWhen(cardOrDate, time) {
+  const date = typeof cardOrDate === "object" ? cardOrDate?.date : cardOrDate;
+  const clock = typeof cardOrDate === "object" ? cardOrDate?.time : time;
+  const dateOnly = typeof cardOrDate === "object" ? !!cardOrDate?.date_only : false;
   if (!date) return "";
-  const dt = new Date(date + "T" + (time || "00:00") + ":00");
+  const dt = new Date(date + "T" + (clock || "00:00") + ":00");
   const day = dt.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
-  if (!time) return day;
+  if (dateOnly) return `${day} · All day`;
+  if (!clock) return `${day} · Choose a start time`;
   const t = dt.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
   return `${day} · ${t}`;
 }
@@ -171,7 +175,7 @@ function ItineraryView({ keptCards, meetingDate, roleOf, hasFamilyFeatures = fal
     setTimeout(cleanup, 1000);
   };
 
-  const empty = !itinerary.days.length && !itinerary.recurring.length;
+  const empty = !itinerary.days.length && !itinerary.recurring.length && !itinerary.unscheduled.length;
 
   return (
     <div className="itinerary">
@@ -185,7 +189,7 @@ function ItineraryView({ keptCards, meetingDate, roleOf, hasFamilyFeatures = fal
         </header>
 
         {empty ? (
-          <p className="itinerary-empty">No timed items this week yet. Add times on Review to build your itinerary.</p>
+          <p className="itinerary-empty">No kept items this week yet. Keep cards on Review to build your itinerary.</p>
         ) : (
           <>
             {itinerary.days.map((day) => (
@@ -196,7 +200,7 @@ function ItineraryView({ keptCards, meetingDate, roleOf, hasFamilyFeatures = fal
                     const who = roleOf?.(it.person) || "both";
                     return (
                       <li className="itinerary-row" key={it.id}>
-                        <span className="itinerary-time">{formatItineraryTime(it.time)}</span>
+                        <span className="itinerary-time">{formatItineraryTime(it)}</span>
                         <span className="itinerary-task">{calendarTitle(it)}</span>
                         {it.person ? (
                           <span className={"itinerary-who itinerary-who--" + who}>{it.person}</span>
@@ -216,12 +220,32 @@ function ItineraryView({ keptCards, meetingDate, roleOf, hasFamilyFeatures = fal
                     const who = roleOf?.(it.person) || "both";
                     return (
                       <li className="itinerary-row" key={`rec-${it.id}`}>
-                        <span className="itinerary-time">{formatItineraryTime(it.time)}</span>
+                        <span className="itinerary-time">{formatItineraryTime(it)}</span>
                         <span className="itinerary-task">
                           <span className="itinerary-pattern">Weekly</span>
                           {" · "}
                           {calendarTitle(it)}
                         </span>
+                        {it.person ? (
+                          <span className={"itinerary-who itinerary-who--" + who}>{it.person}</span>
+                        ) : null}
+                      </li>
+                    );
+                  })}
+                </ul>
+              </section>
+            )}
+
+            {itinerary.unscheduled.length > 0 && (
+              <section className="itinerary-day itinerary-unscheduled">
+                <h3 className="itinerary-day-h itinerary-day-h--muted">Unscheduled</h3>
+                <ul className="itinerary-list">
+                  {itinerary.unscheduled.map((it) => {
+                    const who = roleOf?.(it.person) || "both";
+                    return (
+                      <li className="itinerary-row" key={`unsched-${it.id}`}>
+                        <span className="itinerary-time">—</span>
+                        <span className="itinerary-task">{calendarTitle(it)}</span>
                         {it.person ? (
                           <span className={"itinerary-who itinerary-who--" + who}>{it.person}</span>
                         ) : null}
@@ -461,7 +485,7 @@ export default function PlanView({
 
   const Item = ({ it, index, showBadge }) => {
     const synced = it.calendar_synced;
-    const syncOpts = { meetingDate };
+        const syncOpts = { meetingDate, requireResolved: true };
     const canSync = isSyncEligible(it, syncOpts);
     const adding = !synced && canSync && (
       retryingCardId === it.id
@@ -484,8 +508,7 @@ export default function PlanView({
           <div className="pt">{calendarTitle(it)}</div>
           <div className="pmeta">
             <span className="ct">{it.category}</span>
-            {formatWhen(it.date, it.time) && <span>· {formatWhen(it.date, it.time)}</span>}
-            {!it.time && it.date && <span>· All day</span>}
+            {formatWhen(it) && <span>· {formatWhen(it)}</span>}
             {synced && (
               <span className={"synced-badge-wrap" + (badgeAnim ? " synced-badge-wrap--pop" : "")}>
                 <span className={"synced-badge" + (unsyncingCardId === it.id ? " synced-badge--busy" : "") + (badgeAnim ? " synced-badge--in" : "")}>

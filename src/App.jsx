@@ -34,6 +34,7 @@ import {
   getCalendarConnection,
   isSyncEligible,
   needsDateTime,
+  isScheduleResolved,
   startGoogleCalendarConnect,
   syncCalendarEvents,
   syncCardsToCalendar,
@@ -45,6 +46,7 @@ import {
   userMessageForSyncCode,
 } from "./lib/googleCalendar";
 import { canRecordAudio, pickRecordingMimeType, transcribeAudioBlob } from "./lib/transcribe";
+import { occurrenceLabel } from "./lib/planOccurrences";
 import { speechPreviewSupported, startSpeechPreview } from "./lib/speechPreview";
 import {
   clearCaptureDraft,
@@ -119,10 +121,11 @@ function prettyDate(d) {
   const dt = d ? new Date(d + "T00:00:00") : new Date();
   return dt.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
 }
-function formatWhen(date, time) {
+function formatWhen(date, time, dateOnly) {
   if (!date) return "";
   const dt = new Date(date + "T" + (time || "00:00") + ":00");
   const day = dt.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+  if (dateOnly) return `${day} · All day`;
   if (!time) return day;
   const t = dt.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
   return `${day} · ${t}`;
@@ -175,7 +178,10 @@ function StepRail({ view, vertical = false, showResolve = true }) {
       {visibleSteps.map((s, i) => (
         <span key={s.key} style={{ display: "contents" }}>
           {i > 0 && <span className="sep" />}
-          <span className={"step " + (i < cur ? "done" : i === cur ? "active" : "")}>
+          <span
+            className={"step " + (i < cur ? "done" : i === cur ? "active" : "")}
+            aria-current={i === cur ? "step" : undefined}
+          >
             <span className="dot">{i < cur ? <Ico d={I.check} size={11} /> : i + 1}</span>
             {s.label}
           </span>
@@ -965,6 +971,7 @@ function ResolveTimesView({ cards, setCards, onBack, onContinue }) {
       initial[c.id] = {
         date: c.date || "",
         time: c.time || "",
+        date_only: !!c.date_only,
         calendar_reminder: c.calendar_reminder || "",
         calendar_reminder_minutes: c.calendar_reminder_minutes ?? "",
       };
@@ -982,6 +989,7 @@ function ResolveTimesView({ cards, setCards, onBack, onContinue }) {
           next[c.id] = {
             date: c.date || "",
             time: c.time || "",
+            date_only: !!c.date_only,
             calendar_reminder: c.calendar_reminder || "",
             calendar_reminder_minutes: c.calendar_reminder_minutes ?? "",
           };
@@ -999,12 +1007,15 @@ function ResolveTimesView({ cards, setCards, onBack, onContinue }) {
 
   const confirmItem = (id) => {
     const draft = drafts[id];
-    if (!draft?.date || !draft?.time) return;
+    const dateOnly = !!draft?.date_only;
+    if (!draft?.date) return;
+    if (!dateOnly && !draft.time) return;
     setCards((arr) => arr.map((c) => (
       c.id === id ? {
         ...c,
         date: draft.date,
-        time: draft.time,
+        time: dateOnly ? null : draft.time,
+        date_only: dateOnly,
         datetime_confirmed: true,
         calendar_reminder: draft.calendar_reminder || null,
         calendar_reminder_minutes: draft.calendar_reminder === "custom"
@@ -1028,9 +1039,10 @@ function ResolveTimesView({ cards, setCards, onBack, onContinue }) {
 
       <div className="resolve-list">
         {queue.map((item) => {
-          const draft = drafts[item.id] || { date: "", time: "", calendar_reminder: "", calendar_reminder_minutes: "" };
-          const done = confirmedIds.has(item.id) || !!(item.date && item.time);
-          const canConfirm = !!draft.date && !!draft.time;
+          const draft = drafts[item.id] || { date: "", time: "", date_only: false, calendar_reminder: "", calendar_reminder_minutes: "" };
+          const done = confirmedIds.has(item.id) || isScheduleResolved(item);
+          const canConfirm = !!draft.date && (!!draft.time || !!draft.date_only);
+          const occ = occurrenceLabel(cards, item);
           return (
             <div className={"resolve-row" + (done ? " resolve-row--done" : "")} key={item.id}>
               <div className="resolve-row-head">
@@ -1049,6 +1061,7 @@ function ResolveTimesView({ cards, setCards, onBack, onContinue }) {
                   <div className="resolve-row-meta">
                     <span>{item.person}</span>
                     {item.category && <span>· {item.category}</span>}
+                    {occ && <span className="resolve-occ">{occ}</span>}
                   </div>
                   <div className="card-type-row">
                     <CardTypeSelect
@@ -1074,13 +1087,13 @@ function ResolveTimesView({ cards, setCards, onBack, onContinue }) {
                       />
                     </div>
                     <div className="resolve-field">
-                      <label htmlFor={`resolve-time-${item.id}`}>Time</label>
+                      <label htmlFor={`resolve-time-${item.id}`}>Choose a start time</label>
                       <input
                         id={`resolve-time-${item.id}`}
                         type="time"
                         value={draft.time}
-                        disabled={done}
-                        onChange={(e) => patchDraft(item.id, { time: e.target.value })}
+                        disabled={done || draft.date_only}
+                        onChange={(e) => patchDraft(item.id, { time: e.target.value, date_only: false })}
                       />
                     </div>
                     <CardReminderField
@@ -1092,18 +1105,31 @@ function ResolveTimesView({ cards, setCards, onBack, onContinue }) {
                     />
                   </div>
                   {!done && (
-                    <button
-                      type="button"
-                      className="btn btn-soft resolve-confirm"
-                      disabled={!canConfirm}
-                      onClick={() => confirmItem(item.id)}
-                    >
-                      Confirm
-                    </button>
+                    <div className="resolve-confirm-row">
+                      <button
+                        type="button"
+                        className={"btn btn-ghost resolve-date-only" + (draft.date_only ? " on" : "")}
+                        aria-pressed={!!draft.date_only}
+                        onClick={() => patchDraft(item.id, {
+                          date_only: !draft.date_only,
+                          time: draft.date_only ? draft.time : "",
+                        })}
+                      >
+                        Date only
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-soft resolve-confirm"
+                        disabled={!canConfirm}
+                        onClick={() => confirmItem(item.id)}
+                      >
+                        Confirm
+                      </button>
+                    </div>
                   )}
                   {done && (
                     <p className="resolve-confirmed-label">
-                      <Ico d={I.check} size={12} /> Confirmed · {formatWhen(draft.date || item.date, draft.time || item.time)}
+                      <Ico d={I.check} size={12} /> Confirmed · {formatWhen(draft.date || item.date, draft.date_only ? null : (draft.time || item.time), draft.date_only || item.date_only)}
                     </p>
                   )}
                 </>
@@ -1255,7 +1281,7 @@ function ReviewView({
                 />
                 <p className="card-cal-preview">{calendarTitle(it)}</p>
                 {it.source && <div className="cq">"{it.source}"</div>}
-                {when && <div className="cwhen"><Ico d={isEvent ? I.cal : I.clock} size={13} /> {isEvent ? when : "Due · " + when}</div>}
+                {when && <div className="cwhen"><Ico d={isEvent ? I.cal : I.clock} size={13} /> {isEvent ? formatWhen(it.date, it.time, it.date_only) : "Due · " + formatWhen(it.date, it.time, it.date_only)}</div>}
                 <div className="resolve-row-fields rev-schedule">
                     <div className="resolve-field">
                       <label htmlFor={`rev-date-${it.id}`}>Date</label>
@@ -1267,12 +1293,16 @@ function ReviewView({
                       />
                     </div>
                     <div className="resolve-field">
-                      <label htmlFor={`rev-time-${it.id}`}>Time</label>
+                      <label htmlFor={`rev-time-${it.id}`}>Choose a start time</label>
                       <input
                         id={`rev-time-${it.id}`}
                         type="time"
                         value={it.time || ""}
-                        onChange={(e) => patchSchedule(it.id, { time: e.target.value || null })}
+                        disabled={!!it.date_only}
+                        onChange={(e) => {
+                          const time = e.target.value || null;
+                          patchSchedule(it.id, time ? { time, date_only: false } : { time: null });
+                        }}
                       />
                     </div>
                     <CardReminderField
@@ -1282,6 +1312,16 @@ function ReviewView({
                       onChange={(patch) => patchSchedule(it.id, patch)}
                     />
                   </div>
+                  <button
+                    type="button"
+                    className={"btn btn-ghost resolve-date-only" + (it.date_only ? " on" : "")}
+                    aria-pressed={!!it.date_only}
+                    onClick={() => patchSchedule(it.id, it.date_only
+                      ? { date_only: false }
+                      : { date_only: true, time: null })}
+                  >
+                    Date only
+                  </button>
                 <div className="cact">
                   <button className="keepbtn" onClick={() => decide(it.id, STATUS.KEPT)}><Ico d={I.check} size={14} /> Keep</button>
                   <button className="discbtn" onClick={() => decide(it.id, STATUS.DISCARDED)}><Ico d={I.x} size={14} /> Discard</button>
@@ -1779,6 +1819,7 @@ ${text}`;
       const syncOpts = {
         meetingDate,
         sessionId: sessionIdRef.current ?? undefined,
+        requireResolved: true,
       };
       const kept = cards.filter((c) => c.status === STATUS.KEPT || c.status === STATUS.CALENDARED);
       const syncable = kept.filter((c) => isSyncEligible(c, syncOpts) && !c.calendar_synced);
@@ -1844,6 +1885,7 @@ ${text}`;
     const syncOpts = {
       meetingDate,
       sessionId: sessionIdRef.current ?? undefined,
+      requireResolved: true,
     };
     if (!card || card.calendar_synced || !isSyncEligible(card, syncOpts)) return;
     setRetryingCardId(cardId);
@@ -1873,6 +1915,7 @@ ${text}`;
     const syncOpts = {
       meetingDate,
       sessionId: sessionIdRef.current ?? undefined,
+      requireResolved: true,
     };
     const failedIds = cards
       .filter((c) => (
@@ -1960,6 +2003,7 @@ ${text}`;
       const syncOpts = {
         meetingDate,
         sessionId: sessionIdRef.current ?? undefined,
+        requireResolved: true,
       };
       const pending = snapshot.filter(
         (c) => (c.status === STATUS.KEPT || c.status === STATUS.CALENDARED) && isSyncEligible(c, syncOpts) && !c.calendar_synced,

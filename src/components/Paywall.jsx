@@ -9,6 +9,7 @@ import { openStripeCheckout } from "../lib/stripeCheckout";
 import { openPaymentLink, STRIPE_LINKS } from "../lib/stripeLinks";
 import { isPaidPlan, isTrialActive } from "../lib/subscription";
 import { supabase } from "../lib/supabase";
+import BillingPeriodToggle from "./BillingPeriodToggle";
 
 const OFFER_FLAG = "trial_deck_offer_dismissed";
 
@@ -77,13 +78,11 @@ const css = `
     transition: color .15s, border-color .15s, background .15s;
   }
   .pw-cta .btn-monthly:hover { color: var(--terra); border-color: var(--terra); background: var(--terra-tint); }
-  .pw-toggle {
+  .pw-toggle-wrap {
     display: flex;
-    gap: 12px;
     justify-content: center;
     margin: 14px 0 16px;
   }
-  .pw-toggle .btn-monthly { flex: 1 1 0; }
   .pw-cta .btn-monthly.selected {
     background: var(--terra);
     border-color: var(--terra);
@@ -279,23 +278,15 @@ export default function Paywall({ reason = "trial", onClose, workspace, subscrip
               <li><Check /> Export to Notion, Slack, or anywhere as a formatted list.</li>
               <li><Check /> Unlock the Conversation Starter Card Deck (free for the first 100 subscribers).</li>
             </ul>
-            <div className="pw-toggle" aria-label="Billing choice">
-              <button
-                type="button"
-                className={"btn-monthly" + (familyBilling === "family_monthly" ? " selected" : "")}
+            <div className="pw-toggle-wrap">
+              <BillingPeriodToggle
+                value={familyBilling}
+                onChange={setFamilyBilling}
                 disabled={checkoutBusy}
-                onClick={() => setFamilyBilling("family_monthly")}
-              >
-                Monthly
-              </button>
-              <button
-                type="button"
-                className={"btn-monthly" + (familyBilling === "family" ? " selected" : "")}
-                disabled={checkoutBusy}
-                onClick={() => setFamilyBilling("family")}
-              >
-                Annual
-              </button>
+                monthlyValue="family_monthly"
+                annualValue="family"
+                annualLabel="Annual"
+              />
             </div>
             <div className="pw-cta">
               <button

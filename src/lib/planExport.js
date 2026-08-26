@@ -16,7 +16,8 @@ export function formatPlanItemWhen(card) {
   if (!card?.date) return "";
   const dt = new Date(`${card.date}T${card.time || "00:00"}:00`);
   const day = dt.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
-  if (!card.time) return day;
+  if (card.date_only) return `${day} · All day`;
+  if (!card.time) return `${day} · Choose a start time`;
   const t = dt.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
   return `${day}, ${t}`;
 }
