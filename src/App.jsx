@@ -24,6 +24,7 @@ import { fetchWorkspaceSubscription, hasFamilyPlanFeatures, paywallReason, upgra
 import { loadFreeSessionCount } from "./lib/distillUsage";
 import { parseAppLocation, syncPath, SYNC_VIEWS, cardsPath } from "./lib/routes";
 import { normalizeCardPeople } from "./lib/familyContext";
+import { foldCalendarReminders } from "./lib/foldCalendarReminders";
 import {
   applySyncResults,
   calendarSyncOutcome,
@@ -1740,20 +1741,18 @@ ${text}`;
       parsed = [];
     }
 
-    const newCards = normalizeCardPeople(
-      parsed.map((c, i) => {
-        const type = CARD_TYPES.includes(c.type) ? c.type : "action";
-        return {
-          ...c,
-          id: c.id ?? i + 1,
-          type,
-          originalType: c.originalType || type,
-          titleEditedByUser: !!c.titleEditedByUser,
-          status: STATUS.OPEN,
-        };
-      }),
-      context
-    );
+    const mapped = (Array.isArray(parsed) ? parsed : []).map((c, i) => {
+      const type = CARD_TYPES.includes(c.type) ? c.type : "action";
+      return {
+        ...c,
+        id: c.id ?? i + 1,
+        type,
+        originalType: c.originalType || type,
+        titleEditedByUser: !!c.titleEditedByUser,
+        status: STATUS.OPEN,
+      };
+    });
+    const newCards = normalizeCardPeople(foldCalendarReminders(mapped), context);
     setCards(newCards);
     setDistillError(errorMsg);
     setDistillDone(true);

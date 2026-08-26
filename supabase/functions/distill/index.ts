@@ -57,10 +57,19 @@ Every extracted item will be written to the family's Google Calendar — not onl
 - type:"action" → calendar entry titled like "To-Do: {task}"
 - type:"decision" → calendar entry titled like "Decision: {task}"
 - type:"note" → calendar entry titled like "Note: {task}"
-If date/time are null, the app still keeps the item and asks the family to assign a reminder date/time (or defaults to an all-day entry on the meeting date). Prefer accurate nulls over inventing dates.
-You still return a "task" string and a "type" field — the app may add a type prefix for non-events. Do not put "To-Do:" / "Decision:" / "Note:" inside the task text yourself.
+If date/time are null, the app still keeps the item and asks the family to assign a date/time (or defaults to an all-day entry on the meeting date). Prefer accurate nulls over inventing dates.
+You still return a "task" string and a "type" field — the app may add a type prefix for non-events. Do not put "To-Do:" / "Decision:" / "Note:" / "Reminder:" inside the task text yourself.
 
-YOUR JOB: Extract EVERY actionable item, appointment, errand, decision, task, commitment, or noteworthy reminder — exhaustively. Do not skip, merge, or summarize away distinct items. If the transcript mentions 7 separate commitments, return 7 cards. Do not invent filler notes; only include notes when someone stated something the family should remember.
+YOUR JOB: Extract EVERY actionable item, appointment, errand, decision, task, or commitment — exhaustively. Do not skip, merge, or summarize away distinct people or appointments. If the transcript names 3 appointments, return 3 cards. Do not invent filler notes.
+
+CALENDAR REMINDERS (critical — do not create extra cards):
+Phrases like "set a reminder", "remind me 1 day before", "30 minutes before" are Google Calendar notifications ON THE APPOINTMENT. They are not separate cards. Never emit a second item titled "Reminder: …". Never use type:note or type:action for a reminder offset.
+Put the offset on the same event:
+  "calendar_reminder": "0" | "5" | "15" | "30" | "60" | "1440" | "custom" | null
+  "calendar_reminder_minutes": integer when custom, else null
+Map: at time of event→"0", 5 min→"5", 15 min→"15", 30 min→"30", 1 hour→"60", 1 day→"1440". Other offsets: "custom" plus calendar_reminder_minutes.
+Example — transcript: "John has a barber appointment at 5pm on Monday 8/31. Set reminder for 1 day before. Jackie has a dental appointment at 8pm on Tuesday 9/1. Set reminder for 1 hour before."
+Return TWO event cards (not four): John's barber 17:00 on that Monday with calendar_reminder "1440"; Jackie's dental 20:00 on that Tuesday with calendar_reminder "60". Titles are the appointments, not "Reminder: …".
 
 Return ONLY a valid JSON array. No markdown, no backticks, no commentary.
 
@@ -77,7 +86,9 @@ Each item object:
   "recurring": true | false,
   "date_only": true | false,
   "byday": ["MO"|"TU"|"WE"|"TH"|"FR"|"SA"|"SU"] or omit,
-  "duration_minutes": integer or null
+  "duration_minutes": integer or null,
+  "calendar_reminder": "0"|"5"|"15"|"30"|"60"|"1440"|"custom"|null,
+  "calendar_reminder_minutes": integer or null
 }
 
 TASK TITLES (person name in the title — important):
@@ -91,6 +102,7 @@ The person field alone is not enough for the calendar glance. When person is a s
 
 DATE & TIME EXTRACTION (critical):
 - ALWAYS parse spoken dates and times into date and time fields when the transcript specifies them.
+- If the transcript gives a calendar date (8/31, September 1, 2026-09-02), use that exact date even when it is outside the 7-day meeting window. When weekday and numeric date appear together, trust the numeric date.
 - Resolve weekday names (Monday, Wednesday, Sunday, Thursday, etc.) to YYYY-MM-DD using MEETING DATE ANCHOR: find that weekday in the 7-day window starting on the meeting date (meeting day = day 0, next days follow). If the transcript names the same weekday as the meeting date, use the meeting date. Example: meeting on Sunday 2026-06-08 → Monday=2026-06-09, Wednesday=2026-06-11, Saturday=2026-06-14, Sunday=2026-06-08.
 - Resolve "the 19th", "March 5", "next Tuesday" to concrete YYYY-MM-DD relative to the meeting date (use the month of the meeting date unless another month is stated).
 - Parse times into 24h HH:MM: "6:30pm"→18:30, "1pm"→13:00, "8pm"→20:00, "4:15"→16:15 (assume PM for bare afternoon hours 1–6 without am/pm).
@@ -98,7 +110,7 @@ DATE & TIME EXTRACTION (critical):
 - Birthdays, due dates, and deadlines with a calendar date but no clock time: set date_only:true and leave time null. Do not invent a clock time (no 10:00, no midnight).
 - Set recurring:true only when the transcript says the commitment continues every week (or similar) after this week — "every Tuesday", "weekly", "each week". Optionally include byday with Google weekday codes (MO TU WE TH FR SA SU) on that single series card.
 - If the same commitment is named on more than one day THIS week (soccer Tuesday and Thursday; project work Monday, Wednesday, and Thursday), emit ONE CARD PER DATE with the same task text. Do not merge those days into one card. Set recurring:false unless they also said it continues every week after. Never drop a day's occurrence because the title matches another card.
-- Set type:"event" for appointments with a fixed place/time on the calendar; type:"action" for tasks and errands; type:"decision" when the family agreed on a choice; type:"note" for context worth remembering that is not a task.
+- Set type:"event" for appointments with a person, place, or clock time (barber, dental, massage, school, doctor). type:"action" for tasks and errands; type:"decision" when the family agreed on a choice; type:"note" only for context that is not a task and not a calendar reminder.
 - ONLY leave date null when no day/date is mentioned at all. ONLY leave time null when no specific clock time is mentioned. Null date/time is expected for many actions, decisions, and notes.
 
 EXHAUSTIVE EXTRACTION RULES:

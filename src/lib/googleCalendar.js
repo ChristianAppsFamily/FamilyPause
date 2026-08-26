@@ -257,12 +257,13 @@ export function clearCardCalendarSync(cards, cardId) {
   ));
 }
 
-/** Google Calendar reminder choices — user-picked, never inferred from card type. */
+/** Google Calendar reminder choices — from the transcript or the Times/Review picker. */
 export const CALENDAR_REMINDER_OPTIONS = [
   { value: "none", label: "None" },
   { value: "0", label: "At time of event" },
   { value: "5", label: "5 minutes before" },
   { value: "15", label: "15 minutes before" },
+  { value: "30", label: "30 minutes before" },
   { value: "60", label: "1 hour before" },
   { value: "1440", label: "1 day before" },
   { value: "custom", label: "Custom" },
