@@ -921,7 +921,7 @@ function CardReminderField({
   const reminder = value || "";
   return (
     <div className="resolve-field">
-      <label htmlFor={id}>Reminder</label>
+      <label htmlFor={id}>Set Reminder</label>
       <select
         id={id}
         value={reminder}
