@@ -1,39 +1,11 @@
 import { calendarTitle } from "./googleCalendar";
+import { getPlanningWeekDates } from "./planWeek";
+import { formatWeekOfRange } from "./planExport";
 
-function pad(n) {
-  return String(n).padStart(2, "0");
-}
-
-function toIso(d) {
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-}
-
-/** Monday–Sunday ISO dates for the calendar week containing meetingDate. */
-export function getMondaySundayWeek(meetingDate) {
-  const start = new Date(`${meetingDate}T12:00:00`);
-  const day = start.getDay(); // 0 Sun … 6 Sat
-  const mondayOffset = day === 0 ? -6 : 1 - day;
-  const monday = new Date(start);
-  monday.setDate(start.getDate() + mondayOffset);
-  return Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(monday);
-    d.setDate(monday.getDate() + i);
-    return toIso(d);
-  });
-}
-
-/** "Jul 7 – Jul 13, 2026" for Mon–Sun week of meetingDate. */
+/** Week range label — same 7-day window as Plan strip and PDF. */
 export function formatItineraryWeekRange(meetingDate) {
-  const dates = getMondaySundayWeek(meetingDate);
-  const start = new Date(`${dates[0]}T12:00:00`);
-  const end = new Date(`${dates[6]}T12:00:00`);
-  const optsDay = { month: "short", day: "numeric" };
-  const startLabel = start.toLocaleDateString("en-US", optsDay);
-  const endLabel = end.toLocaleDateString("en-US", { ...optsDay, year: "numeric" });
-  return `${startLabel} – ${endLabel}`;
+  return formatWeekOfRange(meetingDate);
 }
-
-/** "MONDAY, JULY 7" */
 export function formatItineraryDayHeader(isoDate) {
   const d = new Date(`${isoDate}T12:00:00`);
   return d
@@ -70,13 +42,13 @@ function timeSortKey(card) {
 }
 
 /**
- * Build itinerary days (Mon–Sun, empty days omitted) + recurring + unscheduled.
+ * Build itinerary days (planning week from meeting date, empty days omitted) + recurring + unscheduled.
  * Dated items stay visible even without a clock time.
  * @param {object[]} cards
  * @param {string} meetingDate
  */
 export function buildItinerary(cards, meetingDate) {
-  const week = getMondaySundayWeek(meetingDate);
+  const week = getPlanningWeekDates(meetingDate);
   const inWeek = new Set(week);
   const list = cards || [];
   const dated = list.filter((c) => c?.date);

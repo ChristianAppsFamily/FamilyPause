@@ -413,7 +413,7 @@ export default function MarketingChrome({ children }) {
               </div>
               <div className="fcol">
                 <h4>Get Started</h4>
-                <button type="button" className="fp-footer-link" onClick={onSignIn}>Sign In</button>
+                <AuthHeaderCta variant="footer" footerClassName="fp-footer-link" onSignIn={onSignIn} />
                 <button type="button" className="fp-footer-link" onClick={onStart}>
                   Start My Free Trial
                 </button>

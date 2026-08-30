@@ -1082,6 +1082,11 @@
   box-shadow: 0 8px 20px rgba(94,107,55,.28);
   font-family: var(--display); font-size: 28px; font-weight: 600; line-height: 1;
 }
+.plan-summary-seal--pending {
+  background: var(--terra-soft);
+  color: var(--terra-d);
+  box-shadow: 0 8px 20px rgba(190,90,55,.18);
+}
 .plan-summary-seal--partial {
   background: var(--gold);
   box-shadow: 0 8px 20px rgba(192,151,64,.28);

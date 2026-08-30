@@ -26,7 +26,7 @@ async function invokeCheckout(body) {
 
 /**
  * Start Stripe Checkout for a workspace-scoped purchase.
- * Falls back to static Payment Link URLs if the edge function is unavailable.
+ * Subscription products require edge checkout (workspace_id metadata) — no Payment Link fallback.
  * Existing subscribers are sent to the Customer Portal instead of a second Checkout.
  *
  * @param {"family"|"family_monthly"|"pro"|"digital"|"digital_offer"|"pack_1"|"pack_3"|"pack_5"} product
@@ -82,17 +82,13 @@ export async function openStripeCheckout(product, {
     throw new Error(message);
   }
 
-  if (product === "family_monthly") {
-    const monthly = STRIPE_LINKS.familyMonthly;
-    if (monthly) {
-      window.location.href = monthly;
-      return;
-    }
+  if (product === "family" || product === "family_monthly" || product === "pro") {
+    const message = failData?.error || failData?.message || failError?.message
+      || "Checkout is unavailable. Stripe must be configured before upgrading from Settings.";
+    throw new Error(message);
   }
 
   const fallbackMap = {
-    family: STRIPE_LINKS.familyAnnual || STRIPE_LINKS.family,
-    pro: STRIPE_LINKS.pro,
     digital: STRIPE_LINKS.digital || STRIPE_LINKS.cardDigital,
   };
   const fallback = fallbackMap[product];

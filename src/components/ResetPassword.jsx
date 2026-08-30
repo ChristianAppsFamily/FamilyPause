@@ -3,27 +3,45 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { AuthShell } from "./Auth.jsx";
 
+const LINK_WAIT_MS = 8000;
+
 export default function ResetPassword() {
   const navigate = useNavigate();
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [ready, setReady] = useState(false);
+  const [linkExpired, setLinkExpired] = useState(false);
   const [error, setError] = useState("");
   const [done, setDone] = useState(false);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     let sub;
+    const timer = setTimeout(() => {
+      setReady((isReady) => {
+        if (!isReady) setLinkExpired(true);
+        return isReady;
+      });
+    }, LINK_WAIT_MS);
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         setReady(true);
+        setLinkExpired(false);
         return;
       }
       sub = supabase.auth.onAuthStateChange((event, session) => {
-        if (event === "PASSWORD_RECOVERY" && session) setReady(true);
+        if (event === "PASSWORD_RECOVERY" && session) {
+          setReady(true);
+          setLinkExpired(false);
+        }
       }).data.subscription;
     });
-    return () => sub?.unsubscribe();
+
+    return () => {
+      clearTimeout(timer);
+      sub?.unsubscribe();
+    };
   }, []);
 
   const submit = async () => {
@@ -38,17 +56,43 @@ export default function ResetPassword() {
     setTimeout(() => navigate("/app"), 1800);
   };
 
+  const statusCopy = done
+    ? "Password updated. Taking you to the app…"
+    : linkExpired
+      ? "This reset link has expired or was already used. Request a new one below."
+      : ready
+        ? "Choose a new password for your FamilyPause account."
+        : "Confirming your reset link…";
+
   return (
     <AuthShell>
       <div className="fp-fade">
         <div style={{ fontSize: 11, letterSpacing: "0.25em", color: "var(--terra)", fontFamily: "'JetBrains Mono', monospace", textTransform: "uppercase", marginBottom: 12 }}>
           Account
         </div>
-        <h1 className="form-hl">Set a new password</h1>
-        <p className="form-sub">
-          {done ? "Password updated. Taking you to the app…" : ready ? "Choose a new password for your FamilyPause account." : "Confirming your reset link…"}
-        </p>
+        <h1 className="form-hl">{linkExpired && !ready ? "Link expired" : "Set a new password"}</h1>
+        <p className="form-sub">{statusCopy}</p>
       </div>
+
+      {linkExpired && !ready && !done && (
+        <div className="fp-fade-1" style={{ marginTop: 20 }}>
+          <button
+            type="button"
+            className="fp-btn-primary"
+            onClick={() => navigate("/auth?mode=forgot")}
+          >
+            Request a new reset link
+          </button>
+          <button
+            type="button"
+            className="fp-btn-secondary"
+            style={{ marginTop: 12, width: "100%" }}
+            onClick={() => navigate("/auth")}
+          >
+            Back to sign in
+          </button>
+        </div>
+      )}
 
       {!done && ready && (
         <>
@@ -85,7 +129,7 @@ export default function ResetPassword() {
         </>
       )}
 
-      {!ready && !done && (
+      {!ready && !done && !linkExpired && (
         <div style={{ width: 32, height: 32, border: "2px solid #E6D9C4", borderTopColor: "#BE5A37", borderRadius: "50%", animation: "spin 0.8s linear infinite", margin: "24px auto 0" }} />
       )}
       <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>

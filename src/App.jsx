@@ -20,10 +20,11 @@ import CardSystem from "./components/CardSystem.jsx";
 import Paywall from "./components/Paywall.jsx";
 import PlanView from "./components/PlanView.jsx";
 import UpgradePrompt from "./components/UpgradePrompt.jsx";
-import { fetchWorkspaceSubscription, hasFamilyPlanFeatures, paywallReason, upgradePaywallReason } from "./lib/subscription";
+import { fetchWorkspaceSubscription, hasFamilyPlanFeatures, paywallReason, upgradePaywallReason, pollUntilPaid } from "./lib/subscription";
 import { loadFreeSessionCount } from "./lib/distillUsage";
 import { parseAppLocation, syncPath, SYNC_VIEWS, cardsPath } from "./lib/routes";
 import { normalizeCardPeople } from "./lib/familyContext";
+import { formatPlanItemWhen } from "./lib/planExport";
 import { stripReminderSatellites } from "./lib/foldCalendarReminders";
 import {
   applySyncResults,
@@ -123,13 +124,7 @@ function prettyDate(d) {
   return dt.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
 }
 function formatWhen(date, time, dateOnly) {
-  if (!date) return "";
-  const dt = new Date(date + "T" + (time || "00:00") + ":00");
-  const day = dt.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
-  if (dateOnly) return `${day} · All day`;
-  if (!time) return day;
-  const t = dt.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
-  return `${day} · ${t}`;
+  return formatPlanItemWhen({ date, time, date_only: dateOnly });
 }
 
 const STATUS = { OPEN: "pending", KEPT: "kept", DISCARDED: "discarded", CALENDARED: "calendared" };
@@ -1027,6 +1022,33 @@ function ResolveTimesView({ cards, setCards, onBack, onContinue }) {
     setConfirmedIds((prev) => new Set(prev).add(id));
   };
 
+  const cardPatchFromDraft = (c, draft) => {
+    if (!draft?.date) return c;
+    const dateOnly = !!draft.date_only;
+    if (!dateOnly && !draft.time) return c;
+    return {
+      ...c,
+      date: draft.date,
+      time: dateOnly ? null : draft.time,
+      date_only: dateOnly,
+      datetime_confirmed: true,
+      calendar_reminder: draft.calendar_reminder || null,
+      calendar_reminder_minutes: draft.calendar_reminder === "custom"
+        ? (draft.calendar_reminder_minutes === "" ? null : draft.calendar_reminder_minutes)
+        : null,
+    };
+  };
+
+  const handleContinue = () => {
+    const next = cards.map((c) => {
+      const draft = drafts[c.id];
+      if (!draft) return c;
+      return cardPatchFromDraft(c, draft);
+    });
+    setCards(next);
+    onContinue();
+  };
+
   return (
     <div className="view resolve-view">
       <div className="resolve-intro">
@@ -1142,7 +1164,7 @@ function ResolveTimesView({ cards, setCards, onBack, onContinue }) {
 
       <div className="resolve-foot">
         <button type="button" className="linkish" onClick={onBack}>← Back to capture</button>
-        <button type="button" className="btn btn-primary btn-lg" onClick={onContinue}>
+        <button type="button" className="btn btn-primary btn-lg" onClick={handleContinue}>
           Continue to review
         </button>
       </div>
@@ -1256,7 +1278,7 @@ function ReviewView({
           {visible.map((it) => {
             const who = roleOf(it.person);
             const isEvent = it.type === "event";
-            const when = formatWhen(it.date, it.time);
+            const when = formatPlanItemWhen(it);
             const decidedState = it.status === STATUS.KEPT || it.status === STATUS.CALENDARED ? "kept" : it.status === STATUS.DISCARDED ? "discarded" : "";
             return (
               <div key={it.id} className={`revcard ${who} ${decidedState}`}>
@@ -1390,6 +1412,7 @@ export default function App({ user, workspace, onSignOut }) {
   const [calendarBusy, setCalendarBusy] = useState(false);
   const [calendarSyncing, setCalendarSyncing] = useState(false);
   const [retryingCardId, setRetryingCardId] = useState(null);
+  const prevOverlayRef = useRef(null);
   const [unsyncingCardId, setUnsyncingCardId] = useState(null);
   const [calendarConnected, setCalendarConnected] = useState(false);
   const [calendarSyncNotice, setCalendarSyncNotice] = useState(null);
@@ -1465,6 +1488,23 @@ export default function App({ user, workspace, onSignOut }) {
     return () => { active = false; };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.search, ws?.id]);
+
+  // Poll subscription after Stripe checkout when returning inside /app (e.g. sync routes)
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get("checkout") !== "success" || !ws?.id) return;
+    if (location.pathname === "/app/settings") return;
+    let cancelled = false;
+    pollUntilPaid(ws.id, { timeoutMs: 18000, intervalMs: 1000 }).then(({ subscription: next }) => {
+      if (!cancelled && next) setSubscription(next);
+      if (!cancelled) {
+        params.delete("checkout");
+        const qs = params.toString();
+        navigate(`${location.pathname}${qs ? `?${qs}` : ""}`, { replace: true });
+      }
+    });
+    return () => { cancelled = true; };
+  }, [location.search, location.pathname, ws?.id, navigate]);
 
   const loadCaptureDraftState = useCallback(() => {
     if (!ws?.id) return;
@@ -1552,6 +1592,17 @@ export default function App({ user, workspace, onSignOut }) {
   useEffect(() => {
     if (overlay !== null || !ws?.id) return;
     fetchWorkspaceSubscription(ws.id).then((sub) => setSubscription(sub)).catch(() => {});
+  }, [overlay, ws?.id]);
+
+  useEffect(() => {
+    const wasPaywall = prevOverlayRef.current === "paywall";
+    prevOverlayRef.current = overlay;
+    if (!wasPaywall || overlay !== null || !ws?.id) return;
+    let cancelled = false;
+    pollUntilPaid(ws.id, { timeoutMs: 12000, intervalMs: 1000 }).then(({ subscription: next }) => {
+      if (!cancelled && next) setSubscription(next);
+    });
+    return () => { cancelled = true; };
   }, [overlay, ws?.id]);
 
   const familyFeaturesEnabled = hasFamilyPlanFeatures(subscription, {
@@ -1840,7 +1891,7 @@ ${text}`;
           const { updatedCards } = await syncCardsToCalendar(ws.id, cards, syncOpts);
           setCards(updatedCards);
           const outcome = calendarSyncOutcome(updatedCards, syncOpts);
-          syncedAll = outcome.state === "succeeded" || outcome.state === "idle";
+          syncedAll = outcome.state === "succeeded";
           if (outcome.state === "failed" || outcome.state === "partial") {
             const failed = updatedCards.find((c) => c.calendar_sync_failed);
             setCalendarSyncNotice(userMessageForSyncCode(failed?.calendar_sync_error));

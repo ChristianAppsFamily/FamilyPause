@@ -523,6 +523,10 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
     try {
       await openStripeCheckout(
         familyBilling === "monthly" ? "family_monthly" : "family",
+        {
+          successPath: "/app/settings?checkout=success",
+          cancelPath: "/app/settings?checkout=cancel",
+        },
       );
     } catch (e) {
       setUpgradeError(e?.message || "Checkout is unavailable. Try again.");

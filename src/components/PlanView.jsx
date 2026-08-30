@@ -380,9 +380,14 @@ export default function PlanView({
   const [showExportUpgrade, setShowExportUpgrade] = useState(false);
   const [planMode, setPlanMode] = useState("plan"); // "plan" | "itinerary"
 
+  const syncOpts = useMemo(
+    () => ({ meetingDate, requireResolved: true }),
+    [meetingDate],
+  );
+
   const outcome = useMemo(
-    () => calendarSyncOutcome(keptCards, { meetingDate, syncing: calendarBusy }),
-    [keptCards, meetingDate, calendarBusy],
+    () => calendarSyncOutcome(keptCards, { ...syncOpts, syncing: calendarBusy }),
+    [keptCards, syncOpts, calendarBusy],
   );
 
   const syncCopy = (() => {
@@ -403,10 +408,13 @@ export default function PlanView({
       };
     }
     if (outcome.state === "succeeded") {
+      const n = outcome.synced;
       return {
         seal: "ok",
         eyebrow: "Step 5 · Your week is built",
-        sub: "A clean plan, organized by person. Appointments timed, actions owned, nothing forgotten.",
+        sub: n === 1
+          ? "1 item added to Google Calendar."
+          : `${n} items added to Google Calendar.`,
         interstitial: "Your week is built.",
       };
     }
@@ -424,6 +432,14 @@ export default function PlanView({
         eyebrow: "Step 5 · Calendar sync didn't finish",
         sub: calendarSyncNotice || userMessageForSyncCode(null),
         interstitial: "Your week is built — calendar items were not added.",
+      };
+    }
+    if (outcome.state === "pending") {
+      return {
+        seal: "pending",
+        eyebrow: "Step 5 · Calendar sync pending",
+        sub: `${outcome.pending} ${outcome.pending === 1 ? "item hasn't" : "items haven't"} been added to Google Calendar yet. Use Add to Cal or Retry below.`,
+        interstitial: "Your week is built — calendar sync still pending.",
       };
     }
     return {
@@ -485,7 +501,6 @@ export default function PlanView({
 
   const Item = ({ it, index, showBadge }) => {
     const synced = it.calendar_synced;
-        const syncOpts = { meetingDate, requireResolved: true };
     const canSync = isSyncEligible(it, syncOpts);
     const adding = !synced && canSync && (
       retryingCardId === it.id

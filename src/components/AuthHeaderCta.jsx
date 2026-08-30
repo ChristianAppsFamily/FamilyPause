@@ -8,6 +8,8 @@ import { useAuthSession } from "../lib/useAuthSession";
 export default function AuthHeaderCta({
   onSignIn,
   className = "btn btn-primary",
+  footerClassName = "fp-footer-link",
+  variant = "button",
   onNavigate,
 }) {
   const auth = useAuthSession();
@@ -18,9 +20,12 @@ export default function AuthHeaderCta({
     navigate("/app");
   };
 
+  const resolvedClass = variant === "footer" ? footerClassName : className;
+
   if (auth === "loading") {
+    if (variant === "footer") return null;
     return (
-      <button type="button" className={className + " auth-cta-placeholder"} disabled tabIndex={-1} aria-hidden="true">
+      <button type="button" className={resolvedClass + " auth-cta-placeholder"} disabled tabIndex={-1} aria-hidden="true">
         Sign In
       </button>
     );
@@ -28,7 +33,7 @@ export default function AuthHeaderCta({
 
   if (auth === "signedIn") {
     return (
-      <button type="button" className={className} onClick={goApp}>
+      <button type="button" className={resolvedClass} onClick={goApp}>
         Continue
       </button>
     );
@@ -37,7 +42,7 @@ export default function AuthHeaderCta({
   return (
     <button
       type="button"
-      className={className}
+      className={resolvedClass}
       onClick={() => {
         onNavigate?.();
         onSignIn();

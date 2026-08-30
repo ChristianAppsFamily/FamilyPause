@@ -328,4 +328,27 @@ OAuth consent screen must be in **Testing** or **Production** with your Google a
 
 Re-set secrets (no `http://`), then retry connect from Settings.
 
+---
+
+## Enterprise waitlist + lead capture
+
+Landing pricing **Join the Waitlist** and the free guide modal post to the `capture-lead` edge function.
+
+1. **Migration** — apply `supabase/migrations/20260815_leads.sql` (creates `public.leads` with RLS):
+
+```bash
+supabase db push
+# or paste the SQL file in Supabase Dashboard → SQL Editor
+```
+
+2. **Deploy function** (must stay JWT-free for public forms):
+
+```bash
+supabase functions deploy capture-lead --no-verify-jwt
+```
+
+3. **Verify** — submit the enterprise waitlist form on `/#pricing`; confirm a row appears in **Table Editor → leads** with `source = ministry_waitlist` (or the form’s source key).
+
+Required secrets for guide email delivery: `RESEND_API_KEY`, `RESEND_FROM_EMAIL`. Waitlist rows persist even if Resend is not configured.
+
 After connecting, re-run the **Google Calendar** SQL block in `supabase_setup.sql` if you have not yet added `google_calendar_email` (stores which Google account was linked).
