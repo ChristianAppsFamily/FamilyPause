@@ -1425,8 +1425,9 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
               <h2>Start with what you&apos;ve got.<br />End with a <em>plan.</em></h2>
               <p>
                 No perfect lists required. Paste it, record it, or type it. FamilyPause finds the appointments, tasks, reminders, then organizes everything into a plan you review before it auto-syncs to your calendar.
-                {" "}Connect Google Calendar to add approved plan items as events. FamilyPause does not read your existing calendar. Access is optional — disconnect anytime in Settings.{" "}
+                {" "}Connect Google Calendar to add approved plan items as events. FamilyPause does not read your existing calendar. Access is optional see{" "}
                 <a href="/privacy.html">Privacy</a>
+                , and disconnect anytime in Settings.
               </p>
             </div>
             <img
