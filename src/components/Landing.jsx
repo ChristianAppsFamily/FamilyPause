@@ -1428,6 +1428,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                 {" "}Connect Google Calendar to add approved plan items as events. FamilyPause does not read your existing calendar. Access is optional see{" "}
                 <a href="/privacy.html">Privacy</a>
                 , and disconnect anytime in Settings.
+                {" "}The use of raw or derived user data received from Google APIs (including Google Calendar / Workspace APIs) adheres to the Google API Services User Data Policy, including the Limited Use requirements.
               </p>
             </div>
             <img

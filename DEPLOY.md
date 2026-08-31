@@ -335,6 +335,36 @@ Privacy must be a dedicated page (not the homepage). After expanding Google user
 
 Then in Cloud Console set both consent fields to the www URLs above and submit for verification.
 
+### OAuth scopes and use-case reply (verification)
+
+**Scopes:** Cloud Console → OAuth consent screen → Data Access / Scopes must list **only**:
+
+`https://www.googleapis.com/auth/calendar.events`
+
+Remove any Drive, Gmail, Fit, or Photos scopes if present. FamilyPause code requests this single scope in `supabase/functions/google-calendar-auth`.
+
+**If Google asks about Drive / Gmail / Fit / health research / AI + Workspace Limited Use**, wait until the homepage and privacy Limited Use lines are live, then reply:
+
+```text
+FamilyPause only requests https://www.googleapis.com/auth/calendar.events.
+We do not use Google Drive, Gmail, Google Fit, or Photos APIs.
+
+Use case: personal/family productivity — after a user reviews their weekly plan,
+approved items are written as events on the Google Calendar account they connect
+in Settings. We do not read their existing calendar to build the plan.
+
+AI: We use Anthropic only on text the user types, pastes, or records in FamilyPause.
+We do not send Google OAuth tokens or Google Calendar API data to Anthropic or any
+AI/ML system, and we do not use Google API data to train or improve any AI/ML models.
+
+We are not a health research application.
+
+Our privacy policy and homepage state that use of raw or derived user data from
+Google APIs adheres to the Google API Services User Data Policy, including Limited Use.
+Privacy: https://www.familypause.com/privacy.html
+Homepage: https://www.familypause.com/
+```
+
 **Account picker:** The connect flow uses `prompt=select_account` so Google always shows the account chooser — your FamilyPause login and Google Calendar account can be different Gmail addresses.
 
 **`invalid_client` error:** Google rejected the OAuth client ID. Common causes:
