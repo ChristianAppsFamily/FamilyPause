@@ -47,4 +47,11 @@ h2 {
 }
 
 p { color: #5B5245; margin-bottom: 14px; font-size: 16px; }
+ul {
+  color: #5B5245;
+  margin: 0 0 14px;
+  padding-left: 1.35em;
+  font-size: 16px;
+}
+li { margin-bottom: 6px; }
 a { color: #BE5A37; }
