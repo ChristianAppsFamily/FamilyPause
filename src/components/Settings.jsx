@@ -950,6 +950,10 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
               Connect Google Calendar
             </button>
           )}
+          <p className="set-sub" style={{ margin: "16px 0 0", fontStyle: "italic", fontSize: 13, lineHeight: 1.5 }}>
+            The use of raw or derived user data received from Google APIs (including Google Calendar / Workspace APIs) adheres to the Google API Services User Data Policy, including the Limited Use requirements.{" "}
+            <a className="set-inline-link" href="/privacy.html" target="_blank" rel="noopener noreferrer">Privacy</a>
+          </p>
         </section>
 
         {/* ── SIGN OUT ───────────────────────────────────────────────── */}
