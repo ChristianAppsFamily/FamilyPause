@@ -1520,12 +1520,11 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                   <div className="price"><span className="amt">$0</span></div>
                   <div className="subprice">Everything you need to keep creating family plans after your trial.</div>
                   <ul className="feats">
-                    <li><span className="far">→</span> Connect to your provided Google Calendar.</li>
+                    <li><span className="far">→</span> Add approved items to your provided Google Calendar.</li>
                     <li><span className="far">→</span> Type, paste, or record what needs planning.</li>
                     <li><span className="far">→</span> Edit item titles, dates, times.</li>
                     <li><span className="far">→</span> One plan per week.</li>
                     <li><span className="far">→</span> Review extracted items before they are scheduled.</li>
-                    <li><span className="far">→</span> Add approved items to your calendar.</li>
                     <li><span className="far">→</span> View your week as a simple itinerary.</li>
                     <li><span className="far">→</span> Copy your plan as text into any app.</li>
                     <li><span className="far">→</span> 7 free Conversation Starter Cards.</li>
@@ -1573,7 +1572,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                   </p>
                   <p className="tier-includes">Everything in Free, plus:</p>
                   <ul className="feats">
-                    <li><span className="far">→</span> Works with the Google Calendar you already share.</li>
+                    <li><span className="far">→</span> Add approved items to your provided Google Calendar.</li>
                     <li><span className="far">→</span> Assign items to family members.</li>
                     <li><span className="far">→</span> Resolve missing dates and times inline.</li>
                     <li><span className="far">→</span> Create unlimited plans.</li>
