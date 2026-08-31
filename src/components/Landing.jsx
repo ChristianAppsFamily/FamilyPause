@@ -731,6 +731,8 @@ const css = `
 }
 .fp-landing #how .shead h2 { font-size: 42px; margin: 12px 0 14px; }
 .fp-landing #how .shead p { font-size: 17px; }
+.fp-landing #how .shead p a { color: var(--terra); text-decoration: underline; text-underline-offset: 3px; }
+.fp-landing #how .shead p a:hover { color: var(--terra-d); }
 .fp-landing #how .how-photo {
   display: block;
   width: 100%;
@@ -1421,7 +1423,11 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
             <div className="shead reveal">
               <span className="eyebrow">How it works</span>
               <h2>Start with what you&apos;ve got.<br />End with a <em>plan.</em></h2>
-              <p>No perfect lists required. Paste it, record it, or type it. FamilyPause finds the appointments, tasks, reminders, then organizes everything into a plan you review before it auto-syncs to your calendar.</p>
+              <p>
+                No perfect lists required. Paste it, record it, or type it. FamilyPause finds the appointments, tasks, reminders, then organizes everything into a plan you review before it auto-syncs to your calendar.
+                {" "}Connect Google Calendar to add approved plan items as events. FamilyPause does not read your existing calendar. Access is optional — disconnect anytime in Settings.{" "}
+                <a href="/privacy.html">Privacy</a>
+              </p>
             </div>
             <img
               className="how-photo reveal"

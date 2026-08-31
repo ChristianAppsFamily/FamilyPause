@@ -319,6 +319,17 @@ Re-run the **Google Calendar** block in **`supabase_setup.sql`** (adds token col
 
 OAuth consent screen must be in **Testing** or **Production** with your Google account added as a test user until the app is verified.
 
+### OAuth consent screen URLs (verification)
+
+Apex `https://familypause.com/` **308-redirects to www**. Submit the final host so Google does not flag a homepage redirect:
+
+| Consent screen field | Exact value |
+| --- | --- |
+| Application home page | `https://www.familypause.com/` |
+| Privacy policy | `https://www.familypause.com/privacy.html` |
+
+In [Cloud Console → OAuth consent screen](https://console.cloud.google.com/apis/credentials/consent), set both fields, then **Prepare for verification** → confirm → submit only after homepage blurb and privacy updates are live.
+
 **Account picker:** The connect flow uses `prompt=select_account` so Google always shows the account chooser — your FamilyPause login and Google Calendar account can be different Gmail addresses.
 
 **`invalid_client` error:** Google rejected the OAuth client ID. Common causes:
