@@ -374,6 +374,59 @@ Homepage: https://www.familypause.com/
 
 Re-set secrets (no `http://`), then retry connect from Settings.
 
+### OAuth verification — reviewer testing (in-app)
+
+Google’s verification team needs a login URL, credentials, and step-by-step OAuth navigation. Prefer **Option 2: local test credentials** on production www.
+
+**Before you email Google (do this once — do not commit passwords):**
+
+1. Sign up at `https://www.familypause.com/app` with a dedicated email/password account (not “Continue with Google” only).
+2. Finish onboarding so Settings is reachable.
+3. Leave Google Calendar **disconnected** on that account.
+4. Do not enable MFA/2FA for that user in Supabase Auth.
+5. Keep the password only in your reply to Google — never in this repo.
+
+**Ready-to-paste reply** (replace placeholders):
+
+```text
+Login URL:
+https://www.familypause.com/app
+
+Test account (email/password — 2FA disabled):
+Email: REPLACE_ME_TEST_EMAIL
+Password: REPLACE_ME_TEST_PASSWORD
+
+How to log in:
+1. Open https://www.familypause.com/app
+2. Click Sign In (if on the marketing site, use Sign In in the header)
+3. Enter the test email and password above (do not use “Continue with Google” for FamilyPause login)
+4. You should land in the FamilyPause app (weekly sync / agenda)
+
+How to execute the Google Calendar OAuth consent workflow:
+1. Open Settings (gear / Settings in the app chrome)
+2. Scroll to Integrations → “Connect Google Calendar”
+3. Click “Connect Google Calendar”
+4. On the in-app account-chooser step, click “Choose Google account”
+5. You are redirected to Google’s OAuth consent screen
+6. Sign in with any Google account the reviewer controls and grant access
+   Requested scope: https://www.googleapis.com/auth/calendar.events
+   (create/manage calendar events FamilyPause writes; we do not use Drive, Gmail, or Fit)
+   Note: FamilyPause login and the Google Calendar account can be different addresses
+7. After approve, you return to Settings with calendar connected
+8. Optional end-to-end use of the scope: create a short Capture note with a dated
+   appointment → Build → Times (if prompted) → Review (Keep) → Build my week / Plan →
+   events sync to the connected Google Calendar (or use Plan “Add to Cal” if not already synced)
+
+No phone numbers, file uploads, or other special inputs are required.
+
+Privacy: https://www.familypause.com/privacy.html
+Homepage: https://www.familypause.com/
+```
+
+**Allow-list alternative:** If Google sent a reviewer email address, you may authorize that address instead of sharing a password; still include the login URL and OAuth steps above.
+
+**Staging Cloud project:** Not required for the first reply. Create a separate GCP project + staging deploy only if live users must avoid the unverified-app screen, the 100-user cap is exhausted, or you are adding new sensitive scopes.
+
 ---
 
 ## Enterprise waitlist + lead capture
