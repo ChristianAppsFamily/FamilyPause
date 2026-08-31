@@ -365,6 +365,63 @@ Privacy: https://www.familypause.com/privacy.html
 Homepage: https://www.familypause.com/
 ```
 
+### OAuth scope justification (minimum scopes)
+
+FamilyPause already requests the **minimum** Calendar write scope. Do **not** downscope away from `calendar.events` (read-only scopes cannot create events). Drive / Gmail / Fit downscope tables do **not** apply.
+
+**Cloud Console checklist**
+
+1. OAuth consent screen → Scopes: list **only** `https://www.googleapis.com/auth/calendar.events` (must match verification submission and production code).
+2. Paste this into the scope justification field:
+
+```text
+FamilyPause uses https://www.googleapis.com/auth/calendar.events so that after a user
+reviews their weekly family plan and keeps an item, the app can create, update, or delete
+a matching Google Calendar event on the calendar account they connect in Settings.
+We do not request https://www.googleapis.com/auth/calendar (full calendar management),
+calendar.readonly, Drive, Gmail, or Fit. Narrower scopes cannot create or update events,
+which is the only Google API feature we implement.
+```
+
+3. Reply to the OAuth verification email with the detailed rationale below (if they say the Console justification was insufficient).
+
+**Ready email reply (detailed)**
+
+```text
+Scope requested (only):
+https://www.googleapis.com/auth/calendar.events
+
+Why this scope is necessary:
+FamilyPause is a family weekly planning app. Users type, paste, or record what is going
+on this week. The app extracts appointments and tasks; the user reviews each item
+(Keep / Discard). For kept items, FamilyPause creates or updates Google Calendar events
+on the Google account the user connects under Settings → Connect Google Calendar, and
+can delete those events when the user unsyncs. That requires calendar.events.
+
+What we do with the data:
+- Create events for approved plan items (title, date/time or all-day, optional reminders)
+- Update or delete events FamilyPause previously created (idempotent google_event_id)
+- Store OAuth tokens and connected Google account email only to maintain that sync
+
+What we do not do:
+- We do not read the user’s existing calendar to build the plan
+- We do not request https://www.googleapis.com/auth/calendar (broader calendar management)
+- We do not use Drive, Gmail, Google Fit, or Photos APIs or scopes
+- We do not request scopes for unimplemented future features
+
+Why narrower scopes are insufficient:
+calendar.readonly and similar read-only scopes cannot create or update events.
+There is no narrower Google Calendar scope that supports write-only event create/update/
+delete for our implemented sync feature. drive.file and Gmail/Fit downscopes do not apply;
+we do not use those APIs.
+
+Consent screen and submission both list only calendar.events, matching production code
+(supabase/functions/google-calendar-auth).
+
+Demo path: log in → Settings → Connect Google Calendar → grant consent →
+optionally Capture a dated appointment → Review Keep → Plan sync / Add to Cal.
+```
+
 **Account picker:** The connect flow uses `prompt=select_account` so Google always shows the account chooser — your FamilyPause login and Google Calendar account can be different Gmail addresses.
 
 **`invalid_client` error:** Google rejected the OAuth client ID. Common causes:
