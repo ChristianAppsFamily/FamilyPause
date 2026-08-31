@@ -1520,6 +1520,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                   <div className="price"><span className="amt">$0</span></div>
                   <div className="subprice">Everything you need to keep creating family plans after your trial.</div>
                   <ul className="feats">
+                    <li><span className="far">→</span> Connect to your provided Google Calendar.</li>
                     <li><span className="far">→</span> Type, paste, or record what needs planning.</li>
                     <li><span className="far">→</span> Edit item titles, dates, times.</li>
                     <li><span className="far">→</span> One plan per week.</li>
