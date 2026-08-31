@@ -959,6 +959,25 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
           <p className="set-sub">
             {user?.email ? `Signed in as ${user.email}.` : "Sign out of FamilyPause on this device."}
           </p>
+          <p className="set-sub" style={{ margin: "0 0 14px" }}>
+            <a
+              className="set-inline-link"
+              href="/privacy.html"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Privacy policy
+            </a>
+            {" · "}
+            <a
+              className="set-inline-link"
+              href="/terms.html"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Terms
+            </a>
+          </p>
           <button className="btn btn-ghost" onClick={onSignOut}>Sign out</button>
         </section>
 

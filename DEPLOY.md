@@ -328,7 +328,12 @@ Apex `https://familypause.com/` **308-redirects to www**. Submit the final host 
 | Application home page | `https://www.familypause.com/` |
 | Privacy policy | `https://www.familypause.com/privacy.html` |
 
-In [Cloud Console → OAuth consent screen](https://console.cloud.google.com/apis/credentials/consent), set both fields, then **Prepare for verification** → confirm → submit only after homepage blurb and privacy updates are live.
+Privacy must be a dedicated page (not the homepage). After expanding Google user-data disclosures in `public/privacy.html` and adding the in-app Privacy link in Settings, wait for the Vercel deploy, then confirm:
+
+1. `https://www.familypause.com/privacy.html` loads and names Google Calendar access, use, sharing, retention, and Limited Use.
+2. Settings → Account shows **Privacy policy** (opens the same URL).
+
+Then in Cloud Console set both consent fields to the www URLs above and submit for verification.
 
 **Account picker:** The connect flow uses `prompt=select_account` so Google always shows the account chooser — your FamilyPause login and Google Calendar account can be different Gmail addresses.
 
