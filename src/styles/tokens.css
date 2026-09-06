@@ -345,15 +345,15 @@ h1, h2, h3 { font-family: var(--display); font-weight: 600; margin: 0; letter-sp
   font-weight: 500;
   display: inline-block;
 }
-.tag-spence  { background: var(--terra-soft); color: var(--terra-d); }
-.tag-amanda  { background: var(--olive-soft); color: var(--olive-d); }
+.tag-person1 { background: var(--terra-soft); color: var(--terra-d); }
+.tag-person2 { background: var(--olive-soft); color: var(--olive-d); }
 .tag-both    { background: var(--gold-soft); color: #8a6a16; }
 .tag-cat     { background: var(--paper-3); color: var(--ink-2); }
 
 /* person dot */
 .pdot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
-.pdot.spence { background: var(--terra); }
-.pdot.amanda { background: var(--olive); }
+.pdot.person1 { background: var(--terra); }
+.pdot.person2 { background: var(--olive); }
 .pdot.both   { background: var(--gold); }
 
 /* date pill (from screens.css) */

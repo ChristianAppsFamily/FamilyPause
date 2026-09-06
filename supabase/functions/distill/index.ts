@@ -23,6 +23,8 @@ const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Frida
 
 const FREE_SESSION_BUILDS = 5;
 const LIFETIME_USAGE_DATE = "1970-01-01";
+/** Reject oversized transcripts before calling Anthropic. */
+const TRANSCRIPT_MAX_CHARS = 50000;
 
 type ExtractionContext = {
   meeting_date?: string;
@@ -207,6 +209,12 @@ Deno.serve(async (req) => {
 
     const { prompt, system, cacheSystem = false, extraction, session_id: sessionId } = await req.json();
     if (!prompt) return json({ error: "Missing prompt" }, 400);
+    if (typeof prompt === "string" && prompt.length > TRANSCRIPT_MAX_CHARS + 4000) {
+      return json({
+        error: `Transcript is too long. Keep it under ${TRANSCRIPT_MAX_CHARS.toLocaleString()} characters.`,
+        code: "TRANSCRIPT_TOO_LONG",
+      }, 413);
+    }
 
     const isExtraction = !!extraction;
     let recapture = false;

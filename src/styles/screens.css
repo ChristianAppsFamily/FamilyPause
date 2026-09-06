@@ -676,7 +676,8 @@
   transition: opacity .45s ease, transform .45s cubic-bezier(.3,.8,.3,1), box-shadow .2s, max-height .45s ease, margin .45s, padding .45s;
   position: relative; overflow: hidden;
 }
-.revcard.amanda { border-left-color: var(--olive); }
+.revcard.person1 { border-left-color: var(--terra); }
+.revcard.person2 { border-left-color: var(--olive); }
 .revcard.both   { border-left-color: var(--gold); }
 .revcard:hover { box-shadow: var(--shadow); }
 .revcard .ctop { display: flex; align-items: center; gap: 9px; margin-bottom: 12px; }
@@ -938,8 +939,8 @@
   white-space: nowrap;
   opacity: .85;
 }
-.itinerary-who--spence { color: var(--terra); }
-.itinerary-who--amanda { color: var(--olive); }
+.itinerary-who--person1 { color: var(--terra); }
+.itinerary-who--person2 { color: var(--olive); }
 .itinerary-who--both { color: var(--gold); }
 .itinerary-actions {
   display: flex;

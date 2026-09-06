@@ -1,11 +1,26 @@
 import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
 
-const cors = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-};
+const ALLOWED_ORIGINS = new Set([
+  "https://www.familypause.com",
+  "https://familypause.com",
+]);
+
+function corsHeaders(req) {
+  const origin = typeof req.headers?.origin === "string" ? req.headers.origin : "";
+  const isProd = process.env.VERCEL_ENV === "production" || process.env.NODE_ENV === "production";
+  const allowLocal = !isProd && /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin);
+  const allowed = ALLOWED_ORIGINS.has(origin) || allowLocal;
+  const headers = {
+    "Access-Control-Allow-Headers": "content-type",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    Vary: "Origin",
+  };
+  if (allowed && origin) {
+    headers["Access-Control-Allow-Origin"] = origin;
+  }
+  return headers;
+}
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const SOURCE_RE = /^[a-z0-9_]{2,80}$/;
@@ -102,7 +117,7 @@ async function saveLead(email, firstName, source) {
 }
 
 export default async function handler(req, res) {
-  Object.entries(cors).forEach(([k, v]) => res.setHeader(k, v));
+  Object.entries(corsHeaders(req)).forEach(([k, v]) => res.setHeader(k, v));
   if (req.method === "OPTIONS") return res.status(200).end();
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 

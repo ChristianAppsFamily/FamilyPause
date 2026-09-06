@@ -195,6 +195,40 @@ Deno.serve(async (req) => {
       return json({ url, portal: true });
     }
 
+    // Immediate cancel when deleting a workspace so billing stops.
+    if (body.action === "cancel_subscription") {
+      const { data: sub } = await admin
+        .from("subscriptions")
+        .select("stripe_sub_id, id")
+        .eq("workspace_id", workspaceId)
+        .maybeSingle();
+      if (!sub?.stripe_sub_id) {
+        return json({ ok: true, canceled: false, reason: "no_subscription" });
+      }
+      try {
+        await stripe.subscriptions.cancel(sub.stripe_sub_id);
+      } catch (err) {
+        const msg = err?.message || String(err);
+        // Already canceled / missing — treat as success so delete can proceed.
+        if (/No such subscription|already been canceled|resource_missing/i.test(msg)) {
+          await admin.from("subscriptions").update({
+            active: false,
+            stripe_sub_id: null,
+            updated_at: new Date().toISOString(),
+          }).eq("id", sub.id);
+          return json({ ok: true, canceled: true, reason: "already_canceled" });
+        }
+        console.error("[stripe-checkout] cancel_subscription", err);
+        return json({ error: "Could not cancel subscription. Try again or manage billing first.", code: "cancel_failed" }, 502);
+      }
+      await admin.from("subscriptions").update({
+        active: false,
+        stripe_sub_id: null,
+        updated_at: new Date().toISOString(),
+      }).eq("id", sub.id);
+      return json({ ok: true, canceled: true });
+    }
+
     // ── Verify post-subscribe deck offer eligibility ───────────────────────
     if (body.action === "verify_deck_offer") {
       const parentSessionId = body.parentSessionId?.trim();

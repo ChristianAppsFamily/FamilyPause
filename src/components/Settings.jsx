@@ -21,7 +21,7 @@ import { useState, useEffect } from "react";
 const SHOW_INVITE_SPOUSE = false;
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "../lib/supabase";
-import { openBillingPortal, openStripeCheckout } from "../lib/stripeCheckout";
+import { openBillingPortal, openStripeCheckout, cancelWorkspaceSubscription } from "../lib/stripeCheckout";
 import { fetchWorkspaceSubscription, isPaidPlan, pollUntilPaid, FREE_SESSION_BUILDS } from "../lib/subscription";
 import { loadFreeSessionCount } from "../lib/distillUsage";
 import {
@@ -77,8 +77,8 @@ const css = `
     border-radius: 999px; padding: 6px 7px 6px 14px;
     font-family: var(--serif); font-size: 14.5px; color: var(--ink);
   }
-  .set-chip.spence { background: var(--terra-soft); border-color: var(--terra-soft); color: var(--terra-d); }
-  .set-chip.amanda { background: var(--olive-soft); border-color: var(--olive-soft); color: var(--olive-d); }
+  .set-chip.person1 { background: var(--terra-soft); border-color: var(--terra-soft); color: var(--terra-d); }
+  .set-chip.person2 { background: var(--olive-soft); border-color: var(--olive-soft); color: var(--olive-d); }
   .set-chip.both   { background: var(--gold-soft);  border-color: var(--gold-soft);  color: #8a6a16; }
   .set-chip .x {
     width: 19px; height: 19px; border-radius: 50%; border: none; cursor: pointer;
@@ -552,6 +552,13 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
   const deleteWorkspace = async () => {
     if (!workspace?.id) { setError("No workspace loaded."); return; }
     setDeleting(true); setError("");
+    try {
+      await cancelWorkspaceSubscription();
+    } catch (e) {
+      setDeleting(false);
+      setError(e?.message || "Could not cancel billing. Fix billing first, then delete.");
+      return;
+    }
     const { error: err } = await supabase.from("workspaces").delete().eq("id", workspace.id);
     if (err) { setDeleting(false); setError(err.message); return; }
     if (onSignOut) onSignOut();
@@ -620,7 +627,7 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
             <div>
               <div className="set-plan">
                 <span className="name">{planLabel}</span>
-                {subscription?.active && <span className="tag tag-amanda">Active</span>}
+                {subscription?.active && <span className="tag tag-cat">Active</span>}
               </div>
               {checkoutNotice && (
                 <p className="set-sub" style={{ margin: "0 0 12px", color: "var(--olive-d)" }}>
@@ -1009,14 +1016,14 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
           {/* Delete workspace */}
           <p className="set-sub" style={{ color: "var(--ink)" }}>
             Delete workspace. Permanently removes your family workspace, every saved session, and all
-            members. This cannot be undone.
+            members. Any active subscription is canceled immediately. This cannot be undone.
           </p>
           {!confirmDelete ? (
             <button className="btn btn-danger" onClick={() => setConfirmDelete(true)}>Delete this workspace</button>
           ) : (
             <div>
               <p style={{ fontFamily: "var(--serif)", color: "var(--ink)", fontSize: 15, fontWeight: 500, marginBottom: 14 }}>
-                Are you absolutely sure? This erases everything.
+                Are you absolutely sure? This erases everything and ends billing.
               </p>
               <div style={{ display: "flex", gap: 10 }}>
                 <button className="btn btn-danger-solid" onClick={deleteWorkspace} disabled={deleting}>

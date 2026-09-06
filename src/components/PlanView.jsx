@@ -459,7 +459,7 @@ export default function PlanView({
     const cols = adults.slice(0, 2).map((name, i) => ({
       key: name,
       name,
-      who: i === 0 ? "spence" : "amanda",
+      who: i === 0 ? "person1" : "person2",
       items: byPerson(name),
     }));
     if (shared.length) {

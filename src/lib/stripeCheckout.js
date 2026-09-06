@@ -124,3 +124,26 @@ export async function openBillingPortal(returnPath = "/app/settings?billing=upda
     fallbackBody?.message || fallbackBody?.error || "Could not open billing. Try again.",
   );
 }
+
+/**
+ * Immediately cancel the workspace Stripe subscription (used before workspace delete).
+ * No-ops when there is no stripe_sub_id. Throws if Stripe cancel fails.
+ */
+export async function cancelWorkspaceSubscription() {
+  const first = await supabase.functions.invoke("create-checkout-session", {
+    body: { action: "cancel_subscription" },
+  });
+  const firstBody = await readFunctionBody(first.data, first.error);
+  if (firstBody?.ok) return firstBody;
+
+  const second = await supabase.functions.invoke("stripe-checkout", {
+    body: { action: "cancel_subscription" },
+  });
+  const secondBody = await readFunctionBody(second.data, second.error);
+  if (secondBody?.ok) return secondBody;
+
+  const message = secondBody?.error || secondBody?.message || firstBody?.error
+    || first.error?.message || second.error?.message
+    || "Could not cancel subscription. Try again or manage billing first.";
+  throw new Error(message);
+}

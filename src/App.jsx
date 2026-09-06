@@ -75,6 +75,9 @@ const DEFAULT_CONTEXT = {
   categories: ["Family", "Kids", "Business", "Finance", "Home", "Faith", "Health"],
 };
 
+/** Max transcript characters sent to distill (UI + edge guard). */
+const TRANSCRIPT_MAX_CHARS = 50000;
+
 async function patchFamilyContext(workspaceId, prev, patch) {
   const family_context = { ...(prev && typeof prev === "object" ? prev : {}), ...patch };
   const { data, error } = await supabase
@@ -675,7 +678,8 @@ function CaptureView({ text, setText, mode, setMode, onBack, onProcess }) {
   }, []);
 
   const dictBusy = dictating || transcribing;
-  const ready = text.trim().length > 0;
+  const overLimit = text.length > TRANSCRIPT_MAX_CHARS;
+  const ready = text.trim().length > 0 && !overLimit;
   const fieldValue = dictBusy
     ? `${baseRef.current}${baseRef.current && livePreview ? " " : ""}${livePreview}`
     : text;
@@ -694,12 +698,19 @@ function CaptureView({ text, setText, mode, setMode, onBack, onProcess }) {
       {dictNotice && !dictBusy && (
         <p className="dictnotice dictnotice-warn">{dictNotice}</p>
       )}
+      {overLimit && (
+        <p className="dictnotice dictnotice-warn">
+          That&apos;s too long to build in one pass ({text.length.toLocaleString()} characters).
+          Trim to {TRANSCRIPT_MAX_CHARS.toLocaleString()} characters or fewer.
+        </p>
+      )}
 
       <div className="capcomposer">
         <textarea
           className="capta"
           placeholder="What’s going on?"
           value={fieldValue}
+          maxLength={TRANSCRIPT_MAX_CHARS}
           readOnly={dictBusy}
           aria-busy={dictBusy || undefined}
           onChange={(e) => { if (!dictBusy) setText(e.target.value); }}
@@ -743,6 +754,7 @@ function CaptureView({ text, setText, mode, setMode, onBack, onProcess }) {
               payload = await confirmDictation();
               nextMode = "dictate";
             }
+            if ((payload || "").length > TRANSCRIPT_MAX_CHARS) return;
             if ((payload || "").trim().length > 0) onProcess(payload, nextMode);
           }}
         >
@@ -1424,6 +1436,8 @@ export default function App({ user, workspace, onSignOut }) {
   const [cards, setCards] = useState([]);
   const [distillError, setDistillError] = useState(null);
   const [distillDone, setDistillDone] = useState(false);
+  const [syncError, setSyncError] = useState(null);
+  const [syncRetrying, setSyncRetrying] = useState(false);
   const [captureText, setCaptureText] = useState("");
   const [captureMode, setCaptureMode] = useState("paste");
   const [agendaTopics, setAgendaTopics] = useState([]);
@@ -1650,8 +1664,8 @@ export default function App({ user, workspace, onSignOut }) {
   const roleOf = useCallback((person) => {
     const p = (person || "").toLowerCase();
     if (p === "both" || p === "family" || p === "shared") return "both";
-    if (adults[0] && p === adults[0].toLowerCase()) return "spence";
-    if (adults[1] && p === adults[1].toLowerCase()) return "amanda";
+    if (adults[0] && p === adults[0].toLowerCase()) return "person1";
+    if (adults[1] && p === adults[1].toLowerCase()) return "person2";
     return "both";
   }, [adults]);
 
@@ -1661,7 +1675,7 @@ export default function App({ user, workspace, onSignOut }) {
   useEffect(() => {
     if (!ws?.id) return;
     const channel = supabase
-      .channel("session-sync")
+      .channel(`session-sync-${ws.id}`)
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "sessions", filter: `workspace_id=eq.${ws.id}` },
         (payload) => { if (payload.new?.cards) setCards(payload.new.cards); })
       .subscribe();
@@ -1728,6 +1742,14 @@ export default function App({ user, workspace, onSignOut }) {
 
   // ── Distill (real AI) ────────────────────────────────────────────────────
   const runDistill = async (text, mode = "paste") => {
+    if ((text || "").length > TRANSCRIPT_MAX_CHARS) {
+      setDistillError(
+        `That plan is too long (${text.length.toLocaleString()} characters). Trim to ${TRANSCRIPT_MAX_CHARS.toLocaleString()} or fewer, then try again.`,
+      );
+      go("capture");
+      return;
+    }
+
     let currentSubscription = subscription;
     if (!subscriptionLoaded && ws?.id) {
       try {
@@ -1845,11 +1867,37 @@ ${text}`;
   // Persist review / resolve card edits for spouse realtime sync
   useEffect(() => {
     if (!sessionIdRef.current || (view !== "review" && view !== "resolve")) return;
-    const t = setTimeout(() => {
-      supabase.from("sessions").update({ cards }).eq("id", sessionIdRef.current);
+    const sessionId = sessionIdRef.current;
+    const t = setTimeout(async () => {
+      const { error } = await supabase
+        .from("sessions")
+        .update({ cards })
+        .eq("id", sessionId);
+      if (error) {
+        console.error("[session-sync] card update failed", error);
+        setSyncError("Couldn’t sync with spouse — retry");
+      } else {
+        setSyncError(null);
+      }
     }, 400);
     return () => clearTimeout(t);
   }, [cards, view]);
+
+  const retrySpouseCardSync = useCallback(async () => {
+    if (!sessionIdRef.current || syncRetrying) return;
+    setSyncRetrying(true);
+    const { error } = await supabase
+      .from("sessions")
+      .update({ cards: cardsRef.current })
+      .eq("id", sessionIdRef.current);
+    setSyncRetrying(false);
+    if (error) {
+      console.error("[session-sync] retry failed", error);
+      setSyncError("Couldn’t sync with spouse — retry");
+      return;
+    }
+    setSyncError(null);
+  }, [syncRetrying]);
 
   const markFirstSessionComplete = async () => {
     if (!ws?.id || ws.first_session_completed) return;
@@ -2205,6 +2253,31 @@ ${text}`;
 
       {captureDraft && view !== "capture" && view !== "processing" && view !== "resolve" && view !== "review" && view !== "plan" && (
         <ResumeBanner draft={captureDraft} onResume={resumeCaptureDraft} onDiscard={discardCaptureDraft} />
+      )}
+
+      {syncError && (view === "review" || view === "resolve") && (
+        <div className="resume-banner rise" role="status" style={{ marginBottom: 0 }}>
+          <div className="resume-banner-copy">
+            <p style={{ margin: 0 }}>{syncError}</p>
+          </div>
+          <div className="resume-banner-actions">
+            <button
+              type="button"
+              className="btn btn-soft"
+              onClick={() => setSyncError(null)}
+            >
+              Dismiss
+            </button>
+            <button
+              type="button"
+              className="btn btn-primary"
+              disabled={syncRetrying}
+              onClick={retrySpouseCardSync}
+            >
+              {syncRetrying ? "Retrying…" : "Retry"}
+            </button>
+          </div>
+        </div>
       )}
 
       {view === "agenda" && (

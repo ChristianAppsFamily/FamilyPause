@@ -487,11 +487,15 @@ function PasswordInput({ value, onChange, onKeyDown, placeholder, autoFocus }) {
 }
 
 // ── SIGN IN ───────────────────────────────────────────────────────────────────
-function SignIn({ onSwitch, onSuccess, initialEmail = "" }) {
+function SignIn({ onSwitch, onSuccess, initialEmail = "", bootstrapError = "" }) {
   const [email, setEmail] = useState(initialEmail);
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState(bootstrapError || "");
+
+  useEffect(() => {
+    if (bootstrapError) setError(bootstrapError);
+  }, [bootstrapError]);
 
   const handleSignIn = async () => {
     if (!email || !password) { setError("Please fill in all fields."); return; }
@@ -894,7 +898,7 @@ function JoinWorkspace({ onSwitch, onSuccess, initialCode = "" }) {
 
 export { AuthShell };
 
-export default function Auth({ onAuthenticated, inviteCode = "" }) {
+export default function Auth({ onAuthenticated, inviteCode = "", bootstrapError = "" }) {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
@@ -924,7 +928,7 @@ export default function Auth({ onAuthenticated, inviteCode = "" }) {
     onAuthenticated({ newUser: true, joined: true, displayName, workspaceId });
   };
 
-  if (screen === "signin")  return <SignIn  onSwitch={onSwitch} onSuccess={handleSignInSuccess} initialEmail={searchParams.get("email") || ""} />;
+  if (screen === "signin")  return <SignIn  onSwitch={onSwitch} onSuccess={handleSignInSuccess} initialEmail={searchParams.get("email") || ""} bootstrapError={bootstrapError} />;
   if (screen === "signup")  return <SignUp  onSwitch={onSwitch} onSuccess={handleSignUpSuccess} />;
   if (screen === "forgot")  return <ForgotPassword onSwitch={onSwitch} />;
   if (screen === "join")    return <JoinWorkspace  onSwitch={onSwitch} onSuccess={handleJoinSuccess} initialCode={inviteCode} />;

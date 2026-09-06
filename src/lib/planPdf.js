@@ -4,8 +4,8 @@ import { getPlanningWeekDates } from "./planWeek";
 import { formatPlanItemWhen, formatWeekOfRange } from "./planExport";
 
 const WHO_RGB = {
-  spence: [190, 90, 55],
-  amanda: [94, 107, 55],
+  person1: [190, 90, 55],
+  person2: [94, 107, 55],
   both: [192, 151, 64],
 };
 

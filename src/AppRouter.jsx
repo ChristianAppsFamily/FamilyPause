@@ -68,6 +68,7 @@ export default function AppRouter() {
   const [user, setUser] = useState(null);
   const [workspace, setWorkspace] = useState(null);
   const [onboardingData, setOnboardingData] = useState(null);
+  const [authBootstrapError, setAuthBootstrapError] = useState("");
   const bootstrapped = useRef(false);
 
   const inviteCodeFromUrl = inviteCodeFromPath(location.pathname);
@@ -102,6 +103,7 @@ export default function AppRouter() {
         setUser(session.user);
         setWorkspace(membership.workspaces);
         bootstrapped.current = true;
+        setAuthBootstrapError("");
 
         if (parsed.area === "subscribeSuccess") {
           setPhase("subscribeSuccess");
@@ -124,11 +126,14 @@ export default function AppRouter() {
         "Friend";
       const { data: ws, error: wsErr } = await supabase.rpc("create_owner_workspace", { p_name: name });
       if (wsErr) {
+        console.error("create_owner_workspace failed:", wsErr);
+        setAuthBootstrapError("Couldn’t create your family workspace. Try again.");
         setUser(session.user);
         setPhase("auth");
         bootstrapped.current = true;
         return;
       }
+      setAuthBootstrapError("");
       const newWorkspace = Array.isArray(ws) ? ws[0] : ws;
       await ensureTrialSubscription(newWorkspace.id);
       triggerWelcomeEmail({
@@ -300,6 +305,7 @@ export default function AppRouter() {
     <Auth
       onAuthenticated={handleAuthenticated}
       inviteCode={inviteCodeFromUrl || ""}
+      bootstrapError={authBootstrapError}
     />
   );
 
