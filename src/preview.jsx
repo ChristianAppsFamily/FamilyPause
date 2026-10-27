@@ -1,4 +1,6 @@
 import React, { useState } from 'react'
+import { HelmetProvider } from 'react-helmet-async'
+import { BrowserRouter } from 'react-router-dom'
 import './styles/tokens.css'
 import './styles/screens.css'
 import Auth from './components/Auth.jsx'
@@ -32,23 +34,27 @@ export default function Preview() {
   const [page, setPage] = useState('app')
   const current = PAGES.find((p) => p.key === page)
   return (
-    <div>
-      <div style={{
-        position: 'sticky', top: 0, zIndex: 9999, display: 'flex', gap: 6, flexWrap: 'wrap',
-        alignItems: 'center', padding: '8px 14px', background: '#2A251D',
-        fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: '0.08em',
-      }}>
-        <span style={{ color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', marginRight: 8 }}>Preview</span>
-        {PAGES.map((p) => (
-          <button key={p.key} onClick={() => setPage(p.key)} style={{
-            cursor: 'pointer', border: 'none', borderRadius: 5, padding: '6px 12px',
-            fontFamily: 'inherit', fontSize: 11, letterSpacing: '0.06em', textTransform: 'uppercase',
-            background: page === p.key ? '#BE5A37' : 'rgba(255,255,255,0.10)',
-            color: page === p.key ? '#fff' : 'rgba(255,255,255,0.65)',
-          }}>{p.label}</button>
-        ))}
-      </div>
-      <div key={page}>{current.render()}</div>
-    </div>
+    <HelmetProvider>
+      <BrowserRouter>
+        <div>
+          <div style={{
+            position: 'sticky', top: 0, zIndex: 9999, display: 'flex', gap: 6, flexWrap: 'wrap',
+            alignItems: 'center', padding: '8px 14px', background: '#2A251D',
+            fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: '0.08em',
+          }}>
+            <span style={{ color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', marginRight: 8 }}>Preview</span>
+            {PAGES.map((p) => (
+              <button key={p.key} onClick={() => setPage(p.key)} style={{
+                cursor: 'pointer', border: 'none', borderRadius: 5, padding: '6px 12px',
+                fontFamily: 'inherit', fontSize: 11, letterSpacing: '0.06em', textTransform: 'uppercase',
+                background: page === p.key ? '#BE5A37' : 'rgba(255,255,255,0.10)',
+                color: page === p.key ? '#fff' : 'rgba(255,255,255,0.65)',
+              }}>{p.label}</button>
+            ))}
+          </div>
+          <div key={page}>{current.render()}</div>
+        </div>
+      </BrowserRouter>
+    </HelmetProvider>
   )
 }

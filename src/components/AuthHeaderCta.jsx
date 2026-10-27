@@ -11,6 +11,7 @@ export default function AuthHeaderCta({
   footerClassName = "fp-footer-link",
   variant = "button",
   onNavigate,
+  signInLabel = "Sign In",
 }) {
   const auth = useAuthSession();
   const navigate = useNavigate();
@@ -26,7 +27,7 @@ export default function AuthHeaderCta({
     if (variant === "footer") return null;
     return (
       <button type="button" className={resolvedClass + " auth-cta-placeholder"} disabled tabIndex={-1} aria-hidden="true">
-        Sign In
+        {signInLabel}
       </button>
     );
   }
@@ -48,7 +49,7 @@ export default function AuthHeaderCta({
         onSignIn();
       }}
     >
-      Sign In
+      {signInLabel}
     </button>
   );
 }
