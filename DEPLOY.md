@@ -508,3 +508,43 @@ supabase functions deploy capture-lead --no-verify-jwt
 Required secrets for guide email delivery: `RESEND_API_KEY`, `RESEND_FROM_EMAIL`. Waitlist rows persist even if Resend is not configured.
 
 After connecting, re-run the **Google Calendar** SQL block in `supabase_setup.sql` if you have not yet added `google_calendar_email` (stores which Google account was linked).
+
+---
+
+## Plan item email reminders (primary calendar path)
+
+Google Calendar API sync is **dormant** until OAuth verification clears. Kept plan items schedule **email reminders** with an Add to Calendar (.ics) link instead.
+
+1. **Migration** — apply `supabase/migrations/20260924_plan_item_reminders.sql`:
+
+```bash
+supabase db push
+# or paste the SQL in Dashboard → SQL Editor
+```
+
+2. **Deploy functions:**
+
+```bash
+supabase functions deploy schedule-reminders
+supabase functions deploy send-plan-item-reminders --no-verify-jwt
+```
+
+3. **Cron** (Dashboard → Edge Functions → Cron Jobs, or `pg_cron` + `net.http_post`):
+
+```
+*/15 * * * *
+```
+
+Target URL: `https://<PROJECT_REF>.supabase.co/functions/v1/send-plan-item-reminders`  
+Header: `Authorization: Bearer <REMINDER_CRON_SECRET>` (if that secret is set)
+
+4. **Secrets** (reuse existing where possible):
+
+- `RESEND_API_KEY` (required)
+- `REMINDER_CRON_SECRET` (recommended)
+- `REMINDER_FROM_EMAIL` or `LEAD_FROM_EMAIL` (optional; defaults to `FamilyPause <hello@mail.familypause.com>`)
+- `PUBLIC_APP_ORIGIN` (optional; defaults to `https://www.familypause.com` for ICS links)
+
+5. **ICS download** — Vercel route `GET /api/calendar-ics?token=<access_token>` (needs `SUPABASE_SERVICE_ROLE_KEY` on Vercel).
+
+This is separate from **weekly meeting reminders** (`send-weekly-reminders` + workspace `reminder_day` / `reminder_time`), which nudge families to run FamilyPause itself.

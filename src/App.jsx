@@ -47,6 +47,13 @@ import {
   CALENDAR_REMINDER_OPTIONS,
   userMessageForSyncCode,
 } from "./lib/googleCalendar";
+import {
+  DEFAULT_REMINDER_OFFSET,
+  ENABLE_GOOGLE_CALENDAR_SYNC,
+  scheduleItemReminders,
+  applyReminderScheduleToCards,
+  coerceReminderFields,
+} from "./lib/planReminders";
 import { canRecordAudio, pickRecordingMimeType, transcribeAudioBlob } from "./lib/transcribe";
 import { occurrenceLabel } from "./lib/planOccurrences";
 import { speechPreviewSupported, startSpeechPreview } from "./lib/speechPreview";
@@ -925,7 +932,7 @@ function CardReminderField({
   disabled = false,
   onChange,
 }) {
-  const reminder = value || "";
+  const reminder = value || DEFAULT_REMINDER_OFFSET;
   return (
     <div className="resolve-field">
       <label htmlFor={id}>Set Reminder</label>
@@ -936,12 +943,11 @@ function CardReminderField({
         onChange={(e) => {
           const next = e.target.value;
           onChange({
-            calendar_reminder: next || null,
+            calendar_reminder: next || DEFAULT_REMINDER_OFFSET,
             calendar_reminder_minutes: next === "custom" ? customMinutes : null,
           });
         }}
       >
-        <option value="">Select</option>
         {CALENDAR_REMINDER_OPTIONS.map((o) => (
           <option key={o.value} value={o.value}>{o.label}</option>
         ))}
@@ -980,7 +986,7 @@ function ResolveTimesView({ cards, setCards, onBack, onContinue }) {
         date: c.date || "",
         time: c.time || "",
         date_only: !!c.date_only,
-        calendar_reminder: c.calendar_reminder || "",
+        calendar_reminder: c.calendar_reminder || DEFAULT_REMINDER_OFFSET,
         calendar_reminder_minutes: c.calendar_reminder_minutes ?? "",
       };
     });
@@ -998,7 +1004,7 @@ function ResolveTimesView({ cards, setCards, onBack, onContinue }) {
             date: c.date || "",
             time: c.time || "",
             date_only: !!c.date_only,
-            calendar_reminder: c.calendar_reminder || "",
+            calendar_reminder: c.calendar_reminder || DEFAULT_REMINDER_OFFSET,
             calendar_reminder_minutes: c.calendar_reminder_minutes ?? "",
           };
         }
@@ -1025,10 +1031,7 @@ function ResolveTimesView({ cards, setCards, onBack, onContinue }) {
         time: dateOnly ? null : draft.time,
         date_only: dateOnly,
         datetime_confirmed: true,
-        calendar_reminder: draft.calendar_reminder || null,
-        calendar_reminder_minutes: draft.calendar_reminder === "custom"
-          ? (draft.calendar_reminder_minutes === "" ? null : draft.calendar_reminder_minutes)
-          : null,
+        ...coerceReminderFields(draft),
       } : c
     )));
     setConfirmedIds((prev) => new Set(prev).add(id));
@@ -1044,10 +1047,7 @@ function ResolveTimesView({ cards, setCards, onBack, onContinue }) {
       time: dateOnly ? null : draft.time,
       date_only: dateOnly,
       datetime_confirmed: true,
-      calendar_reminder: draft.calendar_reminder || null,
-      calendar_reminder_minutes: draft.calendar_reminder === "custom"
-        ? (draft.calendar_reminder_minutes === "" ? null : draft.calendar_reminder_minutes)
-        : null,
+      ...coerceReminderFields(draft),
     };
   };
 
@@ -1074,7 +1074,7 @@ function ResolveTimesView({ cards, setCards, onBack, onContinue }) {
 
       <div className="resolve-list">
         {queue.map((item) => {
-          const draft = drafts[item.id] || { date: "", time: "", date_only: false, calendar_reminder: "", calendar_reminder_minutes: "" };
+          const draft = drafts[item.id] || { date: "", time: "", date_only: false, calendar_reminder: DEFAULT_REMINDER_OFFSET, calendar_reminder_minutes: "" };
           const done = confirmedIds.has(item.id) || isScheduleResolved(item);
           const canConfirm = !!draft.date && (!!draft.time || !!draft.date_only);
           const occ = occurrenceLabel(cards, item);
@@ -1379,9 +1379,9 @@ function ReviewView({
             onClick={onBuild}
           >
             {calendarSyncing ? (
-              <em>Syncing to calendar…</em>
+              <em>Scheduling reminders…</em>
             ) : (
-              <><Ico d={I.arrow} size={16} /> Sync to Calendar</>
+              <><Ico d={I.arrow} size={16} /> Schedule Reminders</>
             )}
           </button>
         </div>
@@ -1922,37 +1922,55 @@ ${text}`;
     const reduced = prefersReducedMotion();
     const isFirstCelebration = !ws?.first_session_completed;
     const arrivalMode = reduced ? "static" : isFirstCelebration ? "full" : "quick";
-    let syncedAll = true;
+    let remindersOk = true;
 
-    if (calendarConnected && ws?.id) {
-      const syncOpts = {
-        meetingDate,
-        sessionId: sessionIdRef.current ?? undefined,
-        requireResolved: true,
-      };
-      const kept = cards.filter((c) => c.status === STATUS.KEPT || c.status === STATUS.CALENDARED);
-      const syncable = kept.filter((c) => isSyncEligible(c, syncOpts) && !c.calendar_synced);
-      if (syncable.length > 0) {
+    if (ws?.id) {
+      const kept = cards
+        .filter((c) => c.status === STATUS.KEPT || c.status === STATUS.CALENDARED)
+        .map((c) => ({ ...c, ...coerceReminderFields(c) }));
+      setCards((prev) => prev.map((c) => {
+        if (c.status !== STATUS.KEPT && c.status !== STATUS.CALENDARED) return c;
+        return { ...c, ...coerceReminderFields(c) };
+      }));
+
+      if (kept.length > 0) {
         setCalendarSyncing(true);
         setCalendarSyncNotice(null);
         try {
-          const { updatedCards } = await syncCardsToCalendar(ws.id, cards, syncOpts);
-          setCards(updatedCards);
-          const outcome = calendarSyncOutcome(updatedCards, syncOpts);
-          syncedAll = outcome.state === "succeeded";
-          if (outcome.state === "failed" || outcome.state === "partial") {
-            const failed = updatedCards.find((c) => c.calendar_sync_failed);
-            setCalendarSyncNotice(userMessageForSyncCode(failed?.calendar_sync_error));
+          const result = await scheduleItemReminders({
+            workspaceId: ws.id,
+            sessionId: sessionIdRef.current,
+            meetingDate,
+            cards: kept,
+          });
+          setCards((prev) => applyReminderScheduleToCards(
+            prev.map((c) => (
+              c.status === STATUS.KEPT || c.status === STATUS.CALENDARED
+                ? { ...c, ...coerceReminderFields(c) }
+                : c
+            )),
+            result,
+          ));
+          remindersOk = (result.scheduled_count || 0) > 0
+            || (result.skipped || []).every((s) => s.reason === "none" || s.reason === "not_kept");
+          if ((result.skipped || []).some((s) => s.reason === "insert_failed")) {
+            remindersOk = false;
+            setCalendarSyncNotice("Some reminders could not be scheduled. You can set them from the plan.");
           }
         } catch (e) {
-          const code = e instanceof CalendarSyncError ? e.code : e?.code;
-          setCalendarSyncNotice(e?.message || userMessageForSyncCode(code));
-          syncedAll = false;
+          console.error("[buildWeek] schedule reminders", e);
+          setCalendarSyncNotice(e?.message || "Could not schedule reminders. Try again from Review.");
+          remindersOk = false;
           setCards((prev) => prev.map((c) => (
-            isSyncEligible(c, syncOpts)
-            && (c.status === STATUS.KEPT || c.status === STATUS.CALENDARED)
-            && !c.calendar_synced
-              ? { ...c, calendar_sync_failed: true, calendar_sync_error: code || "INTERNAL" }
+            c.status === STATUS.KEPT || c.status === STATUS.CALENDARED
+              ? {
+                ...c,
+                ...coerceReminderFields(c),
+                reminder_scheduled: false,
+                reminder_schedule_failed: true,
+                reminder_needs_set: true,
+                reminder_label: "Set reminder",
+              }
               : c
           )));
         } finally {
@@ -1961,10 +1979,29 @@ ${text}`;
       }
     }
 
+    // Optional Google Calendar API sync — dormant until OAuth verification clears.
+    if (ENABLE_GOOGLE_CALENDAR_SYNC && calendarConnected && ws?.id) {
+      const syncOpts = {
+        meetingDate,
+        sessionId: sessionIdRef.current ?? undefined,
+        requireResolved: true,
+      };
+      const kept = cards.filter((c) => c.status === STATUS.KEPT || c.status === STATUS.CALENDARED);
+      const syncable = kept.filter((c) => isSyncEligible(c, syncOpts) && !c.calendar_synced);
+      if (syncable.length > 0) {
+        try {
+          const { updatedCards } = await syncCardsToCalendar(ws.id, cards, syncOpts);
+          setCards(updatedCards);
+        } catch (e) {
+          console.error("[buildWeek] dormant google sync", e);
+        }
+      }
+    }
+
     if (!reduced) playPlanChime(soundsEnabledForWorkspace(ws));
 
     setPlanArrivalMode(arrivalMode);
-    setShowPlanConfetti(isFirstCelebration && !reduced && syncedAll);
+    setShowPlanConfetti(isFirstCelebration && !reduced && remindersOk);
     setPlanArrivalPhase(arrivalMode === "full" ? "interstitial" : arrivalMode === "quick" ? "revealing" : "done");
 
     go("plan");
@@ -2335,25 +2372,14 @@ ${text}`;
           adults={adults}
           roleOf={roleOf}
           onRestart={restart}
-          calendarConnected={calendarConnected}
-          calendarBusy={calendarBusy}
-          retryingCardId={retryingCardId}
-          unsyncingCardId={unsyncingCardId}
-          showCalendarConnect={calendarConnectPrompt}
-          onConfirmCalendarConnect={confirmCalendarConnect}
-          onCancelCalendarConnect={() => setCalendarConnectPrompt(false)}
-          familyPauseEmail={user?.email}
-          onRetrySync={retryCardSync}
-          onRetryFailed={retryFailedSync}
-          onAddToCal={handlePlanAddToCal}
-          onUnsync={unsyncCard}
+          onEditReminders={() => go("review")}
           meetingDate={meetingDate}
           arrivalPhase={planArrivalPhase}
           arrivalMode={planArrivalMode}
           showFirstConfetti={showPlanConfetti}
           hasFamilyFeatures={familyFeaturesEnabled}
           onUpgrade={openFeatureUpgrade}
-          calendarSyncNotice={calendarSyncNotice}
+          reminderNotice={calendarSyncNotice}
         />
       )}
     </div>

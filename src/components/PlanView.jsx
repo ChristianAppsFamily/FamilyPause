@@ -1,14 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { prefersReducedMotion } from "../lib/motion";
 import { eventDayIndices, getPlanningWeekDates, weekStripLabels } from "../lib/planWeek";
-import { calendarTitle, calendarSyncOutcome, isSyncEligible, userMessageForSyncCode } from "../lib/googleCalendar";
+import { calendarTitle } from "../lib/googleCalendar";
+import { reminderScheduleOutcome, reminderLabelFromCard } from "../lib/planReminders";
 import { buildPlanMarkdown } from "../lib/planExport";
 import {
   buildItinerary,
   buildItineraryText,
   formatItineraryTime,
 } from "../lib/planItinerary";
-import CalendarAccountChooser from "./CalendarAccountChooser";
 import UpgradePrompt from "./UpgradePrompt";
 
 function Ico({ d, size = 16, fill = false, sw = 1.7 }) {
@@ -343,25 +343,14 @@ export default function PlanView({
   adults,
   roleOf,
   onRestart,
-  calendarConnected,
-  calendarBusy,
-  retryingCardId,
-  unsyncingCardId,
-  showCalendarConnect,
-  onConfirmCalendarConnect,
-  onCancelCalendarConnect,
-  familyPauseEmail,
-  onRetrySync,
-  onRetryFailed,
-  onAddToCal,
-  onUnsync,
+  onEditReminders,
   meetingDate,
   arrivalPhase = "done",
   arrivalMode = "static",
   showFirstConfetti = false,
   hasFamilyFeatures = false,
   onUpgrade,
-  calendarSyncNotice = null,
+  reminderNotice = null,
 }) {
   const reduced = prefersReducedMotion();
   const staticLayout = arrivalMode === "static" || reduced;
@@ -380,66 +369,46 @@ export default function PlanView({
   const [showExportUpgrade, setShowExportUpgrade] = useState(false);
   const [planMode, setPlanMode] = useState("plan"); // "plan" | "itinerary"
 
-  const syncOpts = useMemo(
-    () => ({ meetingDate, requireResolved: true }),
-    [meetingDate],
-  );
-
   const outcome = useMemo(
-    () => calendarSyncOutcome(keptCards, { ...syncOpts, syncing: calendarBusy }),
-    [keptCards, syncOpts, calendarBusy],
+    () => reminderScheduleOutcome(keptCards),
+    [keptCards],
   );
 
   const syncCopy = (() => {
-    if (!calendarConnected) {
-      return {
-        seal: "ok",
-        eyebrow: "Step 5 · Your week is built",
-        sub: "A clean plan, organized by person. Appointments timed, actions owned, nothing forgotten.",
-        interstitial: "Your week is built.",
-      };
-    }
-    if (outcome.state === "syncing") {
-      return {
-        seal: "ok",
-        eyebrow: "Step 5 · Adding to calendar",
-        sub: "Adding your kept items to Google Calendar…",
-        interstitial: "Adding to your calendar.",
-      };
-    }
     if (outcome.state === "succeeded") {
-      const n = outcome.synced;
+      const n = outcome.scheduled;
       return {
         seal: "ok",
-        eyebrow: "Step 5 · Your week is built",
+        eyebrow: "Step 5 · Reminders scheduled",
         sub: n === 1
-          ? "1 item added to Google Calendar."
-          : `${n} items added to Google Calendar.`,
-        interstitial: "Your week is built.",
+          ? "1 reminder scheduled. We’ll email you with an Add to Calendar link."
+          : `${n} reminders scheduled. We’ll email you with Add to Calendar links.`,
+        interstitial: "Reminders scheduled.",
       };
     }
     if (outcome.state === "partial") {
       return {
         seal: "partial",
         eyebrow: "Step 5 · Needs attention",
-        sub: `${outcome.synced} added to Google Calendar. ${outcome.failed} ${outcome.failed === 1 ? "needs" : "need"} another try.`,
-        interstitial: "Your week is built — some calendar items need attention.",
+        sub: reminderNotice
+          || `${outcome.scheduled} reminder${outcome.scheduled === 1 ? "" : "s"} scheduled. ${outcome.failed || outcome.needsSet} still need a reminder.`,
+        interstitial: "Your week is built — some reminders need attention.",
       };
     }
     if (outcome.state === "failed") {
       return {
         seal: "failed",
-        eyebrow: "Step 5 · Calendar sync didn't finish",
-        sub: calendarSyncNotice || userMessageForSyncCode(null),
-        interstitial: "Your week is built — calendar items were not added.",
+        eyebrow: "Step 5 · Reminders didn’t finish",
+        sub: reminderNotice || "Reminders could not be scheduled. Go back to review and try again.",
+        interstitial: "Your week is built — reminders were not scheduled.",
       };
     }
-    if (outcome.state === "pending") {
+    if (outcome.state === "needs_set") {
       return {
         seal: "pending",
-        eyebrow: "Step 5 · Calendar sync pending",
-        sub: `${outcome.pending} ${outcome.pending === 1 ? "item hasn't" : "items haven't"} been added to Google Calendar yet. Use Add to Cal or Retry below.`,
-        interstitial: "Your week is built — calendar sync still pending.",
+        eyebrow: "Step 5 · Your week is built",
+        sub: `${outcome.needsSet} ${outcome.needsSet === 1 ? "item has" : "items have"} no reminder. Use Set reminder below if you want an email.`,
+        interstitial: "Your week is built.",
       };
     }
     return {
@@ -500,19 +469,15 @@ export default function PlanView({
   const sectionDelay = quick ? 40 : 120;
 
   const Item = ({ it, index, showBadge }) => {
-    const synced = it.calendar_synced;
-    const canSync = isSyncEligible(it, syncOpts);
-    const adding = !synced && canSync && (
-      retryingCardId === it.id
-      || (calendarBusy && !!it.calendar_sync_failed)
-    );
-    const badgeAnim = showBadge && synced && badgeDrawn && !staticLayout;
-    const retryLocked = calendarBusy || retryingCardId != null;
+    const scheduled = !!it.reminder_scheduled;
+    const label = reminderLabelFromCard(it);
+    const needsSet = !!it.reminder_needs_set || it.calendar_reminder === "none" || !scheduled;
+    const badgeAnim = showBadge && scheduled && badgeDrawn && !staticLayout;
     return (
       <div
         className={
           "planitem"
-          + (synced ? " synced" : "")
+          + (scheduled ? " synced" : "")
           + (sectionsVisible && !staticLayout ? " planitem--in" : "")
           + (staticLayout ? " planitem--static" : "")
         }
@@ -524,44 +489,21 @@ export default function PlanView({
           <div className="pmeta">
             <span className="ct">{it.category}</span>
             {formatWhen(it) && <span>· {formatWhen(it)}</span>}
-            {synced && (
+            {scheduled && label && (
               <span className={"synced-badge-wrap" + (badgeAnim ? " synced-badge-wrap--pop" : "")}>
-                <span className={"synced-badge" + (unsyncingCardId === it.id ? " synced-badge--busy" : "") + (badgeAnim ? " synced-badge--in" : "")}>
+                <span className={"synced-badge" + (badgeAnim ? " synced-badge--in" : "")}>
                   <SyncedCheckIcon draw={badgeAnim} />
-                  {unsyncingCardId === it.id ? "Removing…" : "Added"}
+                  {label}
                 </span>
-                <button
-                  type="button"
-                  className="plan-cal-unsync"
-                  disabled={unsyncingCardId === it.id || calendarBusy}
-                  onClick={() => onUnsync(it.id)}
-                  aria-label="Unsync from Google Calendar"
-                >
-                  ×
-                </button>
               </span>
             )}
-            {!synced && adding && canSync && (
-              <span className="plan-cal-pending">Adding</span>
-            )}
-            {!synced && !adding && it.calendar_sync_failed && canSync && (
+            {needsSet && !scheduled && (
               <button
                 type="button"
                 className="plan-cal-retry"
-                disabled={retryLocked}
-                onClick={() => onRetrySync(it.id)}
+                onClick={() => onEditReminders?.()}
               >
-                Retry
-              </button>
-            )}
-            {!synced && !adding && !it.calendar_sync_failed && canSync && (
-              <button
-                type="button"
-                className="plan-cal-add"
-                disabled={retryLocked || unsyncingCardId === it.id}
-                onClick={() => (calendarConnected ? onRetrySync(it.id) : onAddToCal(it.id))}
-              >
-                {calendarConnected ? "Pending" : "Add to Cal"}
+                Set reminder
               </button>
             )}
           </div>
@@ -623,13 +565,6 @@ export default function PlanView({
           />
         ) : (
           <>
-        {calendarConnected && (
-          <div className="plan-cal-status">
-            <span className="plan-cal-dot" aria-hidden="true" />
-            Google Calendar connected
-          </div>
-        )}
-
         <WeekStrip
           meetingDate={meetingDate}
           cards={keptCards}
@@ -655,28 +590,16 @@ export default function PlanView({
           <p className="plan-summary-sub">
             {syncCopy.sub}
           </p>
-          {(outcome.state === "partial" || outcome.state === "failed") && onRetryFailed && (
+          {(outcome.state === "failed" || outcome.state === "partial" || outcome.state === "needs_set") && onEditReminders && (
             <button
               type="button"
               className="btn btn-primary plan-sync-retry-all"
-              disabled={calendarBusy || retryingCardId != null}
-              onClick={onRetryFailed}
+              onClick={onEditReminders}
             >
-              {calendarBusy ? "Retrying…" : outcome.state === "partial" ? "Retry failed items" : "Retry calendar sync"}
+              Set reminders
             </button>
           )}
         </div>
-
-        {showCalendarConnect && (
-          <div style={{ marginBottom: 20 }}>
-            <CalendarAccountChooser
-              onConfirm={onConfirmCalendarConnect}
-              onCancel={onCancelCalendarConnect}
-              busy={calendarBusy}
-              compact
-            />
-          </div>
-        )}
 
         <div className="plangrid">
           {personSections.filter((s) => !s.wide).map((sec, si) => (
@@ -747,15 +670,10 @@ export default function PlanView({
             </button>
             <button
               type="button"
-              className={outcome.synced > 0 ? "plan-btn-primary" : "plan-btn-ghost"}
-              onClick={() => window.open("https://calendar.google.com", "_blank", "noopener,noreferrer")}
-              aria-label={
-                outcome.synced > 0
-                  ? "Open Google Calendar"
-                  : "Open Google Calendar. Items from this plan were not added."
-              }
+              className="plan-btn-ghost"
+              onClick={() => onEditReminders?.()}
             >
-              Open Calendar
+              Edit reminders
             </button>
           </div>
         </div>
