@@ -1,5 +1,5 @@
-const CACHE = "familypause-v2";
-const STATIC = ["/manifest.json", "/favicon.svg"];
+const CACHE = "familypause-v3";
+const STATIC = ["/manifest.json", "/favicon.svg", "/favicon.ico"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(STATIC)));
