@@ -3,7 +3,7 @@ import { useState } from "react";
 const css = `
   .sp-backdrop {
     position: fixed; inset: 0; z-index: 90;
-    background: rgba(42, 37, 29, 0.45);
+    background: rgba(15,23,42, 0.45);
     display: flex; align-items: center; justify-content: center;
     padding: 20px; backdrop-filter: blur(2px);
   }
@@ -24,11 +24,10 @@ const css = `
   }
   .sp-x:hover { color: var(--terra); background: var(--terra-tint); }
   .sp-eyebrow {
-    font-family: var(--mono); font-size: 10px; letter-spacing: .14em;
-    text-transform: uppercase; color: var(--terra); margin: 0 0 10px;
+    font-family: var(--mono); font-weight: 600; font-size: 12px; letter-spacing: 0; color: var(--terra); margin: 0 0 10px;
   }
   .sp-hl {
-    font-family: var(--display); font-style: italic; font-weight: 600;
+    font-family: var(--display); font-style: normal; font-weight: 800;
     font-size: 22px; color: var(--ink); margin: 0 0 8px;
   }
   .sp-sub {

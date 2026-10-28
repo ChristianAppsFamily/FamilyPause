@@ -8,7 +8,7 @@ const css = `
     display: grid;
     place-items: center;
     padding: 16px;
-    background: rgba(42, 37, 29, .42);
+    background: rgba(15,23,42, .42);
   }
   .upgrade-prompt-card {
     width: 100%;
@@ -24,8 +24,8 @@ const css = `
     color: var(--ink);
     font-family: var(--display);
     font-size: 18px;
-    font-style: italic;
-    font-weight: 600;
+    font-style: normal;
+    font-weight: 800;
     line-height: 1.3;
   }
   .upgrade-prompt-card p {

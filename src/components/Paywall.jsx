@@ -18,7 +18,7 @@ const css = `
   .pw-head { text-align: center; margin-bottom: 34px; }
   .pw-head .eyebrow { margin-bottom: 12px; }
   .pw-head h1 { font-size: 40px; line-height: 1.06; margin-bottom: 12px; }
-  .pw-head h1 em { font-style: italic; color: var(--terra); }
+  .pw-head h1 em { font-style: normal; color: var(--em); color: var(--terra); }
   .pw-head p { color: var(--ink-2); font-size: 16.5px; line-height: 1.55; max-width: 480px; margin: 0 auto; }
 
   .pw-offer {
@@ -27,13 +27,13 @@ const css = `
   .pw-offer.free { background: var(--olive-tint); border: 1px solid var(--olive-soft); }
   .pw-offer.half { background: var(--terra-tint); border: 1px solid var(--terra-soft); }
   .pw-offer-eyebrow {
-    font-family: var(--mono); font-size: 10px; letter-spacing: .14em; text-transform: uppercase;
+    font-family: var(--mono); font-weight: 600; font-size: 12px; letter-spacing: 0;
     margin: 0 0 8px;
   }
   .pw-offer.free .pw-offer-eyebrow { color: var(--olive-d); }
   .pw-offer.half .pw-offer-eyebrow { color: var(--terra-d); }
   .pw-offer-hl {
-    font-family: var(--display); font-style: italic; font-weight: 600;
+    font-family: var(--display); font-style: normal; font-weight: 800;
     font-size: 16px; line-height: 1.35; color: var(--ink); margin: 0;
   }
 
@@ -52,16 +52,16 @@ const css = `
   .pw-badge {
     position: absolute; top: -12px; left: 26px;
     background: var(--terra); color: #fff;
-    font-family: var(--mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase;
-    padding: 5px 12px; border-radius: 999px; box-shadow: 0 4px 12px rgba(190,90,55,.3);
+    font-family: var(--mono); font-weight: 600; font-size: 12px; letter-spacing: 0;
+    padding: 5px 12px; border-radius: 999px; box-shadow: 0 4px 12px rgba(20,128,94,.3);
   }
-  .pw-name { font-family: var(--mono); font-size: 11.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 12px; }
+  .pw-name { font-family: var(--mono); font-weight: 600; font-size: 13.5px; letter-spacing: 0; color: var(--ink-3); margin-bottom: 12px; }
   .pw-card.feat .pw-name { color: var(--terra-d); }
   .pw-price { display: flex; align-items: baseline; gap: 6px; margin-bottom: 4px; }
-  .pw-price .amt { font-family: var(--display); font-size: 44px; font-weight: 600; color: var(--ink); line-height: 1; }
-  .pw-price .per { font-family: var(--mono); font-size: 12px; letter-spacing: .04em; color: var(--ink-3); }
+  .pw-price .amt { font-family: var(--display); font-size: 44px; font-weight: 800; color: var(--ink); line-height: 1; }
+  .pw-price .per { font-family: var(--mono); font-weight: 600; font-size: 14px; letter-spacing: 0; color: var(--ink-3); }
   .pw-tagline { color: var(--ink-2); font-size: 14.5px; line-height: 1.5; margin: 10px 0 18px; min-height: 42px; }
-  .pw-includes { margin: 0 0 12px; font-family: var(--mono); font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--terra-d); }
+  .pw-includes { margin: 0 0 12px; font-family: var(--mono); font-weight: 600; font-size: 12.5px; letter-spacing: 0; color: var(--terra-d); }
   .pw-feats { list-style: none; margin: 0 0 24px; padding: 0; display: flex; flex-direction: column; gap: 11px; }
   .pw-feats li { display: flex; gap: 11px; align-items: flex-start; font-size: 14.5px; color: var(--ink); line-height: 1.4; }
   .pw-feats .ck {
@@ -71,9 +71,9 @@ const css = `
   }
   .pw-cta { margin-top: auto; display: flex; flex-direction: column; gap: 10px; }
   .pw-cta .btn-monthly {
-    font-family: var(--mono); text-transform: uppercase; letter-spacing: .07em;
-    font-size: 12px; font-weight: 500; border: 1px solid var(--line-2);
-    border-radius: var(--r-sm); padding: 13px 18px; cursor: pointer;
+    font-family: var(--mono); letter-spacing: 0;
+    font-size: 14px; font-weight: 600; border: 1px solid var(--line-2);
+    border-radius: 9999px; padding: 13px 18px; cursor: pointer;
     background: transparent; color: var(--ink-2);
     transition: color .15s, border-color .15s, background .15s;
   }
@@ -94,14 +94,14 @@ const css = `
     color: #fff;
   }
   .pw-deck-note {
-    font-family: var(--mono); font-size: 10px; letter-spacing: .04em;
+    font-family: var(--mono); font-weight: 600; font-size: 12px; letter-spacing: 0;
     color: var(--ink-3); text-align: center; margin: 0;
   }
   .pw-foot { text-align: center; margin-top: 26px; }
-  .pw-foot .note { font-family: var(--mono); font-size: 11.5px; letter-spacing: .04em; color: var(--ink-3); }
+  .pw-foot .note { font-family: var(--mono); font-weight: 600; font-size: 13.5px; letter-spacing: 0; color: var(--ink-3); }
   .pw-foot .deck {
     display: inline-block; margin-top: 14px;
-    font-family: var(--mono); font-size: 11.5px; letter-spacing: .05em; text-transform: uppercase;
+    font-family: var(--mono); font-weight: 600; font-size: 13.5px; letter-spacing: 0;
     color: var(--ink-2); text-decoration: none; border-bottom: 1px dashed var(--line-2); padding-bottom: 2px;
     background: none; border-left: none; border-right: none; border-top: none; cursor: pointer;
   }
@@ -216,8 +216,8 @@ export default function Paywall({ reason = "trial", onClose, workspace, subscrip
       <div className="brandbar">
         <div className="brand">
           <div className="mark">
-            <img src="/uploads/Logo_4.png" alt="FamilyPause"
-                 style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "inherit", display: "block" }} />
+            <img src="/fp-mark.svg" alt="FamilyPause"
+                 style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }} />
           </div>
           <div className="word"><b>Family</b><span>Pause</span></div>
         </div>

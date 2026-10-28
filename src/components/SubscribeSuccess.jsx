@@ -42,14 +42,13 @@ const css = `
   }
   .ss-mark img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .ss-eyebrow {
-    font-family: var(--mono); font-size: 11px; letter-spacing: .18em;
-    text-transform: uppercase; color: var(--olive-d); margin-bottom: 12px;
+    font-family: var(--mono); font-weight: 600; font-size: 13px; letter-spacing: 0; color: var(--olive-d); margin-bottom: 12px;
   }
   .ss-hl {
-    font-family: var(--display); font-size: 34px; font-weight: 600;
-    line-height: 1.12; margin: 0 0 14px; letter-spacing: -.015em;
+    font-family: var(--display); font-size: 34px; font-weight: 800;
+    line-height: 1.12; margin: 0 0 14px; letter-spacing: -.03em;
   }
-  .ss-hl em { font-style: italic; color: var(--terra); }
+  .ss-hl em { font-style: normal; color: var(--em); color: var(--terra); }
   .ss-body {
     font-size: 16px; color: var(--ink-2); line-height: 1.55; margin: 0 0 28px;
   }
@@ -58,30 +57,28 @@ const css = `
     border-radius: var(--r); padding: 22px 20px; margin-bottom: 22px; text-align: left;
   }
   .ss-offer-label {
-    font-family: var(--mono); font-size: 10.5px; letter-spacing: .14em;
-    text-transform: uppercase; color: var(--terra-d); margin-bottom: 8px;
+    font-family: var(--mono); font-weight: 600; font-size: 12.5px; letter-spacing: 0; color: var(--terra-d); margin-bottom: 8px;
   }
   .ss-offer-title {
-    font-family: var(--display); font-size: 22px; font-weight: 600; margin-bottom: 6px;
+    font-family: var(--display); font-size: 22px; font-weight: 800; margin-bottom: 6px;
   }
   .ss-prices { display: flex; align-items: baseline; gap: 10px; margin-bottom: 8px; }
   .ss-prices .now {
-    font-family: var(--display); font-size: 36px; font-weight: 600; color: var(--terra);
+    font-family: var(--display); font-size: 36px; font-weight: 800; color: var(--terra);
   }
   .ss-prices .was {
-    font-family: var(--mono); font-size: 14px; color: var(--ink-3);
+    font-family: var(--mono); font-weight: 600; font-size: 14px; color: var(--ink-3);
     text-decoration: line-through;
   }
   .ss-today {
-    font-family: var(--mono); font-size: 11px; letter-spacing: .08em;
-    text-transform: uppercase; color: var(--olive-d);
+    font-family: var(--mono); font-weight: 600; font-size: 13px; letter-spacing: 0; color: var(--olive-d);
   }
   .ss-btn {
-    width: 100%; font-family: var(--mono); text-transform: uppercase; letter-spacing: .08em;
-    font-size: 13px; font-weight: 500; border: none; border-radius: var(--r-sm);
+    width: 100%; font-family: var(--mono); letter-spacing: 0;
+    font-size: 13px; font-weight: 600; border: none; border-radius: 9999px;
     padding: 16px 22px; cursor: pointer; margin-bottom: 12px;
     background: var(--terra); color: #fff;
-    box-shadow: 0 8px 20px rgba(190,90,55,.26);
+    box-shadow: 0 8px 20px rgba(20,128,94,.26);
     transition: background .15s, transform .12s;
   }
   .ss-btn:hover:not(:disabled) { background: var(--terra-d); transform: translateY(-1px); }
@@ -93,7 +90,7 @@ const css = `
   }
   .ss-ghost:hover { color: var(--terra); }
   .ss-note {
-    font-family: var(--mono); font-size: 11px; letter-spacing: .04em;
+    font-family: var(--mono); font-weight: 600; font-size: 13px; letter-spacing: 0;
     color: var(--ink-3); margin-top: 18px;
   }
   .ss-err {
@@ -183,7 +180,7 @@ export default function SubscribeSuccess({ workspace, onWorkspaceUpdate, onConti
       <style>{css}</style>
       <div className="ss-card">
         <div className="ss-mark">
-          <img src="/uploads/Logo_4.png" alt="FamilyPause" />
+          <img src="/fp-mark.svg" alt="FamilyPause" />
         </div>
         <div className="ss-eyebrow">You&apos;re in</div>
         <h1 className="ss-hl">Your Family Plan is <em>active.</em></h1>

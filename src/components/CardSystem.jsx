@@ -18,6 +18,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "../lib/supabase";
+import { FpMark } from "./SiteChrome.jsx";
 import { joinWaitlist } from "../lib/sendGuide";
 import { playCardFlip, soundsEnabledForWorkspace } from "../lib/sounds";
 import { openPaymentLink, STRIPE_LINKS } from "../lib/stripeLinks";
@@ -38,9 +39,9 @@ function SyncDatePill({ meetingDate }) {
         display: "inline-flex",
         alignItems: "center",
         gap: 8,
-        fontFamily: "'JetBrains Mono', monospace",
-        fontSize: 11,
-        letterSpacing: "0.08em",
+        fontFamily: "'Inter', system-ui, sans-serif",
+        fontSize: 13,
+        letterSpacing: 0, fontWeight: 600,
         color: T.gold,
         background: T.goldL,
         border: `1px solid ${T.gold}44`,
@@ -57,25 +58,25 @@ function SyncDatePill({ meetingDate }) {
 // ── PALETTE ───────────────────────────────────────────────────────────────────
 // Palette mapped to the design bundle (src/styles/tokens.css): source of truth.
 const T = {
-  bg:       "#FBF6EC",  // --paper
-  surface:  "#FCF8F0",  // --paper-card
-  surface2: "#F4EAD8",  // --paper-2
-  border:   "#E6D9C4",  // --line
-  text:     "#2A251D",  // --ink
-  mid:      "#5B5245",  // --ink-2
-  muted:    "#8C8070",  // --ink-3
-  terra:    "#BE5A37",  // --terra
-  terraL:   "#FAEAE0",  // --terra-tint
-  terraD:   "#A2481F",  // --terra-d
-  olive:    "#5E6B37",  // --olive
-  oliveL:   "#EDF0E1",  // --olive-tint
-  oliveDark:"#4C5829",  // --olive-d
-  gold:     "#C09740",  // --gold
-  goldL:    "#F0E3C0",  // --gold-soft
-  goldD:    "#8A6A16",  // gold dark text
-  brown:    "#8C8070",  // --ink-3
-  red:      "#C0402F",  // --red
-  redL:     "#FBEAE5",  // --red-tint
+  bg:       "#FFFFFF",  // --paper
+  surface:  "#FFFFFF",  // --paper-card
+  surface2: "#EEF6F2",  // --paper-2
+  border:   "#E5E7EB",  // --line
+  text:     "#0F172A",  // --ink
+  mid:      "#475569",  // --ink-2
+  muted:    "#94A3B8",  // --ink-3
+  terra:    "#14805E",  // --terra
+  terraL:   "#EEF6F2",  // --terra-tint
+  terraD:   "#0F6A4D",  // --terra-d
+  olive:    "#14805E",  // --olive
+  oliveL:   "#EEF6F2",  // --olive-tint
+  oliveDark:"#0F6A4D",  // --olive-d
+  gold:     "#F59E0B",  // --gold
+  goldL:    "#FFF4E0",  // --gold-soft
+  goldD:    "#B45309",  // gold dark text
+  brown:    "#94A3B8",  // --ink-3
+  red:      "#DC2626",  // --red
+  redL:     "#FEF2F2",  // --red-tint
 };
 
 // ── CARD DATA ─────────────────────────────────────────────────────────────────
@@ -163,13 +164,12 @@ const CAT_COLORS = {
   Finances: { bg: T.goldL,   text: T.goldD,    border: T.gold  },
   Kids:     { bg: T.oliveL,  text: T.oliveDark,border: T.olive },
   Marriage: { bg: T.terraL,  text: T.terraD,   border: T.terra },
-  Faith:    { bg: "#EDE8D4", text: "#5A4A10",  border: "#B8980C" },
+  Faith:    { bg: "#EEF6F2", text: "#92400E",  border: "#F59E0B" },
   Dreams:   { bg: "#E8E0F0", text: "#3A1A60",  border: "#8A5AC0" },
   Home:     { bg: T.surface, text: T.mid,      border: T.brown },
 };
 
 const css = `
-  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Lora:ital,wght@0,400;0,500;0,600;1,400;1,500&family=JetBrains+Mono:wght@400;500;600&display=swap');
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   @keyframes fadeUp {
@@ -221,9 +221,8 @@ const css = `
     color: ${T.text};
     padding: 13px 16px;
     font-size: 16px;
-    font-family: 'JetBrains Mono', monospace;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
+    font-family: 'Inter', system-ui, sans-serif; font-weight: 600;
+    letter-spacing: 0;
     transition: border-color 0.2s, box-shadow 0.2s;
     outline: none;
     text-align: center;
@@ -242,27 +241,27 @@ const css = `
     width: 100%;
     background: ${T.terra};
     color: ${T.bg};
-    border: none; border-radius: 10px;
+    border: none; border-radius: 9999px;
     padding: 15px; font-size: 16px;
-    font-family: 'Lora', serif;
+    font-family: 'Inter', system-ui, sans-serif; font-weight: 600;
     cursor: pointer; transition: all 0.2s;
-    box-shadow: 0 4px 16px rgba(190,90,55,0.25);
+    box-shadow: 0 4px 16px rgba(20,128,94,0.25);
     display: flex; align-items: center; justify-content: center; gap: 8px;
   }
   .cs-btn-primary:hover:not(:disabled) {
     background: ${T.terraD};
     transform: translateY(-1px);
-    box-shadow: 0 6px 24px rgba(190,90,55,0.35);
+    box-shadow: 0 6px 24px rgba(20,128,94,0.35);
   }
   .cs-btn-primary:disabled { opacity: 0.55; cursor: not-allowed; }
 
   .cs-btn-ghost {
     background: none;
     border: 1px solid ${T.border};
-    border-radius: 10px; color: ${T.mid};
+    border-radius: 9999px; color: ${T.mid};
     padding: 13px; font-size: 14px;
-    font-family: 'JetBrains Mono', monospace;
-    letter-spacing: 0.05em; cursor: pointer;
+    font-family: 'Inter', system-ui, sans-serif; font-weight: 600;
+    letter-spacing: 0; cursor: pointer;
     width: 100%; transition: all 0.2s;
   }
   .cs-btn-ghost:hover { border-color: ${T.terra}; color: ${T.terra}; }
@@ -271,11 +270,11 @@ const css = `
     width: 100%;
     background: ${T.olive};
     color: ${T.bg};
-    border: none; border-radius: 10px;
+    border: none; border-radius: 9999px;
     padding: 15px; font-size: 16px;
-    font-family: 'Lora', serif;
+    font-family: 'Inter', system-ui, sans-serif; font-weight: 600;
     cursor: pointer; transition: all 0.2s;
-    box-shadow: 0 4px 16px rgba(74,103,65,0.25);
+    box-shadow: 0 4px 16px rgba(20,128,94,0.25);
   }
   .cs-btn-olive:hover {
     background: ${T.oliveDark};
@@ -284,7 +283,7 @@ const css = `
 
   .deck-card:hover {
     transform: translateY(-3px);
-    box-shadow: 0 12px 32px rgba(46,40,32,0.1);
+    box-shadow: 0 12px 32px rgba(15,23,42,0.1);
   }
 `;
 
@@ -311,7 +310,7 @@ function CardFace({ card, deckYear, flipped = true, style = {} }) {
       border: `1px solid ${T.border}`,
       borderRadius: 20,
       padding: "36px 32px",
-      boxShadow: "0 20px 60px rgba(46,40,32,0.14), 0 4px 16px rgba(46,40,32,0.08)",
+      boxShadow: "0 20px 60px rgba(15,23,42,0.14), 0 4px 16px rgba(15,23,42,0.08)",
       position: "relative",
       overflow: "hidden",
       animation: flipped ? "cardFlip 0.6s cubic-bezier(0.34,1.56,0.64,1) both" : "none",
@@ -327,10 +326,10 @@ function CardFace({ card, deckYear, flipped = true, style = {} }) {
 
       {/* Year + deck badge */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 28 }}>
-        <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: T.muted, letterSpacing: "0.2em" }}>
-          FAMILYPAUSE · {deckYear}
+        <div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontWeight: 600, fontSize: 12, color: T.muted, letterSpacing: 0 }}>
+          FamilyPause · {deckYear}
         </div>
-        <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: T.muted, letterSpacing: "0.1em" }}>
+        <div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontWeight: 600, fontSize: 12, color: T.muted, letterSpacing: 0 }}>
           #{String(card?.id).padStart(2, "0")} / 52
         </div>
       </div>
@@ -341,8 +340,8 @@ function CardFace({ card, deckYear, flipped = true, style = {} }) {
         background: cat.bg, color: cat.text,
         border: `1px solid ${cat.border}44`,
         padding: "4px 12px", borderRadius: 20,
-        fontFamily: "'JetBrains Mono', monospace",
-        fontSize: 11, letterSpacing: "0.08em",
+        fontFamily: "'Inter', system-ui, sans-serif",
+        fontSize: 13, letterSpacing: 0, fontWeight: 600,
         marginBottom: 24,
       }}>
         {card?.category}
@@ -350,8 +349,8 @@ function CardFace({ card, deckYear, flipped = true, style = {} }) {
 
       {/* Question */}
       <div style={{
-        fontFamily: "'Playfair Display', serif",
-        fontSize: 22, fontWeight: 400,
+        fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
+        fontSize: 22, fontWeight: 800,
         color: T.text, lineHeight: 1.45,
         marginBottom: 32,
       }}>
@@ -365,7 +364,7 @@ function CardFace({ card, deckYear, flipped = true, style = {} }) {
         paddingTop: 20,
       }}>
         <div style={{ flex: 1, height: 1, background: T.border }} />
-        <div style={{ color: T.terra, fontSize: 14 }}>⁋</div>
+        <FpMark size={18} />
         <div style={{ flex: 1, height: 1, background: T.border }} />
       </div>
     </div>
@@ -380,7 +379,7 @@ function CardBack({ style = {}, year = 2026 }) {
       <span className="cs-corner bl" aria-hidden="true" />
       <span className="cs-corner br" aria-hidden="true" />
       <div className="cs-cardback-mark" aria-hidden="true">&ldquo;</div>
-      <div className="cs-cardback-quote" aria-hidden="true">⁋</div>
+      <div className="cs-cardback-quote" aria-hidden="true"><FpMark size={36} fill="#FFFFFF" /></div>
       <div className="cs-cardback-title">FamilyPause</div>
       <div className="cs-cardback-meta">Conversation Cards · {year}</div>
     </div>
@@ -431,7 +430,7 @@ function CardDraw({ workspace, meetingDate, onStartSession, onSkip, onUnlock }) 
       const previewYear = 2026;
 
       return (
-        <div style={{ background: T.bg, fontFamily: "'Lora', serif" }}>
+        <div style={{ background: T.bg, fontFamily: "'Inter', system-ui, sans-serif" }}>
           <style>{css}</style>
 
           <div className="cs-locked-screen">
@@ -475,7 +474,7 @@ function CardDraw({ workspace, meetingDate, onStartSession, onSkip, onUnlock }) 
   // INTRO: has deck, show draw prompt
   if (phase === "intro") {
     return (
-      <div style={{ minHeight: "100vh", background: T.bg, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "48px 24px", fontFamily: "'Lora', serif" }}>
+      <div style={{ minHeight: "100vh", background: T.bg, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "48px 24px", fontFamily: "'Inter', system-ui, sans-serif" }}>
         <style>{css}</style>
         <div style={{ width: "100%", maxWidth: 420, textAlign: "center" }}>
           <SyncDatePill meetingDate={meetingDate} />
@@ -483,10 +482,10 @@ function CardDraw({ workspace, meetingDate, onStartSession, onSkip, onUnlock }) 
             <CardBack />
           </div>
 
-          <div className="cs-fade" style={{ fontSize: 11, letterSpacing: "0.25em", color: T.terra, fontFamily: "'JetBrains Mono', monospace", textTransform: "uppercase", marginBottom: 12 }}>
+          <div className="cs-fade" style={{ fontSize: 13, letterSpacing: 0, color: T.terra, fontFamily: "'Inter', system-ui, sans-serif", fontWeight: 600, marginBottom: 12 }}>
             Before you begin
           </div>
-          <h2 className="cs-fade-1" style={{ fontFamily: "'Playfair Display', serif", fontSize: 34, fontWeight: 400, color: T.text, marginBottom: 12 }}>
+          <h2 className="cs-fade-1" style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 34, fontWeight: 800, color: T.text, marginBottom: 12 }}>
             Pull your card<br /><em style={{ color: T.terra }}>for this week.</em>
           </h2>
           <p className="cs-fade-2" style={{ fontSize: 15, color: T.mid, lineHeight: 1.65, marginBottom: 36 }}>
@@ -515,7 +514,7 @@ function CardDraw({ workspace, meetingDate, onStartSession, onSkip, onUnlock }) 
           <div style={{ animation: "cardFloat 1s ease-in-out infinite", marginBottom: 32 }}>
             <CardBack style={{ width: 280, margin: "0 auto" }} />
           </div>
-          <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: T.muted, letterSpacing: "0.15em", animation: "pulse 1s ease-in-out infinite" }}>
+          <div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontWeight: 600, fontSize: 13, color: T.muted, letterSpacing: 0, animation: "pulse 1s ease-in-out infinite" }}>
             DRAWING YOUR CARD...
           </div>
         </div>
@@ -527,16 +526,16 @@ function CardDraw({ workspace, meetingDate, onStartSession, onSkip, onUnlock }) 
   if (phase === "revealed" && drawnCard) {
     const cat = CAT_COLORS[drawnCard.category] || CAT_COLORS.Home;
     return (
-      <div style={{ minHeight: "100vh", background: T.bg, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "48px 24px", fontFamily: "'Lora', serif" }}>
+      <div style={{ minHeight: "100vh", background: T.bg, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "48px 24px", fontFamily: "'Inter', system-ui, sans-serif" }}>
         <style>{css}</style>
         <div style={{ width: "100%", maxWidth: 460 }}>
 
           <div style={{ textAlign: "center", marginBottom: 32 }}>
             <SyncDatePill meetingDate={meetingDate} />
-            <div className="cs-fade" style={{ fontSize: 11, letterSpacing: "0.25em", color: T.terra, fontFamily: "'JetBrains Mono', monospace", textTransform: "uppercase", marginBottom: 8 }}>
+            <div className="cs-fade" style={{ fontSize: 13, letterSpacing: 0, color: T.terra, fontFamily: "'Inter', system-ui, sans-serif", fontWeight: 600, marginBottom: 8 }}>
               This week's card
             </div>
-            <div className="cs-fade-1" style={{ fontFamily: "'Playfair Display', serif", fontSize: 14, color: T.muted, fontStyle: "italic" }}>
+            <div className="cs-fade-1" style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontWeight: 800, fontSize: 14, color: T.muted }}>
               {DECKS[deckYear]?.theme} · {deckYear}
             </div>
           </div>
@@ -544,7 +543,7 @@ function CardDraw({ workspace, meetingDate, onStartSession, onSkip, onUnlock }) 
           <CardFace card={drawnCard} deckYear={deckYear} />
 
           <div className="cs-fade-2" style={{ marginTop: 12, textAlign: "center" }}>
-            <div style={{ fontSize: 13, color: T.muted, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.05em" }}>
+            <div style={{ fontSize: 13, color: T.muted, fontFamily: "'Inter', system-ui, sans-serif", fontWeight: 600, letterSpacing: 0 }}>
               Read it together. Sit with it for a moment.
             </div>
           </div>
@@ -555,8 +554,8 @@ function CardDraw({ workspace, meetingDate, onStartSession, onSkip, onUnlock }) 
             </button>
             <button onClick={drawCard} style={{
               background: "none", border: "none",
-              color: T.terra, fontFamily: "'JetBrains Mono', monospace",
-              fontSize: 12, letterSpacing: "0.08em", cursor: "pointer",
+              color: T.terra, fontFamily: "'Inter', system-ui, sans-serif", fontWeight: 600,
+              fontSize: 14, letterSpacing: 0, cursor: "pointer",
               padding: "10px", textDecoration: "underline",
               textUnderlineOffset: 3,
             }}>
@@ -728,7 +727,7 @@ function UnlockDeck({ workspace, onSuccess, onClose }) {
             fontSize: 36, margin: "0 auto 24px",
             animation: "sparkle 0.6s ease both",
           }}>✓</div>
-          <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 32, color: T.text, marginBottom: 12 }}>
+          <h2 style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontWeight: 800, fontSize: 32, color: T.text, marginBottom: 12 }}>
             Deck unlocked.
           </h2>
           <p style={{ fontSize: 15, color: T.mid, lineHeight: 1.6 }}>
@@ -792,7 +791,7 @@ function UnlockDeck({ workspace, onSuccess, onClose }) {
             </div>
 
             {error && (
-              <div style={{ background: T.redL, border: `1px solid ${T.red}33`, borderRadius: 8, padding: "12px 16px", marginBottom: 16, fontSize: 14, color: T.red, fontFamily: "'JetBrains Mono', monospace" }}>
+              <div style={{ background: T.redL, border: `1px solid ${T.red}33`, borderRadius: 8, padding: "12px 16px", marginBottom: 16, fontSize: 14, color: T.red, fontFamily: "'Inter', system-ui, sans-serif" }}>
                 {error}
               </div>
             )}
@@ -812,10 +811,10 @@ function UnlockDeck({ workspace, onSuccess, onClose }) {
             <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 14, padding: "26px", marginBottom: 22 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 18 }}>
                 <div>
-                  <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 22, color: T.text, marginBottom: 6 }}>2026 Conversation Starter Card Deck</div>
-                  <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, color: T.muted, letterSpacing: "0.05em" }}>52 cards · Permanent access · No expiration</div>
+                  <div style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontWeight: 800, fontSize: 22, color: T.text, marginBottom: 6 }}>2026 Conversation Starter Card Deck</div>
+                  <div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontWeight: 600, fontSize: 14, color: T.muted, letterSpacing: 0 }}>52 cards · Permanent access · No expiration</div>
                 </div>
-                <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 32, color: T.terra }}>{formatDigitalPrice()}</div>
+                <div style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontWeight: 800, fontSize: 32, color: T.terra }}>{formatDigitalPrice()}</div>
               </div>
               {["52 weekly conversation prompts", "Organized across 6 categories", "Card draw feature unlocked permanently", "Both spouses get access instantly"].map((f) => (
                 <div key={f} style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 8 }}>
@@ -828,7 +827,7 @@ function UnlockDeck({ workspace, onSuccess, onClose }) {
             <button type="button" className="cs-btn-primary" style={{ padding: "16px", fontSize: 17 }} onClick={handleDigitalPurchase}>
               Unlock the Conversation Starter Card Deck, {formatDigitalPrice()}
             </button>
-            <div style={{ textAlign: "center", marginTop: 12, fontSize: 12, color: T.muted, fontFamily: "'JetBrains Mono', monospace" }}>
+            <div style={{ textAlign: "center", marginTop: 12, fontSize: 12, color: T.muted, fontFamily: "'Inter', system-ui, sans-serif" }}>
               Secure payment via Stripe · Instant access
             </div>
 
@@ -851,15 +850,15 @@ function DeckLibrary({ workspace, onClose, onUnlock }) {
     .filter(y => y > Math.max(...(unlockedYears.length ? unlockedYears : [2025])));
 
   return (
-    <div style={{ minHeight: "100vh", background: T.bg, fontFamily: "'Lora', serif" }}>
+    <div style={{ minHeight: "100vh", background: T.bg, fontFamily: "'Inter', system-ui, sans-serif" }}>
       <style>{css}</style>
 
       {/* Header */}
       <div style={{ borderBottom: `1px solid ${T.border}`, padding: "18px 24px", display: "flex", alignItems: "center", gap: 14, background: T.bg }}>
         <button onClick={onClose} style={{ background: "none", border: "none", color: T.muted, cursor: "pointer", fontSize: 20 }}>←</button>
         <div>
-          <div style={{ fontSize: 11, letterSpacing: "0.2em", color: T.muted, fontFamily: "'JetBrains Mono', monospace" }}>MY CARDS</div>
-          <div style={{ fontSize: 20, color: T.text, fontFamily: "'Playfair Display', serif" }}>Conversation Cards</div>
+          <div style={{ fontSize: 13, letterSpacing: 0, color: T.muted, fontFamily: "'Inter', system-ui, sans-serif", fontWeight: 600 }}>MY CARDS</div>
+          <div style={{ fontSize: 20, color: T.text, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontWeight: 800 }}>Conversation Cards</div>
         </div>
       </div>
 
@@ -868,7 +867,7 @@ function DeckLibrary({ workspace, onClose, onUnlock }) {
         {/* Owned decks */}
         {unlockedYears.length > 0 ? (
           <>
-            <div style={{ fontSize: 11, color: T.muted, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: 16 }}>
+            <div style={{ fontSize: 13, color: T.muted, fontFamily: "'Inter', system-ui, sans-serif", fontWeight: 600, letterSpacing: 0, marginBottom: 16 }}>
               Your Decks
             </div>
             {unlockedYears.sort((a, b) => b - a).map(year => {
@@ -884,17 +883,17 @@ function DeckLibrary({ workspace, onClose, onUnlock }) {
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                     <div>
                       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
-                        <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 22, color: T.text }}>{year} Deck</div>
-                        <div style={{ background: T.oliveL, color: T.olive, border: `1px solid ${T.olive}33`, borderRadius: 20, padding: "2px 10px", fontFamily: "'JetBrains Mono', monospace", fontSize: 10, letterSpacing: "0.08em" }}>
+                        <div style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontWeight: 800, fontSize: 22, color: T.text }}>{year} Deck</div>
+                        <div style={{ background: T.oliveL, color: T.olive, border: `1px solid ${T.olive}33`, borderRadius: 20, padding: "2px 10px", fontFamily: "'Inter', system-ui, sans-serif", fontSize: 12, letterSpacing: 0, fontWeight: 600 }}>
                           ✓ UNLOCKED
                         </div>
                       </div>
-                      <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: T.muted, letterSpacing: "0.05em", marginBottom: 8 }}>
+                      <div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontWeight: 600, fontSize: 13, color: T.muted, letterSpacing: 0, marginBottom: 8 }}>
                         {deck.theme}
                       </div>
-                      <div style={{ fontSize: 14, color: T.mid, fontStyle: "italic" }}>{deck.tagline}</div>
+                      <div style={{ fontSize: 14, color: T.mid }}>{deck.tagline}</div>
                     </div>
-                    <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 28, color: T.terraL, fontWeight: 400, flexShrink: 0, marginLeft: 16 }}>
+                    <div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontSize: 28, color: T.terraL, fontWeight: 400, flexShrink: 0, marginLeft: 16 }}>
                       {deck.cards.length}
                     </div>
                   </div>
@@ -906,14 +905,14 @@ function DeckLibrary({ workspace, onClose, onUnlock }) {
                     ).map(([cat, count]) => {
                       const col = CAT_COLORS[cat] || CAT_COLORS.Home;
                       return (
-                        <div key={cat} style={{ background: col.bg, color: col.text, border: `1px solid ${col.border}33`, padding: "3px 10px", borderRadius: 20, fontFamily: "'JetBrains Mono', monospace", fontSize: 10, letterSpacing: "0.05em" }}>
+                        <div key={cat} style={{ background: col.bg, color: col.text, border: `1px solid ${col.border}33`, padding: "3px 10px", borderRadius: 20, fontFamily: "'Inter', system-ui, sans-serif", fontSize: 12, letterSpacing: 0, fontWeight: 600 }}>
                           {cat} · {count}
                         </div>
                       );
                     })}
                   </div>
 
-                  <div style={{ marginTop: 12, fontSize: 12, color: T.muted, fontFamily: "'JetBrains Mono', monospace" }}>
+                  <div style={{ marginTop: 12, fontSize: 12, color: T.muted, fontFamily: "'Inter', system-ui, sans-serif" }}>
                     These cards are yours permanently. No expiration.
                   </div>
                 </div>
@@ -923,7 +922,7 @@ function DeckLibrary({ workspace, onClose, onUnlock }) {
         ) : (
           <div style={{ textAlign: "center", padding: "40px 0", marginBottom: 32 }}>
             <div style={{ fontSize: 40, marginBottom: 16 }}>🃏</div>
-            <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 22, color: T.text, marginBottom: 8 }}>No Conversation Cards yet</div>
+            <div style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontWeight: 800, fontSize: 22, color: T.text, marginBottom: 8 }}>No Conversation Cards yet</div>
             <div style={{ fontSize: 15, color: T.mid, lineHeight: 1.6 }}>Get the FamilyPause Conversation Starter Card Deck to unlock the weekly card draw.</div>
           </div>
         )}
@@ -934,7 +933,7 @@ function DeckLibrary({ workspace, onClose, onUnlock }) {
           if (!deck?.available) return null;
           return (
             <div key={year} style={{ marginTop: 24 }}>
-              <div style={{ fontSize: 11, color: T.muted, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: 14 }}>
+              <div style={{ fontSize: 13, color: T.muted, fontFamily: "'Inter', system-ui, sans-serif", fontWeight: 600, letterSpacing: 0, marginBottom: 14 }}>
                 New This Year
               </div>
               <div style={{
@@ -944,17 +943,17 @@ function DeckLibrary({ workspace, onClose, onUnlock }) {
                 position: "relative", overflow: "hidden",
               }}>
                 {/* Decorative */}
-                <div style={{ position: "absolute", top: -20, right: -20, width: 120, height: 120, borderRadius: "50%", background: "rgba(190,90,55,0.08)", pointerEvents: "none" }} />
+                <div style={{ position: "absolute", top: -20, right: -20, width: 120, height: 120, borderRadius: "50%", background: "rgba(20,128,94,0.08)", pointerEvents: "none" }} />
 
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
                   <div>
-                    <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: T.terra, letterSpacing: "0.2em", marginBottom: 8 }}>
+                    <div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontWeight: 600, fontSize: 12, color: T.terra, letterSpacing: 0, marginBottom: 8 }}>
                       {year} DECK AVAILABLE
                     </div>
-                    <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 26, color: T.text, marginBottom: 6 }}>
+                    <div style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontWeight: 800, fontSize: 26, color: T.text, marginBottom: 6 }}>
                       {year}: {deck.theme}
                     </div>
-                    <div style={{ fontSize: 14, color: T.mid, fontStyle: "italic", lineHeight: 1.5 }}>
+                    <div style={{ fontSize: 14, color: T.mid, lineHeight: 1.5 }}>
                       {deck.tagline}
                     </div>
                   </div>
@@ -969,18 +968,18 @@ function DeckLibrary({ workspace, onClose, onUnlock }) {
                     background: T.terra, color: T.bg,
                     border: "none", borderRadius: 8,
                     padding: "10px 20px", cursor: "pointer",
-                    fontFamily: "'Lora', serif", fontSize: 15,
+                    fontFamily: "'Inter', system-ui, sans-serif", fontSize: 15,
                     transition: "all 0.15s",
-                    boxShadow: `0 4px 12px rgba(190,90,55,0.25)`,
+                    boxShadow: `0 4px 12px rgba(20,128,94,0.25)`,
                   }}>
                     Get the {year} Conversation Starter Card Deck →
                   </button>
                   <a href="https://familypause.com/cards" target="_blank" rel="noreferrer" style={{
                     background: "transparent",
                     border: `1px solid ${T.terra}44`,
-                    borderRadius: 8, padding: "10px 20px",
-                    color: T.terraD, fontFamily: "'JetBrains Mono', monospace",
-                    fontSize: 12, letterSpacing: "0.05em",
+                    borderRadius: 9999, padding: "10px 20px",
+                    color: T.terraD, fontFamily: "'Inter', system-ui, sans-serif",
+                    fontSize: 14, letterSpacing: 0, fontWeight: 600,
                     textDecoration: "none", transition: "all 0.15s",
                   }}>
                     See the Conversation Cards
@@ -994,7 +993,7 @@ function DeckLibrary({ workspace, onClose, onUnlock }) {
         {/* No new decks available */}
         {availableNewYears.length === 0 && unlockedYears.length > 0 && (
           <div style={{ marginTop: 28, padding: "20px 24px", background: T.surface, border: `1px solid ${T.border}`, borderRadius: 14, textAlign: "center" }}>
-            <div style={{ fontSize: 13, color: T.muted, fontFamily: "'JetBrains Mono', monospace" }}>
+            <div style={{ fontSize: 13, color: T.muted, fontFamily: "'Inter', system-ui, sans-serif" }}>
               You're up to date. New decks drop each January.
             </div>
           </div>
@@ -1002,7 +1001,7 @@ function DeckLibrary({ workspace, onClose, onUnlock }) {
 
         {/* Add another deck */}
         <div style={{ marginTop: 24, textAlign: "center" }}>
-          <button onClick={onUnlock} style={{ background: "none", border: "none", color: T.terra, fontFamily: "'JetBrains Mono', monospace", fontSize: 12, letterSpacing: "0.08em", cursor: "pointer", textDecoration: "underline", textUnderlineOffset: 3 }}>
+          <button onClick={onUnlock} style={{ background: "none", border: "none", color: T.terra, fontFamily: "'Inter', system-ui, sans-serif", fontWeight: 600, fontSize: 14, letterSpacing: 0, cursor: "pointer", textDecoration: "underline", textUnderlineOffset: 3 }}>
             + Enter another deck code
           </button>
         </div>

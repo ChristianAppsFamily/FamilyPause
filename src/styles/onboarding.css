@@ -31,31 +31,29 @@
 }
 
 .ob-eyebrow {
-  font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: 0.25em;
-  text-transform: uppercase;
+  font-family: var(--mono); font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 0;
   color: var(--terra);
 }
 
 .ob-eyebrow-mut {
-  font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
+  font-family: var(--mono); font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 0;
   color: var(--ink-3);
 }
 
 .ob-hl {
   font-family: var(--display);
-  font-weight: 400;
+  font-weight: 800;
   font-size: 38px;
   line-height: 1.13;
   color: var(--ink);
   margin: 12px 0 14px;
   text-wrap: pretty;
 }
-.ob-hl em { font-style: italic; color: var(--terra); }
+.ob-hl em { font-style: normal; color: var(--em); color: var(--terra); }
 
 .ob-body {
   font-family: var(--body);
@@ -73,16 +71,16 @@
   font-family: var(--body); font-weight: 500; font-size: 16px;
   color: var(--paper);
   background: var(--terra);
-  border: none; border-radius: 8px;
+  border: none; border-radius: 9999px;
   padding: 15px;
-  box-shadow: 0 4px 16px rgba(190, 90, 55, 0.25);
+  box-shadow: 0 4px 16px rgba(20,128,94, 0.25);
   cursor: pointer;
   transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s;
 }
 .ob-btn-primary:hover:not(:disabled) {
   background: var(--terra-d);
   transform: translateY(-1px);
-  box-shadow: 0 7px 22px rgba(190, 90, 55, 0.33);
+  box-shadow: 0 7px 22px rgba(20,128,94, 0.33);
 }
 .ob-btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
 
@@ -93,7 +91,7 @@
   color: var(--ink-2);
   background: transparent;
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: 9999px;
   padding: 13px;
   cursor: pointer;
   margin-top: 10px;
@@ -103,7 +101,7 @@
 
 .ob-gold-box {
   background: var(--gold-soft);
-  border: 1px solid rgba(192, 151, 64, 0.25);
+  border: 1px solid rgba(245,158,11, 0.25);
   border-radius: 12px;
   padding: 22px 24px;
   margin: 28px 0 32px;
@@ -113,15 +111,14 @@
   display: flex; align-items: flex-start; gap: 11px;
   font-size: 15px; color: var(--ink-2); line-height: 1.4;
 }
-.ob-arr { font-family: var(--mono); font-size: 13px; color: var(--terra); margin-top: 2px; flex: none; }
+.ob-arr { font-family: var(--mono); font-weight: 600; font-size: 13px; color: var(--terra); margin-top: 2px; flex: none; }
 
 .ob-field-block { margin-bottom: 24px; }
 .ob-field-label {
   display: block;
-  font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  font-family: var(--mono); font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 0;
   color: var(--ink-2);
   margin-bottom: 9px;
 }
@@ -155,7 +152,7 @@
   color: var(--terra);
   background: var(--paper-2);
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: 9999px;
   padding: 0 20px;
   cursor: pointer;
   flex: none;
@@ -175,17 +172,16 @@
 .ob-chip-x {
   display: flex; align-items: center; justify-content: center;
   width: 18px; height: 18px; border-radius: 50%;
-  background: rgba(162, 72, 31, 0.12);
+  background: rgba(15,106,77, 0.12);
   color: var(--terra-d);
   border: none; cursor: pointer;
   font-size: 15px; line-height: 1; padding: 0;
 }
 
 .ob-field-note {
-  font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  font-family: var(--mono); font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0;
   color: var(--ink-3);
   margin-top: 12px;
   line-height: 1.7;
@@ -200,7 +196,7 @@
 .ob-invite-row { display: flex; gap: 8px; margin-top: 11px; }
 .ob-invite-field {
   flex: 1;
-  font-family: var(--mono);
+  font-family: var(--mono); font-weight: 600;
   font-size: 13px;
   color: var(--ink);
   background: var(--paper);
@@ -217,7 +213,7 @@
   color: var(--paper);
   background: var(--terra);
   border: none;
-  border-radius: 8px;
+  border-radius: 9999px;
   padding: 0 22px;
   cursor: pointer;
   flex: none;
@@ -231,7 +227,7 @@
   display: flex; align-items: center; justify-content: center; gap: 8px;
   font-family: var(--body);
   font-size: 14px; font-weight: 500;
-  border-radius: 8px;
+  border-radius: 9999px;
   padding: 13px;
   cursor: pointer;
   border: 1px solid transparent;
@@ -244,16 +240,16 @@
 
 .ob-code-hint {
   background: var(--gold-soft);
-  border: 1px solid rgba(192, 151, 64, 0.25);
+  border: 1px solid rgba(245,158,11, 0.25);
   border-radius: 12px;
   padding: 18px 22px 20px;
   margin-bottom: 28px;
   text-align: center;
 }
 .ob-code-big {
-  font-family: var(--mono);
+  font-family: var(--mono); font-weight: 600;
   font-size: 20px;
-  letter-spacing: 0.2em;
+  letter-spacing: 0;
   color: var(--terra);
   margin: 10px 0 8px;
 }
@@ -269,7 +265,7 @@
   background: var(--olive);
   display: flex; align-items: center; justify-content: center;
   margin: 0 auto 24px;
-  box-shadow: 0 8px 26px rgba(94, 107, 55, 0.3);
+  box-shadow: 0 8px 26px rgba(20,128,94, 0.3);
   animation: obPopIn 520ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
   animation-delay: 120ms;
 }
@@ -302,7 +298,7 @@
   display: flex;
   background: var(--paper-3);
   padding: 3px;
-  border-radius: 10px;
+  border-radius: 9999px;
   gap: 3px;
   margin-bottom: 24px;
 }
@@ -313,7 +309,7 @@
   color: var(--ink-3);
   background: transparent;
   border: none;
-  border-radius: 8px;
+  border-radius: 9999px;
   padding: 10px 8px;
   cursor: pointer;
   transition: all 0.15s;
@@ -321,14 +317,13 @@
 .ob-tab-sw button.active {
   background: var(--paper);
   color: var(--ink);
-  box-shadow: 0 1px 4px rgba(42, 37, 29, 0.1);
+  box-shadow: 0 1px 4px rgba(15,23,42, 0.1);
 }
 
 .ob-code-input {
-  font-family: var(--mono);
+  font-family: var(--mono); font-weight: 600;
   font-size: 20px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  letter-spacing: 0;
   text-align: center;
   color: var(--ink);
   background: var(--paper);
@@ -345,7 +340,7 @@
 
 .ob-info-gold {
   background: var(--gold-soft);
-  border: 1px solid rgba(192, 151, 64, 0.22);
+  border: 1px solid rgba(245,158,11, 0.22);
   border-radius: 10px;
   padding: 16px;
   margin-top: 16px;
@@ -361,7 +356,7 @@
 }
 .ob-info-terra {
   background: var(--terra-tint);
-  border: 1px solid rgba(190, 90, 55, 0.18);
+  border: 1px solid rgba(20,128,94, 0.18);
   border-radius: 10px;
   padding: 14px 16px;
   margin-top: 16px;

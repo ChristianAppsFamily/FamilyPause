@@ -149,7 +149,7 @@ App must load at localhost:5173 showing the Auth sign in screen with no console 
 File location: src/components/Settings.jsx
 Sections needed:
 - Family members — editable list, saves to workspace family_context in Supabase
-- Invite code — displays current invite_code from workspace in a copyable JetBrains Mono box with copy button
+- Invite code — displays current invite_code from workspace in a copyable monospace box with copy button
 - Card decks — shows owned decks, links to CardSystem unlock flow
 - Subscription — shows current plan and trial days remaining
 - Sign out button — calls onSignOut prop passed from AppRouter
@@ -158,9 +158,9 @@ Sections needed:
 ### Step 9 — Build SessionHistory.jsx
 File location: src/components/SessionHistory.jsx
 Load past sessions from Supabase sessions table ordered by meeting_date descending.
-Each row shows: date in Playfair Display, day of week, count of kept items, actions, events.
+Each row shows: date in Plus Jakarta Sans, day of week, count of kept items, actions, events.
 Tappable row expands to show the full card list for that session.
-Empty state shows Playfair Display headline "Your history starts this Sunday" with encouraging body copy.
+Empty state shows Plus Jakarta Sans headline "Your history starts this Sunday" with encouraging body copy.
 
 ### Step 10 — Build Paywall.jsx
 File location: src/components/Paywall.jsx
@@ -210,8 +210,8 @@ Create public/manifest.json:
   "description": "The weekly reset every family needs",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#FAF7F2",
-  "theme_color": "#B85C38",
+  "background_color": "#FFFFFF",
+  "theme_color": "#14805E",
   "icons": [
     { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
     { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
@@ -221,7 +221,7 @@ Create public/manifest.json:
 Add to index.html inside the head tag:
 ```html
 <link rel="manifest" href="/manifest.json">
-<meta name="theme-color" content="#B85C38">
+<meta name="theme-color" content="#14805E">
 ```
 
 ### Step 14 — Deploy to Vercel
@@ -237,71 +237,58 @@ Then in Vercel: import repo, add the three env vars, deploy.
 ---
 
 ## Design system — VISUAL SOURCE OF TRUTH
-**The design bundle in `project/` is the authoritative visual design.** It was exported
-from Claude Design (see `README.md`) and the tokens + component styles in
-`project/app/styles.css` and `project/app/screens.css` are the truth. Those tokens are
-ported verbatim into **`src/styles/tokens.css`**, which is imported globally in `main.jsx`.
-All UI — new and existing — composes those shared classes/tokens. Do not invent new
-palettes, button shapes, or radii; use the tokens below.
+**Evergreen and Sunshine (emerald + sun) is the design system for the whole product** — landing,
+marketing pages, auth, onboarding, the weekly-sync app, cards, settings, paywall, legal pages,
+and emails. Marketing homepage source: `FamilyPause_ProtoType/` (ported as React). In-app
+patterns still follow `FamilyPause App Screens.html`. It replaced the old Terra & Cream system
+(Playfair / Lora / JetBrains Mono, terracotta) everywhere.
 
-> Note: earlier drafts of this brief listed an approximate "#B85C38" palette with
-> Lora rounded buttons. That is superseded. The exact bundle values are authoritative.
+- `src/styles/tokens.css` — global app tokens + shared classes (`.btn`, `.eyebrow`, `.tag`,
+  `.field`, `.brand`, `.steps`) and self-hosted `@font-face` for Plus Jakarta Sans and Inter
+  (`public/fonts/`). Legacy variable names (`--terra`, `--olive`, `--gold`, `--paper`,
+  `--display`, `--serif`, `--mono`) are kept as **aliases** of the v2 values so existing CSS
+  keeps working. Prefer the v2 names (`--em`, `--sun`, `--hd`, `--bd`) in new code.
+- `src/styles/site.css` — landing and marketing chrome styles, scoped under `.fp-site`.
+- `src/components/SiteChrome.jsx` — shared marketing nav + footer + tilted `FpMark` / `FpLogo`;
+  used by Landing and `MarketingChrome` (blog, contact, cards, mobile).
 
-### Terra & Cream tokens (from project/app/styles.css → src/styles/tokens.css)
+### Tokens
 ```
---paper        #FBF6EC  warm paper — page background (with radial gradient, see body)
---paper-2      #F4EAD8  raised surface / segmented controls
---paper-3      #EEE1CC  deeper surface / hover
---paper-card   #FCF8F0  cards and panels
---ink          #2A251D  primary text
---ink-2        #5B5245  secondary copy
---ink-3        #8C8070  labels / metadata / muted
---line         #E6D9C4  borders and dividers
---line-2       #DECFB5  stronger borders
---terra        #BE5A37  terracotta — primary buttons, logo, accents
---terra-d      #A2481F  terracotta dark — hover / tag text
---terra-soft   #F1DDCF  terracotta tag background
---terra-tint   #FAEAE0  terracotta wash — focus rings, light fills
---olive        #5E6B37  olive — Keep / success
---olive-d      #4C5829  olive dark — success text
---olive-soft   #DEE4CB  olive tag background
---olive-tint   #EDF0E1  olive wash — success backgrounds
---gold         #C09740  gold — dates / calendar / events
---gold-soft    #F0E3C0  gold tag background
---red          #C0402F  Discard / destructive
---red-soft     #F6DAD3  / --red-tint #FBEAE5  destructive backgrounds
+--em       #14805E  emerald — primary buttons, links, accents, Keep / success
+--em-d     #0F6A4D  emerald dark — hover, tag text
+--em-50    #E3F1EB  emerald tag background
+--mint     #EEF6F2  mint wash — soft surfaces, focus fills
+--sun      #FFB547  sun — logo heads, highlights, badges
+--sun-50   #FFF4E0  sun tag background
+--ink      #0F172A  primary text      --ink-2 #475569 secondary   --ink-3 #94A3B8 muted
+--line     #E5E7EB  borders           --line-2 #D1D5DB stronger borders
+--red      #DC2626  Discard / destructive (--red-soft #FEE2E2, --red-tint #FEF2F2)
+person colors: blue #3B82F6 (person 1), violet #8B5CF6 (person 2), amber #F59E0B (shared), coral #FF6F61
 ```
-Radii: `--r-sm 7px` (buttons), `--r 12px`, `--r-lg 18px` (panels). Shadows: `--shadow-sm`,
-`--shadow`, `--shadow-lg`. Page background is a radial-gradient warm paper (see `body` in tokens.css).
+Page background is plain white. Radii: `--r-sm 10px`, `--r 14px` (inputs), `--r-lg 20px`
+(cards/panels); **buttons are pills (9999px)**. Shadows are soft slate (`rgba(15,23,42,…)`);
+primary buttons use the emerald `--btn-sh`.
 
 ## Typography
-Three fonts only. Never substitute.
-- **Playfair Display** (weights 500/600/700) — all headlines and display text. h1–h3 are 600. Italic for emotional emphasis phrases.
-- **Lora** (400/500/600) — all body copy, input text, conversational UI.
-- **JetBrains Mono** (400/500/600) — all labels, metadata, codes, eyebrows, AND **buttons**. Buttons are UPPERCASE, letter-spacing .08em, 7px radius (`.btn` in tokens.css). Eyebrows are UPPERCASE terra at letter-spacing .22em (`.eyebrow`).
+Two fonts only.
+- **Plus Jakarta Sans** 800 — all headlines/display, letter-spacing -.03em. No italics; emphasize
+  a phrase by coloring it emerald (`h1 em` renders upright in emerald).
+- **Inter** 400/500/600/700 — body, inputs, labels, eyebrows, buttons. Everything is sentence case;
+  no uppercase mono labels, no wide letter-spacing. Eyebrows are Inter 600 emerald.
 
-### Two button systems (IMPORTANT — don't mix them up)
-The design bundle uses **two** distinct button treatments depending on the surface:
-- **Standalone prototypes — Auth, Onboarding, Cards (CardSystem):** primary buttons are
-  **Lora, sentence-case, 8px radius, soft drop-shadow** (e.g. "Sign In", "Save and Continue",
-  "I have the deck"). Small/secondary buttons ("Add") are mono uppercase.
-- **Main weekly-sync App** (`App.jsx`, screens.css): buttons are **mono UPPERCASE, .08em,
-  7px radius** (`.btn` in tokens.css) — e.g. "DISTILL THIS WEEK", "BUILD MY WEEK".
+Buttons: Inter 600, sentence case, pill radius. Primary = emerald fill; secondary = white with
+1.5px ink border (`.btn-ghost` / landing `.btn-s`); soft = mint fill.
 
-So: Auth/Onboarding/Cards = Lora buttons; the main App flow = mono buttons. Settings/
-SessionHistory/Paywall (new screens, no prototype) follow the main-App mono system.
-
-Load from Google Fonts (per the design bundle):
-```
-https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Lora:ital,wght@0,400;0,500;0,600;1,400;1,500&family=JetBrains+Mono:wght@400;500;600&display=swap
-```
+Fonts are self-hosted in `public/fonts/` (`plus-jakarta-sans.woff2`, `inter.woff2`) with
+`@font-face` in `src/styles/tokens.css`. Family names stay `'Plus Jakarta Sans'` and `'Inter'`
+so existing stacks keep working. Do not add Google Fonts links.
 
 ## Logo mark
-The logo asset is `public/uploads/Logo_4.png` (two terracotta rounded pill shapes with a
-dot above each — two people standing together; also reads as a pause symbol). Render it in a
-38px rounded-square `.mark` (terra gradient fallback). Wordmark is **FamilyPause** in Playfair
-Display 600: **`Family` in terra (#BE5A37)** and **`Pause` in ink (#2A251D)** — markup
-`<b>Family</b><span>Pause</span>` per the design bundle.
+Two emerald pills, each tilted 6° outward, with a sun-gold dot above each (two people standing
+together; also reads as pause). Files: `public/fp-mark.svg` (UI), `public/fp-mark.png` (jsPDF
+export), `public/favicon.svg`, `icon-192/512.png`. Inline SVG: `FpMark` / `FpLogo` in
+`SiteChrome.jsx`. Wordmark is Plus Jakarta Sans 800: `Family` in ink, `Pause` in emerald
+(on dark/emerald backgrounds: white pills, `Pause` in sun).
 
 ## Pricing model
 - Free — 7 day full trial, then manual use only, 1 AI session per month free
@@ -325,8 +312,7 @@ Model string: claude-haiku-4-5
 Max tokens: 1000
 
 ## What NOT to change
-- The design bundle (`project/`) and `src/styles/tokens.css` are the visual source of truth — match them; don't introduce off-palette colors, Lora buttons, or new radii
-- The three font choices
+- The evergreen system (`src/styles/tokens.css`, `src/styles/site.css`) — don't introduce off-palette colors, non-pill buttons, uppercase mono labels, or new fonts
 - The AI model string claude-haiku-4-5
 - Supabase table names: workspaces, workspace_members, sessions, deck_codes, subscriptions
 - The invite code format FP-YYYY-XXXX-0000

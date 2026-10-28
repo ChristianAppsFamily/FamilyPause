@@ -5,7 +5,7 @@ import { isValidEmail, joinWaitlist } from "../lib/sendGuide";
 
 const css = `
 .fp-mobile-page {
-  background: linear-gradient(135deg, var(--olive), #525E2F);
+  background: linear-gradient(135deg, var(--olive), #0F6A4D);
   color: #fff;
   padding: 88px 0 96px;
   min-height: calc(100vh - 220px);
@@ -16,26 +16,25 @@ const css = `
 }
 .fp-mobile-page .eyebrow {
   font-family: var(--mono);
-  text-transform: uppercase;
-  letter-spacing: .24em;
-  font-size: 12px;
-  font-weight: 500;
-  color: #F2E7C9;
+  letter-spacing: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #FFF4E0;
   display: inline-block;
   margin-bottom: 16px;
 }
 .fp-mobile-page h1 {
   font-family: var(--display);
-  font-weight: 600;
+  font-weight: 800;
   font-size: clamp(32px, 6vw, 50px);
   line-height: 1.12;
-  letter-spacing: -.012em;
+  letter-spacing: -.03em;
   color: #fff;
   margin: 0 0 18px;
 }
 .fp-mobile-page h1 em {
-  color: #F2E7C9;
-  font-style: italic;
+  color: #FFF4E0;
+  font-style: normal; color: var(--em);
 }
 .fp-mobile-page .sub {
   font-family: var(--serif);
@@ -53,24 +52,23 @@ const css = `
 .fp-mobile-page .chip {
   display: inline-flex;
   align-items: center;
-  font-family: var(--mono);
-  font-size: 12px;
-  letter-spacing: .08em;
-  text-transform: uppercase;
-  color: #2A251D;
-  background: #FBF6EC;
-  border: 1px solid #E6D9C4;
+  font-family: var(--mono); font-weight: 600;
+  font-size: 14px;
+  letter-spacing: 0;
+  color: #0F172A;
+  background: #FFFFFF;
+  border: 1px solid #E5E7EB;
   border-radius: 999px;
   padding: 12px 20px;
   cursor: pointer;
-  box-shadow: 0 8px 18px rgba(42, 37, 29, .16);
+  box-shadow: 0 8px 18px rgba(15,23,42, .16);
   transition: transform .12s, box-shadow .2s, background .2s, color .2s;
 }
 .fp-mobile-page .chip:hover {
-  color: #2A251D;
-  background: #F4EAD8;
+  color: #0F172A;
+  background: #EEF6F2;
   transform: translateY(-1px);
-  box-shadow: 0 12px 22px rgba(42, 37, 29, .2);
+  box-shadow: 0 12px 22px rgba(15,23,42, .2);
 }
 .fp-mobile-page .chip:active { transform: translateY(1px); }
 
@@ -81,7 +79,7 @@ const css = `
   display: grid;
   place-items: center;
   padding: 16px;
-  background: rgba(46, 40, 32, .46);
+  background: rgba(15,23,42, .46);
   backdrop-filter: blur(3px);
 }
 .fp-mobile-modal {
@@ -90,7 +88,7 @@ const css = `
   max-width: 420px;
   border-radius: 16px;
   background: #fff;
-  box-shadow: 0 24px 70px rgba(70, 45, 20, .26);
+  box-shadow: 0 24px 70px rgba(15,23,42, .26);
   padding: 48px 40px 28px;
   text-align: center;
 }
@@ -101,7 +99,7 @@ const css = `
 .fp-mobile-modal h2 {
   font-family: var(--display);
   font-size: 32px;
-  font-weight: 600;
+  font-weight: 800;
   color: var(--ink);
   margin: 0 0 12px;
 }

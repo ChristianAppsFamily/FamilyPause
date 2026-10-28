@@ -15,20 +15,20 @@ const json = (body: unknown, status = 200) =>
 function welcomeHtml(firstName: string) {
   return `<!DOCTYPE html>
 <html><head><meta charset="utf-8"></head>
-<body style="margin:0;padding:0;background:#FAF7F2;font-family:Georgia,'Lora',serif;color:#2A251D;">
+<body style="margin:0;padding:0;background:#FFFFFF;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,Helvetica,Arial,sans-serif;color:#0F172A;">
   <div style="max-width:560px;margin:0 auto;padding:40px 24px;">
-    <p style="font-size:14px;letter-spacing:0.12em;text-transform:uppercase;color:#BE5A37;margin:0 0 24px;">FamilyPause</p>
+    <p style="font-size:14px;letter-spacing:0.12em;text-transform:uppercase;color:#14805E;margin:0 0 24px;">FamilyPause</p>
     <h1 style="font-size:28px;font-weight:600;line-height:1.25;margin:0 0 20px;">Hi ${firstName},</h1>
-    <p style="font-size:17px;line-height:1.65;color:#5B5245;margin:0 0 16px;">
+    <p style="font-size:17px;line-height:1.65;color:#475569;margin:0 0 16px;">
       You just started something good. Your 7-day trial is live, and your family workspace is ready whenever you are.
     </p>
-    <p style="font-size:17px;line-height:1.65;color:#5B5245;margin:0 0 16px;">
+    <p style="font-size:17px;line-height:1.65;color:#475569;margin:0 0 16px;">
       This Sunday (or whenever works), sit down together, talk like humans, and let FamilyPause handle the structure.
     </p>
-    <p style="font-size:17px;line-height:1.65;color:#5B5245;margin:0 0 32px;">
-      <a href="https://familypause.com/app" style="color:#BE5A37;">Open FamilyPause →</a>
+    <p style="font-size:17px;line-height:1.65;color:#475569;margin:0 0 32px;">
+      <a href="https://familypause.com/app" style="color:#14805E;">Open FamilyPause →</a>
     </p>
-    <p style="font-size:16px;line-height:1.6;color:#5B5245;margin:0;">
+    <p style="font-size:16px;line-height:1.6;color:#475569;margin:0;">
       Glad you're here,<br><strong>Spence</strong><br>Founder, FamilyPause
     </p>
   </div>

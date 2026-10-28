@@ -63,19 +63,19 @@ function reminderHtml(opts: {
   return `<!DOCTYPE html>
 <html>
   <head><meta charset="utf-8"><meta name="viewport" content="width=device-width"></head>
-  <body style="margin:0;padding:0;background:#FAF7F2;font-family:Georgia,'Lora',serif;color:#2A251D;">
+  <body style="margin:0;padding:0;background:#FFFFFF;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,Helvetica,Arial,sans-serif;color:#0F172A;">
     <div style="max-width:560px;margin:0 auto;padding:44px 24px;">
-      <p style="margin:0 0 24px;color:#BE5A37;font-size:13px;letter-spacing:.12em;text-transform:uppercase;">FamilyPause</p>
+      <p style="margin:0 0 24px;color:#14805E;font-size:13px;letter-spacing:.12em;text-transform:uppercase;">FamilyPause</p>
       <h1 style="margin:0 0 12px;font-size:26px;font-weight:600;line-height:1.25;">${title}</h1>
-      <p style="margin:0 0 18px;font-size:16px;line-height:1.6;color:#5B5245;">${when}</p>
-      ${desc ? `<p style="margin:0 0 24px;font-size:15px;line-height:1.6;color:#8C8070;">${desc}</p>` : ""}
-      <p style="margin:0 0 28px;font-size:16px;line-height:1.65;color:#5B5245;">Add this to your calendar so it doesn't get lost.</p>
-      <a href="${icsUrl}" style="display:inline-block;padding:14px 22px;border-radius:7px;background:#BE5A37;color:#ffffff;text-decoration:none;font-size:14px;letter-spacing:.06em;text-transform:uppercase;font-family:ui-monospace,Menlo,monospace;">Add to Calendar</a>
-      <p style="margin:32px 0 0;font-size:15px;line-height:1.6;color:#2A251D;">Spence<br><span style="color:#8C8070;">FamilyPause</span></p>
-      <hr style="border:none;border-top:1px solid #E6D9C4;margin:28px 0 16px;" />
-      <p style="margin:0;font-size:12px;line-height:1.5;color:#8C8070;">
+      <p style="margin:0 0 18px;font-size:16px;line-height:1.6;color:#475569;">${when}</p>
+      ${desc ? `<p style="margin:0 0 24px;font-size:15px;line-height:1.6;color:#94A3B8;">${desc}</p>` : ""}
+      <p style="margin:0 0 28px;font-size:16px;line-height:1.65;color:#475569;">Add this to your calendar so it doesn't get lost.</p>
+      <a href="${icsUrl}" style="display:inline-block;padding:14px 22px;border-radius:7px;background:#14805E;color:#ffffff;text-decoration:none;font-size:14px;letter-spacing:.06em;text-transform:uppercase;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,Helvetica,Arial,sans-serif;">Add to Calendar</a>
+      <p style="margin:32px 0 0;font-size:15px;line-height:1.6;color:#0F172A;">Spence<br><span style="color:#94A3B8;">FamilyPause</span></p>
+      <hr style="border:none;border-top:1px solid #E5E7EB;margin:28px 0 16px;" />
+      <p style="margin:0;font-size:12px;line-height:1.5;color:#94A3B8;">
         This reminder was scheduled from your FamilyPause plan.<br>
-        <a href="https://www.familypause.com/app" style="color:#BE5A37;">Open FamilyPause</a>
+        <a href="https://www.familypause.com/app" style="color:#14805E;">Open FamilyPause</a>
       </p>
     </div>
   </body>

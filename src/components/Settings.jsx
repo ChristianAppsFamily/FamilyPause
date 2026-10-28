@@ -67,7 +67,7 @@ const css = `
   .set-cal-bullets li { margin: 0 0 8px; }
   .set-cal-bullets li:last-child { margin-bottom: 0; }
   .set-grouplbl {
-    font-family: var(--mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase;
+    font-family: var(--mono); font-weight: 600; font-size: 13px; letter-spacing: 0;
     color: var(--ink-3); margin-bottom: 10px;
   }
   .set-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 11px; }
@@ -79,29 +79,29 @@ const css = `
   }
   .set-chip.person1 { background: var(--terra-soft); border-color: var(--terra-soft); color: var(--terra-d); }
   .set-chip.person2 { background: var(--olive-soft); border-color: var(--olive-soft); color: var(--olive-d); }
-  .set-chip.both   { background: var(--gold-soft);  border-color: var(--gold-soft);  color: #8a6a16; }
+  .set-chip.both   { background: var(--gold-soft);  border-color: var(--gold-soft);  color: #b45309; }
   .set-chip .x {
     width: 19px; height: 19px; border-radius: 50%; border: none; cursor: pointer;
     display: grid; place-items: center; font-size: 13px; line-height: 1;
-    background: rgba(42,37,29,.10); color: inherit; transition: background .15s;
+    background: rgba(15,23,42,.10); color: inherit; transition: background .15s;
   }
-  .set-chip .x:hover { background: rgba(42,37,29,.20); }
-  .set-empty { color: var(--ink-3); font-style: italic; font-size: 14.5px; margin-bottom: 11px; }
+  .set-chip .x:hover { background: rgba(15,23,42,.20); }
+  .set-empty { color: var(--ink-3); font-size: 14.5px; margin-bottom: 11px; }
   .set-addrow { display: flex; gap: 9px; align-items: stretch; }
   .set-addrow .field { flex: 1; }
-  .set-saved { font-family: var(--mono); font-size: 11.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--olive-d); }
+  .set-saved { font-family: var(--mono); font-weight: 600; font-size: 13.5px; letter-spacing: 0; color: var(--olive-d); }
   .set-codebox {
     flex: 1; background: var(--paper); border: 1px solid var(--line); border-radius: var(--r);
-    padding: 14px 16px; font-family: var(--mono); font-size: 16px; letter-spacing: .12em;
+    padding: 14px 16px; font-family: var(--mono); font-weight: 600; font-size: 16px; letter-spacing: 0;
     color: var(--ink); user-select: all; overflow-x: auto; white-space: nowrap;
   }
   .set-deckpill {
     display: inline-flex; align-items: center; gap: 8px;
-    background: var(--gold-soft); color: #8a6a16; border-radius: 999px;
-    padding: 7px 14px; font-family: var(--mono); font-size: 11.5px; letter-spacing: .06em; text-transform: uppercase;
+    background: var(--gold-soft); color: #b45309; border-radius: 999px;
+    padding: 7px 14px; font-family: var(--mono); font-weight: 600; font-size: 13.5px; letter-spacing: 0;
   }
   .set-plan { display: flex; align-items: baseline; gap: 12px; margin-bottom: 8px; }
-  .set-plan .name { font-family: var(--display); font-size: 26px; color: var(--ink); }
+  .set-plan .name { font-family: var(--display); font-weight: 800; font-size: 26px; color: var(--ink); }
   .set-upgrade {
     margin-top: 16px; padding: 16px 16px 14px;
     background: var(--terra-tint); border: 1px solid var(--terra-soft);
@@ -112,7 +112,7 @@ const css = `
     to { opacity: 1; transform: none; }
   }
   .set-upgrade-title {
-    font-family: var(--display); font-size: 18px; font-weight: 600;
+    font-family: var(--display); font-size: 18px; font-weight: 800;
     color: var(--ink); margin: 0 0 6px;
   }
   .set-upgrade-sub {
@@ -126,17 +126,16 @@ const css = `
     display: flex; align-items: baseline; gap: 6px; margin-bottom: 14px;
   }
   .set-upgrade-price .amt {
-    font-family: var(--display); font-size: 32px; font-weight: 600; color: var(--ink);
+    font-family: var(--display); font-size: 32px; font-weight: 800; color: var(--ink);
   }
   .set-upgrade-price .per {
-    font-family: var(--mono); font-size: 12px; color: var(--ink-3);
+    font-family: var(--mono); font-weight: 600; font-size: 14px; color: var(--ink-3);
   }
   .set-toggle {
     display: inline-flex; align-items: center; gap: 12px;
     border: 1px solid var(--line); background: var(--paper-2);
     border-radius: 999px; padding: 6px 6px 6px 14px; cursor: pointer;
-    font-family: var(--mono); font-size: 11px; letter-spacing: .08em;
-    text-transform: uppercase; color: var(--ink-2); user-select: none;
+    font-family: var(--mono); font-weight: 600; font-size: 13px; letter-spacing: 0; color: var(--ink-2); user-select: none;
     transition: border-color .15s, background .15s, color .15s;
   }
   .set-toggle:hover:not(:disabled) { border-color: var(--line-2); }
@@ -159,7 +158,7 @@ const css = `
   .set-toggle.is-on .set-toggle-thumb { transform: translateX(18px); }
 
   .set-cal-label {
-    font-family: var(--mono); font-size: 9px; letter-spacing: .14em; text-transform: uppercase;
+    font-family: var(--mono); font-weight: 600; font-size: 11px; letter-spacing: 0;
     color: var(--ink-3); margin-bottom: 8px;
   }
   .set-cal-account {
@@ -169,12 +168,12 @@ const css = `
     width: 7px; height: 7px; border-radius: 50%; background: var(--olive); flex-shrink: 0;
   }
   .set-cal-email {
-    font-family: var(--mono); font-size: 12px; letter-spacing: .02em; color: #6A5A40;
+    font-family: var(--mono); font-weight: 600; font-size: 14px; letter-spacing: 0; color: #475569;
   }
   .set-cal-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
   .set-btn-ghost-warm {
-    font-family: var(--lora); font-size: 14px; padding: 10px 18px; border-radius: 8px;
-    background: transparent; border: 1px solid #D8CFC0; color: #6A5A40; cursor: pointer;
+    font-family: var(--lora); font-size: 14px; padding: 10px 18px; border-radius: 9999px;
+    background: transparent; border: 1px solid #D1D5DB; color: #475569; cursor: pointer;
     transition: color .15s, border-color .15s;
   }
   .set-btn-ghost-warm:hover:not(:disabled) { color: var(--terra); border-color: var(--terra); }
@@ -572,8 +571,8 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
       <div className="brandbar">
         <div className="brand">
           <div className="mark">
-            <img src="/uploads/Logo_4.png" alt="FamilyPause"
-                 style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "inherit", display: "block" }} />
+            <img src="/fp-mark.svg" alt="FamilyPause"
+                 style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }} />
           </div>
           <div className="word"><b>Family</b><span>Pause</span></div>
         </div>
@@ -766,7 +765,7 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
                       width: 32, height: 32, borderRadius: "50%",
                       background: m.role === "owner" ? "var(--terra-soft)" : "var(--olive-soft)",
                       display: "flex", alignItems: "center", justifyContent: "center",
-                      fontFamily: "var(--display)", fontWeight: 600, fontSize: 14,
+                      fontFamily: "var(--display)", fontWeight: 800, fontSize: 14,
                       color: m.role === "owner" ? "var(--terra-d)" : "var(--olive-d)",
                     }}>
                       {(m.display_name || "?")[0].toUpperCase()}
@@ -775,7 +774,7 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
                       <div style={{ fontFamily: "var(--serif)", fontSize: 15, color: "var(--ink)" }}>
                         {m.display_name || "Unknown"}
                       </div>
-                      <div style={{ fontFamily: "var(--mono)", fontSize: 10.5, letterSpacing: ".05em", textTransform: "uppercase", color: "var(--ink-3)" }}>
+                      <div style={{ fontFamily: "var(--mono)", fontWeight: 600, fontSize: 12.5, letterSpacing: 0, color: "var(--ink-3)" }}>
                         {m.role === "owner" ? "Owner" : "Member"}
                       </div>
                     </div>
@@ -832,10 +831,10 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
           ) : (
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
               <div>
-                <div style={{ fontFamily: "var(--display)", fontSize: 22, color: "var(--ink)" }}>
+                <div style={{ fontFamily: "var(--display)", fontWeight: 800, fontSize: 22, color: "var(--ink)" }}>
                   {formatReminderDay(reminderDay)} · {formatReminderTime(reminderTime)}
                 </div>
-                <div style={{ fontFamily: "var(--mono)", fontSize: 11, letterSpacing: ".04em", color: "var(--ink-3)", marginTop: 4 }}>
+                <div style={{ fontFamily: "var(--mono)", fontSize: 13, letterSpacing: 0, fontWeight: 600, color: "var(--ink-3)", marginTop: 4 }}>
                   Pacific time
                 </div>
                 {reminderSaved && <div className="set-saved" style={{ marginTop: 8 }}>✓ Saved</div>}
@@ -957,7 +956,7 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
               Connect Google Calendar
             </button>
           )}
-          <p className="set-sub" style={{ margin: "16px 0 0", fontStyle: "italic", fontSize: 13, lineHeight: 1.5 }}>
+          <p className="set-sub" style={{ margin: "16px 0 0", fontSize: 13, lineHeight: 1.5 }}>
             The use of raw or derived user data received from Google APIs (including Google Calendar / Workspace APIs) adheres to the Google API Services User Data Policy, including the Limited Use requirements.{" "}
             <a className="set-inline-link" href="/privacy.html" target="_blank" rel="noopener noreferrer">Privacy</a>
           </p>
@@ -1003,7 +1002,7 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
               Change password. We&apos;ll send a reset link to {user?.email || "your email"}.
             </p>
             {pwSent ? (
-              <p style={{ fontFamily: "var(--mono)", fontSize: 11.5, letterSpacing: ".06em", textTransform: "uppercase", color: "var(--olive-d)" }}>
+              <p style={{ fontFamily: "var(--mono)", fontWeight: 600, fontSize: 13.5, letterSpacing: 0, color: "var(--olive-d)" }}>
                 ✓ Reset link sent. Check your inbox
               </p>
             ) : (

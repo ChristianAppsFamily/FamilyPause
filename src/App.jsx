@@ -216,7 +216,7 @@ function BrandBar({ view, onOpenCards, onOpenSettings, onSignOut, showResolve })
     <>
       <div className="brandbar">
         <div className="brand">
-          <div className="mark"><img src="/uploads/Logo_4.png" alt="FamilyPause" style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "inherit", display: "block" }} /></div>
+          <div className="mark"><img src="/fp-mark.svg" alt="FamilyPause" style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }} /></div>
           <div className="word"><b>Family</b><span>Pause</span></div>
         </div>
         <div className="brandbar-actions">
@@ -1275,12 +1275,12 @@ function ReviewView({
         <div style={{ textAlign: "center", padding: "50px 20px", color: "var(--ink-3)" }}>
           {distillError ? (
             <>
-              <div style={{ fontFamily: "var(--display)", fontSize: 22, fontStyle: "italic", color: "var(--red)", marginBottom: 8 }}>AI unavailable.</div>
+              <div style={{ fontFamily: "var(--display)", fontWeight: 800, fontSize: 22, color: "var(--red)", marginBottom: 8 }}>AI unavailable.</div>
               <div style={{ fontSize: 15, color: "var(--red)", maxWidth: 480, margin: "0 auto" }}>{distillError}</div>
             </>
           ) : (
             <>
-              <div style={{ fontFamily: "var(--display)", fontSize: 22, fontStyle: "italic", color: "var(--ink-2)", marginBottom: 8 }}>Nothing to review.</div>
+              <div style={{ fontFamily: "var(--display)", fontWeight: 800, fontSize: 22, color: "var(--ink-2)", marginBottom: 8 }}>Nothing to review.</div>
               <div style={{ fontSize: 15 }}>We couldn't extract items. Try a longer or clearer transcript.</div>
             </>
           )}
@@ -2237,7 +2237,7 @@ ${text}`;
             position: "fixed",
             inset: 0,
             zIndex: 80,
-            background: "rgba(42, 37, 29, 0.45)",
+            background: "rgba(15,23,42, 0.45)",
             overflowY: "auto",
             padding: "24px 16px 48px",
           }}

@@ -42,7 +42,7 @@ function formatWhen(cardOrDate, time) {
 function FamilyMark() {
   return (
     <div className="plan-interstitial-mark">
-      <img src="/uploads/Logo_4.png" alt="" width={56} height={56} />
+      <img src="/fp-mark.svg" alt="" width={56} height={56} />
     </div>
   );
 }
@@ -70,7 +70,7 @@ function LeafConfetti({ active }) {
       dur: 1.2 + (i % 3) * 0.1,
       rot: (i * 47) % 360,
       drift: ((i % 5) - 2) * 18,
-      col: ["#B85C38", "#4A6741", "#C49A3C"][i % 3],
+      col: ["#14805E", "#0F6A4D", "#F59E0B"][i % 3],
       w: 6 + (i % 3) * 2,
       h: 10 + (i % 4) * 2,
     })),
@@ -181,7 +181,7 @@ function ItineraryView({ keptCards, meetingDate, roleOf, hasFamilyFeatures = fal
     <div className="itinerary">
       <div className="itinerary-print-root">
         <header className="itinerary-head">
-          <img className="itinerary-mark" src="/uploads/Logo_4.png" alt="" width={28} height={28} />
+          <img className="itinerary-mark" src="/fp-mark.svg" alt="" width={28} height={28} />
           <h2 className="itinerary-week">Week of {itinerary.weekRange}</h2>
           <div className="itinerary-wordmark print-only" aria-hidden="true">
             <b>Family</b><span>Pause</span>
@@ -620,7 +620,7 @@ export default function PlanView({
                 const idx = flatIndex++;
                 return <Item key={it.id} it={it} index={idx} showBadge />;
               }) : (
-                <div style={{ color: "var(--ink-3)", fontStyle: "italic", fontSize: 14, padding: "8px 0" }}>All clear this week.</div>
+                <div style={{ color: "var(--ink-3)", fontSize: 14, padding: "8px 0" }}>All clear this week.</div>
               )}
             </div>
           ))}

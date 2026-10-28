@@ -10,6 +10,7 @@ export default function Seo({
   ogTitle,
   ogDescription,
   ogUrl,
+  ogImage = "https://www.familypause.com/images/fp-family.jpg",
   ogType = "website",
   jsonLd,
 }) {
@@ -27,6 +28,7 @@ export default function Seo({
         <meta property="og:description" content={resolvedOgDescription} />
       ) : null}
       {resolvedOgUrl ? <meta property="og:url" content={resolvedOgUrl} /> : null}
+      {ogImage ? <meta property="og:image" content={ogImage} /> : null}
       <meta property="og:type" content={ogType} />
       {jsonLd ? (
         <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>

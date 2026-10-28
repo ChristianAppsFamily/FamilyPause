@@ -52,7 +52,7 @@ const PILL_CLASS = {
   Faith: "cs-cf-pill--faith",
 };
 
-function PauseLogo({ width = 250, height = 362, fill = "#FAF3EC" }) {
+function PauseLogo({ width = 250, height = 362, fill = "#FFFFFF" }) {
   return (
     <svg viewBox="0 0 18 26" width={width} height={height} fill={fill} aria-hidden="true">
       <circle cx="4" cy="3.8" r="3.4" />
@@ -99,7 +99,7 @@ export function CardFrontV2({ card, year = 2026, transitioning = false }) {
         <div className="cs-cf-foot">
           <div className="cs-cf-foot-rule" />
           <div className="cs-cf-ii">
-            <PauseLogo width={21} height={30} fill="#BE5A37" />
+            <PauseLogo width={21} height={30} fill="#14805E" />
           </div>
           <div className="cs-cf-tag">One Card · One Week · One Conversation</div>
           <div className="cs-cf-year">{year}</div>

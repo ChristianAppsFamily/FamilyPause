@@ -67,18 +67,18 @@ function reminderHtml(firstName: string) {
   return `<!DOCTYPE html>
 <html>
   <head><meta charset="utf-8"><meta name="viewport" content="width=device-width"></head>
-  <body style="margin:0;padding:0;background:#FAF7F2;font-family:Georgia,'Lora',serif;color:#2E2820;">
+  <body style="margin:0;padding:0;background:#FFFFFF;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,Helvetica,Arial,sans-serif;color:#0F172A;">
     <div style="max-width:560px;margin:0 auto;padding:44px 24px;">
-      <p style="margin:0 0 24px;color:#BE5A37;font-size:13px;letter-spacing:.12em;text-transform:uppercase;">FamilyPause</p>
-      <p style="margin:0 0 18px;font-size:17px;line-height:1.65;color:#2E2820;">Hey ${safe},</p>
-      <p style="margin:0 0 18px;font-size:17px;line-height:1.65;color:#6A5A40;">This is your weekly reminder to sit down together.</p>
-      <p style="margin:0 0 28px;font-size:17px;line-height:1.65;color:#6A5A40;">Pull a card, hit record, and let FamilyPause handle the rest. Takes about 20 minutes. Your week will thank you.</p>
-      <a href="https://familypause.com/app" style="display:inline-block;padding:13px 22px;border-radius:7px;background:#BE5A37;color:#ffffff;text-decoration:none;font-size:14px;font-family:ui-monospace,Menlo,monospace;letter-spacing:.06em;text-transform:uppercase;">Open FamilyPause</a>
-      <p style="margin:32px 0 0;font-size:16px;line-height:1.6;color:#2E2820;">Spence<br><span style="color:#8C8070;">FamilyPause</span></p>
-      <hr style="border:none;border-top:1px solid #E6D9C4;margin:28px 0 16px;" />
-      <p style="margin:0;font-size:12px;line-height:1.5;color:#8C8070;font-family:ui-monospace,Menlo,monospace;">
+      <p style="margin:0 0 24px;color:#14805E;font-size:13px;letter-spacing:.12em;text-transform:uppercase;">FamilyPause</p>
+      <p style="margin:0 0 18px;font-size:17px;line-height:1.65;color:#0F172A;">Hey ${safe},</p>
+      <p style="margin:0 0 18px;font-size:17px;line-height:1.65;color:#475569;">This is your weekly reminder to sit down together.</p>
+      <p style="margin:0 0 28px;font-size:17px;line-height:1.65;color:#475569;">Pull a card, hit record, and let FamilyPause handle the rest. Takes about 20 minutes. Your week will thank you.</p>
+      <a href="https://familypause.com/app" style="display:inline-block;padding:13px 22px;border-radius:7px;background:#14805E;color:#ffffff;text-decoration:none;font-size:14px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,Helvetica,Arial,sans-serif;letter-spacing:.06em;text-transform:uppercase;">Open FamilyPause</a>
+      <p style="margin:32px 0 0;font-size:16px;line-height:1.6;color:#0F172A;">Spence<br><span style="color:#94A3B8;">FamilyPause</span></p>
+      <hr style="border:none;border-top:1px solid #E5E7EB;margin:28px 0 16px;" />
+      <p style="margin:0;font-size:12px;line-height:1.5;color:#94A3B8;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,Helvetica,Arial,sans-serif;">
         Update your reminder time in Settings.<br>
-        <a href="https://familypause.com" style="color:#BE5A37;">familypause.com</a>
+        <a href="https://familypause.com" style="color:#14805E;">familypause.com</a>
       </p>
     </div>
   </body>

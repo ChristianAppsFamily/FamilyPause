@@ -51,7 +51,7 @@ function StepPrimer({ displayName, workspaceId, onComplete }) {
     <div className="ob-center">
       <div className="ob-anim" style={{ "--d": "0ms" }}>
         <div className="ob-success-circle">
-          <svg viewBox="0 0 24 24" width={32} height={32} fill="none" stroke="#FBF6EC" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width={32} height={32} fill="none" stroke="#FFFFFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M5 12.5l4.5 4.5L19 7" />
           </svg>
         </div>

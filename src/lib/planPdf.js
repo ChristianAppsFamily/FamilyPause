@@ -18,7 +18,7 @@ const PAPER = [251, 246, 236];
 
 async function loadLogoDataUrl() {
   try {
-    const res = await fetch("/uploads/Logo_4.png");
+    const res = await fetch("/fp-mark.png");
     if (!res.ok) return null;
     const blob = await res.blob();
     return await new Promise((resolve, reject) => {

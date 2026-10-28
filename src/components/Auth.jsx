@@ -12,6 +12,7 @@ import { ensureTrialSubscription } from "../lib/subscription";
 import { authPathForScreen, resolveAuthScreen, leaveAuth } from "../lib/routes";
 import { isExistingAccountSignup } from "../lib/authSignup";
 import { triggerWelcomeEmail } from "../lib/welcomeEmail";
+import { FpMark } from "./SiteChrome.jsx";
 
 // Map raw Supabase / browser errors to human copy.
 // Network failures surface as "Failed to fetch" / "NetworkError" — never show
@@ -31,23 +32,22 @@ function friendlyAuthError(err) {
 // Palette mapped to the design bundle (src/styles/tokens.css): source of truth.
 const T = {
   bg:        "#FFFFFF",
-  surface:   "#FCF8F0",  // --paper-card
-  border:    "#E6D9C4",  // --line
-  text:      "#2A251D",  // --ink
-  mid:       "#5B5245",  // --ink-2
-  muted:     "#8C8070",  // --ink-3
-  terra:     "#BE5A37",  // --terra
-  terraL:    "#FAEAE0",  // --terra-tint
-  terraD:    "#A2481F",  // --terra-d
-  olive:     "#5E6B37",  // --olive
-  oliveL:    "#EDF0E1",  // --olive-tint
-  gold:      "#C09740",  // --gold
-  red:       "#C0402F",  // --red
-  redL:      "#FBEAE5",  // --red-tint
+  surface:   "#FFFFFF",  // --paper-card
+  border:    "#E5E7EB",  // --line
+  text:      "#0F172A",  // --ink
+  mid:       "#475569",  // --ink-2
+  muted:     "#94A3B8",  // --ink-3
+  terra:     "#14805E",  // --terra
+  terraL:    "#EEF6F2",  // --terra-tint
+  terraD:    "#0F6A4D",  // --terra-d
+  olive:     "#14805E",  // --olive
+  oliveL:    "#EEF6F2",  // --olive-tint
+  gold:      "#F59E0B",  // --gold
+  red:       "#DC2626",  // --red
+  redL:      "#FEF2F2",  // --red-tint
 };
 
 const css = `
-  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Lora:ital,wght@0,400;0,500;0,600;1,400;1,500&family=JetBrains+Mono:wght@400;500;600&display=swap');
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   @keyframes fadeUp {
     from { opacity: 0; transform: translateY(16px); }
@@ -68,12 +68,12 @@ const css = `
   .fp-input {
     width: 100%;
     background: ${T.bg};
-    border: 1px solid ${T.border};
-    border-radius: 8px;
+    border: 1.5px solid ${T.border};
+    border-radius: 14px;
     color: ${T.text};
     padding: 13px 16px;
     font-size: 16px;
-    font-family: 'Lora', serif;
+    font-family: 'Inter', system-ui, sans-serif;
     transition: border-color 0.2s, box-shadow 0.2s;
     outline: none;
   }
@@ -112,19 +112,19 @@ const css = `
     background: ${T.terra};
     color: #fff;
     border: none;
-    border-radius: 8px;
+    border-radius: 9999px;
     padding: 14px;
     font-size: 16px;
-    font-family: 'Lora', serif; font-weight: 500;
+    font-family: 'Inter', system-ui, sans-serif; font-weight: 500;
     cursor: pointer;
     transition: all 0.2s;
-    box-shadow: 0 4px 16px rgba(190,90,55,0.25);
+    box-shadow: 0 4px 16px rgba(20,128,94,0.25);
     display: flex; align-items: center; justify-content: center; gap: 8px;
   }
   .fp-btn-primary:hover:not(:disabled) {
     background: ${T.terraD};
     transform: translateY(-1px);
-    box-shadow: 0 6px 24px rgba(190,90,55,0.32);
+    box-shadow: 0 6px 24px rgba(20,128,94,0.32);
   }
   .fp-btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
   .fp-btn-google {
@@ -132,32 +132,31 @@ const css = `
     display: flex; align-items: center; justify-content: center; gap: 10px;
     background: #ffffff;
     border: 1px solid ${T.border};
-    border-radius: 8px;
-    color: #2E2820;
+    border-radius: 9999px;
+    color: #0F172A;
     padding: 13px 16px;
     font-size: 15px;
-    font-family: 'Lora', serif;
+    font-family: 'Inter', system-ui, sans-serif;
     cursor: pointer;
-    box-shadow: 0 1px 4px rgba(46,40,32,0.07);
+    box-shadow: 0 1px 4px rgba(15,23,42,0.07);
     transition: transform 0.12s ease, box-shadow 0.12s ease;
   }
-  .fp-btn-google:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(46,40,32,0.10); }
+  .fp-btn-google:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(15,23,42,0.10); }
   .fp-btn-ghost {
     background: none;
     border: 1px solid ${T.border};
-    border-radius: 8px;
+    border-radius: 9999px;
     color: ${T.mid};
     padding: 12px;
     font-size: 14px;
-    font-family: 'JetBrains Mono', monospace;
-    letter-spacing: 0.05em;
+    font-family: 'Inter', system-ui, sans-serif; font-weight: 600;
+    letter-spacing: 0;
     cursor: pointer;
     width: 100%;
     transition: all 0.2s;
   }
   .fp-wordmark {
-    font-family: 'Playfair Display', serif; font-style: italic;
-    font-size: 18px; font-weight: 500; margin-bottom: 18px;
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif; font-size: 18px; font-weight: 800; margin-bottom: 18px;
   }
   .fp-wordmark .wf { color: ${T.text}; }
   .fp-wordmark .wp { color: ${T.terra}; }
@@ -176,17 +175,16 @@ const css = `
   .fp-btn-ghost:hover { border-color: ${T.terra}; color: ${T.terra}; }
   .fp-link {
     background: none; border: none; cursor: pointer;
-    color: ${T.terra}; font-family: 'Lora', serif; font-size: 14px;
+    color: ${T.terra}; font-family: 'Inter', system-ui, sans-serif; font-size: 14px;
     text-decoration: underline; text-underline-offset: 2px;
     padding: 0; transition: color 0.15s;
   }
   .fp-link:hover { color: ${T.terraD}; }
   .fp-label {
     display: block;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
+    font-family: 'Inter', system-ui, sans-serif; font-weight: 600;
+    font-size: 13px;
+    letter-spacing: 0;
     color: ${T.mid};
     margin-bottom: 7px;
   }
@@ -199,20 +197,19 @@ const css = `
     content: ''; flex: 1; height: 1px; background: ${T.border};
   }
   .fp-divider span {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 10px; color: ${T.muted}; letter-spacing: 0.1em;
+    font-family: 'Inter', system-ui, sans-serif; font-weight: 600;
+    font-size: 12px; color: ${T.muted}; letter-spacing: 0;
   }
   .form-hl {
-    font-family: 'Playfair Display', serif;
-    font-style: italic;
-    font-weight: 400;
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    font-weight: 800;
     font-size: 36px;
     line-height: 1.08;
     color: ${T.text};
     margin-bottom: 10px;
   }
   .form-sub {
-    font-family: 'Lora', serif;
+    font-family: 'Inter', system-ui, sans-serif;
     font-size: 15px;
     line-height: 1.55;
     color: ${T.mid};
@@ -252,7 +249,7 @@ function AuthShell({ children, wide = false }) {
       background: T.bg,
       display: "flex",
       alignItems: "flex-start",
-      fontFamily: "'Lora', serif",
+      fontFamily: "'Inter', system-ui, sans-serif",
     }}>
       <style>{css}</style>
 
@@ -274,30 +271,30 @@ function AuthShell({ children, wide = false }) {
       >
         {/* Decorative watermark: the logo mark itself, faint, bottom-right */}
         <div style={{ position: "absolute", bottom: -28, right: -22, opacity: 0.06, pointerEvents: "none" }} aria-hidden="true">
-          <LogoMark width={141} height={180} fill="#FAF7F2" />
+          <FpMark size={180} fill="#FFFFFF" head="#FFFFFF" />
         </div>
 
         <div>
           <AuthLogoLink className="fp-left-logo-link" ariaLabel="Back to previous page">
-            <LogoMark width={17} height={28} fill="#FAF7F2" />
-            <div style={{ fontFamily: "'Playfair Display', serif", fontStyle: "italic", fontSize: 22, fontWeight: 400, letterSpacing: "-0.01em" }}>
-              <span style={{ color: "#FAF7F2" }}>Family</span><span style={{ color: "rgba(250,247,242,0.72)" }}>Pause</span>
+            <FpMark size={30} fill="#FFFFFF" />
+            <div style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 22, fontWeight: 800, letterSpacing: "-0.03em" }}>
+              <span style={{ color: "#FFFFFF" }}>Family</span><span style={{ color: "#FFB547" }}>Pause</span>
             </div>
           </AuthLogoLink>
-          <div style={{ fontFamily: "'Playfair Display', serif", fontStyle: "italic", fontSize: 32, fontWeight: 400, color: T.bg, lineHeight: 1.25, marginBottom: 20 }}>
+          <div style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontSize: 32, fontWeight: 800, color: T.bg, lineHeight: 1.25, marginBottom: 20 }}>
             The weekly reset every family needs
           </div>
-          <div style={{ width: 40, height: 2, background: "rgba(250,247,242,0.3)", marginBottom: 24 }} />
-          <p style={{ fontSize: 15, color: "rgba(250,247,242,0.7)", lineHeight: 1.65 }}>
+          <div style={{ width: 40, height: 2, background: "rgba(255,255,255,0.3)", marginBottom: 24 }} />
+          <p style={{ fontSize: 15, color: "rgba(255,255,255,0.7)", lineHeight: 1.65 }}>
             So much going on. Type it, paste it, or talk it through, and create one plan your family can move on.
           </p>
         </div>
 
         <div>
-          <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, fontStyle: "italic", color: "rgba(250,247,242,0.85)", lineHeight: 1.5, marginBottom: 12 }}>
+          <div style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontWeight: 600, fontSize: 18, color: "rgba(255,255,255,0.85)", lineHeight: 1.5, marginBottom: 12 }}>
             "We did a FamilyPause this weekend and got back on track."
           </div>
-          <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: "rgba(250,247,242,0.4)", letterSpacing: "0.1em", textTransform: "uppercase" }}>
+          <div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontWeight: 600, fontSize: 12, color: "rgba(255,255,255,0.4)", letterSpacing: 0, }}>
             - Spence, Founder
           </div>
         </div>
@@ -352,7 +349,7 @@ function ExistingAccountNotice({ email, onSignIn }) {
       marginBottom: 20,
       fontSize: 14,
       color: T.red,
-      fontFamily: "'Lora', serif",
+      fontFamily: "'Inter', system-ui, sans-serif",
       lineHeight: 1.5,
     }}>
       An account with this email already exists.{" "}
@@ -374,7 +371,7 @@ function ErrorBanner({ message }) {
       marginBottom: 20,
       fontSize: 14,
       color: T.red,
-      fontFamily: "'JetBrains Mono', monospace",
+      fontFamily: "'Inter', system-ui, sans-serif",
       letterSpacing: "0.02em",
     }}>
       {message}
@@ -394,7 +391,7 @@ function SuccessBanner({ message }) {
       marginBottom: 20,
       fontSize: 14,
       color: T.olive,
-      fontFamily: "'JetBrains Mono', monospace",
+      fontFamily: "'Inter', system-ui, sans-serif",
       letterSpacing: "0.02em",
     }}>
       {message}
@@ -407,23 +404,11 @@ function Spinner() {
   return (
     <div style={{
       width: 18, height: 18,
-      border: `2px solid rgba(250,247,242,0.4)`,
+      border: `2px solid rgba(255,255,255,0.4)`,
       borderTopColor: T.bg,
       borderRadius: "50%",
       animation: "spin 0.8s linear infinite",
     }} />
-  );
-}
-
-// ── LOGO MARK (two heads + pill bodies: the "ii" / two-people mark) ──────────
-function LogoMark({ width = 17, height = 28, fill = "#FAF7F2", style }) {
-  return (
-    <svg viewBox="0 0 22 28" width={width} height={height} fill={fill} aria-hidden="true" style={style}>
-      <circle cx="5.5" cy="4.5" r="3.5" />
-      <rect x="1" y="10" width="9" height="17" rx="4.5" />
-      <circle cx="16.5" cy="4.5" r="3.5" />
-      <rect x="12" y="10" width="9" height="17" rx="4.5" />
-    </svg>
   );
 }
 
@@ -525,10 +510,10 @@ function SignIn({ onSwitch, onSuccess, initialEmail = "", bootstrapError = "" })
     <AuthShell>
       <div className="fp-fade" style={{ marginBottom: 8 }}>
         <AuthLogoLink className="fp-logo-link">
-          <LogoMark width={14} height={22} fill={T.terra} />
+          <FpMark size={28} />
           <div className="fp-wordmark" style={{ marginBottom: 0 }}><span className="wf">Family</span><span className="wp">Pause</span></div>
         </AuthLogoLink>
-        <div style={{ fontSize: 11, letterSpacing: "0.25em", color: T.terra, fontFamily: "'JetBrains Mono', monospace", textTransform: "uppercase", marginBottom: 12 }}>
+        <div style={{ fontSize: 13, letterSpacing: 0, color: T.terra, fontFamily: "'Inter', system-ui, sans-serif", fontWeight: 600, marginBottom: 12 }}>
           Welcome back
         </div>
         <h1 className="form-hl">Sign in</h1>
@@ -642,10 +627,10 @@ function SignUp({ onSwitch, onSuccess }) {
     <AuthShell wide>
       <div className="fp-fade" style={{ marginBottom: 8 }}>
         <AuthLogoLink className="fp-logo-link">
-          <LogoMark width={14} height={22} fill={T.terra} />
+          <FpMark size={28} />
           <div className="fp-wordmark" style={{ marginBottom: 0 }}><span className="wf">Family</span><span className="wp">Pause</span></div>
         </AuthLogoLink>
-        <div style={{ fontSize: 11, letterSpacing: "0.25em", color: T.terra, fontFamily: "'JetBrains Mono', monospace", textTransform: "uppercase", marginBottom: 12 }}>
+        <div style={{ fontSize: 13, letterSpacing: 0, color: T.terra, fontFamily: "'Inter', system-ui, sans-serif", fontWeight: 600, marginBottom: 12 }}>
           5 free plans
         </div>
         <h1 className="form-hl">Create your account</h1>
@@ -698,7 +683,7 @@ function SignUp({ onSwitch, onSuccess }) {
         </button>
       </div>
 
-      <p style={{ fontSize: 12, color: T.muted, fontFamily: "'JetBrains Mono', monospace", textAlign: "center", marginBottom: 24, lineHeight: 1.5 }} className="fp-fade-5">
+      <p style={{ fontSize: 12, color: T.muted, fontFamily: "'Inter', system-ui, sans-serif", textAlign: "center", marginBottom: 24, lineHeight: 1.5 }} className="fp-fade-5">
         By signing up you agree to our <a href="/terms.html" style={{ color: T.terra }}>Terms of Service</a>.<br />Your conversations are private.
       </p>
 
@@ -739,7 +724,7 @@ function ForgotPassword({ onSwitch }) {
   return (
     <AuthShell>
       <div className="fp-fade">
-        <div style={{ fontSize: 11, letterSpacing: "0.25em", color: T.terra, fontFamily: "'JetBrains Mono', monospace", textTransform: "uppercase", marginBottom: 12 }}>
+        <div style={{ fontSize: 13, letterSpacing: 0, color: T.terra, fontFamily: "'Inter', system-ui, sans-serif", fontWeight: 600, marginBottom: 12 }}>
           Reset password
         </div>
         <h1 className="form-hl">Forgot your<br />password?</h1>
@@ -835,7 +820,7 @@ function JoinWorkspace({ onSwitch, onSuccess, initialCode = "" }) {
   return (
     <AuthShell wide>
       <div className="fp-fade">
-        <div style={{ fontSize: 11, letterSpacing: "0.25em", color: T.terra, fontFamily: "'JetBrains Mono', monospace", textTransform: "uppercase", marginBottom: 12 }}>
+        <div style={{ fontSize: 13, letterSpacing: 0, color: T.terra, fontFamily: "'Inter', system-ui, sans-serif", fontWeight: 600, marginBottom: 12 }}>
           You're invited
         </div>
         <h1 className="form-hl">Join your<br />family workspace</h1>
@@ -872,8 +857,8 @@ function JoinWorkspace({ onSwitch, onSuccess, initialCode = "" }) {
         <label className="fp-label">Invite code</label>
         <input className="fp-input" type="text" placeholder="e.g. FP-2026-AB12-0001"
           value={inviteCode} onChange={e => setInviteCode(e.target.value)}
-          style={{ fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.1em" }} />
-        <div style={{ fontSize: 11, color: T.muted, fontFamily: "'JetBrains Mono', monospace", marginTop: 6 }}>
+          style={{ fontFamily: "'Inter', system-ui, sans-serif", fontWeight: 600, letterSpacing: 0 }} />
+        <div style={{ fontSize: 11, color: T.muted, fontFamily: "'Inter', system-ui, sans-serif", marginTop: 6 }}>
           Find this in the invite link your spouse sent you.
         </div>
       </div>

@@ -53,13 +53,13 @@ function guideHtml(guideUrl) {
   return `<!DOCTYPE html>
 <html>
   <head><meta charset="utf-8"><meta name="viewport" content="width=device-width"></head>
-  <body style="margin:0;padding:0;background:#FAF7F2;font-family:Georgia,'Times New Roman',serif;color:#2A251D;">
+  <body style="margin:0;padding:0;background:#FFFFFF;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,Helvetica,Arial,sans-serif;color:#0F172A;">
     <div style="max-width:560px;margin:0 auto;padding:44px 24px;">
-      <p style="margin:0 0 24px;color:#BE5A37;font-size:13px;letter-spacing:.12em;text-transform:uppercase;">FamilyPause</p>
-      <h1 style="margin:0 0 18px;font-family:Georgia,'Times New Roman',serif;font-size:28px;font-style:italic;font-weight:600;line-height:1.25;color:#2A251D;">Your FamilyPause Guide is here.</h1>
-      <p style="margin:0 0 28px;color:#5B5245;font-size:16px;line-height:1.65;">The FamilyPause Guide is ready for you — a simple weekly planning system for families with too much going on. Download it below, pick one conversation, and give this week a little more room.</p>
-      <a href="${safeUrl}" style="display:inline-block;padding:14px 22px;border-radius:7px;background:#BE5A37;color:#ffffff;text-decoration:none;font-size:15px;letter-spacing:.02em;">Download The FamilyPause Guide</a>
-      <p style="margin:28px 0 0;color:#5B5245;font-size:16px;line-height:1.65;">With care,<br>Spence</p>
+      <p style="margin:0 0 24px;color:#14805E;font-size:13px;letter-spacing:.12em;text-transform:uppercase;">FamilyPause</p>
+      <h1 style="margin:0 0 18px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,Helvetica,Arial,sans-serif;font-size:28px;font-style:italic;font-weight:600;line-height:1.25;color:#0F172A;">Your FamilyPause Guide is here.</h1>
+      <p style="margin:0 0 28px;color:#475569;font-size:16px;line-height:1.65;">The FamilyPause Guide is ready for you — a simple weekly planning system for families with too much going on. Download it below, pick one conversation, and give this week a little more room.</p>
+      <a href="${safeUrl}" style="display:inline-block;padding:14px 22px;border-radius:7px;background:#14805E;color:#ffffff;text-decoration:none;font-size:15px;letter-spacing:.02em;">Download The FamilyPause Guide</a>
+      <p style="margin:28px 0 0;color:#475569;font-size:16px;line-height:1.65;">With care,<br>Spence</p>
     </div>
   </body>
 </html>`;

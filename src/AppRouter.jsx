@@ -26,9 +26,9 @@ import App from "./App";
 
 const T = {
   bg:    "#FFFFFF",
-  terra: "#B85C38",
-  text:  "#2E2820",
-  mid:   "#6A5A40",
+  terra: "#14805E",
+  text:  "#0F172A",
+  mid:   "#475569",
 };
 
 function Loader() {
@@ -41,18 +41,18 @@ function Loader() {
       alignItems: "center",
       justifyContent: "center",
       gap: 20,
-      fontFamily: "'Georgia', serif",
+      fontFamily: "'Inter', system-ui, sans-serif",
     }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400&display=swap');
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
       `}</style>
-      <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 28, color: T.text }}>
-        Family<span style={{ color: T.terra }}>Pause</span>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", fontWeight: 800, letterSpacing: "-0.03em", fontSize: 28, color: T.text }}>
+        <img src="/fp-mark.svg" alt="" width={30} height={30} />
+        <span>Family<span style={{ color: T.terra }}>Pause</span></span>
       </div>
       <div style={{
         width: 32, height: 32,
-        border: `2px solid #D8CFC0`,
+        border: `2px solid #D1D5DB`,
         borderTopColor: T.terra,
         borderRadius: "50%",
         animation: "spin 0.8s linear infinite",

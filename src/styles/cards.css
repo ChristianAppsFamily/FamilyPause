@@ -25,16 +25,15 @@
 
 .cs-eyebrow {
   font-family: var(--mono);
-  font-size: 11px;
-  font-weight: 400;
-  letter-spacing: 0.25em;
-  text-transform: uppercase;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0;
   color: var(--terra);
 }
 
 .cs-hl {
   font-family: var(--display);
-  font-weight: 400;
+  font-weight: 800;
   font-size: 30px;
   line-height: 1.14;
   color: var(--ink);
@@ -43,7 +42,7 @@
 }
 
 .cs-hl em {
-  font-style: italic;
+  font-style: normal; color: var(--em);
   color: var(--terra);
 }
 
@@ -71,19 +70,19 @@
   font-family: var(--serif);
   font-weight: 500;
   font-size: 16px;
-  border-radius: 10px;
+  border-radius: 9999px;
   padding: 14px;
   cursor: pointer;
   transition: transform 0.12s, box-shadow 0.12s;
-  color: #6a4a10;
+  color: #92400e;
   background: var(--gold-soft);
-  border: 1px solid rgba(192, 151, 64, 0.3);
+  border: 1px solid rgba(245,158,11, 0.3);
   text-decoration: none;
 }
 
 .cs-btn-gold:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 16px rgba(192, 151, 64, 0.2);
+  box-shadow: 0 4px 16px rgba(245,158,11, 0.2);
 }
 
 .cs-btn-ghost-lora {
@@ -93,7 +92,7 @@
   font-family: var(--serif);
   font-weight: 400;
   font-size: 15px;
-  border-radius: 10px;
+  border-radius: 9999px;
   padding: 14px;
   cursor: pointer;
   transition: color 0.12s, border-color 0.12s;
@@ -175,9 +174,9 @@
 
 .sample-carousel-counter {
   font-family: var(--mono);
-  font-size: 11px;
-  font-weight: 400;
-  letter-spacing: 0.08em;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0;
   color: var(--ink-3);
   text-align: center;
   margin-top: 4px;
@@ -212,10 +211,9 @@
 
 .cs-pv-cap {
   font-family: var(--mono);
-  font-size: 10px;
-  font-weight: 400;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0;
   color: var(--ink-3);
   margin-bottom: 28px;
 }
@@ -250,7 +248,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 16px 50px rgba(46, 40, 32, 0.16), 0 3px 10px rgba(46, 40, 32, 0.06);
+  box-shadow: 0 16px 50px rgba(15,23,42, 0.16), 0 3px 10px rgba(15,23,42, 0.06);
 }
 
 .cs-cb-ghost {
@@ -272,26 +270,25 @@
 
 .cs-cb-wordmark {
   font-family: var(--display);
-  font-style: italic;
-  font-weight: 500;
+  font-style: normal;
+  font-weight: 800;
   font-size: 30px;
-  color: #faf3ec;
+  color: #ffffff;
 }
 
 .cs-cb-rule {
   width: 62px;
   height: 1px;
-  background: rgba(250, 243, 236, 0.55);
+  background: rgba(255,255,255, 0.55);
   margin: 15px 0 14px;
 }
 
 .cs-cb-meta {
   font-family: var(--mono);
-  font-size: 11px;
-  font-weight: 400;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: rgba(250, 243, 236, 0.82);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0;
+  color: rgba(255,255,255, 0.82);
 }
 
 .cs-cb-corner {
@@ -304,29 +301,29 @@
 .cs-cb-corner.tl {
   top: 20px;
   left: 20px;
-  border-top: 1px solid rgba(250, 243, 236, 0.5);
-  border-left: 1px solid rgba(250, 243, 236, 0.5);
+  border-top: 1px solid rgba(255,255,255, 0.5);
+  border-left: 1px solid rgba(255,255,255, 0.5);
 }
 
 .cs-cb-corner.tr {
   top: 20px;
   right: 20px;
-  border-top: 1px solid rgba(250, 243, 236, 0.5);
-  border-right: 1px solid rgba(250, 243, 236, 0.5);
+  border-top: 1px solid rgba(255,255,255, 0.5);
+  border-right: 1px solid rgba(255,255,255, 0.5);
 }
 
 .cs-cb-corner.bl {
   bottom: 20px;
   left: 20px;
-  border-bottom: 1px solid rgba(250, 243, 236, 0.5);
-  border-left: 1px solid rgba(250, 243, 236, 0.5);
+  border-bottom: 1px solid rgba(255,255,255, 0.5);
+  border-left: 1px solid rgba(255,255,255, 0.5);
 }
 
 .cs-cb-corner.br {
   bottom: 20px;
   right: 20px;
-  border-bottom: 1px solid rgba(250, 243, 236, 0.5);
-  border-right: 1px solid rgba(250, 243, 236, 0.5);
+  border-bottom: 1px solid rgba(255,255,255, 0.5);
+  border-right: 1px solid rgba(255,255,255, 0.5);
 }
 
 /* ─── Card front (v2) ───────────────────────── */
@@ -336,7 +333,7 @@
   min-height: 476px;
   border-radius: 20px;
   background: var(--paper-card);
-  box-shadow: 0 16px 50px rgba(46, 40, 32, 0.16), 0 3px 10px rgba(46, 40, 32, 0.06);
+  box-shadow: 0 16px 50px rgba(15,23,42, 0.16), 0 3px 10px rgba(15,23,42, 0.06);
   overflow: hidden;
   display: flex;
   transform-origin: center;
@@ -361,8 +358,8 @@
 
 .cs-cf-rule-d {
   height: 3px;
-  border-top: 1px solid #cba877;
-  border-bottom: 1px solid #cba877;
+  border-top: 1px solid #ffb547;
+  border-bottom: 1px solid #ffb547;
   box-sizing: content-box;
 }
 
@@ -375,17 +372,17 @@
 
 .cs-cf-wordmark {
   font-family: var(--display);
-  font-style: italic;
-  font-weight: 500;
+  font-style: normal;
+  font-weight: 800;
   font-size: 21px;
-  color: #9e5b38;
+  color: #0f6a4d;
 }
 
 .cs-cf-num {
   font-family: var(--mono);
-  font-size: 12px;
-  font-weight: 400;
-  letter-spacing: 0.1em;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0;
   color: var(--ink-2);
 }
 
@@ -393,12 +390,11 @@
   align-self: flex-start;
   margin-top: 15px;
   font-family: var(--mono);
-  font-size: 11px;
-  font-weight: 400;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0;
   padding: 6px 13px;
-  border-radius: 6px;
+  border-radius: 9999px;
   background: var(--terra-soft);
   color: var(--terra-d);
 }
@@ -410,7 +406,7 @@
 
 .cs-cf-pill--finances {
   background: var(--gold-soft);
-  color: #8a6a16;
+  color: #b45309;
 }
 
 .cs-cf-pill--kids {
@@ -440,8 +436,8 @@
   justify-content: center;
   text-align: center;
   font-family: var(--display);
-  font-style: italic;
-  font-weight: 400;
+  font-style: normal;
+  font-weight: 800;
   font-size: 25px;
   line-height: 1.4;
   color: var(--ink);
@@ -455,7 +451,7 @@
 
 .cs-cf-foot-rule {
   height: 1px;
-  background: #cba877;
+  background: #ffb547;
   margin-bottom: 16px;
 }
 
@@ -467,19 +463,18 @@
 
 .cs-cf-tag {
   font-family: var(--mono);
-  font-size: 10px;
-  font-weight: 400;
-  letter-spacing: 0.13em;
-  text-transform: uppercase;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0;
   color: var(--ink-2);
   margin-bottom: 8px;
 }
 
 .cs-cf-year {
   font-family: var(--mono);
-  font-size: 10px;
-  font-weight: 400;
-  letter-spacing: 0.14em;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0;
   color: var(--ink-3);
   margin-bottom: 16px;
 }
@@ -524,17 +519,16 @@
 }
 
 .cs-unlock-eyebrow {
-  font-family: var(--mono);
-  font-size: 12px;
-  letter-spacing: 0.25em;
-  text-transform: uppercase;
+  font-family: var(--mono); font-weight: 600;
+  font-size: 14px;
+  letter-spacing: 0;
   color: var(--terra);
   margin-bottom: 10px;
 }
 
 .cs-unlock-hl {
   font-family: var(--display);
-  font-weight: 400;
+  font-weight: 800;
   font-size: 34px;
   line-height: 1.12;
   color: var(--ink);
@@ -543,7 +537,7 @@
 }
 
 .cs-unlock-hl em {
-  font-style: italic;
+  font-style: normal; color: var(--em);
   color: var(--terra);
 }
 
@@ -559,7 +553,7 @@
   display: flex;
   background: var(--paper-2);
   padding: 3px;
-  border-radius: 10px;
+  border-radius: 9999px;
   gap: 3px;
   margin-bottom: 28px;
 }
@@ -572,7 +566,7 @@
   color: var(--ink-3);
   background: transparent;
   border: none;
-  border-radius: 8px;
+  border-radius: 9999px;
   padding: 12px 10px;
   cursor: pointer;
   transition: all 0.15s;
@@ -582,15 +576,14 @@
 .cs-tab-sw button.active {
   background: var(--paper);
   color: var(--ink);
-  box-shadow: 0 1px 4px rgba(46, 40, 32, 0.1);
+  box-shadow: 0 1px 4px rgba(15,23,42, 0.1);
 }
 
 .cs-unlock-label {
   display: block;
-  font-family: var(--mono);
-  font-size: 12px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  font-family: var(--mono); font-weight: 600;
+  font-size: 14px;
+  letter-spacing: 0;
   color: var(--ink-2);
   margin-bottom: 10px;
 }
@@ -598,9 +591,8 @@
 .cs-code-input {
   font-family: var(--mono);
   font-size: 20px;
-  font-weight: 400;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0;
   text-align: center;
   color: var(--ink);
   background: var(--paper);
@@ -624,26 +616,25 @@
 .cs-unlock-hint {
   font-size: 13px;
   color: var(--ink-3);
-  font-family: var(--mono);
+  font-family: var(--mono); font-weight: 600;
   margin-top: 10px;
   margin-bottom: 20px;
-  letter-spacing: 0.04em;
+  letter-spacing: 0;
 }
 
 .cs-info-gold {
   margin-top: 20px;
   padding: 16px 18px;
   background: var(--gold-soft);
-  border: 1px solid rgba(192, 151, 64, 0.22);
+  border: 1px solid rgba(245,158,11, 0.22);
   border-radius: 10px;
 }
 
 .cs-info-gold-title {
-  font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: #6a4a10;
+  font-family: var(--mono); font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 0;
+  color: #92400e;
   margin-bottom: 8px;
 }
 
@@ -659,15 +650,14 @@
   margin-top: 18px;
   padding: 16px 18px;
   background: var(--terra-tint);
-  border: 1px solid rgba(190, 90, 55, 0.18);
+  border: 1px solid rgba(20,128,94, 0.18);
   border-radius: 10px;
 }
 
 .cs-physical-waitlist-eyebrow {
-  font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  font-family: var(--mono); font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 0;
   color: var(--terra-d);
   margin-bottom: 8px;
 }
@@ -707,14 +697,13 @@
 .cs-physical-waitlist-btn {
   flex: 0 0 auto;
   font-family: var(--mono);
-  font-size: 11.5px;
-  font-weight: 500;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: 0;
   color: #fff;
   background: var(--terra);
   border: none;
-  border-radius: 7px;
+  border-radius: 9999px;
   padding: 12px 16px;
   cursor: pointer;
   transition: background 0.15s;
@@ -761,7 +750,7 @@
   border: 1px solid var(--terra);
   border-radius: 20px;
   padding: 36px 32px;
-  box-shadow: 0 20px 60px rgba(190, 90, 55, 0.2);
+  box-shadow: 0 20px 60px rgba(20,128,94, 0.2);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -791,35 +780,35 @@
 .cs-corner.tl {
   top: 20px;
   left: 20px;
-  border-top: 1px solid rgba(250, 243, 236, 0.5);
-  border-left: 1px solid rgba(250, 243, 236, 0.5);
+  border-top: 1px solid rgba(255,255,255, 0.5);
+  border-left: 1px solid rgba(255,255,255, 0.5);
 }
 
 .cs-corner.tr {
   top: 20px;
   right: 20px;
-  border-top: 1px solid rgba(250, 243, 236, 0.5);
-  border-right: 1px solid rgba(250, 243, 236, 0.5);
+  border-top: 1px solid rgba(255,255,255, 0.5);
+  border-right: 1px solid rgba(255,255,255, 0.5);
 }
 
 .cs-corner.bl {
   bottom: 20px;
   left: 20px;
-  border-bottom: 1px solid rgba(250, 243, 236, 0.5);
-  border-left: 1px solid rgba(250, 243, 236, 0.5);
+  border-bottom: 1px solid rgba(255,255,255, 0.5);
+  border-left: 1px solid rgba(255,255,255, 0.5);
 }
 
 .cs-corner.br {
   bottom: 20px;
   right: 20px;
-  border-bottom: 1px solid rgba(250, 243, 236, 0.5);
-  border-right: 1px solid rgba(250, 243, 236, 0.5);
+  border-bottom: 1px solid rgba(255,255,255, 0.5);
+  border-right: 1px solid rgba(255,255,255, 0.5);
 }
 
 .cs-cardback-mark {
-  font-family: var(--display);
+  font-family: var(--display); font-weight: 800;
   font-size: 48px;
-  color: rgba(250, 247, 242, 0.15);
+  color: rgba(255,255,255, 0.15);
   position: absolute;
   top: 16px;
   left: 24px;
@@ -828,6 +817,8 @@
 }
 
 .cs-cardback-quote {
+  display: flex;
+  justify-content: center;
   font-size: 36px;
   margin-bottom: 16px;
   position: relative;
@@ -836,21 +827,20 @@
 }
 
 .cs-cardback-title {
-  font-family: var(--display);
+  font-family: var(--display); font-weight: 800;
   font-size: 22px;
   color: var(--paper);
-  letter-spacing: 0.02em;
+  letter-spacing: -.03em;
   position: relative;
   z-index: 1;
 }
 
 .cs-cardback-meta {
-  font-family: var(--mono);
-  font-size: 10px;
-  color: rgba(250, 247, 242, 0.5);
-  letter-spacing: 0.2em;
+  font-family: var(--mono); font-weight: 600;
+  font-size: 12px;
+  color: rgba(255,255,255, 0.5);
+  letter-spacing: 0;
   margin-top: 8px;
-  text-transform: uppercase;
   position: relative;
   z-index: 1;
 }

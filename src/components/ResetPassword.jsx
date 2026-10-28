@@ -67,7 +67,7 @@ export default function ResetPassword() {
   return (
     <AuthShell>
       <div className="fp-fade">
-        <div style={{ fontSize: 11, letterSpacing: "0.25em", color: "var(--terra)", fontFamily: "'JetBrains Mono', monospace", textTransform: "uppercase", marginBottom: 12 }}>
+        <div style={{ fontSize: 13, letterSpacing: 0, color: "var(--terra)", fontFamily: "'Inter', system-ui, sans-serif", fontWeight: 600, marginBottom: 12 }}>
           Account
         </div>
         <h1 className="form-hl">{linkExpired && !ready ? "Link expired" : "Set a new password"}</h1>
@@ -97,7 +97,7 @@ export default function ResetPassword() {
       {!done && ready && (
         <>
           {error && (
-            <div style={{ background: "#FBEAE5", border: "1px solid #F6DAD3", borderRadius: 8, padding: "10px 14px", marginBottom: 16, fontSize: 14, color: "#C0402F" }}>
+            <div style={{ background: "#FEF2F2", border: "1px solid #FEE2E2", borderRadius: 8, padding: "10px 14px", marginBottom: 16, fontSize: 14, color: "#DC2626" }}>
               {error}
             </div>
           )}
@@ -130,7 +130,7 @@ export default function ResetPassword() {
       )}
 
       {!ready && !done && !linkExpired && (
-        <div style={{ width: 32, height: 32, border: "2px solid #E6D9C4", borderTopColor: "#BE5A37", borderRadius: "50%", animation: "spin 0.8s linear infinite", margin: "24px auto 0" }} />
+        <div style={{ width: 32, height: 32, border: "2px solid #E5E7EB", borderTopColor: "#14805E", borderRadius: "50%", animation: "spin 0.8s linear infinite", margin: "24px auto 0" }} />
       )}
       <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
     </AuthShell>

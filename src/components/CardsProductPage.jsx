@@ -3,10 +3,10 @@ import { Link } from "react-router-dom";
 import { cardsPath } from "../lib/routes";
 import { formatDigitalPrice } from "../lib/deckPricing";
 import { joinWaitlist } from "../lib/sendGuide";
+import MarketingChrome from "./MarketingChrome.jsx";
 
 const css = `
 .cards-product {
-  min-height: 100vh;
   background: var(--paper);
   color: var(--ink);
   font-family: var(--serif);
@@ -16,11 +16,11 @@ const css = `
 .cards-product h1 {
   font-family: var(--display);
   font-size: clamp(36px, 5vw, 48px);
-  font-weight: 600;
+  font-weight: 800;
   line-height: 1.08;
   margin: 12px 0 16px;
 }
-.cards-product h1 em { font-style: italic; color: var(--terra); }
+.cards-product h1 em { font-style: normal; color: var(--em); color: var(--terra); }
 .cards-product .lead { color: var(--ink-2); font-size: 17px; line-height: 1.6; margin-bottom: 32px; }
 .cards-product .grid { display: grid; gap: 18px; margin-bottom: 28px; }
 .cards-product .card {
@@ -35,22 +35,21 @@ const css = `
   background: linear-gradient(150deg, #fff, var(--terra-tint));
 }
 .cards-product .card h2 {
-  font-family: var(--display);
+  font-family: var(--display); font-weight: 800;
   font-size: 26px;
   margin: 0 0 8px;
 }
 .cards-product .price {
-  font-family: var(--display);
+  font-family: var(--display); font-weight: 800;
   font-size: 36px;
   color: var(--terra);
   margin-bottom: 12px;
 }
 .cards-product .coming {
   font-family: var(--mono);
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0;
   color: var(--terra-d);
   background: var(--terra-soft);
   display: inline-block;
@@ -69,17 +68,6 @@ const css = `
   font-size: 15px;
   font-weight: 500;
 }
-.cards-product .back {
-  font-family: var(--mono);
-  font-size: 12px;
-  letter-spacing: .08em;
-  text-transform: uppercase;
-  color: var(--ink-3);
-  text-decoration: none;
-  display: inline-block;
-  margin-bottom: 24px;
-}
-.cards-product .back:hover { color: var(--terra); }
 .cards-product .wait-copy {
   color: var(--ink-2);
   font-size: 14.5px;
@@ -157,10 +145,10 @@ export default function CardsProductPage() {
   };
 
   return (
+    <MarketingChrome>
     <div className="cards-product">
       <style>{css}</style>
       <div className="wrap">
-        <Link className="back" to="/">← FamilyPause home</Link>
         <div className="eyebrow">2026 Conversation Cards</div>
         <h1>52 questions for your <em>weekly pause</em></h1>
         <p className="lead">
@@ -240,5 +228,6 @@ export default function CardsProductPage() {
         </p>
       </div>
     </div>
+    </MarketingChrome>
   );
 }

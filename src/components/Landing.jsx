@@ -1,45 +1,144 @@
-// Homepage v2 — ported from familypause-RE-2/project/FamilyPause Homepage v2.html
-// Styles: src/styles/home2.css (scoped .fp-home2). App Terra & Cream is untouched.
+// Prototype homepage — ported from FamilyPause_ProtoType as React, with real routes.
+// Styles: src/styles/site.css (scoped .fp-site).
 
 import { useEffect, useState } from "react";
-import { Helmet } from "react-helmet-async";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import ExitIntentModal from "./ExitIntentModal.jsx";
-import AuthHeaderCta from "./AuthHeaderCta.jsx";
+import { FpMark, SiteFooter, SiteNav } from "./SiteChrome.jsx";
 import Seo from "./Seo.jsx";
 import { isValidEmail, requestFamilyPauseGuide } from "../lib/sendGuide";
-import "../styles/home2.css";
+import "../styles/site.css";
 
-const LANDING_SECTION_IDS = new Set(["how", "together", "pricing", "concierge", "shop"]);
+const LANDING_SECTION_IDS = new Set([
+  "how-it-works",
+  "conversation-cards",
+  "concierge",
+  "pricing",
+  "shop",
+  "guide",
+  "for-you",
+]);
 
-const CARD_TAGS = [
-  { t: "Kids", q: "What's one thing each kid needs more of from us this week?", cls: "t-todo" },
-  { t: "Finances", q: "Is there anything we're spending on that we'd rather not be?", cls: "t-appt" },
-  { t: "Marriage", q: "When did you feel most like a team this past week?", cls: "t-dec" },
-  { t: "Faith", q: "Where do we want to make room for rest this Sunday?", cls: "t-note" },
+const QUESTIONS = {
+  Kids: [
+    ["What would make this week feel lighter for you?", "What is one thing we can take off each other’s plate?"],
+    ["What does each of our kids need a little more of this week?", "Choose one small moment to give them your full attention."],
+    ["Where could we make a little more room for fun?", "Pick something simple enough to actually happen."],
+  ],
+  Finances: [
+    ["Is there anything coming up that we should plan for together?", "Name the expense, choose a next step, and decide who owns it."],
+    ["What money decision have we been putting off?", "What would help us talk about it with less pressure?"],
+    ["What small change would make our budget feel easier?", "Agree on one thing to try for the week."],
+  ],
+  Marriage: [
+    ["When did you feel most like a team this week?", "What can we repeat in the week ahead?"],
+    ["What is one way I can show up for you this week?", "Make it small, specific, and easy to say yes to."],
+    ["What would a good moment for just us look like?", "Give it a time and protect it together."],
+  ],
+  Faith: [
+    ["Where did you notice something to be grateful for this week?", "Share one moment you want to remember."],
+    ["What could we pray about together this week?", "Make space to listen before you make a plan."],
+    ["How can we live our values in a small way this week?", "Choose one thoughtful action to take together."],
+  ],
+};
+
+const CATEGORIES = Object.keys(QUESTIONS);
+
+const TASKS = [
+  { id: "dentist", type: "Appointment", title: "Take Jordan to the dentist", date: "2026-11-05", time: "15:00", owner: "Amanda" },
+  { id: "form", type: "To-do", title: "Sign the field trip form", date: "", time: "", owner: "Spence" },
+  { id: "date", type: "Decision", title: "Friday is our date night", date: "2026-11-06", time: "19:00", owner: "Both" },
+  { id: "trip", type: "Note", title: "Ask about the school trip", date: "", time: "", owner: "Both" },
+  { id: "groceries", type: "To-do", title: "Order the groceries", date: "2026-11-04", time: "17:00", owner: "Spence", done: true },
 ];
 
-const HOW_TABS = [
-  { title: "Lock the Pause", body: "Pick one 20-minute slot. It repeats on both calendars." },
-  { title: "Talk It Through", body: "Pull a card, hit record, and talk like you normally would." },
-  { title: "Get Your Plan", body: "Your talk becomes a sorted plan with owners and dates." },
-  { title: "Make Time Together", body: "Choose this week's date night. We remind you both." },
+const PAUSE_LABEL = { "Tue 8pm": "Tuesday at 8", "Thu 8pm": "Thursday at 8", "Sat 9am": "Saturday at 9" };
+const PAUSE_TIMES = ["Tue 8pm", "Thu 8pm", "Sat 9am"];
+const HOW_TABS = ["Lock the Pause", "Start the Pause", "Build the Plan", "Live the Week"];
+const HOW_STEPS = [
+  [
+    ["Choose a time you can protect", "Pick a moment when you can both be present."],
+    ["Make it a weekly rhythm", "A little consistency goes a long way."],
+    ["Let us take care of the nudge", "An invitation and a reminder for you both."],
+  ],
+  [
+    ["Start with a good question", "Make space for what is on each other’s mind."],
+    ["Talk about your real week", "Kids, plans, money, and the things in between."],
+    ["Be present with each other", "Your conversation can become your shared plan."],
+  ],
+  [
+    ["Review what came up", "We organize your conversation into a draft plan."],
+    ["Choose dates and owners", "Share the work in a way that feels fair."],
+    ["Approve your shared plan", "Nothing reaches your calendar until you say so."],
+  ],
+  [
+    ["See the same week", "One plan, wherever life takes you both."],
+    ["Check things off together", "Share the follow-through, not just the planning."],
+    ["Make room to come back", "Your next Pause is already waiting for you."],
+  ],
 ];
 
-const FOR_CARDS = [
-  { img: "/images/blog-underrated-marriage-habit.jpg", title: "Married couples", body: "Stay on the same page without it becoming a chore." },
-  { img: "/images/fp-how-capture.png", title: "Busy parents", body: "Pickups, practices, and permission slips in one place." },
-  { img: "/images/blog-ai-family-walk.jpg", title: "Families who pause together", body: "A weekly rhythm with room for rest and faith." },
-  { img: "/images/fp-wall-display.png", title: "Entrepreneur households", body: "Keep business weeks from swallowing family time." },
-  { img: "/images/blog-how-to-run-a-family-meeting.jpg", title: "Homeschool families", body: "Lessons, co-ops, and field trips, planned together." },
+const PRODUCTS = [
+  { id: "deck", name: "Conversation Starter Card Deck", price: 29, type: "deck" },
+  { id: "journal", name: "Guided Journal", price: 24, type: "journal" },
+  { id: "pad", name: "Weekly Planner Pad", price: 18, type: "pad" },
+  { id: "bundle", name: "The FamilyPause Bundle", price: 59, type: "bundle" },
 ];
 
-const SHOP = [
-  { title: "Conversation Starter Card Deck" },
-  { title: "Guided Journal" },
-  { title: "Weekly Planner Pad" },
-  { title: "Bundle" },
+const WHO = [
+  ["heart", "Married couples", "Stay on the same page, and close to each other."],
+  ["baby", "Busy parents", "Keep your family organized without the mental load."],
+  ["home", "Families who pause together", "Build stronger rhythms, as a family."],
+  ["briefcase", "Entrepreneur households", "Make room for work, and what matters most."],
+  ["book", "Homeschool families", "Plan with intention. Leave space for life."],
 ];
+
+const ICONS = {
+  arrow: <path d="M4 12h16m-6-6 6 6-6 6" />,
+  check: <path d="m5 12 4 4L20 5" />,
+  clock: <><circle cx="12" cy="12" r="9" /><path d="M12 6v6l4 2" /></>,
+  users: <><circle cx="9" cy="7" r="3.5" /><path d="M2 21v-3a7 7 0 0 1 14 0v3M17 4a3 3 0 0 1 0 6m1 4a6 6 0 0 1 4 5v2" /></>,
+  heart: <path d="M20.5 5.5a5.2 5.2 0 0 0-7.3 0L12 6.7l-1.2-1.2a5.2 5.2 0 0 0-7.3 7.3L12 21l8.5-8.2a5.2 5.2 0 0 0 0-7.3Z" />,
+  calendar: <><rect x="3" y="5" width="18" height="16" rx="3" /><path d="M7 3v4m10-4v4M3 10h18m-14 4h3m4 0h3m-10 3h3" /></>,
+  list: <><rect x="4" y="3" width="16" height="19" rx="3" /><path d="m8 8 1 1 2-2m2 1h3m-8 6h8m-8 4h5" /></>,
+  message: <><path d="M21 11a9 9 0 0 1-9 9H4l-2 2V11a9 9 0 0 1 19 0Z" /><path d="M7 9h10m-10 4h6" /></>,
+  flip: <path d="M4 8h12l-4-4m4 4-4 4M20 16H8l4-4m-4 4 4 4" />,
+  mic: <><rect x="9" y="2" width="6" height="13" rx="3" /><path d="M5 10v2a7 7 0 0 0 14 0v-2M12 19v3m-4 0h8" /></>,
+  spark: <path d="m12 3 2.6 6.4L21 12l-6.4 2.6L12 21l-2.6-6.4L3 12l6.4-2.6ZM20 2v4m-2-2h4" />,
+  mail: <><rect x="3" y="5" width="18" height="14" rx="3" /><path d="m3 6 9 7 9-7" /></>,
+  flame: <path d="M12 2c1 6 7 7 7 13a7 7 0 1 1-14 0c0-3 2-6 4-8-1 5 2 6 3 7 2-3 2-7 0-12Z" />,
+  shield: <><path d="m12 3 8 3v6c0 5-8 10-8 10S4 17 4 12V6Z" /><path d="m8 12 3 3 5-6" /></>,
+  play: <path d="m8 5 11 7-11 7Z" />,
+  baby: <><path d="M9 4a3 3 0 0 1 6 0M4 9a9 9 0 1 1 0 8 3 3 0 0 1 0-8Z" /><path d="M9 12h.01M15 12h.01m-6 4q3 3 6 0" /></>,
+  book: <path d="M12 5v16M12 5C8 2 4 3 2 4v16c3-1 6-1 10 1 4-2 7-2 10-1V4c-2-1-6-2-10 1Z" />,
+  home: <path d="m3 10 9-7 9 7v11h-6v-7H9v7H3Z" />,
+  briefcase: <><rect x="3" y="7" width="18" height="14" rx="3" /><path d="M8 7V4h8v3M3 12c6 4 12 4 18 0M10 13h4" /></>,
+};
+
+function Ic({ name, className = "" }) {
+  return (
+    <svg className={`icon ${className}`.trim()} viewBox="0 0 24 24" aria-hidden="true">
+      {ICONS[name]}
+    </svg>
+  );
+}
+
+function ownerColor(owner) {
+  return ({ Spence: "blue", Amanda: "coral", Jordan: "amber", Nora: "violet", Both: "" })[owner] || "";
+}
+
+function formatTime(time) {
+  if (!time) return "";
+  const [h, m] = time.split(":").map(Number);
+  return `${h % 12 || 12}${m ? `:${String(m).padStart(2, "0")}` : ""}${h >= 12 ? "pm" : "am"}`;
+}
+
+function shortDate(task) {
+  if (!task.date) return "Needs a date";
+  const d = new Date(`${task.date}T12:00:00`);
+  return new Intl.DateTimeFormat("en-US", { weekday: "short", month: "short", day: "numeric" }).format(d)
+    + (task.time ? ` · ${formatTime(task.time)}` : "");
+}
 
 function scrollToLandingSection(id, { smooth = true } = {}) {
   if (!id || !LANDING_SECTION_IDS.has(id)) return false;
@@ -49,95 +148,197 @@ function scrollToLandingSection(id, { smooth = true } = {}) {
   return true;
 }
 
-function FpLogo({ white = false, size = 30 }) {
+function MiniWeek() {
   return (
-    <>
-      <svg viewBox="0 0 30 30" width={size} height={size} aria-hidden="true">
-        <circle cx="10" cy="4.5" r="3.5" fill="#FFB547" />
-        <circle cx="20" cy="4.5" r="3.5" fill="#FFB547" />
-        <rect x="6" y="11" width="8" height="18" rx="4" fill={white ? "#fff" : "#14805E"} />
-        <rect x="16" y="11" width="8" height="18" rx="4" fill={white ? "#fff" : "#14805E"} />
-      </svg>
-      <span>Family<b>Pause</b></span>
-    </>
+    <div className="mini-week">
+      {[["Mon", 2], ["Tue", 3], ["Wed", 4], ["Thu", 5], ["Fri", 6], ["Sat", 7], ["Sun", 8]].map(([d, n]) => (
+        <span key={d} className={n === 5 ? "current" : ""}>
+          {d}<b>{n}</b><i style={![4, 5, 6].includes(n) ? { visibility: "hidden" } : undefined} />
+        </span>
+      ))}
+    </div>
   );
 }
 
-function Ico({ name, size = 20 }) {
-  const s = { width: size, height: size, fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": true };
-  switch (name) {
-    case "check":
-      return <svg {...s} viewBox="0 0 24 24"><path d="M5 12.5 10 17.5 19.5 6.5" /></svg>;
-    case "clock":
-      return <svg {...s} viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>;
-    case "users":
-      return <svg {...s} viewBox="0 0 24 24"><circle cx="9" cy="8" r="3" /><path d="M3 19c.6-3 2.8-5 6-5s5.4 2 6 5" /><circle cx="17" cy="9" r="2.5" /><path d="M16 19c.4-2 1.6-3.4 3.5-4" /></svg>;
-    case "heart":
-      return <svg {...s} viewBox="0 0 24 24"><path d="M19.5 12.6 12 20l-7.5-7.4A4.5 4.5 0 1 1 12 6.1a4.5 4.5 0 1 1 7.5 6.5z" /></svg>;
-    case "inbox":
-      return <svg {...s} viewBox="0 0 24 24"><path d="M4 13h4l2 3h4l2-3h4v6H4z" /><path d="M4 13V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v7" /></svg>;
-    case "flame":
-      return <svg {...s} viewBox="0 0 24 24"><path d="M12 3c2 4-2 5-1 9 3-1 6-4 6-8 3 3 4 7 2 11a7 7 0 1 1-13-1c1-3 3-5 6-11z" /></svg>;
-    case "list":
-      return <svg {...s} viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11" /><path d="M4 6h.01M4 12h.01M4 18h.01" /></svg>;
-    case "circle-check":
-      return <svg {...s} viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" /><path d="m8 12 3 3 5-6" /></svg>;
-    case "calendar-clock":
-      return <svg {...s} viewBox="0 0 24 24"><path d="M8 3v3M16 3v3M4 9h16M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z" /><path d="M15 15.5V14l1-.5" /><circle cx="15" cy="16" r="3" /></svg>;
-    case "bell":
-      return <svg {...s} viewBox="0 0 24 24"><path d="M6 9a6 6 0 1 1 12 0c0 7 3 7 3 9H3c0-2 3-2 3-9" /><path d="M10 21a2 2 0 0 0 4 0" /></svg>;
-    case "footprints":
-      return <svg {...s} viewBox="0 0 24 24"><path d="M8 4c1.5 0 2.5 1.2 2.5 2.7S8.8 10 7.5 10 5 8.6 5 7.1 6.5 4 8 4z" /><path d="M16 10c1.5 0 2.5 1.2 2.5 2.7S16.8 16 15.5 16 13 14.6 13 13.1 14.5 10 16 10z" /></svg>;
-    case "repeat":
-      return <svg {...s} viewBox="0 0 24 24"><path d="M17 2v4h-4" /><path d="M7 22v-4h4" /><path d="M7 8a7 7 0 0 1 10-1l3 3" /><path d="M17 16a7 7 0 0 1-10 1l-3-3" /></svg>;
-    case "calendar-check":
-      return <svg {...s} viewBox="0 0 24 24"><path d="M8 3v3M16 3v3M4 9h16M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z" /><path d="m9 15 2 2 4-4" /></svg>;
-    case "user-check":
-      return <svg {...s} viewBox="0 0 24 24"><circle cx="9" cy="8" r="3" /><path d="M3 19c.6-3 2.8-5 6-5s5.4 2 6 5" /><path d="m16 11 2 2 4-4" /></svg>;
-    case "lock":
-      return <svg {...s} viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2" /><path d="M8 11V8a4 4 0 0 1 8 0v3" /></svg>;
-    case "shield":
-      return <svg {...s} viewBox="0 0 24 24"><path d="M12 3 5 6v6c0 5 3.2 8.4 7 9.5 3.8-1.1 7-4.5 7-9.5V6z" /><path d="m9 12 2 2 4-4" /></svg>;
-    default:
-      return null;
+function StoreBadges() {
+  return (
+    <div className="store-badges">
+      <Link to="/mobile" className="store-badge" aria-label="FamilyPause on the App Store">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M17 12c0-2 1.6-3 2-3.3-1.1-1.5-2.7-1.7-3.3-1.7-1.4-.2-2.7.8-3.5.8s-1.9-.8-3.1-.7C7.5 7.1 6 8 5.2 9.4c-1.7 3 .1 7.4 1.8 9.8.8 1.2 1.7 2.5 3 2.4 1.2 0 1.7-.8 3.2-.8s1.9.8 3.2.8 2.1-1.2 2.9-2.4a10 10 0 0 0 1.3-2.7c-.1 0-3.6-1.3-3.6-4.5ZM14.8 5.4a4.7 4.7 0 0 0 1.1-3.3 4.8 4.8 0 0 0-3.1 1.6 4.4 4.4 0 0 0-1.1 3.2c1.2.1 2.3-.5 3.1-1.5Z" />
+        </svg>
+        <span><small>Download on the</small><strong>App Store</strong></span>
+      </Link>
+      <Link to="/mobile" className="store-badge" aria-label="FamilyPause on Google Play">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M3 2v20l11-10Z" />
+          <path d="m5 2 11 8 4-2Z" />
+          <path d="M16 14 5 22l15-8Z" />
+          <path d="m17 11 4 1-4 1Z" />
+        </svg>
+        <span><small>GET IT ON</small><strong>Google Play</strong></span>
+      </Link>
+    </div>
+  );
+}
+
+function ProductArt({ type }) {
+  if (type === "pad") {
+    return (
+      <div className="planner-pad">
+        <strong>FamilyPause · Our week, together</strong>
+        <div className="paper-grid"><i /><i /><i /><i /></div>
+      </div>
+    );
   }
+  if (type === "bundle") {
+    return (
+      <div className="bundle-art">
+        <ProductArt type="journal" />
+        <ProductArt type="pad" />
+        <ProductArt type="deck" />
+      </div>
+    );
+  }
+  return (
+    <div className={`book${type === "deck" ? " deck" : ""}`}>
+      <span className="mini-logo">FamilyPause</span>
+      {type !== "deck" && <span className="mini-pause"><i /><i /></span>}
+      <strong>{type === "deck" ? <>Conversation<br />Starters</> : <>A calmer week,<br />together.</>}</strong>
+      <small>{type === "deck" ? "One conversation at a time." : "The FamilyPause guided journal"}</small>
+    </div>
+  );
+}
+
+function PlanCard({ task }) {
+  const tone = task.type === "To-do" ? "sun-soft" : task.type === "Decision" ? "blue" : task.type === "Note" ? "violet" : "";
+  return (
+    <article className="plan-item">
+      <i className={`dot ${ownerColor(task.owner)}`} />
+      <div className="plan-item-main">
+        <div className="plan-item-top">
+          <h4>{task.title}</h4>
+          <span className={`pill ${tone}`}>{task.type}</span>
+        </div>
+        <p>{task.date ? shortDate(task) : "No date yet"} &nbsp; {task.owner}</p>
+        <span className={`plan-item-status${task.date ? "" : " needs-date"}`}>
+          <Ic name={task.date ? "check" : "clock"} />
+          {task.date ? "Ready for calendar" : "Needs a date"}
+        </span>
+      </div>
+    </article>
+  );
+}
+
+function PlanStack() {
+  return (
+    <div className="plan-stack">
+      {TASKS.slice(0, 4).map((task) => <PlanCard key={task.id} task={task} />)}
+    </div>
+  );
+}
+
+function TranscriptDemo({ played, onToggle }) {
+  return (
+    <div className="transcript-card card">
+      <div className="ui-card-title">
+        <span className="row"><Ic name="mic" />Live transcript</span>
+        <span className="recording-label"><i className="dot" />Sample Pause</span>
+      </div>
+      <div className="transcript-line">
+        <span className="tiny-avatar blue">S</span>
+        <div>
+          <strong>Spence <time>00:12</time></strong>
+          <p>I can take Jordan to the <mark>dentist on Thursday.</mark></p>
+        </div>
+      </div>
+      <div className="transcript-line">
+        <span className="tiny-avatar coral">A</span>
+        <div>
+          <strong>Amanda <time>00:20</time></strong>
+          <p>Perfect. Let’s make <mark>Friday a date night.</mark></p>
+        </div>
+      </div>
+      {played && (
+        <div className="transcript-line">
+          <span className="tiny-avatar blue">S</span>
+          <div>
+            <strong>Spence <time>00:27</time></strong>
+            <p>I’ll sign the field trip form, too.</p>
+          </div>
+        </div>
+      )}
+      <div className="transcript-summary">
+        <Ic name="check" />Captured for your plan
+        <button type="button" className="btn link" style={{ fontSize: 8, marginLeft: "auto" }} onClick={onToggle}>
+          {played ? "Replay" : "Play sample"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function ChecklistDemo({ doneIds, onToggle }) {
+  return (
+    <div className="checklist-card card">
+      <div className="ui-card-title">
+        <span>Our week</span>
+        <span className="small muted" style={{ fontSize: 9 }}>Nov 2–8</span>
+      </div>
+      <MiniWeek />
+      {["dentist", "date", "groceries"].map((id) => {
+        const task = TASKS.find((item) => item.id === id);
+        const done = doneIds.has(id);
+        return (
+          <button
+            key={id}
+            type="button"
+            className="checklist-row"
+            style={{ width: "100%", padding: 0 }}
+            onClick={() => onToggle(id)}
+            aria-pressed={done}
+          >
+            <span className={`checkmark${done ? " checked" : ""}`}>{done ? <Ic name="check" /> : null}</span>
+            <span className={done ? "checked-text" : ""}>{task.title}</span>
+            <i className={`dot ${ownerColor(task.owner)}`} />
+          </button>
+        );
+      })}
+      <span className="btn primary small block" style={{ fontSize: 10, marginTop: 17 }}>
+        Add all to calendar<Ic name="calendar" className="sm" />
+      </span>
+    </div>
+  );
 }
 
 function LandingHead() {
   return (
-    <>
-      <Seo
-        title="FamilyPause — Plan your week. Make time for each other."
-        description="A 20-minute weekly sit-down for married couples, plus reminders and check-ins that keep date night on the calendar."
-        canonical="https://www.familypause.com/"
-      />
-      <Helmet>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800&family=Inter:wght@400;500;600;700&display=swap"
-          rel="stylesheet"
-        />
-      </Helmet>
-    </>
+    <Seo
+      title="FamilyPause — Plan your week. Make time for each other."
+      description="A 20-minute weekly sit-down for married couples, plus reminders and check-ins that keep date night on the calendar."
+      canonical="https://www.familypause.com/"
+    />
   );
 }
 
 export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
   const location = useLocation();
   const navigate = useNavigate();
-  const [cardFlip, setCardFlip] = useState(false);
-  const [cardTag, setCardTag] = useState(CARD_TAGS[0]);
-  const [checkin, setCheckin] = useState("ask");
+  const [category, setCategory] = useState("Kids");
+  const [question, setQuestion] = useState(0);
+  const [flipped, setFlipped] = useState(false);
+  const [transcriptPlayed, setTranscriptPlayed] = useState(false);
+  const [doneIds, setDoneIds] = useState(() => new Set(["groceries"]));
   const [howTab, setHowTab] = useState(0);
+  const [pauseTime, setPauseTime] = useState("Thu 8pm");
   const [annual, setAnnual] = useState(false);
   const [leadEmail, setLeadEmail] = useState("");
   const [leadStatus, setLeadStatus] = useState("idle");
   const [leadError, setLeadError] = useState("");
 
   useEffect(() => {
-    document.body.classList.add("fp-home2-page");
-    return () => document.body.classList.remove("fp-home2-page");
+    document.body.classList.add("fp-site-page");
+    return () => document.body.classList.remove("fp-site-page");
   }, []);
 
   useEffect(() => {
@@ -154,14 +355,18 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
     };
   }, [location.hash, location.pathname, location.key]);
 
-  const goToSection = (id) => (event) => {
-    event.preventDefault();
+  const scrollOrNavigate = (id) => {
     if (location.hash === `#${id}`) {
       scrollToLandingSection(id, { smooth: true });
       return;
     }
     navigate(`/#${id}`);
   };
+  const goToSection = (id) => (event) => {
+    event.preventDefault();
+    scrollOrNavigate(id);
+  };
+  const scrollHome = () => window.scrollTo({ top: 0, behavior: "smooth" });
 
   const submitGuide = async (event) => {
     event.preventDefault();
@@ -182,447 +387,527 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
     setLeadStatus("success");
   };
 
+  const toggleDone = (id) => {
+    setDoneIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const prompts = QUESTIONS[category];
+  const current = prompts[question % prompts.length];
+  const familyAmount = annual ? "$79" : "$9";
+  const familyPeriod = annual ? "/year" : "/month";
+  const familySub = annual ? "One annual payment. More room for family." : "or $79/year when billed annually";
+  const pauseDay = PAUSE_LABEL[pauseTime];
+
+  const onHowKey = (event, index) => {
+    if (event.key !== "ArrowRight" && event.key !== "ArrowLeft") return;
+    event.preventDefault();
+    const next = (index + (event.key === "ArrowRight" ? 1 : 3)) % 4;
+    setHowTab(next);
+    document.getElementById(`step-${next}`)?.focus();
+  };
+
   return (
-    <div className="fp-home2">
+    <div className="fp-site">
       <LandingHead />
+      <SiteNav onSignIn={onSignIn} onStart={onStart} onSection={scrollOrNavigate} onHome={scrollHome} />
 
-      <nav className="top">
-        <div className="wrap">
-          <a href="/" className="logo" onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: "smooth" }); }}>
-            <FpLogo />
-          </a>
-          <div className="nav-l">
-            <a href="#how" onClick={goToSection("how")}>How It Works</a>
-            <a href="#together" onClick={goToSection("together")}>Time Together</a>
-            <a href="#pricing" onClick={goToSection("pricing")}>Pricing</a>
-            <a href="#concierge" onClick={goToSection("concierge")}>Concierge</a>
-            <Link to="/blog">Blog</Link>
-          </div>
-          <div className="nav-r">
-            <AuthHeaderCta onSignIn={onSignIn} className="lk" signInLabel="Log in" />
-            <button type="button" className="btn btn-p btn-sm" onClick={onStart}>Start Free</button>
-          </div>
-        </div>
-      </nav>
-
-      <header className="hero">
-        <div className="wrap">
-          <h1>Plan your week together. <span>Then actually show up for each other.</span></h1>
-          <p className="hero-sub">A 20-minute weekly sit-down for married couples, plus reminders and check-ins that keep date night on the calendar.</p>
-          <div className="row">
-            <button type="button" className="btn btn-p" onClick={onStart}>Start Free</button>
-            <a href="#how" className="btn btn-s" onClick={goToSection("how")}>See How It Works</a>
-          </div>
-          <div className="row chips">
-            <span><span className="chip-ico"><Ico name="check" size={13} /></span>Free to start</span>
-            <span><span className="chip-ico"><Ico name="check" size={13} /></span>Built for couples</span>
-            <span><span className="chip-ico"><Ico name="check" size={13} /></span>20 minutes a week</span>
-          </div>
-          <div className="hero-vis">
-            <div className="hero-photo">
-              <img src="/images/fp-hero.jpg" alt="Couple planning the week together" />
-            </div>
-            <div className="phone">
-              <div className="phone-in">
-                <div className="notch" />
-                <div className="ps">
-                  <div className="ps-top">
-                    <h4>This week</h4>
-                    <span className="dots">
-                      <span className="dot d-blue">S</span>
-                      <span className="dot d-violet">A</span>
-                    </span>
-                  </div>
-                  <div className="wk">Oct 26 – Nov 1 · 9 items</div>
-                  <div className="day">MONDAY</div>
-                  <div className="it"><span className="dot d-amber" /><span className="t">Ella dentist<br /><small>3:30 pm · Spence drives</small></span></div>
-                  <div className="day">WEDNESDAY</div>
-                  <div className="it"><span className="dot d-coral" /><span className="t">Noah co-op project due</span></div>
-                  <div className="it"><span className="dot d-violet" /><span className="t">Pay water bill</span></div>
-                  <div className="day">FRIDAY</div>
-                  <div className="it tt"><Ico name="heart" size={16} /><span className="t">Date night<br /><small>7:00 pm · Luigi&apos;s</small></span></div>
-                  <div className="day">SUNDAY</div>
-                  <div className="it"><span className="dot d-blue" /><span className="t">Weekly Pause<br /><small>8:00 pm · Living room</small></span></div>
-                </div>
+      <main id="main">
+        <section className="hero" id="home">
+          <div className="container hero-inner">
+            <div className="hero-copy">
+              <div className="eyebrow"><Ic name="spark" className="sm" />The weekly family meeting, made easy</div>
+              <h1>Your family’s week,<br /><span className="green">planned together.</span></h1>
+              <p>Talk it through for 20 minutes. FamilyPause turns it into a plan you can both see.</p>
+              <div className="hero-actions">
+                <button type="button" className="btn primary" onClick={onStart}>Start Free<Ic name="arrow" /></button>
+                <a className="btn" href="#how-it-works" onClick={goToSection("how-it-works")}>See How It Works</a>
               </div>
+              <div className="hero-chips">
+                <span><Ic name="check" />Free to start</span>
+                <span><Ic name="check" />Built for couples</span>
+                <span><Ic name="check" />Nothing reaches your calendar until you approve it</span>
+              </div>
+              <div className="hero-rating">
+                <span>A little more in sync. A lot more us.</span>
+              </div>
+              <StoreBadges />
             </div>
-            <div className="float f-streak">
-              <div className="ic"><Ico name="flame" /></div>
-              <div><b>12 week streak</b><small>Every Sunday since August</small></div>
-            </div>
-            <div className="float f-date">
-              <div className="ic"><Ico name="heart" /></div>
-              <div><b>Date night, Fri 7pm</b><small>Luigi&apos;s · Sitter confirmed</small></div>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      <div className="benefits">
-        <div className="wrap grid">
-          <div className="ben"><div className="ic"><Ico name="clock" /></div><div><h3>20 minutes a week</h3><p>One sit-down replaces a week of scattered texts.</p></div></div>
-          <div className="ben"><div className="ic"><Ico name="users" /></div><div><h3>Plan together</h3><p>One shared plan, so nobody carries it alone.</p></div></div>
-          <div className="ben"><div className="ic"><Ico name="heart" /></div><div><h3>Make time for each other</h3><p>Date nights and walks go on the calendar.</p></div></div>
-          <div className="ben"><div className="ic"><Ico name="inbox" /></div><div><h3>Nothing gets lost</h3><p>Every decision from the talk lands in your plan.</p></div></div>
-        </div>
-      </div>
-
-      <section>
-        <div className="wrap">
-          <div className="sh"><span className="label">Everything in one weekly ritual</span><h2>Talk once. Know the whole week.</h2></div>
-          <div className="bento">
-            <div className="tile s7">
-              <span className="label">Conversation Cards</span>
-              <h3>Pull a card. Start the right talk.</h3>
-              <p>One question each week gets you past logistics and into what matters.</p>
-              <div className="cc-tags">
-                {CARD_TAGS.map((tag) => (
-                  <button
-                    type="button"
-                    key={tag.t}
-                    className={"tag" + (cardTag.t === tag.t ? " on" : "")}
-                    onClick={() => { setCardTag(tag); setCardFlip(false); }}
-                  >
-                    {tag.t}
-                  </button>
+            <div className="hero-visual">
+              <div className="blob green" />
+              <div className="blob sun" />
+              <div className="blob blue" />
+              <img
+                className="hero-photo"
+                src="/images/fp-couple.jpg"
+                alt="A couple planning their week together at a bright kitchen table"
+                fetchPriority="high"
+              />
+              <div className="phone">
+                <div className="phone-top"><span>9:41</span><span>▂▄▆ &nbsp; ▰</span></div>
+                <div className="phone-brand"><FpMark size={14} />FamilyPause</div>
+                <div className="row between" style={{ marginTop: 15 }}>
+                  <h3>Our week</h3>
+                  <span className="tiny-avatar" style={{ height: 20, width: 20, fontSize: 7 }}>S+A</span>
+                </div>
+                <p>November 2–8 · Together</p>
+                <MiniWeek />
+                <p className="phone-progress"><span>3 of 5 ready for the week</span><span>60%</span></p>
+                <div className="progress-track"><i /></div>
+                {TASKS.slice(0, 3).map((task) => (
+                  <div className="phone-task" key={task.id}>
+                    <i className={`dot ${ownerColor(task.owner)}`} />
+                    <div>
+                      <strong>{task.title}</strong>
+                      <span>{task.date ? shortDate(task) : "Give it a date together"}</span>
+                    </div>
+                  </div>
                 ))}
+                <button type="button" className="btn primary block" onClick={onStart}>
+                  Make our plan<Ic name="arrow" />
+                </button>
+                <div className="phone-home" />
               </div>
-              <div className="vis">
-                <div className={"cc-wrap" + (cardFlip ? " flip" : "")} onClick={() => setCardFlip((v) => !v)} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setCardFlip((v) => !v); } }}>
-                  <div className="cc-back" />
-                  <div className="cc">
-                    <div className="cc-f cc-front">
-                      <span className={"tag " + cardTag.cls} style={{ alignSelf: "flex-start" }}>{cardTag.t}</span>
-                      <div className="q">{cardTag.q}</div>
-                      <div className="ft"><span>Card 14 of 52</span><span>Tap to flip</span></div>
-                    </div>
-                    <div className="cc-f cc-cover">
-                      <span className="logo"><FpLogo white /></span>
-                      <span style={{ fontWeight: 600 }}>Conversation Card</span>
-                    </div>
-                  </div>
+              <div className="float-card dentist">
+                <span className="float-icon"><Ic name="calendar" /></span>
+                <div>
+                  <strong>Dentist, Thu 3pm</strong>
+                  <p>One less thing to remember.</p>
                 </div>
               </div>
-            </div>
-
-            <div className="tile s5">
-              <span className="label">Capture</span>
-              <h3>Just talk. We&apos;ll take notes.</h3>
-              <p>Record your talk. FamilyPause pulls out who&apos;s doing what.</p>
-              <div className="vis">
-                <div className="card tr">
-                  <div className="tr-h"><span className="rec" /><b>Sunday Pause</b><span style={{ color: "var(--ink-2)" }}>14:32</span></div>
-                  <div className="ln"><span className="sp"><span className="dot d-blue" />Spence</span><p>Ella&apos;s dentist moved to <mark>Monday at 3:30</mark>. I&apos;ll take her.</p></div>
-                  <div className="ln"><span className="sp"><span className="dot d-violet" />Amanda</span><p>Then I&apos;ll <mark>pay the water bill</mark> by Wednesday.</p></div>
-                  <div className="ln"><span className="sp"><span className="dot d-blue" />Spence</span><p><mark>Date night Friday</mark>. Luigi&apos;s again?</p></div>
-                  <div className="tr-x"><Ico name="list" size={16} />3 items added to your plan</div>
-                </div>
-              </div>
-            </div>
-
-            <div className="tile s5">
-              <span className="label">Your weekly plan</span>
-              <h3>One plan you both trust.</h3>
-              <p>Sorted, assigned, and flagged if it still needs a time.</p>
-              <div className="vis">
-                <div className="stack">
-                  <div className="card pi"><div className="bd"><b>Ella dentist, Mon 3:30 pm</b><div className="meta"><span className="tag t-appt">Appointment</span><span className="st st-ready"><Ico name="circle-check" size={14} />Ready</span></div></div><span className="dots"><span className="dot d-blue">S</span><span className="dot d-amber">E</span></span></div>
-                  <div className="card pi"><div className="bd"><b>Pay water bill</b><div className="meta"><span className="tag t-todo">To-do</span><span className="st st-ready"><Ico name="circle-check" size={14} />Ready</span></div></div><span className="dots"><span className="dot d-violet">A</span></span></div>
-                  <div className="card pi"><div className="bd"><b>Noah&apos;s swim lessons: keep going?</b><div className="meta"><span className="tag t-dec">Decision</span><span className="st st-need"><Ico name="calendar-clock" size={14} />Needs a date</span></div></div><span className="dots"><span className="dot d-blue">S</span><span className="dot d-violet">A</span></span></div>
-                  <div className="card pi"><div className="bd"><b>Grandma visits Nov 14</b><div className="meta"><span className="tag t-note">Note</span></div></div></div>
-                </div>
-              </div>
-            </div>
-
-            <div className="tile s7" id="together">
-              <span className="label">Time Together</span>
-              <h3>Protect the time that&apos;s just for you two.</h3>
-              <p>Pick your thing. It goes on the calendar, with a reminder and a check-in the day of.</p>
-              <div className="vis">
-                <div className="stack" style={{ maxWidth: 440 }}>
-                  <div className="card tt-main"><div className="ic"><Ico name="heart" /></div><div><b>Date night, Fri 7pm</b><small>Luigi&apos;s · Table for two · Sitter confirmed</small></div></div>
-                  <div className="card chk">
-                    {checkin === "ask" ? (
-                      <>
-                        <div className="q"><Ico name="bell" size={18} />Still on for tonight?</div>
-                        <div className="row">
-                          <button type="button" className="btn btn-p btn-sm" onClick={() => setCheckin("yes")}>Yes</button>
-                          <button type="button" className="btn btn-s btn-sm" onClick={() => setCheckin("re")}>Reschedule</button>
-                        </div>
-                      </>
-                    ) : checkin === "yes" ? (
-                      <div className="q"><Ico name="circle-check" size={18} />Confirmed. See you at 7.</div>
-                    ) : (
-                      <div className="q"><Ico name="calendar-clock" size={18} />Moved to Saturday, 7:00 pm</div>
-                    )}
-                  </div>
-                  <div className="card rec-it"><div className="ic"><Ico name="footprints" /></div><div style={{ flex: 1 }}>Thursday walk after dinner<small>Every Thursday · 7:30 pm</small></div><Ico name="repeat" size={20} /></div>
+              <div className="float-card streak">
+                <span className="float-icon sun"><Ic name="flame" /></span>
+                <div>
+                  <strong>12 week streak</strong>
+                  <p>You’re building something good.</p>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <section className="mint" id="how">
-        <div className="wrap">
-          <div className="sh"><span className="label">How It Works</span><h2>Four steps, every week.</h2></div>
-          <div className="how">
-            <div className="how-tabs">
-              {HOW_TABS.map((tab, i) => (
-                <button key={tab.title} type="button" className={"how-tab" + (howTab === i ? " on" : "")} onClick={() => setHowTab(i)}>
-                  <span className="n">{i + 1}</span>
-                  <span><b>{tab.title}</b><p>{tab.body}</p></span>
+        <section className="benefits" aria-label="Benefits">
+          <div className="container benefit-grid">
+            {[["clock", "20 minutes a week"], ["users", "Built for busy couples"], ["heart", "Share the load"], ["list", "Nothing gets lost"]].map(([icon, label]) => (
+              <div className="benefit" key={label}>
+                <span className="benefit-icon"><Ic name={icon} /></span>
+                {label}
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="features container" aria-label="A calmer week, from conversation to plan">
+          <div className="feature-row" id="conversation-cards">
+            <div className="feature-copy">
+              <div className="eyebrow">Conversation starters</div>
+              <h2>Start with a real conversation.</h2>
+              <p>A good question can get you past the to-do list and back to each other. Make room for the things that don’t always make it into the calendar.</p>
+              <a className="text-link" href="#shop" onClick={goToSection("shop")}>Find your next conversation<Ic name="arrow" /></a>
+            </div>
+            <div className="feature-visual">
+              <div className="conversation-demo">
+                <div className="feature-categories" aria-label="Conversation categories">
+                  {CATEGORIES.map((name) => (
+                    <button
+                      key={name}
+                      type="button"
+                      className={`category-tab${category === name ? " active" : ""}`}
+                      aria-pressed={category === name}
+                      onClick={() => { setCategory(name); setQuestion(0); setFlipped(false); }}
+                    >
+                      {name}
+                    </button>
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  className={`flip-card${flipped ? " flipped" : ""}`}
+                  onClick={() => setFlipped((value) => !value)}
+                  aria-label="Flip the conversation card"
+                >
+                  <div className="flip-inner">
+                    <div className="flip-face">
+                      <Ic name="message" />
+                      <p>{current[0]}</p>
+                      <div className="card-foot"><span>{category} · A little room to connect</span><Ic name="flip" /></div>
+                    </div>
+                    <div className="flip-face back">
+                      <Ic name="heart" />
+                      <p>{current[1]}</p>
+                      <div className="card-foot"><span>Go a little deeper</span><Ic name="flip" /></div>
+                    </div>
+                  </div>
+                </button>
+                <div className="question-controls">
+                  <span>{(question % prompts.length) + 1} of {prompts.length} sample prompts</span>
+                  <button type="button" onClick={() => { setQuestion((n) => n + 1); setFlipped(false); }}>
+                    Next conversation<Ic name="arrow" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="feature-row reverse">
+            <div className="feature-copy">
+              <div className="eyebrow">Capture the important things</div>
+              <h2>Be present.<br />We’ll remember.</h2>
+              <p>Talk through your week naturally. FamilyPause captures the details, so you can focus on the person across the table.</p>
+              <button type="button" className="text-link" onClick={() => setTranscriptPlayed((value) => !value)}>
+                Try the sample conversation<Ic name="play" className="sm" />
+              </button>
+            </div>
+            <div className="feature-visual blue-stage">
+              <TranscriptDemo played={transcriptPlayed} onToggle={() => setTranscriptPlayed((value) => !value)} />
+            </div>
+          </div>
+
+          <div className="feature-row">
+            <div className="feature-copy">
+              <div className="eyebrow">Build the plan</div>
+              <h2>Turn good intentions into a shared plan.</h2>
+              <p>The appointments, the little jobs, the decisions you made together. Give each one a home, a date, and someone who’s got it.</p>
+              <button type="button" className="text-link" onClick={onStart}>
+                Explore the weekly plan<Ic name="arrow" />
+              </button>
+            </div>
+            <div className="feature-visual"><PlanStack /></div>
+          </div>
+
+          <div className="feature-row reverse">
+            <div className="feature-copy">
+              <div className="eyebrow">Live the week</div>
+              <h2>A plan you can both carry.</h2>
+              <p>One shared view of the week. Check things off, make space for what matters, and keep the follow-through from falling to one person.</p>
+              <span className="text-link">You’re always in control<Ic name="shield" className="sm" /></span>
+            </div>
+            <div className="feature-visual white-stage">
+              <div style={{ width: "100%", display: "flex", justifyContent: "center" }}>
+                <ChecklistDemo doneIds={doneIds} onToggle={toggleDone} />
+              </div>
+              <div className="reminder-float">
+                <div className="row">
+                  <span className="float-icon"><Ic name="mail" /></span>
+                  <div>
+                    <strong>Your week, together</strong>
+                    <p style={{ marginTop: 1, fontSize: 6 }}>From FamilyPause</p>
+                  </div>
+                </div>
+                <p>Here’s the plan you made, the moments you protected, and a little nudge to follow through.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="section mint" id="how-it-works">
+          <div className="container">
+            <div className="section-head">
+              <div className="eyebrow center">A little rhythm for real life</div>
+              <h2>Give us the chaos.<br />Get back a plan, together.</h2>
+              <p>No perfect routine required. Just a little time for the week, and for each other.</p>
+            </div>
+            <div className="timeline-tabs" role="tablist" aria-label="How FamilyPause works">
+              {HOW_TABS.map((label, index) => (
+                <button
+                  key={label}
+                  id={`step-${index}`}
+                  type="button"
+                  role="tab"
+                  aria-controls="timeline-panel"
+                  aria-selected={howTab === index}
+                  tabIndex={howTab === index ? 0 : -1}
+                  className={howTab === index ? "active" : ""}
+                  onClick={() => setHowTab(index)}
+                  onKeyDown={(event) => onHowKey(event, index)}
+                >
+                  {label}
                 </button>
               ))}
             </div>
-            <div className="how-vis">
-              <div className={"how-p" + (howTab === 0 ? " on" : "")}>
-                <div className="card inv">
-                  <div className="inv-h"><div className="ic"><Ico name="calendar-check" /></div><div><b>Weekly Pause</b><small>Sundays · 8:00 pm · 20 min</small></div></div>
-                  <div className="inv-p"><span style={{ display: "flex", gap: 10, alignItems: "center" }}><span className="dot d-blue" />Spence</span><span className="ok"><Ico name="check" size={16} />Accepted</span></div>
-                  <div className="inv-p"><span style={{ display: "flex", gap: 10, alignItems: "center" }}><span className="dot d-violet" />Amanda</span><span className="ok"><Ico name="check" size={16} />Accepted</span></div>
+            <div className="timeline-panel" id="timeline-panel" role="tabpanel" aria-labelledby={`step-${howTab}`}>
+              <div className="timeline-steps">
+                {HOW_STEPS[howTab].map(([title, body], index) => (
+                  <div className="timeline-step" key={title}>
+                    <span className="step-number">{index + 1}</span>
+                    <div>
+                      <h3>{title}</h3>
+                      <p>{body}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="timeline-visual">
+                {howTab === 0 && (
+                  <div className="lock-demo card">
+                    <span className="pill">Your weekly Pause</span>
+                    <h3>A little time, just for us.</h3>
+                    <p>Choose a time that feels realistic.</p>
+                    {PAUSE_TIMES.map((time) => (
+                      <button
+                        key={time}
+                        type="button"
+                        className={`lock-choice${pauseTime === time ? " selected" : ""}`}
+                        style={{ width: "100%" }}
+                        onClick={() => setPauseTime(time)}
+                      >
+                        <Ic name="calendar" /> {time}
+                        <strong>{pauseTime === time ? "Selected" : "Choose"}</strong>
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {howTab === 1 && <TranscriptDemo played={transcriptPlayed} onToggle={() => setTranscriptPlayed((value) => !value)} />}
+                {howTab === 2 && <PlanStack />}
+                {howTab === 3 && <ChecklistDemo doneIds={doneIds} onToggle={toggleDone} />}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="section" id="concierge">
+          <div className="container concierge-grid">
+            <div className="concierge-copy">
+              <span className="pill sun"><Ic name="users" className="sm" />Real person, every week</span>
+              <div className="eyebrow">Your FamilyPause concierge</div>
+              <h2>Never be the one who has to bring it up.</h2>
+              <p>You shouldn’t have to carry the planning of the planning. A real assistant finds a time that works for both of you, sends the invite, and helps you keep your Pause.</p>
+              <button type="button" className="btn primary" onClick={() => navigate("/contact")}>
+                Add Concierge<Ic name="arrow" />
+              </button>
+            </div>
+            <div className="concierge-visual">
+              <div className="email-card">
+                <div className="email-subject">Let’s lock in your Pause</div>
+                <div className="email-header">
+                  <span className="assistant-avatar"><Ic name="users" /></span>
+                  <div>
+                    <strong>Your FamilyPause assistant</strong>
+                    <span>To: Spence and Amanda</span>
+                  </div>
+                  <time>MON, 9:00 AM</time>
+                </div>
+                <p className="email-body">Hi Spence and Amanda,<br />Here are a few times for your weekly Pause. Which one works for you both?</p>
+                <div className="time-options" aria-label="Choose your Pause time">
+                  {PAUSE_TIMES.map((time) => (
+                    <button
+                      key={time}
+                      type="button"
+                      className={`time-option${pauseTime === time ? " active" : ""}`}
+                      aria-pressed={pauseTime === time}
+                      onClick={() => setPauseTime(time)}
+                    >
+                      {time}
+                    </button>
+                  ))}
+                </div>
+                <div className="email-reply">
+                  <span className="tiny-avatar blue">S</span>
+                  <div>
+                    <strong>Spence</strong>
+                    <p><span className="pause-day">{pauseDay}</span> works for me.</p>
+                  </div>
+                </div>
+                <div className="email-reply">
+                  <span className="tiny-avatar coral">A</span>
+                  <div>
+                    <strong>Amanda</strong>
+                    <p>Same here. Let’s put it on the calendar.</p>
+                  </div>
                 </div>
               </div>
-              <div className={"how-p" + (howTab === 1 ? " on" : "")}>
-                <div className="card tr">
-                  <div className="tr-h"><span className="rec" /><b>Recording</b><span style={{ color: "var(--ink-2)" }}>06:12</span></div>
-                  <div className="ln"><span className="sp"><span className="dot d-violet" />Amanda</span><p>Card says: when did we feel most like a team?</p></div>
-                  <div className="ln"><span className="sp"><span className="dot d-blue" />Spence</span><p>Honestly, Saturday morning with the garage.</p></div>
-                </div>
-              </div>
-              <div className={"how-p" + (howTab === 2 ? " on" : "")}>
-                <div className="stack">
-                  <div className="card pi"><div className="bd"><b>Ella dentist, Mon 3:30 pm</b><div className="meta"><span className="tag t-appt">Appointment</span><span className="st st-ready"><Ico name="circle-check" size={14} />Ready</span></div></div><span className="dots"><span className="dot d-blue">S</span></span></div>
-                  <div className="card pi"><div className="bd"><b>Noah&apos;s swim lessons: keep going?</b><div className="meta"><span className="tag t-dec">Decision</span><span className="st st-need"><Ico name="calendar-clock" size={14} />Needs a date</span></div></div><span className="dots"><span className="dot d-blue">S</span><span className="dot d-violet">A</span></span></div>
-                </div>
-              </div>
-              <div className={"how-p" + (howTab === 3 ? " on" : "")}>
-                <div className="stack">
-                  <div className="card tt-main"><div className="ic"><Ico name="heart" /></div><div><b>Date night, Fri 7pm</b><small>Luigi&apos;s · Reminder Fri at 5:00 pm</small></div></div>
-                  <div className="card rec-it"><div className="ic"><Ico name="footprints" /></div><div style={{ flex: 1 }}>Thursday walk after dinner<small>Every Thursday · 7:30 pm</small></div></div>
+              <div className="locked-card">
+                <Ic name="check" />
+                <div>
+                  <strong>Locked in</strong>
+                  <p>{pauseDay}{pauseTime.includes("am") ? "am" : "pm"}</p>
+                  <small>Your weekly FamilyPause · Both confirmed</small>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <section className="conc" id="concierge">
-        <div className="wrap">
-          <div>
-            <span className="badge-sun"><Ico name="user-check" size={16} />A real person, every week</span>
-            <h2 style={{ marginTop: 24 }}>Never be the one who has to bring it up.</h2>
-            <p className="lead-p">Your Concierge emails you both, finds a time, handles the back-and-forth, and locks it in.</p>
-            <ul>
-              <li><Ico name="circle-check" size={20} />Schedules your Pause and date night weekly</li>
-              <li><Ico name="circle-check" size={20} />Books reservations and reminds the sitter</li>
-              <li><Ico name="circle-check" size={20} />Works over email. No app needed for your spouse</li>
-            </ul>
-            <a href="#pricing" className="btn btn-p" onClick={goToSection("pricing")}>Add Concierge</a>
-          </div>
-          <div className="em-thread">
-            <div className="card em">
-              <div className="em-h"><div className="av" style={{ background: "var(--em)" }}>M</div><div><b>Megan at FamilyPause</b><small>to Spence, Amanda</small></div><span className="tm">Mon 9:02 am</span></div>
-              <p>Hi Spence and Amanda, here are three times for this week&apos;s Pause. Reply with the one that works.</p>
-              <div className="opts"><span className="pick">Sun 8:00 pm</span><span>Mon 8:30 pm</span><span>Tue 7:45 pm</span></div>
-            </div>
-            <div className="card em re">
-              <div className="em-h" style={{ marginBottom: 4 }}><div className="av" style={{ background: "var(--blue)" }}>S</div><div><b>Spence</b></div><span className="tm">9:14 am</span></div>
-              <p>Sunday works for me.</p>
-            </div>
-            <div className="card em re">
-              <div className="em-h" style={{ marginBottom: 4 }}><div className="av" style={{ background: "var(--violet)" }}>A</div><div><b>Amanda</b></div><span className="tm">10:41 am</span></div>
-              <p>Sunday for me too.</p>
-            </div>
-            <div className="card locked"><div className="ic"><Ico name="lock" /></div><div><b>Locked in</b><small>Sunday, Nov 1 · 8:00 pm · On both calendars</small></div></div>
-            <div className="card mini"><div className="ic" style={{ background: "var(--sun)", color: "var(--ink)" }}><Ico name="heart" /></div><div><b>Date night confirmed</b><small>Fri 7:00 pm · Luigi&apos;s</small></div></div>
-          </div>
-        </div>
-      </section>
-
-      <section className="testi">
-        <div className="wrap">
-          <div className="testi-av">
-            <img src="/images/fp-final-cta.png" alt="Spence, founder of FamilyPause" />
-            <span className="badge-sun"><Ico name="flame" size={14} />12 weeks in a row</span>
-          </div>
-          <blockquote>We used to plan our week in the car and in text threads at 11pm. Now it&apos;s twenty minutes on Sunday, and Friday nights are ours again.</blockquote>
-          <p className="who"><b>Spence</b> · Founder and First User</p>
-        </div>
-      </section>
-
-      <section className="mint">
-        <div className="wrap">
-          <div className="sh"><span className="label">Who it&apos;s for</span><h2>Made for households with a lot going on.</h2></div>
-          <div className="for-row">
-            {FOR_CARDS.map((card) => (
-              <div className="card for" key={card.title}>
-                <div className="ph"><img src={card.img} alt="" /></div>
-                <div className="bd"><h3>{card.title}</h3><p>{card.body}</p></div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section id="pricing">
-        <div className="wrap">
-          <div className="price-h">
-            <div className="sh"><span className="label">Pricing</span><h2>Start free. Upgrade when you&apos;re ready.</h2></div>
-            <div className="toggle">
-              <button type="button" className={annual ? "" : "on"} onClick={() => setAnnual(false)}>Monthly</button>
-              <button type="button" className={annual ? "on" : ""} onClick={() => setAnnual(true)}>Annual <span className="save">Save 27%</span></button>
-            </div>
-          </div>
-          <div className="price-grid">
-            <div className="card pc">
-              <div className="top"><h3>Free</h3></div>
-              <div className="pr"><b>$0</b><span>forever</span></div>
-              <p className="desc">Everything you need to try your first weekly Pause.</p>
-              <ul>
-                <li><Ico name="check" size={18} />One plan per week</li>
-                <li><Ico name="check" size={18} />Weekly Conversation Card</li>
-                <li><Ico name="check" size={18} />Shared plan for two</li>
-              </ul>
-              <button type="button" className="btn btn-s btn-block" onClick={onStart}>Start Free</button>
-            </div>
-            <div className="card pc pop">
-              <div className="top"><h3>Family Plan</h3><span className="badge-sun">Most Popular</span></div>
-              <div className="pr"><b>{annual ? "$79" : "$9"}</b><span>{annual ? "/year" : "/month"}</span></div>
-              <p className="desc">The full weekly ritual, plus time together that actually happens.</p>
-              <ul>
-                <li><Ico name="check" size={18} />Unlimited plans and captures</li>
-                <li><Ico name="check" size={18} />Full Conversation Card library</li>
-                <li><Ico name="check" size={18} />Time Together reminders and check-ins</li>
-                <li><Ico name="check" size={18} />Calendar sync and spouse emails</li>
-              </ul>
-              <button type="button" className="btn btn-p btn-block" onClick={onStart}>Start Free Trial</button>
-              <p className="note">{annual ? "Billed yearly. About $6.58 a month." : "Billed monthly. Cancel anytime."}</p>
-            </div>
-            <div className="card pc">
-              <div className="top"><h3>Family Plan + Concierge</h3></div>
-              <div className="pr"><b>$38</b><span>/month</span></div>
-              <p className="desc">A real person locks in your weekly Pause and time together.</p>
-              <ul>
-                <li><Ico name="check" size={18} />Everything in Family Plan</li>
-                <li><Ico name="check" size={18} />Weekly scheduling by email</li>
-                <li><Ico name="check" size={18} />Date night reservations</li>
-                <li><Ico name="check" size={18} />Sitter and reminder handling</li>
-              </ul>
-              <a href="#pricing" className="btn btn-s btn-block" onClick={goToSection("pricing")}>Add Concierge</a>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section style={{ paddingTop: 0 }} id="shop">
-        <div className="wrap">
-          <div className="price-h" style={{ marginBottom: 40 }}>
-            <div className="sh"><span className="label">Shop</span><h2>Bring the Pause to the table.</h2></div>
-            <a href="#shop" className="btn btn-s" onClick={goToSection("shop")}>Visit the shop</a>
-          </div>
-          <div className="shop">
-            {SHOP.map((item) => (
-              <div className="prod" key={item.title}>
-                <div className="ph" aria-hidden="true" />
-                <div className="meta">
-                  <h3>{item.title}</h3>
-                  <span className="p">Coming soon</span>
+        <section className="testimonial-section">
+          <div className="container testimonial-grid quote-only">
+            <div className="founder-quote">
+              <div className="quote-marks">“</div>
+              <blockquote>Making the plan wasn’t the hard part. Making the time was. Now we protect twenty minutes, and the whole week feels lighter.</blockquote>
+              <div className="row">
+                <div className="founder-info">
+                  <div className="founder-avatar initial" aria-hidden="true">S</div>
+                  <div>
+                    <strong>Spence</strong>
+                    <span>Founder and First User</span>
+                  </div>
                 </div>
+                <span className="pill sun"><Ic name="flame" className="sm" />12 weeks in a row</span>
               </div>
-            ))}
+            </div>
           </div>
+        </section>
 
-          <div className="lead" style={{ marginTop: 120 }}>
-            <div>
-              <h2>Get Free FamilyPause Guide</h2>
-              <p>A simple but effective weekly planning system for families with too much going on.</p>
-              <form onSubmit={submitGuide}>
-                <input
-                  type="email"
-                  placeholder="you@example.com"
-                  required
-                  value={leadEmail}
-                  onChange={(e) => setLeadEmail(e.target.value)}
-                  autoComplete="email"
-                />
-                <button className="btn btn-p" type="submit" disabled={leadStatus === "loading"}>
-                  {leadStatus === "loading" ? "Sending…" : "Send Me the Guide"}
+        <section className="section mint" id="for-you">
+          <div className="container">
+            <div className="section-head">
+              <div className="eyebrow center">Different families. A shared starting point.</div>
+              <h2>For the life you’re<br />building together.</h2>
+            </div>
+            <div className="who-grid">
+              {WHO.map(([icon, title, body]) => (
+                <article className="who-card" key={title}>
+                  <Ic name={icon} />
+                  <h3>{title}</h3>
+                  <p>{body}</p>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="section" id="pricing">
+          <div className="container">
+            <div className="pricing-head">
+              <div>
+                <div className="eyebrow">Simple plans for a shared life</div>
+                <h2>A little structure.<br />A lot more together.</h2>
+              </div>
+              <div className="billing-toggle" role="group" aria-label="Billing period">
+                <button type="button" className={annual ? "" : "active"} aria-pressed={!annual} onClick={() => setAnnual(false)}>Monthly</button>
+                <button type="button" className={annual ? "active" : ""} aria-pressed={annual} onClick={() => setAnnual(true)}>
+                  Annual<span className="save">Save 27%</span>
                 </button>
-              </form>
-              {leadError ? <p className="err">{leadError}</p> : null}
-              <p className={"ok" + (leadStatus === "success" ? " on" : "")}>Check your inbox. The guide is on its way.</p>
+              </div>
             </div>
-            <div className="pdf">
-              <img className="pdf-cover" src="/images/familypause-guide-cover.jpg" alt="The FamilyPause Guide" />
+            <div className="pricing-grid">
+              <article className="price-card">
+                <h3 className="price-label">Free</h3>
+                <div className="price-amount"><strong>$0</strong><span /></div>
+                <p className="price-sub">Try your first Pause, then one plan per week.</p>
+                <ul>
+                  {["Weekly planning Pause", "Conversation starters", "One shared weekly plan", "You approve every calendar item"].map((item) => (
+                    <li key={item}><Ic name="check" />{item}</li>
+                  ))}
+                </ul>
+                <button type="button" className="btn block" onClick={onStart}>Start Free</button>
+              </article>
+              <article className="price-card popular">
+                <div className="popular-badge"><Ic name="spark" />Most Popular</div>
+                <h3 className="price-label">Family Plan</h3>
+                <div className="price-amount"><strong>{familyAmount}</strong><span>{familyPeriod}</span></div>
+                <p className="price-sub">{familySub}</p>
+                <ul>
+                  {["Everything in Free", "Full shared planning tools", "Calendar-ready plans", "Reminders for both of you"].map((item) => (
+                    <li key={item}><Ic name="check" />{item}</li>
+                  ))}
+                </ul>
+                <button type="button" className="btn primary block" onClick={onStart}>Choose Family Plan</button>
+              </article>
+              <article className="price-card">
+                <h3 className="price-label">Family Plan + Concierge</h3>
+                <div className="price-amount"><strong>$38</strong><span>/month</span></div>
+                <p className="price-sub">A real assistant locks your Pause every week.</p>
+                <ul>
+                  {["Everything in Family Plan", "Weekly scheduling support", "Both spouses coordinated", "Your Pause, locked in"].map((item) => (
+                    <li key={item}><Ic name="check" />{item}</li>
+                  ))}
+                </ul>
+                <button type="button" className="btn block" onClick={() => navigate("/contact")}>Add Concierge</button>
+              </article>
             </div>
+            <p className="pricing-note">Start free. Find your rhythm. Grow into what your family needs.<br />Concierge is billed monthly.</p>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <div className="cta" style={{ paddingTop: 0 }}>
-        <div className="wrap">
-          <div className="cta-box">
-            <h2>Your first Pause is this week.</h2>
-            <p>Twenty minutes. One plan. More time for each other.</p>
-            <button type="button" className="btn btn-w" onClick={onStart}>Start Free</button>
+        <section className="section shop-section" id="shop">
+          <div className="container">
+            <div className="shop-heading">
+              <div>
+                <div className="eyebrow">A little something for the table</div>
+                <h2>Make your Pause a ritual.</h2>
+              </div>
+              <span className="coming">Coming soon</span>
+            </div>
+            <div className="shop-grid">
+              {PRODUCTS.map((product) => (
+                <article className="product-card" key={product.id}>
+                  <div className="product-stage"><ProductArt type={product.type} /></div>
+                  <div className="product-details">
+                    <h3>{product.name}</h3>
+                    <div className="product-bottom">
+                      <strong>${product.price}</strong>
+                      <span className="coming">Coming soon</span>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
           </div>
-        </div>
-      </div>
+        </section>
 
-      <footer>
-        <div className="wrap">
-          <div className="ft-grid">
-            <div className="ft-brand">
-              <a href="/" className="logo" onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: "smooth" }); }}>
-                <FpLogo />
-              </a>
-              <p>A weekly planning ritual for married couples.</p>
-            </div>
+        <section className="guide-band" id="guide">
+          <div className="container guide-grid">
             <div>
-              <h5>How FamilyPause Helps</h5>
-              <ul>
-                <li><a href="#how" onClick={goToSection("how")}>Plan the week</a></li>
-                <li><a href="#together" onClick={goToSection("together")}>Time together</a></li>
-                <li><Link to="/cards">Conversation Cards</Link></li>
-                <li><a href="#concierge" onClick={goToSection("concierge")}>Concierge</a></li>
-              </ul>
+              <div className="eyebrow">A good place to begin</div>
+              <h2>Get Free FamilyPause Guide</h2>
+              <p>Your first calmer week starts with one good conversation. A simple guide to making your weekly Pause your own.</p>
+              {leadStatus === "success" ? (
+                <p className="guide-status">
+                  Check your inbox.{" "}
+                  <a href="/guide.pdf" download="FamilyPause-Guide.pdf">Download now</a>
+                </p>
+              ) : (
+                <form className="guide-form" onSubmit={submitGuide}>
+                  <label>
+                    <span className="sr-only">Your email address</span>
+                    <input
+                      name="email"
+                      type="email"
+                      required
+                      placeholder="Your email address"
+                      autoComplete="email"
+                      aria-label="Your email address"
+                      value={leadEmail}
+                      onChange={(event) => setLeadEmail(event.target.value)}
+                      disabled={leadStatus === "loading"}
+                    />
+                  </label>
+                  <button type="submit" className="btn primary" disabled={leadStatus === "loading"}>
+                    {leadStatus === "loading" ? "Sending…" : "Send my guide"}
+                    <Ic name="arrow" className="sm" />
+                  </button>
+                </form>
+              )}
+              {leadError ? <p className="guide-error">{leadError}</p> : null}
             </div>
-            <div>
-              <h5>Product</h5>
-              <ul>
-                <li><a href="#how" onClick={goToSection("how")}>How It Works</a></li>
-                <li><a href="#pricing" onClick={goToSection("pricing")}>Pricing</a></li>
-                <li><a href="#shop" onClick={goToSection("shop")}>Shop</a></li>
-                <li><a href="#shop" onClick={goToSection("shop")}>Free Guide</a></li>
-              </ul>
-            </div>
-            <div>
-              <h5>Company</h5>
-              <ul>
-                <li><Link to="/contact">About</Link></li>
-                <li><Link to="/contact">Gift FamilyPause</Link></li>
-                <li><Link to="/contact">Contact</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h5>Help</h5>
-              <ul>
-                <li><Link to="/contact">FAQ</Link></li>
-                <li><a href="/privacy.html">Privacy</a></li>
-                <li><a href="/terms.html">Terms</a></li>
-              </ul>
+            <div className="guide-art">
+              <div className="book">
+                <span className="mini-logo">FamilyPause</span>
+                <span className="mini-pause"><i /><i /></span>
+                <strong>A calmer week,<br />together.</strong>
+                <small>Your guide to the weekly family Pause.</small>
+              </div>
+              <div className="guide-caption">A simple conversation.<br />A shared plan.<br />A little more together.</div>
             </div>
           </div>
-          <div className="ft-b">
-            <span>FamilyPause is a product of Christian App Empire LLC.</span>
-            <span><Ico name="shield" size={16} />Ad-free. We never sell your family&apos;s information.</span>
-          </div>
-        </div>
-      </footer>
+        </section>
 
-      <ExitIntentModal onStarted={onStart} />
+        <section className="final-cta">
+          <div className="container">
+            <h2>Make this the week<br />you pause, together.</h2>
+            <p>Your next good week starts with twenty minutes.</p>
+            <button type="button" className="btn white" onClick={onStart}>Start Free<Ic name="arrow" /></button>
+            <StoreBadges />
+          </div>
+        </section>
+      </main>
+
+      <SiteFooter onSection={scrollOrNavigate} onHome={scrollHome} />
+      <ExitIntentModal />
     </div>
   );
 }

@@ -1,9 +1,23 @@
+@font-face {
+  font-family: "Plus Jakarta Sans";
+  src: url("/fonts/plus-jakarta-sans.woff2") format("woff2");
+  font-weight: 500 800;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Inter";
+  src: url("/fonts/inter.woff2") format("woff2");
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+}
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-  font-family: 'Lora', Georgia, serif;
-  background: radial-gradient(ellipse 120% 80% at 50% 0%, #FCF8F0 0%, #FBF6EC 55%, #F4EAD8 100%);
-  color: #2A251D;
+  font-family: 'Inter', system-ui, sans-serif;
+  background: radial-gradient(ellipse 120% 80% at 50% 0%, #FFFFFF 0%, #FFFFFF 55%, #EEF6F2 100%);
+  color: #0F172A;
   max-width: 680px;
   margin: 0 auto;
   padding: 48px 24px 80px;
@@ -12,46 +26,46 @@ body {
 }
 
 .back {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 13px; font-weight: 600;
+  letter-spacing: 0;
   margin-bottom: 28px;
 }
-.back a { color: #BE5A37; text-decoration: none; }
+.back a { color: #14805E; text-decoration: none; }
 .back a:hover { text-decoration: underline; }
 
 h1 {
-  font-family: 'Playfair Display', serif;
-  font-weight: 600;
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-weight: 800;
+  letter-spacing: -.03em;
   font-size: 2.25rem;
   margin-bottom: 8px;
   line-height: 1.1;
 }
 
 .meta {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: #8C8070;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 13px; font-weight: 600;
+  letter-spacing: 0;
+  color: #94A3B8;
   margin-bottom: 28px;
 }
 
 h2 {
-  font-family: 'Playfair Display', serif;
-  font-weight: 600;
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-weight: 800;
+  letter-spacing: -.02em;
   font-size: 1.2rem;
   margin-top: 32px;
   margin-bottom: 10px;
 }
 
-p { color: #5B5245; margin-bottom: 14px; font-size: 16px; }
+p { color: #475569; margin-bottom: 14px; font-size: 16px; }
 ul {
-  color: #5B5245;
+  color: #475569;
   margin: 0 0 14px;
   padding-left: 1.35em;
   font-size: 16px;
 }
 li { margin-bottom: 6px; }
-a { color: #BE5A37; }
+a { color: #14805E; }

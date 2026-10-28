@@ -9,7 +9,7 @@ const css = `
   min-height: 100vh;
   background:
     radial-gradient(700px 380px at 50% 0%, var(--terra-tint), transparent 65%),
-    #FAF7F2;
+    #FFFFFF;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -33,10 +33,10 @@ const css = `
   margin: 0 0 14px;
   font-family: var(--display);
   font-size: 28px;
-  font-style: italic;
-  font-weight: 600;
+  font-style: normal;
+  font-weight: 800;
   line-height: 1.2;
-  color: #2E2820;
+  color: #0F172A;
 }
 .fp-sub-title.is-soft {
   font-size: 24px;
@@ -46,7 +46,7 @@ const css = `
   font-family: var(--serif);
   font-size: 16px;
   line-height: 1.6;
-  color: #6A5A40;
+  color: #475569;
 }
 .fp-sub-body.is-mid {
   font-size: 14px;
@@ -58,14 +58,14 @@ const css = `
   min-height: 48px;
   padding: 14px 28px;
   border: none;
-  border-radius: 8px;
+  border-radius: 9999px;
   background: var(--terra);
   color: #fff;
   font-family: var(--serif);
   font-size: 16px;
   font-weight: 500;
   cursor: pointer;
-  box-shadow: 0 8px 20px rgba(190, 90, 55, .24);
+  box-shadow: 0 8px 20px rgba(20,128,94, .24);
   transition: background .15s, transform .12s;
 }
 .fp-sub-btn:hover { background: var(--terra-d); transform: translateY(-1px); }
@@ -91,9 +91,9 @@ const css = `
 }
 .fp-sub-note {
   margin: 18px 0 0;
-  font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: .04em;
+  font-family: var(--mono); font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 0;
   color: var(--ink-3);
 }
 `;
@@ -175,7 +175,7 @@ export function SubscribeSuccess() {
       />
       <style>{css}</style>
       <div className="fp-sub-card">
-        <img className="fp-sub-mark" src="/uploads/Logo_4.png" alt="" />
+        <img className="fp-sub-mark" src="/fp-mark.svg" alt="" />
         <h1 className="fp-sub-title">{title}</h1>
         <p className="fp-sub-body">{body}</p>
         <button
@@ -204,7 +204,7 @@ export function SubscribeCancel() {
       />
       <style>{css}</style>
       <div className="fp-sub-card">
-        <img className="fp-sub-mark" src="/uploads/Logo_4.png" alt="" />
+        <img className="fp-sub-mark" src="/fp-mark.svg" alt="" />
         <h1 className="fp-sub-title is-soft">No worries.</h1>
         <p className="fp-sub-body is-mid">You can upgrade anytime from your account settings.</p>
         <button
