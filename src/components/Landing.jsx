@@ -12,7 +12,7 @@ import "../styles/site.css";
 const LANDING_SECTION_IDS = new Set([
   "how-it-works",
   "conversation-cards",
-  "concierge",
+  "family-assistant",
   "pricing",
   "shop",
   "guide",
@@ -669,15 +669,15 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
           </div>
         </section>
 
-        <section className="section" id="concierge">
+        <section className="section" id="family-assistant">
           <div className="container concierge-grid">
             <div className="concierge-copy">
-              <span className="pill sun"><Ic name="users" className="sm" />Real person, every week</span>
-              <div className="eyebrow">Your FamilyPause concierge</div>
+              <span className="pill sun"><Ic name="users" className="sm" />A real person, every week</span>
+              <div className="eyebrow">Your Family Assistant</div>
               <h2>Never be the one who has to bring it up.</h2>
-              <p>You shouldn’t have to carry the planning of the planning. A real assistant finds a time that works for both of you, sends the invite, and helps you keep your Pause.</p>
+              <p>A real person who locks in your weekly Pause and your time together, every week.</p>
               <button type="button" className="btn primary" onClick={() => navigate("/contact")}>
-                Add Concierge<Ic name="arrow" />
+                Add Family Assistant<Ic name="arrow" />
               </button>
             </div>
             <div className="concierge-visual">
@@ -686,7 +686,7 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                 <div className="email-header">
                   <span className="assistant-avatar"><Ic name="users" /></span>
                   <div>
-                    <strong>Your FamilyPause assistant</strong>
+                    <strong>FamilyPause Family Assistant</strong>
                     <span>To: Spence and Amanda</span>
                   </div>
                   <time>MON, 9:00 AM</time>
@@ -808,18 +808,18 @@ export default function Landing({ onSignIn = () => {}, onStart = () => {} }) {
                 <button type="button" className="btn primary block" onClick={onStart}>Choose Family Plan</button>
               </article>
               <article className="price-card">
-                <h3 className="price-label">Family Plan + Concierge</h3>
+                <h3 className="price-label">Family Plan + Family Assistant</h3>
                 <div className="price-amount"><strong>$38</strong><span>/month</span></div>
-                <p className="price-sub">A real assistant locks your Pause every week.</p>
+                <p className="price-sub">A real person who locks in your weekly Pause and your time together, every week.</p>
                 <ul>
                   {["Everything in Family Plan", "Weekly scheduling support", "Both spouses coordinated", "Your Pause, locked in"].map((item) => (
                     <li key={item}><Ic name="check" />{item}</li>
                   ))}
                 </ul>
-                <button type="button" className="btn block" onClick={() => navigate("/contact")}>Add Concierge</button>
+                <button type="button" className="btn block" onClick={() => navigate("/contact")}>Add Family Assistant</button>
               </article>
             </div>
-            <p className="pricing-note">Start free. Find your rhythm. Grow into what your family needs.<br />Concierge is billed monthly.</p>
+            <p className="pricing-note">Start free. Find your rhythm. Grow into what your family needs.<br />Family Assistant is billed monthly.</p>
           </div>
         </section>
 

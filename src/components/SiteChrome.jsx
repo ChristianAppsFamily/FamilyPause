@@ -118,7 +118,7 @@ export function SiteNav({ onSignIn, onStart, onSection, onHome }) {
           <a href="/#how-it-works" onClick={section("how-it-works")}>How It Works</a>
           <a href="/#conversation-cards" onClick={section("conversation-cards")}>Conversation Cards</a>
           <a href="/#pricing" onClick={section("pricing")}>Pricing</a>
-          <a href="/#concierge" onClick={section("concierge")}>Concierge</a>
+          <a href="/#family-assistant" onClick={section("family-assistant")}>Family Assistant</a>
           <Link to="/blog" onClick={closeMenu}>Blog</Link>
         </nav>
         <div className="nav-actions">
@@ -163,7 +163,7 @@ export function SiteFooter({ onSection, onHome }) {
             <a href="/#how-it-works" onClick={section("how-it-works")}>How it works</a>
             <a href="/#conversation-cards" onClick={section("conversation-cards")}>Conversation Cards</a>
             <a href="/#pricing" onClick={section("pricing")}>Pricing</a>
-            <a href="/#concierge" onClick={section("concierge")}>Concierge</a>
+            <a href="/#family-assistant" onClick={section("family-assistant")}>Family Assistant</a>
           </div>
           <div className="footer-column">
             <h3>Company</h3>
