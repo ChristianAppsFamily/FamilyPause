@@ -375,6 +375,7 @@ h1 em, h2 em, h3 em { font-style: normal; color: var(--em); }
 .pdot.person1 { background: var(--blue); }
 .pdot.person2 { background: var(--violet); }
 .pdot.both   { background: var(--amber); }
+.pdot.kid    { background: #FF6F61; }
 
 /* date pill (from screens.css) */
 .datepill {

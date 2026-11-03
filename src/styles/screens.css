@@ -1103,6 +1103,41 @@
 .plan-summary-sub {
   color: var(--ink-2); font-size: 16px; max-width: 520px; margin: 0 auto; line-height: 1.45;
 }
+.plan-summary-actions {
+  display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 18px;
+}
+.plan-summary-note {
+  margin: 12px 0 0; font-size: 14px; color: var(--ink-2);
+}
+.planitem-actions {
+  display: flex; align-items: center; gap: 8px; margin-top: 8px; flex-wrap: wrap;
+}
+.plan-cal-menu-wrap { position: relative; }
+.plan-cal-icon {
+  width: 32px; height: 32px; border-radius: 999px; border: 1.5px solid var(--line);
+  background: #fff; color: var(--ink-2); display: grid; place-items: center; cursor: pointer;
+}
+.plan-cal-icon:hover { border-color: var(--em); color: var(--em); }
+.plan-cal-menu {
+  position: absolute; z-index: 5; top: 36px; left: 0; min-width: 180px;
+  background: #fff; border: 1px solid var(--line); border-radius: 12px;
+  box-shadow: 0 10px 28px rgba(15,23,42,.12); padding: 6px; display: grid; gap: 2px;
+}
+.plan-cal-menu button {
+  text-align: left; border: 0; background: transparent; padding: 10px 12px;
+  border-radius: 8px; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; color: var(--ink);
+}
+.plan-cal-menu button:hover { background: var(--mint); color: var(--em-d); }
+.plan-reminder-select select {
+  font: inherit; font-size: 12px; font-weight: 600; border: 1.5px solid var(--line);
+  border-radius: 999px; padding: 6px 12px; background: #fff; color: var(--ink-2);
+}
+.plan-bell-chip { gap: 5px; }
+.pdot.kid { background: #FF6F61; }
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+}
 
 .plancol { opacity: 1; transform: none; }
 .plancol:not(.plancol--in) {

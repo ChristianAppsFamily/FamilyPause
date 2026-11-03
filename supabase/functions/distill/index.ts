@@ -54,13 +54,14 @@ MEETING DATE ANCHOR: ${meetingDate} (${meetingDay})
 Use this date to resolve every relative day mentioned in the transcript.
 
 HOW YOUR OUTPUT IS USED:
-Every extracted item will be written to the family's Google Calendar — not only appointments.
-- type:"event" → a normal timed calendar entry; the app uses the task text as the event title (no type prefix).
-- type:"action" → calendar entry titled like "To-Do: {task}"
-- type:"decision" → calendar entry titled like "Decision: {task}"
-- type:"note" → calendar entry titled like "Note: {task}"
-If date/time are null, the app still keeps the item and asks the family to assign a date/time (or defaults to an all-day entry on the meeting date). Prefer accurate nulls over inventing dates.
-You still return a "task" string and a "type" field — the app may add a type prefix for non-events. Do not put "To-Do:" / "Decision:" / "Note:" / "Reminder:" inside the task text yourself.
+Every extracted item becomes a FamilyPause plan card. Families add dated items to their own calendars (Google template / .ics) and may get FamilyPause email reminders — nothing is auto-pushed to Google Calendar.
+- type:"event" → appointment / calendar event; task text is the title (no type prefix).
+- type:"action" → to-do; titled like "To-Do: {task}"
+- type:"decision" → titled like "Decision: {task}"
+- type:"note" → titled like "Note: {task}"
+- type:"time_together" → protected couple/family time (date night, weekly Pause, "every Thursday"); task text is the title (no type prefix).
+If date/time are null, the app still keeps the item. Prefer accurate nulls over inventing dates or times.
+Do not put "To-Do:" / "Decision:" / "Note:" / "Reminder:" inside the task text yourself.
 
 YOUR JOB: Extract EVERY actionable item, appointment, errand, decision, task, or commitment — exhaustively. Do not skip, merge, or summarize away distinct people or appointments. If the transcript names 3 appointments, return 3 cards. Do not invent filler notes.
 
@@ -80,11 +81,12 @@ Each item object:
   "source": (exact phrase from transcript, under 15 words),
   "date": "YYYY-MM-DD" or null,
   "time": "HH:MM" 24-hour or null,
-  "type": "action" | "event" | "decision" | "note",
+  "type": "action" | "event" | "decision" | "note" | "time_together",
   "recurring": true | false,
   "date_only": true | false,
+  "date_precision": "day" | "month" | omit (default day),
   "byday": ["MO"|"TU"|"WE"|"TH"|"FR"|"SA"|"SU"] or omit,
-  "duration_minutes": integer or null
+  "duration_minutes": integer or null (ONLY when a duration was spoken — never invent 60)
 }
 
 TASK TITLES (person name in the title — important):
@@ -104,10 +106,14 @@ DATE & TIME EXTRACTION (critical):
 - Parse times into 24h HH:MM: "6:30pm"→18:30, "1pm"→13:00, "8pm"→20:00, "4:15"→16:15 (assume PM for bare afternoon hours 1–6 without am/pm).
 - Vague periods without a clock time leave time null: "Saturday morning", "Sunday afternoon", "evening" without a number.
 - Birthdays, due dates, and deadlines with a calendar date but no clock time: set date_only:true and leave time null. Do not invent a clock time (no 10:00, no midnight).
-- Set recurring:true only when the transcript says the commitment continues every week (or similar) after this week — "every Tuesday", "weekly", "each week". Optionally include byday with Google weekday codes (MO TU WE TH FR SA SU) on that single series card.
-- If the same commitment is named on more than one day THIS week (soccer Tuesday and Thursday; project work Monday, Wednesday, and Thursday), emit ONE CARD PER DATE with the same task text. Do not merge those days into one card. Set recurring:false unless they also said it continues every week after. Never drop a day's occurrence because the title matches another card.
-- Set type:"event" for appointments with a person, place, or clock time (barber, dental, massage, school, doctor). type:"action" for tasks and errands; type:"decision" when the family agreed on a choice; type:"note" only for context that is not a task. Never use note/action for "set reminder" phrases.
-- ONLY leave date null when no day/date is mentioned at all. ONLY leave time null when no specific clock time is mentioned. Null date/time is expected for many actions, decisions, and notes.
+- NEVER invent a time. Decisions and notes have no time unless one was said.
+- Deferred / postponed phrases ("revisit in the new year", "not now", "later", "someday", "after the holidays") → date:null, time:null. Do not force a planning-week date.
+- Month-only phrases ("by mid-December", "sometime in March", "before January") → date_precision:"month", date as YYYY-MM-01 for that month, time:null, date_only:true. Do not invent a day of month.
+- "Every Thursday" / weekly couple time / protected Pause → type:"time_together", recurring:true, byday with the weekday code, and the next occurrence date in the planning window when possible.
+- Set recurring:true when the transcript says the commitment continues every week (or similar) — "every Tuesday", "weekly", "each week". Include byday (MO TU WE TH FR SA SU) on that series card.
+- If the same commitment is named on more than one day THIS week (soccer Tuesday and Thursday), emit ONE CARD PER DATE with the same task text. Set recurring:false unless they also said it continues every week after.
+- Set type:"event" for appointments with a person, place, or clock time (barber, dental, massage, school, doctor). type:"action" for tasks and errands; type:"decision" when the family agreed on a choice; type:"note" only for context that is not a task; type:"time_together" for protected time together. Never use note/action for "set reminder" phrases.
+- ONLY leave date null when no day/date is mentioned at all (or the item is deferred). ONLY leave time null when no specific clock time is mentioned. Null date/time is expected for many actions, decisions, and notes.
 
 EXHAUSTIVE EXTRACTION RULES:
 - Include errands ("oil change on the van"), kid tasks ("pick the summer camp"), scheduling items, and follow-ups — even if brief.

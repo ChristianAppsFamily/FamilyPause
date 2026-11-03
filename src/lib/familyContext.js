@@ -29,7 +29,8 @@ export function normalizePersonField(rawPerson, context = {}) {
   const firstMatches = known.filter((p) => firstName(p) === rawFirst);
   if (firstMatches.length === 1) return firstMatches[0];
 
-  return "Family";
+  // Keep the spoken name when we can't confidently map it — don't collapse to Family.
+  return raw;
 }
 
 /** @param {object[]} cards @param {{ people?: string[], kids?: string[] }} context */
@@ -45,7 +46,8 @@ export function normalizeCardPeople(cards, context) {
       date_only: dateOnly,
       duration_minutes: dateOnly
         ? null
-        : (c.duration_minutes ?? (c.date && c.time ? 60 : null)),
+        : (c.duration_minutes != null ? c.duration_minutes : null),
+      date_precision: c.date_precision || null,
       calendar_synced: !!c.calendar_synced,
       calendar_sync_failed: !!c.calendar_sync_failed,
       google_event_id: c.google_event_id ?? null,

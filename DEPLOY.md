@@ -525,26 +525,34 @@ supabase db push
 2. **Deploy functions:**
 
 ```bash
+supabase db push   # or apply supabase/migrations/20261103_plan_calendar_reminders_v2.sql
 supabase functions deploy schedule-reminders
-supabase functions deploy send-plan-item-reminders --no-verify-jwt
+supabase functions deploy send-due-reminders --no-verify-jwt
+supabase functions deploy email-plan
 ```
 
-3. **Cron** (Dashboard → Edge Functions → Cron Jobs, or `pg_cron` + `net.http_post`):
+3. **Cron** every 5 minutes (`pg_cron` + `pg_net`, or Dashboard Edge Function Cron):
 
 ```
-*/15 * * * *
+*/5 * * * *
 ```
 
-Target URL: `https://<PROJECT_REF>.supabase.co/functions/v1/send-plan-item-reminders`  
-Header: `Authorization: Bearer <REMINDER_CRON_SECRET>` (if that secret is set)
+Target URL: `https://<PROJECT_REF>.supabase.co/functions/v1/send-due-reminders`  
+Header: `Authorization: Bearer <REMINDER_CRON_SECRET>`
 
-4. **Secrets** (reuse existing where possible):
+4. **Secrets**:
 
 - `RESEND_API_KEY` (required)
 - `REMINDER_CRON_SECRET` (recommended)
-- `REMINDER_FROM_EMAIL` or `LEAD_FROM_EMAIL` (optional; defaults to `FamilyPause <hello@mail.familypause.com>`)
-- `PUBLIC_APP_ORIGIN` (optional; defaults to `https://www.familypause.com` for ICS links)
+- `LINK_SIGNING_SECRET` (required for Done / Snooze / Add to calendar email buttons; also set on Vercel)
+- `REMINDER_FROM_EMAIL` (optional; defaults to `FamilyPause <reminders@familypause.com>`)
+- `PUBLIC_APP_ORIGIN` (optional; defaults to `https://www.familypause.com`)
 
-5. **ICS download** — Vercel route `GET /api/calendar-ics?token=<access_token>` (needs `SUPABASE_SERVICE_ROLE_KEY` on Vercel).
+5. **Routes**
+
+- ICS download: `GET /api/calendar-ics?token=<access_token>`
+- Reminder actions: `GET /api/reminder-action?token=<signed>` (Vercel needs `LINK_SIGNING_SECRET` + `SUPABASE_SERVICE_ROLE_KEY`)
+
+Legacy `send-plan-item-reminders` can stay deployed but cron should point at `send-due-reminders`.
 
 This is separate from **weekly meeting reminders** (`send-weekly-reminders` + workspace `reminder_day` / `reminder_time`), which nudge families to run FamilyPause itself.

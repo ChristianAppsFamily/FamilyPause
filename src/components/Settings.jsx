@@ -32,7 +32,10 @@ import {
   getCalendarConnection,
   startGoogleCalendarConnect,
   disconnectGoogleCalendar,
+  getUserTimeZone,
 } from "../lib/googleCalendar";
+import { ENABLE_GOOGLE_CALENDAR_SYNC } from "../lib/planReminders";
+import { DEFAULT_TIME_ZONE } from "../lib/remindAt";
 import CalendarAccountChooser from "./CalendarAccountChooser";
 import BillingPeriodToggle from "./BillingPeriodToggle";
 import ReminderPicker, {
@@ -44,6 +47,20 @@ import ReminderPicker, {
   normalizeReminderTime,
 } from "./ReminderPicker";
 import "../styles/reminder.css";
+
+const COMMON_TIMEZONES = [
+  "America/Los_Angeles",
+  "America/Denver",
+  "America/Chicago",
+  "America/New_York",
+  "America/Phoenix",
+  "Pacific/Honolulu",
+  "America/Anchorage",
+  "Europe/London",
+  "Europe/Paris",
+  "Australia/Sydney",
+  "Pacific/Auckland",
+];
 
 const css = `
   .set-sec { padding: 24px 26px; margin-bottom: 18px; }
@@ -275,6 +292,13 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
   const [reminderEditing, setReminderEditing] = useState(false);
   const [reminderSaving, setReminderSaving] = useState(false);
   const [reminderSaved, setReminderSaved] = useState(false);
+  const [timezone, setTimezone] = useState(() => workspace?.timezone || getUserTimeZone() || DEFAULT_TIME_ZONE);
+  const [reminderEmailsEnabled, setReminderEmailsEnabled] = useState(
+    () => workspace?.reminder_emails_enabled !== false,
+  );
+  const [tzSaving, setTzSaving] = useState(false);
+  const [testReminderBusy, setTestReminderBusy] = useState(false);
+  const [testReminderNotice, setTestReminderNotice] = useState("");
 
   // ── Members who accepted invite ────────────────────────────────────────────
   const [members, setMembers] = useState([]);
@@ -505,6 +529,64 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
     setReminderSaved(true);
     setTimeout(() => setReminderSaved(false), 2500);
     onWorkspaceUpdate?.(data || { ...workspace, reminder_day: day, reminder_time: time });
+  };
+
+  const saveTimezonePrefs = async (patch) => {
+    if (!workspace?.id || tzSaving) return;
+    setTzSaving(true);
+    setError("");
+    const next = {
+      timezone: patch.timezone ?? timezone,
+      reminder_emails_enabled: patch.reminder_emails_enabled ?? reminderEmailsEnabled,
+    };
+    const { data, error: err } = await supabase
+      .from("workspaces")
+      .update(next)
+      .eq("id", workspace.id)
+      .select("*")
+      .maybeSingle();
+    setTzSaving(false);
+    if (err) {
+      setError(err.message || "Couldn't save reminder preferences.");
+      return;
+    }
+    setTimezone(next.timezone);
+    setReminderEmailsEnabled(next.reminder_emails_enabled);
+    onWorkspaceUpdate?.(data || { ...workspace, ...next });
+  };
+
+  const sendTestReminder = async () => {
+    if (!workspace?.id || testReminderBusy) return;
+    setTestReminderBusy(true);
+    setTestReminderNotice("");
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const pad = (n) => String(n).padStart(2, "0");
+    const eventDate = `${tomorrow.getFullYear()}-${pad(tomorrow.getMonth() + 1)}-${pad(tomorrow.getDate())}`;
+    const { error: err } = await supabase.from("plan_item_reminders").insert({
+      workspace_id: workspace.id,
+      card_id: `test-${Date.now()}`,
+      title: "FamilyPause test reminder",
+      description: "This is a test reminder from Settings.",
+      event_date: eventDate,
+      event_time: "09:00",
+      date_only: false,
+      reminder_offset_minutes: 0,
+      remind_at: new Date().toISOString(),
+      send_at: new Date().toISOString(),
+      status: "pending",
+      ics_uid: `test-${workspace.id}@familypause.com`,
+      recipient: "holder",
+      kind: "reminder",
+      reminder_choice: "morning_of",
+      attempts: 0,
+    });
+    setTestReminderBusy(false);
+    if (err) {
+      setTestReminderNotice(err.message || "Could not queue a test reminder.");
+      return;
+    }
+    setTestReminderNotice("Test reminder queued. It will send on the next cron run (within a few minutes).");
   };
 
   // ── Plan + trial ───────────────────────────────────────────────────────────
@@ -868,7 +950,65 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
           </button>
         </section>
 
+        {/* ── PLAN REMINDERS ──────────────────────────────────────────── */}
+        <section className="panel set-sec rise">
+          <div className="eyebrow">Plan reminders</div>
+          <h2>Email reminders</h2>
+          <p className="set-sub">
+            FamilyPause emails you (and your spouse, when linked) before plan items.
+            Times use your account timezone.
+          </p>
+          <label className="set-sub" style={{ display: "block", marginBottom: 8 }}>
+            Timezone
+            <select
+              className="field"
+              style={{ display: "block", width: "100%", marginTop: 6 }}
+              value={timezone}
+              disabled={tzSaving}
+              onChange={(e) => {
+                const next = e.target.value;
+                setTimezone(next);
+                saveTimezonePrefs({ timezone: next });
+              }}
+            >
+              {[timezone, ...COMMON_TIMEZONES].filter((v, i, a) => a.indexOf(v) === i).map((tz) => (
+                <option key={tz} value={tz}>{tz}</option>
+              ))}
+            </select>
+          </label>
+          <button
+            type="button"
+            className={"set-toggle" + (reminderEmailsEnabled ? " is-on" : "")}
+            onClick={() => {
+              const next = !reminderEmailsEnabled;
+              setReminderEmailsEnabled(next);
+              saveTimezonePrefs({ reminder_emails_enabled: next });
+            }}
+            aria-pressed={reminderEmailsEnabled}
+            aria-label={reminderEmailsEnabled ? "Reminder emails on" : "Reminder emails off"}
+          >
+            <span>{reminderEmailsEnabled ? "Reminder emails on" : "Reminder emails off"}</span>
+            <span className="set-toggle-track" aria-hidden="true">
+              <span className="set-toggle-thumb" />
+            </span>
+          </button>
+          <div style={{ marginTop: 14 }}>
+            <button
+              type="button"
+              className="btn btn-soft"
+              disabled={testReminderBusy || !reminderEmailsEnabled}
+              onClick={sendTestReminder}
+            >
+              {testReminderBusy ? "Queuing…" : "Send me a test reminder"}
+            </button>
+            {testReminderNotice ? (
+              <p className="set-sub" style={{ marginTop: 10 }}>{testReminderNotice}</p>
+            ) : null}
+          </div>
+        </section>
+
         {/* ── GOOGLE CALENDAR ─────────────────────────────────────────── */}
+        {ENABLE_GOOGLE_CALENDAR_SYNC ? (
         <section className="panel set-sec rise">
           <div className="eyebrow">Integrations</div>
           <h2>Connect Google Calendar</h2>
@@ -961,6 +1101,7 @@ export default function Settings({ workspace, user, onSignOut, onClose, onOpenDe
             <a className="set-inline-link" href="/privacy.html" target="_blank" rel="noopener noreferrer">Privacy</a>
           </p>
         </section>
+        ) : null}
 
         {/* ── SIGN OUT ───────────────────────────────────────────────── */}
         <section className="panel set-sec rise">

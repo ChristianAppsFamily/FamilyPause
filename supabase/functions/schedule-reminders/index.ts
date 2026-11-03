@@ -1,9 +1,13 @@
 // schedule-reminders — JWT required.
-// Inserts plan_item_reminders rows for kept cards before the session is deleted.
+// Replaces pending plan_item_reminders for kept cards (holder + spouse).
 // Deploy: supabase functions deploy schedule-reminders
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { computeRemindAt } from "../_shared/remindAt.ts";
+import {
+  coerceReminderChoice,
+  computeReminderSends,
+  DEFAULT_TIME_ZONE,
+} from "../_shared/remindAt.ts";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -17,8 +21,6 @@ const json = (body: unknown, status = 200) =>
     headers: { ...cors, "Content-Type": "application/json" },
   });
 
-const DEFAULT_OFFSET = 1440; // 1 day before
-
 type InCard = {
   id?: number | string;
   status?: string;
@@ -27,25 +29,13 @@ type InCard = {
   date?: string | null;
   time?: string | null;
   date_only?: boolean;
+  date_precision?: string | null;
   calendar_reminder?: string | null;
-  calendar_reminder_minutes?: number | null;
-  duration_minutes?: number | null;
   type?: string;
+  duration_minutes?: number | null;
+  recurring?: boolean;
+  byday?: string[] | null;
 };
-
-function reminderOffsetMinutes(card: InCard): number | null {
-  const choice = card.calendar_reminder;
-  if (choice === "none") return null;
-  if (choice == null || choice === "") return DEFAULT_OFFSET;
-  if (choice === "custom") {
-    const m = Number(card.calendar_reminder_minutes);
-    if (!Number.isFinite(m) || m < 0) return DEFAULT_OFFSET;
-    return Math.round(m);
-  }
-  const m = Number(choice);
-  if (!Number.isFinite(m) || m < 0) return DEFAULT_OFFSET;
-  return Math.round(m);
-}
 
 function keptStatus(card: InCard) {
   const s = String(card.status || "").toLowerCase();
@@ -55,11 +45,20 @@ function keptStatus(card: InCard) {
 function calendarTitle(card: InCard): string {
   const task = (card.task || "").trim() || "Untitled";
   const type = (card.type || "action").toLowerCase();
-  if (type === "event") return task;
+  if (type === "event" || type === "time_together") return task;
   if (type === "action") return task.startsWith("To-Do:") ? task : `To-Do: ${task}`;
   if (type === "decision") return task.startsWith("Decision:") ? task : `Decision: ${task}`;
   if (type === "note") return task.startsWith("Note:") ? task : `Note: ${task}`;
   return task;
+}
+
+function offsetMinutesForChoice(choice: string): number {
+  if (choice === "morning_of") return 0;
+  if (choice === "1_hour") return 60;
+  if (choice === "day_before") return 1440;
+  if (choice === "checkin_9am") return 0;
+  const n = Number(choice);
+  return Number.isFinite(n) ? n : 1440;
 }
 
 Deno.serve(async (req) => {
@@ -85,44 +84,98 @@ Deno.serve(async (req) => {
       session_id?: string | null;
       meeting_date?: string;
       cards?: InCard[];
+      card_ids_to_cancel?: string[];
     };
 
     const workspaceId = body.workspace_id;
     if (!workspaceId) return json({ error: "Missing workspace_id" }, 400);
-    if (!Array.isArray(body.cards)) return json({ error: "Missing cards" }, 400);
+    if (!Array.isArray(body.cards) && !Array.isArray(body.card_ids_to_cancel)) {
+      return json({ error: "Missing cards" }, 400);
+    }
 
     const { data: membership } = await supabase
       .from("workspace_members")
-      .select("workspace_id")
+      .select("workspace_id, role")
       .eq("workspace_id", workspaceId)
       .eq("user_id", user.id)
       .maybeSingle();
     if (!membership) return json({ error: "Forbidden" }, 403);
 
     const admin = createClient(supabaseUrl, serviceKey);
+
+    const { data: ws } = await admin
+      .from("workspaces")
+      .select("id, timezone, reminder_emails_enabled, owner_id")
+      .eq("id", workspaceId)
+      .maybeSingle();
+
+    const timeZone = ws?.timezone || DEFAULT_TIME_ZONE;
+
+    const { data: members } = await admin
+      .from("workspace_members")
+      .select("user_id, role")
+      .eq("workspace_id", workspaceId);
+
+    const memberList = members || [];
+    const recipients: Array<"holder" | "spouse"> = ["holder"];
+    if (memberList.length >= 2) recipients.push("spouse");
+
+    // Cancel pending for discarded cards
+    for (const id of body.card_ids_to_cancel || []) {
+      await admin
+        .from("plan_item_reminders")
+        .update({ status: "cancelled", updated_at: new Date().toISOString() })
+        .eq("workspace_id", workspaceId)
+        .eq("card_id", String(id))
+        .eq("status", "pending");
+    }
+
     const meetingDate = body.meeting_date || null;
     const scheduled: Array<{
       card_id: string;
       reminder_id: string;
       reminder_offset_minutes: number;
       remind_at: string;
+      send_at: string;
+      recipient: string;
+      kind: string;
       access_token: string;
+      reminder_choice: string;
     }> = [];
     const skipped: Array<{ card_id: string; reason: string }> = [];
 
-    for (const card of body.cards) {
+    for (const card of body.cards || []) {
       const cardId = String(card.id ?? "");
       if (!cardId) {
         skipped.push({ card_id: "", reason: "missing_id" });
         continue;
       }
       if (!keptStatus(card)) {
+        await admin
+          .from("plan_item_reminders")
+          .update({ status: "cancelled", updated_at: new Date().toISOString() })
+          .eq("workspace_id", workspaceId)
+          .eq("card_id", cardId)
+          .eq("status", "pending");
         skipped.push({ card_id: cardId, reason: "not_kept" });
         continue;
       }
 
-      const offset = reminderOffsetMinutes(card);
-      if (offset === null) {
+      // Replace pending rows for this card
+      await admin
+        .from("plan_item_reminders")
+        .update({ status: "cancelled", updated_at: new Date().toISOString() })
+        .eq("workspace_id", workspaceId)
+        .eq("card_id", cardId)
+        .eq("status", "pending");
+
+      if (card.date_precision === "month") {
+        skipped.push({ card_id: cardId, reason: "month_only" });
+        continue;
+      }
+
+      const choice = coerceReminderChoice(card);
+      if (choice === "none") {
         skipped.push({ card_id: cardId, reason: "none" });
         continue;
       }
@@ -134,57 +187,73 @@ Deno.serve(async (req) => {
       }
 
       const dateOnly = !!card.date_only || !card.time;
-      if (!dateOnly && !card.time) {
-        skipped.push({ card_id: cardId, reason: "missing_time" });
-        continue;
-      }
-
-      const remindAt = computeRemindAt({
+      const sends = computeReminderSends({
         event_date: eventDate,
         event_time: dateOnly ? null : card.time,
         date_only: dateOnly,
-        reminder_offset_minutes: offset,
+        reminder_choice: choice,
+        type: card.type,
+        timeZone,
       });
+
+      if (!sends.length) {
+        skipped.push({ card_id: cardId, reason: "none" });
+        continue;
+      }
 
       const title = calendarTitle(card);
       const description = (card.source || card.task || title || "").slice(0, 2000);
       const icsUid = `${cardId}-${workspaceId}@familypause.com`;
 
-      const row = {
-        workspace_id: workspaceId,
-        session_id: body.session_id || null,
-        card_id: cardId,
-        title,
-        description,
-        event_date: eventDate,
-        event_time: dateOnly ? null : String(card.time),
-        date_only: dateOnly,
-        reminder_offset_minutes: offset,
-        remind_at: remindAt.toISOString(),
-        status: "pending",
-        ics_uid: icsUid,
-        updated_at: new Date().toISOString(),
-      };
+      for (const send of sends) {
+        for (const recipient of recipients) {
+          const row = {
+            workspace_id: workspaceId,
+            session_id: body.session_id || null,
+            card_id: cardId,
+            title,
+            description,
+            event_date: eventDate,
+            event_time: dateOnly ? null : String(card.time),
+            date_only: dateOnly,
+            reminder_offset_minutes: offsetMinutesForChoice(send.choice),
+            remind_at: send.sendAt.toISOString(),
+            send_at: send.sendAt.toISOString(),
+            status: "pending",
+            ics_uid: icsUid,
+            recipient,
+            kind: send.kind,
+            reminder_choice: send.choice,
+            attempts: 0,
+            recurring: !!card.recurring,
+            updated_at: new Date().toISOString(),
+          };
 
-      const { data: inserted, error } = await admin
-        .from("plan_item_reminders")
-        .insert(row)
-        .select("id, access_token, remind_at, reminder_offset_minutes")
-        .single();
+          const { data: inserted, error } = await admin
+            .from("plan_item_reminders")
+            .insert(row)
+            .select("id, access_token, remind_at, send_at, reminder_offset_minutes, recipient, kind, reminder_choice")
+            .single();
 
-      if (error || !inserted) {
-        console.error("[schedule-reminders] insert", cardId, error);
-        skipped.push({ card_id: cardId, reason: "insert_failed" });
-        continue;
+          if (error || !inserted) {
+            console.error("[schedule-reminders] insert", cardId, error);
+            skipped.push({ card_id: cardId, reason: "insert_failed" });
+            continue;
+          }
+
+          scheduled.push({
+            card_id: cardId,
+            reminder_id: inserted.id,
+            reminder_offset_minutes: inserted.reminder_offset_minutes,
+            remind_at: inserted.send_at || inserted.remind_at,
+            send_at: inserted.send_at || inserted.remind_at,
+            recipient: inserted.recipient,
+            kind: inserted.kind,
+            access_token: inserted.access_token,
+            reminder_choice: inserted.reminder_choice || choice,
+          });
+        }
       }
-
-      scheduled.push({
-        card_id: cardId,
-        reminder_id: inserted.id,
-        reminder_offset_minutes: inserted.reminder_offset_minutes,
-        remind_at: inserted.remind_at,
-        access_token: inserted.access_token,
-      });
     }
 
     return json({
@@ -192,6 +261,8 @@ Deno.serve(async (req) => {
       scheduled_count: scheduled.length,
       scheduled,
       skipped,
+      timezone: timeZone,
+      reminder_emails_enabled: ws?.reminder_emails_enabled !== false,
     });
   } catch (e) {
     console.error("[schedule-reminders]", e);

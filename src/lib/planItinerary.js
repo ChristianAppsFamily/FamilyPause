@@ -56,6 +56,7 @@ export function buildItinerary(cards, meetingDate) {
 
   const byDate = Object.fromEntries(week.map((iso) => [iso, []]));
   const recurring = [];
+  const later = [];
 
   for (const card of dated) {
     if (card.recurring) {
@@ -63,6 +64,8 @@ export function buildItinerary(cards, meetingDate) {
     }
     if (inWeek.has(card.date)) {
       byDate[card.date].push(card);
+    } else if (!card.recurring) {
+      later.push(card);
     }
   }
 
@@ -70,6 +73,7 @@ export function buildItinerary(cards, meetingDate) {
     byDate[iso].sort((a, b) => timeSortKey(a) - timeSortKey(b));
   }
   recurring.sort((a, b) => timeSortKey(a) - timeSortKey(b));
+  later.sort((a, b) => String(a.date).localeCompare(String(b.date)) || timeSortKey(a) - timeSortKey(b));
 
   const days = week
     .filter((iso) => byDate[iso].length > 0)
@@ -79,7 +83,7 @@ export function buildItinerary(cards, meetingDate) {
       items: byDate[iso],
     }));
 
-  return { weekRange: formatItineraryWeekRange(meetingDate), days, recurring, unscheduled };
+  return { weekRange: formatItineraryWeekRange(meetingDate), days, recurring, later, unscheduled };
 }
 
 /**
@@ -88,7 +92,7 @@ export function buildItinerary(cards, meetingDate) {
  * @param {string} meetingDate
  */
 export function buildItineraryText(cards, meetingDate) {
-  const { weekRange, days, recurring, unscheduled } = buildItinerary(cards, meetingDate);
+  const { weekRange, days, recurring, later = [], unscheduled } = buildItinerary(cards, meetingDate);
   const lines = [`FamilyPause - Week of ${weekRange}`, ""];
 
   for (const day of days) {
@@ -105,6 +109,15 @@ export function buildItineraryText(cards, meetingDate) {
     for (const it of recurring) {
       const who = it.person ? `  (${it.person})` : "";
       lines.push(`Weekly · ${formatItineraryTime(it)}  ${calendarTitle(it)}${who}`);
+    }
+    lines.push("");
+  }
+
+  if (later.length) {
+    lines.push("LATER");
+    for (const it of later) {
+      const who = it.person ? `  (${it.person})` : "";
+      lines.push(`${it.date || ""} · ${formatItineraryTime(it)}  ${calendarTitle(it)}${who}`);
     }
     lines.push("");
   }

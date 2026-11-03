@@ -2,7 +2,20 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { prefersReducedMotion } from "../lib/motion";
 import { eventDayIndices, getPlanningWeekDates, weekStripLabels } from "../lib/planWeek";
 import { calendarTitle } from "../lib/googleCalendar";
-import { reminderScheduleOutcome, reminderLabelFromCard } from "../lib/planReminders";
+import {
+  reminderScheduleOutcome,
+  reminderLabelFromCard,
+  PLAN_REMINDER_OPTIONS,
+} from "../lib/planReminders";
+import {
+  buildGoogleTemplateUrl,
+  buildIcsCalendar,
+  downloadIcs,
+  formatPlanWhen,
+  isCalendarDated,
+  safeIcsFilename,
+} from "../lib/calendarLinks";
+import { DEFAULT_TIME_ZONE } from "../lib/remindAt";
 import { buildPlanMarkdown } from "../lib/planExport";
 import {
   buildItinerary,
@@ -24,17 +37,17 @@ const I = {
   check: "M5 12.5 10 17.5 19.5 6.5",
   cal: ["M7 3v3M17 3v3", "M4 8h16", "M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"],
   lock: ["M7 11V8a5 5 0 0 1 10 0v3", "M6 11h12v10H6z"],
+  bell: ["M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9", "M10 18a2 2 0 0 0 4 0"],
 };
 
 function formatWhen(cardOrDate, time) {
-  const date = typeof cardOrDate === "object" ? cardOrDate?.date : cardOrDate;
-  const clock = typeof cardOrDate === "object" ? cardOrDate?.time : time;
-  const dateOnly = typeof cardOrDate === "object" ? !!cardOrDate?.date_only : false;
+  if (typeof cardOrDate === "object" && cardOrDate) return formatPlanWhen(cardOrDate);
+  const date = cardOrDate;
+  const clock = time;
   if (!date) return "";
   const dt = new Date(date + "T" + (clock || "00:00") + ":00");
   const day = dt.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
-  if (dateOnly) return `${day} · All day`;
-  if (!clock) return `${day} · Choose a start time`;
+  if (!clock) return day;
   const t = dt.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
   return `${day} · ${t}`;
 }
@@ -175,7 +188,8 @@ function ItineraryView({ keptCards, meetingDate, roleOf, hasFamilyFeatures = fal
     setTimeout(cleanup, 1000);
   };
 
-  const empty = !itinerary.days.length && !itinerary.recurring.length && !itinerary.unscheduled.length;
+  const empty = !itinerary.days.length && !itinerary.recurring.length
+    && !(itinerary.later || []).length && !itinerary.unscheduled.length;
 
   return (
     <div className="itinerary">
@@ -226,6 +240,26 @@ function ItineraryView({ keptCards, meetingDate, roleOf, hasFamilyFeatures = fal
                           {" · "}
                           {calendarTitle(it)}
                         </span>
+                        {it.person ? (
+                          <span className={"itinerary-who itinerary-who--" + who}>{it.person}</span>
+                        ) : null}
+                      </li>
+                    );
+                  })}
+                </ul>
+              </section>
+            )}
+
+            {(itinerary.later || []).length > 0 && (
+              <section className="itinerary-day itinerary-later">
+                <h3 className="itinerary-day-h itinerary-day-h--muted">Later</h3>
+                <ul className="itinerary-list">
+                  {itinerary.later.map((it) => {
+                    const who = roleOf?.(it.person) || "both";
+                    return (
+                      <li className="itinerary-row" key={`later-${it.id}`}>
+                        <span className="itinerary-time">{it.date || "—"}</span>
+                        <span className="itinerary-task">{calendarTitle(it)}</span>
                         {it.person ? (
                           <span className={"itinerary-who itinerary-who--" + who}>{it.person}</span>
                         ) : null}
@@ -341,10 +375,18 @@ function SyncedCheckIcon({ draw }) {
 export default function PlanView({
   keptCards,
   adults,
+  kids = [],
   roleOf,
   onRestart,
   onEditReminders,
+  onReminderChange,
+  onMarkedAddedToCalendar,
+  onEmailPlan,
+  onAddAllToCalendar,
   meetingDate,
+  timeZone = DEFAULT_TIME_ZONE,
+  workspaceId = null,
+  spouseName = "",
   arrivalPhase = "done",
   arrivalMode = "static",
   showFirstConfetti = false,
@@ -374,68 +416,90 @@ export default function PlanView({
     [keptCards],
   );
 
+  const [calMenuId, setCalMenuId] = useState(null);
+  const [emailBusy, setEmailBusy] = useState(false);
+  const [emailNotice, setEmailNotice] = useState(null);
+
   const syncCopy = (() => {
     if (outcome.state === "succeeded") {
       const n = outcome.scheduled;
       return {
         seal: "ok",
-        eyebrow: "Step 5 · Reminders scheduled",
+        eyebrow: "Step 6 · Your week is set",
         sub: n === 1
           ? "1 reminder scheduled. We’ll email you with an Add to Calendar link."
           : `${n} reminders scheduled. We’ll email you with Add to Calendar links.`,
-        interstitial: "Reminders scheduled.",
+        interstitial: "Your week is set.",
       };
     }
     if (outcome.state === "partial") {
       return {
         seal: "partial",
-        eyebrow: "Step 5 · Needs attention",
+        eyebrow: "Step 6 · Your week is set",
         sub: reminderNotice
           || `${outcome.scheduled} reminder${outcome.scheduled === 1 ? "" : "s"} scheduled. ${outcome.failed || outcome.needsSet} still need a reminder.`,
-        interstitial: "Your week is built — some reminders need attention.",
+        interstitial: "Your week is set — some reminders need attention.",
       };
     }
     if (outcome.state === "failed") {
       return {
         seal: "failed",
-        eyebrow: "Step 5 · Reminders didn’t finish",
-        sub: reminderNotice || "Reminders could not be scheduled. Go back to review and try again.",
-        interstitial: "Your week is built — reminders were not scheduled.",
+        eyebrow: "Step 6 · Your week is set",
+        sub: reminderNotice || "Reminders could not be scheduled. You can still add items to your calendar.",
+        interstitial: "Your week is set.",
       };
     }
     if (outcome.state === "needs_set") {
       return {
         seal: "pending",
-        eyebrow: "Step 5 · Your week is built",
-        sub: `${outcome.needsSet} ${outcome.needsSet === 1 ? "item has" : "items have"} no reminder. Use Set reminder below if you want an email.`,
-        interstitial: "Your week is built.",
+        eyebrow: "Step 6 · Your week is set",
+        sub: `${outcome.needsSet} ${outcome.needsSet === 1 ? "item has" : "items have"} no reminder. Use Set reminder on a row if you want an email.`,
+        interstitial: "Your week is set.",
       };
     }
     return {
       seal: "ok",
-      eyebrow: "Step 5 · Your week is built",
+      eyebrow: "Step 6 · Your week is set",
       sub: "A clean plan, organized by person. Appointments timed, actions owned, nothing forgotten.",
-      interstitial: "Your week is built.",
+      interstitial: "Your week is set.",
     };
   })();
 
-
-  const isAdult = (p) => adults.some((a) => a.toLowerCase() === (p || "").toLowerCase());
+  const sharedNames = new Set(["both", "family", "shared", "everyone"]);
   const byPerson = (name) => keptCards.filter((c) => (c.person || "").toLowerCase() === name.toLowerCase());
-  const shared = keptCards.filter((c) => !isAdult(c.person));
 
   const personSections = useMemo(() => {
-    const cols = adults.slice(0, 2).map((name, i) => ({
-      key: name,
-      name,
-      who: i === 0 ? "person1" : "person2",
-      items: byPerson(name),
-    }));
+    const cols = [];
+    adults.forEach((name, i) => {
+      const items = byPerson(name);
+      if (!items.length) return;
+      cols.push({
+        key: name,
+        name,
+        who: i === 0 ? "person1" : i === 1 ? "person2" : "kid",
+        items,
+      });
+    });
+    (kids || []).forEach((name) => {
+      const items = byPerson(name);
+      if (!items.length) return;
+      cols.push({ key: name, name, who: "kid", items });
+    });
+    const claimed = new Set([
+      ...adults.map((n) => n.toLowerCase()),
+      ...(kids || []).map((n) => n.toLowerCase()),
+    ]);
+    const shared = keptCards.filter((c) => {
+      const p = (c.person || "").toLowerCase();
+      if (sharedNames.has(p)) return true;
+      if (!p) return true;
+      return !claimed.has(p);
+    });
     if (shared.length) {
-      cols.push({ key: "shared", name: "Shared & Family", who: "both", items: shared, wide: true });
+      cols.push({ key: "shared", name: "Shared", who: "both", items: shared, wide: true });
     }
     return cols;
-  }, [adults, keptCards, shared]);
+  }, [adults, kids, keptCards]);
 
   const flatItems = useMemo(() => {
     const list = [];
@@ -468,11 +532,57 @@ export default function PlanView({
   const staggerMs = quick ? 28 : 60;
   const sectionDelay = quick ? 40 : 120;
 
+  const markAdded = (item) => {
+    onMarkedAddedToCalendar?.(item.id);
+  };
+
+  const addItemToCalendar = (item, provider) => {
+    if (!isCalendarDated(item)) return;
+    if (provider === "google") {
+      const url = buildGoogleTemplateUrl(item, timeZone);
+      if (url) window.open(url, "_blank", "noopener,noreferrer");
+      markAdded(item);
+      setCalMenuId(null);
+      return;
+    }
+    const ics = buildIcsCalendar([item], { timeZone, workspaceId });
+    downloadIcs(safeIcsFilename(calendarTitle(item)), ics);
+    markAdded(item);
+    setCalMenuId(null);
+  };
+
+  const addAllToCalendar = () => {
+    const dated = keptCards.filter(isCalendarDated);
+    if (onAddAllToCalendar) {
+      onAddAllToCalendar(dated);
+      return;
+    }
+    const ics = buildIcsCalendar(dated, { timeZone, workspaceId });
+    downloadIcs("familypause-plan.ics", ics);
+    dated.forEach((it) => markAdded(it));
+  };
+
+  const emailPlan = async () => {
+    if (!onEmailPlan || emailBusy) return;
+    setEmailBusy(true);
+    setEmailNotice(null);
+    try {
+      await onEmailPlan();
+      setEmailNotice(spouseName ? `Plan emailed to you and ${spouseName}.` : "Plan emailed.");
+    } catch (e) {
+      setEmailNotice(e?.message || "Could not email the plan.");
+    } finally {
+      setEmailBusy(false);
+    }
+  };
+
   const Item = ({ it, index, showBadge }) => {
     const scheduled = !!it.reminder_scheduled;
     const label = reminderLabelFromCard(it);
-    const needsSet = !!it.reminder_needs_set || it.calendar_reminder === "none" || !scheduled;
     const badgeAnim = showBadge && scheduled && badgeDrawn && !staticLayout;
+    const dated = isCalendarDated(it);
+    const added = !!it.added_to_calendar_at;
+    const menuOpen = calMenuId === it.id;
     return (
       <div
         className={
@@ -489,23 +599,48 @@ export default function PlanView({
           <div className="pmeta">
             <span className="ct">{it.category}</span>
             {formatWhen(it) && <span>· {formatWhen(it)}</span>}
-            {scheduled && label && (
+            {label && label !== "None" && (
               <span className={"synced-badge-wrap" + (badgeAnim ? " synced-badge-wrap--pop" : "")}>
-                <span className={"synced-badge" + (badgeAnim ? " synced-badge--in" : "")}>
-                  <SyncedCheckIcon draw={badgeAnim} />
+                <span className={"synced-badge plan-bell-chip" + (badgeAnim ? " synced-badge--in" : "")}>
+                  <Ico d={I.bell} size={11} />
                   {label}
                 </span>
               </span>
             )}
-            {needsSet && !scheduled && (
-              <button
-                type="button"
-                className="plan-cal-retry"
-                onClick={() => onEditReminders?.()}
-              >
-                Set reminder
-              </button>
+            {added && <span className="synced-badge">Added</span>}
+          </div>
+          <div className="planitem-actions">
+            {dated && (
+              <div className="plan-cal-menu-wrap">
+                <button
+                  type="button"
+                  className="plan-cal-icon"
+                  aria-label="Add to calendar"
+                  aria-expanded={menuOpen}
+                  onClick={() => setCalMenuId(menuOpen ? null : it.id)}
+                >
+                  <Ico d={I.cal} size={14} />
+                </button>
+                {menuOpen && (
+                  <div className="plan-cal-menu" role="menu">
+                    <button type="button" role="menuitem" onClick={() => addItemToCalendar(it, "google")}>Google Calendar</button>
+                    <button type="button" role="menuitem" onClick={() => addItemToCalendar(it, "apple")}>Apple Calendar (.ics)</button>
+                    <button type="button" role="menuitem" onClick={() => addItemToCalendar(it, "outlook")}>Outlook (.ics)</button>
+                  </div>
+                )}
+              </div>
             )}
+            <label className="plan-reminder-select">
+              <span className="sr-only">Set reminder</span>
+              <select
+                value={it.calendar_reminder || "none"}
+                onChange={(e) => onReminderChange?.(it.id, e.target.value)}
+              >
+                {PLAN_REMINDER_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
+                ))}
+              </select>
+            </label>
           </div>
         </div>
       </div>
@@ -590,15 +725,27 @@ export default function PlanView({
           <p className="plan-summary-sub">
             {syncCopy.sub}
           </p>
-          {(outcome.state === "failed" || outcome.state === "partial" || outcome.state === "needs_set") && onEditReminders && (
+          <div className="plan-summary-actions">
             <button
               type="button"
-              className="btn btn-primary plan-sync-retry-all"
-              onClick={onEditReminders}
+              className="btn btn-primary"
+              onClick={addAllToCalendar}
+              disabled={!keptCards.some(isCalendarDated)}
             >
-              Set reminders
+              Add all to calendar
             </button>
-          )}
+            {spouseName ? (
+              <button
+                type="button"
+                className="btn btn-ghost"
+                onClick={emailPlan}
+                disabled={emailBusy || !keptCards.length}
+              >
+                {emailBusy ? "Sending…" : `Email plan to ${spouseName}`}
+              </button>
+            ) : null}
+          </div>
+          {emailNotice ? <p className="plan-summary-note">{emailNotice}</p> : null}
         </div>
 
         <div className="plangrid">
@@ -648,17 +795,6 @@ export default function PlanView({
 
         <div className="planfoot">
           <div className="planfoot-actions">
-            <button type="button" className="plan-btn-ghost" onClick={onRestart}>
-              Start New Sync
-            </button>
-            <button
-              type="button"
-              className={"plan-btn-ghost" + (copied ? " plan-btn-ghost--ok" : "")}
-              onClick={copyAsList}
-              disabled={!keptCards.length}
-            >
-              {copied ? "Copied!" : "Copy as Text"}
-            </button>
             <button
               type="button"
               className={"plan-btn-ghost" + (!hasFamilyFeatures ? " plan-btn-ghost--locked" : "")}
@@ -670,10 +806,14 @@ export default function PlanView({
             </button>
             <button
               type="button"
-              className="plan-btn-ghost"
-              onClick={() => onEditReminders?.()}
+              className={"plan-btn-ghost" + (copied ? " plan-btn-ghost--ok" : "")}
+              onClick={copyAsList}
+              disabled={!keptCards.length}
             >
-              Edit reminders
+              {copied ? "Copied!" : "Copy as text"}
+            </button>
+            <button type="button" className="plan-btn-ghost" onClick={onRestart}>
+              Start new Pause
             </button>
           </div>
         </div>

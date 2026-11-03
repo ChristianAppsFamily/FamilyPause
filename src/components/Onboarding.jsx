@@ -12,6 +12,8 @@ import ReminderPicker, {
   DEFAULT_REMINDER_DAY,
   DEFAULT_REMINDER_TIME,
 } from "./ReminderPicker";
+import { getUserTimeZone } from "../lib/googleCalendar";
+import { DEFAULT_TIME_ZONE } from "../lib/remindAt";
 import "../styles/onboarding.css";
 import "../styles/reminder.css";
 
@@ -33,6 +35,7 @@ function StepPrimer({ displayName, workspaceId, onComplete }) {
         .update({
           reminder_day: reminderDay,
           reminder_time: reminderTime,
+          timezone: getUserTimeZone() || DEFAULT_TIME_ZONE,
         })
         .eq("id", workspaceId);
 
@@ -69,7 +72,7 @@ function StepPrimer({ displayName, workspaceId, onComplete }) {
           ["🎙️", "Speech to text to transcribe your meeting"],
           ["📋", "Or paste a transcript from Otter"],
           ["✅", "Review cards together, Keep or Discard"],
-          ["📅", "Send appointments to Google Calendar"],
+          ["📅", "Add items to your calendar and get email reminders"],
         ].map(([emoji, text]) => (
           <div key={text} className="ob-how-row"><span className="ob-how-emoji">{emoji}</span><span>{text}</span></div>
         ))}

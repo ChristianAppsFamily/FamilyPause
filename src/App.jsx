@@ -44,8 +44,8 @@ import {
   typeNeedsSchedule,
   unsyncCalendarEvent,
   cardToCalendarEvent,
-  CALENDAR_REMINDER_OPTIONS,
   userMessageForSyncCode,
+  getUserTimeZone,
 } from "./lib/googleCalendar";
 import {
   DEFAULT_REMINDER_OFFSET,
@@ -53,7 +53,15 @@ import {
   scheduleItemReminders,
   applyReminderScheduleToCards,
   coerceReminderFields,
+  PLAN_REMINDER_OPTIONS,
+  emailPlanToFamily,
 } from "./lib/planReminders";
+import {
+  buildIcsCalendar,
+  downloadIcs,
+  isCalendarDated,
+} from "./lib/calendarLinks";
+import { DEFAULT_TIME_ZONE } from "./lib/remindAt";
 import { canRecordAudio, pickRecordingMimeType, transcribeAudioBlob } from "./lib/transcribe";
 import { occurrenceLabel } from "./lib/planOccurrences";
 import { speechPreviewSupported, startSpeechPreview } from "./lib/speechPreview";
@@ -928,7 +936,6 @@ function EditableCardTitle({
 function CardReminderField({
   id,
   value,
-  customMinutes,
   disabled = false,
   onChange,
 }) {
@@ -944,34 +951,14 @@ function CardReminderField({
           const next = e.target.value;
           onChange({
             calendar_reminder: next || DEFAULT_REMINDER_OFFSET,
-            calendar_reminder_minutes: next === "custom" ? customMinutes : null,
+            calendar_reminder_minutes: null,
           });
         }}
       >
-        {CALENDAR_REMINDER_OPTIONS.map((o) => (
+        {PLAN_REMINDER_OPTIONS.map((o) => (
           <option key={o.value} value={o.value}>{o.label}</option>
         ))}
       </select>
-      {reminder === "custom" && (
-        <input
-          className="resolve-custom-minutes"
-          type="number"
-          min="0"
-          step="1"
-          inputMode="numeric"
-          placeholder="Minutes before"
-          aria-label="Custom reminder minutes before"
-          disabled={disabled}
-          value={customMinutes ?? ""}
-          onChange={(e) => {
-            const raw = e.target.value;
-            onChange({
-              calendar_reminder: "custom",
-              calendar_reminder_minutes: raw === "" ? null : Number(raw),
-            });
-          }}
-        />
-      )}
     </div>
   );
 }
@@ -1134,7 +1121,6 @@ function ResolveTimesView({ cards, setCards, onBack, onContinue }) {
                     <CardReminderField
                       id={`resolve-reminder-${item.id}`}
                       value={draft.calendar_reminder}
-                      customMinutes={draft.calendar_reminder_minutes}
                       disabled={done}
                       onChange={(patch) => patchDraft(item.id, patch)}
                     />
@@ -1343,7 +1329,6 @@ function ReviewView({
                     <CardReminderField
                       id={`rev-reminder-${it.id}`}
                       value={it.calendar_reminder}
-                      customMinutes={it.calendar_reminder_minutes}
                       onChange={(patch) => patchSchedule(it.id, patch)}
                     />
                   </div>
@@ -1666,8 +1651,18 @@ export default function App({ user, workspace, onSignOut }) {
     if (p === "both" || p === "family" || p === "shared") return "both";
     if (adults[0] && p === adults[0].toLowerCase()) return "person1";
     if (adults[1] && p === adults[1].toLowerCase()) return "person2";
+    if (kids.some((k) => k.toLowerCase() === p)) return "kid";
     return "both";
-  }, [adults]);
+  }, [adults, kids]);
+
+  // Persist browser timezone once if workspace has none
+  useEffect(() => {
+    if (!ws?.id || ws.timezone) return;
+    const tz = getUserTimeZone() || DEFAULT_TIME_ZONE;
+    supabase.from("workspaces").update({ timezone: tz }).eq("id", ws.id).then(({ error }) => {
+      if (!error) setWs((prev) => (prev ? { ...prev, timezone: tz } : prev));
+    });
+  }, [ws?.id, ws?.timezone]);
 
   const processingFamilyLabel = [...adults, ...(kids.length ? ["the kids"] : [])].join(", ") || "Everyone";
 
@@ -2370,10 +2365,62 @@ ${text}`;
         <PlanView
           keptCards={keptCards}
           adults={adults}
+          kids={kids}
           roleOf={roleOf}
           onRestart={restart}
           onEditReminders={() => go("review")}
+          onReminderChange={(cardId, choice) => {
+            setCards((prev) => prev.map((c) => (
+              c.id === cardId
+                ? { ...c, calendar_reminder: choice, calendar_reminder_minutes: null, ...coerceReminderFields({ ...c, calendar_reminder: choice }) }
+                : c
+            )));
+            if (ws?.id) {
+              const nextCards = cards.map((c) => (
+                c.id === cardId
+                  ? { ...c, calendar_reminder: choice, calendar_reminder_minutes: null }
+                  : c
+              ));
+              scheduleItemReminders({
+                workspaceId: ws.id,
+                sessionId: sessionIdRef.current,
+                meetingDate,
+                cards: nextCards.filter((c) => c.id === cardId),
+              }).then((result) => {
+                setCards((prev) => applyReminderScheduleToCards(prev, result));
+              }).catch((e) => console.error("[plan] reschedule reminder", e));
+            }
+          }}
+          onMarkedAddedToCalendar={(cardId) => {
+            const at = new Date().toISOString();
+            setCards((prev) => prev.map((c) => (
+              c.id === cardId ? { ...c, added_to_calendar_at: at } : c
+            )));
+          }}
+          onEmailPlan={async () => {
+            if (!ws?.id) throw new Error("Missing workspace");
+            return emailPlanToFamily({
+              workspaceId: ws.id,
+              meetingDate,
+              spouseName,
+              cards: keptCards,
+            });
+          }}
+          onAddAllToCalendar={(dated) => {
+            const ics = buildIcsCalendar(dated, {
+              timeZone: ws?.timezone || DEFAULT_TIME_ZONE,
+              workspaceId: ws?.id,
+            });
+            downloadIcs("familypause-plan.ics", ics);
+            const at = new Date().toISOString();
+            setCards((prev) => prev.map((c) => (
+              isCalendarDated(c) ? { ...c, added_to_calendar_at: at } : c
+            )));
+          }}
           meetingDate={meetingDate}
+          timeZone={ws?.timezone || DEFAULT_TIME_ZONE}
+          workspaceId={ws?.id}
+          spouseName={spouseName}
           arrivalPhase={planArrivalPhase}
           arrivalMode={planArrivalMode}
           showFirstConfetti={showPlanConfetti}

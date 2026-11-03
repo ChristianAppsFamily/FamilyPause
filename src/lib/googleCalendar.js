@@ -10,13 +10,14 @@ export { calendarSyncOutcome, isScheduleResolved, isSyncEligible };
 /** @typedef {{ connected: boolean, connectedAt: string|null, memberId: string|null, googleEmail: string|null }} CalendarConnection */
 
 /** Schema types stored on cards. */
-export const CARD_TYPES = ["event", "action", "decision", "note"];
+export const CARD_TYPES = ["event", "action", "decision", "note", "time_together"];
 
 const TYPE_LABELS = {
   event: "Event",
   action: "To-Do",
   decision: "Decision",
   note: "Note",
+  time_together: "Time Together",
 };
 
 /** UI label for a schema type. */
@@ -30,13 +31,13 @@ export function typeLabel(type) {
 export function calendarTitle(card) {
   const task = (card?.task || "").trim() || "Untitled";
   if (card?.titleEditedByUser) return task;
-  if (card?.type === "event") return task;
+  if (card?.type === "event" || card?.type === "time_together") return task;
   return `${typeLabel(card?.type)}: ${task}`;
 }
 
 /** Types that benefit from an optional/manual date-time before sync. */
 export function typeNeedsSchedule(type) {
-  return type === "event" || type === "action" || type === "decision";
+  return type === "event" || type === "action" || type === "decision" || type === "time_together";
 }
 
 const BYDAY_CODES = new Set(["MO", "TU", "WE", "TH", "FR", "SA", "SU"]);
@@ -58,11 +59,13 @@ export function normalizeByday(raw) {
  */
 export function needsDateTime(card) {
   if (!card) return false;
+  if (card.date_precision === "month") return false;
   if (isScheduleResolved(card)) return false;
   if (card.type === "note") {
     return !!(card.date || card.time);
   }
   if (typeNeedsSchedule(card.type)) {
+    if (card.date_only && card.date) return false;
     return !card.date || !card.time;
   }
   return false;
@@ -75,6 +78,7 @@ export function isCalendarRelevant(card) {
     || card.type === "action"
     || card.type === "decision"
     || card.type === "note"
+    || card.type === "time_together"
     || !!card.date
     || !!card.time;
 }
