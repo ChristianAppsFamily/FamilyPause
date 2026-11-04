@@ -24,7 +24,8 @@ import CaptureView from "./components/CaptureView.jsx";
 import ReviewView from "./components/ReviewView.jsx";
 import { fetchWorkspaceSubscription, hasFamilyPlanFeatures, paywallReason, upgradePaywallReason, pollUntilPaid } from "./lib/subscription";
 import { loadFreeSessionCount } from "./lib/distillUsage";
-import { parseAppLocation, syncPath, SYNC_VIEWS, cardsPath } from "./lib/routes";
+import { parseAppLocation, syncPath, homePath, SYNC_VIEWS, cardsPath } from "./lib/routes";
+import HomeView from "./components/HomeView.jsx";
 import { normalizeCardPeople } from "./lib/familyContext";
 import { stripReminderSatellites } from "./lib/foldCalendarReminders";
 import {
@@ -655,8 +656,11 @@ export default function App({ user, workspace, onSignOut }) {
       setOverlay(null);
     } else if (parsed.area === "overlay") {
       setOverlay(parsed.overlay);
+    } else if (parsed.area === "home") {
+      setOverlay(null);
+      loadCaptureDraftState();
     }
-  }, [location.pathname, location.search]);
+  }, [location.pathname, location.search, loadCaptureDraftState]);
 
   useEffect(() => {
     if (view === "agenda" || overlay === "decks") loadCaptureDraftState();
@@ -683,7 +687,7 @@ export default function App({ user, workspace, onSignOut }) {
 
   const closeOverlay = () => {
     if (window.history.length > 1) navigate(-1);
-    else navigate(syncPath(view));
+    else navigate(homePath());
   };
 
   const openCardDeck = () => openOverlay("decks");
@@ -693,7 +697,7 @@ export default function App({ user, workspace, onSignOut }) {
   };
 
   const leaveCards = () => {
-    navigate(syncPath("agenda"));
+    navigate(homePath());
   };
 
   const cardDeckInitialView = () => {
@@ -1146,7 +1150,7 @@ ${text}`;
     await clearActiveSession();
     setCaptureText("");
     setCaptureMode("paste");
-    go("agenda");
+    navigate(homePath());
     loadCaptureDraftState();
   };
 
@@ -1350,6 +1354,27 @@ ${text}`;
           onStartSession={startWeeklySync}
           onSkip={startWeeklySync}
           onWorkspaceUpdate={setWs}
+        />
+      </div>
+    );
+  }
+
+  const isHome = parseAppLocation(location.pathname, location.search).area === "home";
+  if (isHome) {
+    return (
+      <div className="stage" style={{ maxWidth: "none", padding: 0 }}>
+        {captureDraft && (
+          <div style={{ maxWidth: 960, margin: "0 auto", padding: "12px 24px 0", position: "relative", zIndex: 5 }}>
+            <ResumeBanner draft={captureDraft} onResume={resumeCaptureDraft} onDiscard={discardCaptureDraft} />
+          </div>
+        )}
+        <HomeView
+          workspace={ws}
+          user={user}
+          adults={adults}
+          roleOf={roleOf}
+          onStartSync={startWeeklySync}
+          onOpenSettings={() => openOverlay("settings")}
         />
       </div>
     );

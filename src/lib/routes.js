@@ -10,6 +10,10 @@ export function syncPath(view = "agenda") {
   return `/app/sync/${view}`;
 }
 
+export function homePath() {
+  return "/app/home";
+}
+
 export function cardsPath(view = "draw") {
   if (view === "library" || view === "unlock") return `/app/cards?view=${view}`;
   return "/app/cards";
@@ -87,6 +91,10 @@ export function parseAppLocation(pathname, search = "") {
 
   if (pathname === "/app/subscribe/success") {
     return { area: "subscribeSuccess" };
+  }
+
+  if (pathname === "/app/home") {
+    return { area: "home" };
   }
 
   const syncMatch = pathname.match(/\/app\/sync\/(\w+)/);
