@@ -20,17 +20,15 @@ import CardSystem from "./components/CardSystem.jsx";
 import Paywall from "./components/Paywall.jsx";
 import PlanView from "./components/PlanView.jsx";
 import TimesView from "./components/TimesView.jsx";
-import UpgradePrompt from "./components/UpgradePrompt.jsx";
+import ReviewView from "./components/ReviewView.jsx";
 import { fetchWorkspaceSubscription, hasFamilyPlanFeatures, paywallReason, upgradePaywallReason, pollUntilPaid } from "./lib/subscription";
 import { loadFreeSessionCount } from "./lib/distillUsage";
 import { parseAppLocation, syncPath, SYNC_VIEWS, cardsPath } from "./lib/routes";
 import { normalizeCardPeople } from "./lib/familyContext";
-import { formatPlanItemWhen } from "./lib/planExport";
 import { stripReminderSatellites } from "./lib/foldCalendarReminders";
 import {
   applySyncResults,
   calendarSyncOutcome,
-  calendarTitle,
   CARD_TYPES,
   CalendarSyncError,
   clearCardCalendarSync,
@@ -39,19 +37,16 @@ import {
   startGoogleCalendarConnect,
   syncCalendarEvents,
   syncCardsToCalendar,
-  typeLabel,
   unsyncCalendarEvent,
   cardToCalendarEvent,
   userMessageForSyncCode,
   getUserTimeZone,
 } from "./lib/googleCalendar";
 import {
-  DEFAULT_REMINDER_OFFSET,
   ENABLE_GOOGLE_CALENDAR_SYNC,
   scheduleItemReminders,
   applyReminderScheduleToCards,
   coerceReminderFields,
-  PLAN_REMINDER_OPTIONS,
   emailPlanToFamily,
 } from "./lib/planReminders";
 import {
@@ -137,9 +132,6 @@ function todayStr() {
 function prettyDate(d) {
   const dt = d ? new Date(d + "T00:00:00") : new Date();
   return dt.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
-}
-function formatWhen(date, time, dateOnly) {
-  return formatPlanItemWhen({ date, time, date_only: dateOnly });
 }
 
 const STATUS = { OPEN: "pending", KEPT: "kept", DISCARDED: "discarded", CALENDARED: "calendared" };
@@ -810,365 +802,6 @@ function ProcessingView({ done, familyNames = "Everyone" }) {
         ))}
       </div>
       <div className="procbar"><i style={{ width: pct + "%" }} /></div>
-    </div>
-  );
-}
-
-function CardTypeSelect({ value, onChange, id, locked = false, onLocked }) {
-  const selected = CARD_TYPES.includes(value) ? value : "action";
-  if (locked) {
-    return (
-      <button
-        type="button"
-        id={id}
-        className="card-type-select card-type-select--locked"
-        onClick={onLocked}
-        aria-label="Item type, Family Plan feature"
-      >
-        {typeLabel(selected)}
-      </button>
-    );
-  }
-  return (
-    <select
-      id={id}
-      className="card-type-select"
-      value={selected}
-      onChange={(e) => onChange(e.target.value)}
-      aria-label="Item type"
-    >
-      {CARD_TYPES.map((t) => (
-        <option key={t} value={t}>{typeLabel(t)}</option>
-      ))}
-    </select>
-  );
-}
-
-/** Type-only patch — never touches task / titleEditedByUser. */
-function setCardType(setCards, id, nextType) {
-  setCards((arr) => arr.map((c) => (
-    c.id === id ? { ...c, type: nextType } : c
-  )));
-}
-
-function setCardTitle(setCards, id, nextTitle) {
-  const task = (nextTitle || "").trim();
-  if (!task) return;
-  setCards((arr) => arr.map((c) => (
-    c.id === id
-      ? { ...c, task, titleEditedByUser: true }
-      : c
-  )));
-}
-
-function EditableCardTitle({
-  card,
-  setCards,
-  as = "h3",
-  className = "",
-  locked = false,
-  onLocked,
-}) {
-  const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState(card.task || "");
-  const inputRef = useRef(null);
-
-  useEffect(() => {
-    if (!editing) setDraft(card.task || "");
-  }, [card.task, editing]);
-
-  useEffect(() => {
-    if (editing) {
-      inputRef.current?.focus();
-      inputRef.current?.select();
-    }
-  }, [editing]);
-
-  const commit = () => {
-    const next = (draft || "").trim();
-    if (next && next !== (card.task || "").trim()) {
-      setCardTitle(setCards, card.id, next);
-    } else {
-      setDraft(card.task || "");
-    }
-    setEditing(false);
-  };
-
-  const Tag = as;
-
-  if (editing) {
-    return (
-      <input
-        ref={inputRef}
-        className={"card-title-input " + className}
-        value={draft}
-        aria-label="Edit title"
-        onChange={(e) => setDraft(e.target.value)}
-        onBlur={commit}
-        onKeyDown={(e) => {
-          if (e.key === "Enter") { e.preventDefault(); commit(); }
-          if (e.key === "Escape") {
-            setDraft(card.task || "");
-            setEditing(false);
-          }
-        }}
-      />
-    );
-  }
-
-  return (
-    <Tag className={"card-title-edit " + className}>
-      <button
-        type="button"
-        className={"card-title-btn" + (locked ? " card-title-btn--locked" : "")}
-        onClick={locked ? onLocked : () => setEditing(true)}
-        aria-label={locked ? "Edit title, Family Plan feature" : "Edit title"}
-      >
-        {card.task || "Untitled"}
-      </button>
-    </Tag>
-  );
-}
-
-function CardReminderField({
-  id,
-  value,
-  disabled = false,
-  onChange,
-}) {
-  const reminder = value || DEFAULT_REMINDER_OFFSET;
-  return (
-    <div className="resolve-field">
-      <label htmlFor={id}>Set Reminder</label>
-      <select
-        id={id}
-        value={reminder}
-        disabled={disabled}
-        onChange={(e) => {
-          const next = e.target.value;
-          onChange({
-            calendar_reminder: next || DEFAULT_REMINDER_OFFSET,
-            calendar_reminder_minutes: null,
-          });
-        }}
-      >
-        {PLAN_REMINDER_OPTIONS.map((o) => (
-          <option key={o.value} value={o.value}>{o.label}</option>
-        ))}
-      </select>
-    </div>
-  );
-}
-
-// ── REVIEW (View 4) ───────────────────────────────────────────────────────────
-function ReviewView({
-  cards,
-  setCards,
-  roleOf,
-  onBack,
-  onBuild,
-  distillError,
-  calendarSyncing,
-  hasFamilyFeatures,
-  onUpgrade,
-}) {
-  const [activeCategory, setActiveCategory] = useState("all");
-  const [lastAction, setLastAction] = useState(null);
-  const [showEditingUpgrade, setShowEditingUpgrade] = useState(false);
-  const openEditingUpgrade = () => setShowEditingUpgrade(true);
-
-  const decide = (id, status) => {
-    const item = cards.find((c) => c.id === id);
-    if (item && item.status !== status) setLastAction({ id, previousStatus: item.status });
-    setCards((arr) => arr.map((it) => (it.id === id ? { ...it, status } : it)));
-  };
-
-  const undoLast = () => {
-    if (!lastAction) return;
-    setCards((arr) => arr.map((it) => (it.id === lastAction.id ? { ...it, status: lastAction.previousStatus } : it)));
-    setLastAction(null);
-  };
-
-  const patchSchedule = (id, patch) => {
-    setCards((arr) => arr.map((c) => (c.id === id ? { ...c, ...patch } : c)));
-  };
-
-  const categories = ["all", ...new Set(cards.map((c) => c.category).filter(Boolean))];
-  const visible = activeCategory === "all" ? cards : cards.filter((c) => c.category === activeCategory);
-  const total = cards.length;
-  const decided = cards.filter((c) => c.status !== STATUS.OPEN).length;
-  const kept = cards.filter((c) => c.status === STATUS.KEPT || c.status === STATUS.CALENDARED).length;
-  const openCount = cards.filter((c) => c.status === STATUS.OPEN).length;
-  const allDecided = total > 0 && decided === total;
-  const pct = total ? Math.round((decided / total) * 100) : 0;
-  const keepAll = () => setCards((arr) => arr.map((it) => (it.status === STATUS.OPEN ? { ...it, status: STATUS.KEPT } : it)));
-  const discardAll = () => setCards((arr) => arr.map((it) => (it.status === STATUS.OPEN ? { ...it, status: STATUS.DISCARDED } : it)));
-
-  return (
-    <div className="view">
-      <div className="revhead">
-        <div>
-          <div className="eyebrow" style={{ marginBottom: 9 }}>Step 5 · This week's review</div>
-          <h1 className="revtitle">Keep or <em>Discard</em></h1>
-        </div>
-        <div className="progresswrap">
-          <span className="chip chip-soft fw">{decided}/{total} reviewed</span>
-          <div className="minibar"><i style={{ width: pct + "%" }} /></div>
-        </div>
-      </div>
-
-      <div className="revmeta">
-        <span className="chip chip-ok"><Ico d={I.check} size={13} /> {total} items extracted</span>
-        <span className="chip chip-soft"><Ico d={I.clock} size={13} /> ~2 min to review</span>
-        {lastAction && (
-          <button className="linkish" onClick={undoLast}>Undo last</button>
-        )}
-        {openCount > 0 && (
-          <>
-            <button className="linkish" style={{ marginLeft: "auto" }} onClick={keepAll}>Keep all remaining →</button>
-            <button className="linkish" onClick={discardAll}>Discard all remaining</button>
-          </>
-        )}
-      </div>
-
-      {categories.length > 2 && (
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 18 }}>
-          {categories.map((cat) => (
-            <button
-              key={cat}
-              type="button"
-              className={"chip " + (activeCategory === cat ? "chip-terra" : "chip-soft")}
-              onClick={() => setActiveCategory(cat)}
-              style={{ cursor: "pointer", border: "none" }}
-            >
-              {cat === "all" ? "All" : cat}
-            </button>
-          ))}
-        </div>
-      )}
-
-      {total === 0 ? (
-        <div style={{ textAlign: "center", padding: "50px 20px", color: "var(--ink-3)" }}>
-          {distillError ? (
-            <>
-              <div style={{ fontFamily: "var(--display)", fontWeight: 800, fontSize: 22, color: "var(--red)", marginBottom: 8 }}>AI unavailable.</div>
-              <div style={{ fontSize: 15, color: "var(--red)", maxWidth: 480, margin: "0 auto" }}>{distillError}</div>
-            </>
-          ) : (
-            <>
-              <div style={{ fontFamily: "var(--display)", fontWeight: 800, fontSize: 22, color: "var(--ink-2)", marginBottom: 8 }}>Nothing to review.</div>
-              <div style={{ fontSize: 15 }}>We couldn't extract items. Try a longer or clearer transcript.</div>
-            </>
-          )}
-        </div>
-      ) : (
-        <div>
-          {visible.map((it) => {
-            const who = roleOf(it.person);
-            const isEvent = it.type === "event";
-            const when = formatPlanItemWhen(it);
-            const decidedState = it.status === STATUS.KEPT || it.status === STATUS.CALENDARED ? "kept" : it.status === STATUS.DISCARDED ? "discarded" : "";
-            return (
-              <div key={it.id} className={`revcard ${who} ${decidedState}`}>
-                <span className="checkpop"><Ico d={I.check} size={13} /></span>
-                <div className="ctop">
-                  <span className={"pdot " + who} />
-                  <span className={"tag tag-" + who}>{it.person}</span>
-                  <span className="tag tag-cat">{it.category}</span>
-                  <CardTypeSelect
-                    id={`review-type-${it.id}`}
-                    value={it.type}
-                    onChange={(t) => setCardType(setCards, it.id, t)}
-                    locked={!hasFamilyFeatures}
-                    onLocked={openEditingUpgrade}
-                  />
-                </div>
-                <EditableCardTitle
-                  card={it}
-                  setCards={setCards}
-                  as="h3"
-                  locked={!hasFamilyFeatures}
-                  onLocked={openEditingUpgrade}
-                />
-                <p className="card-cal-preview">{calendarTitle(it)}</p>
-                {it.source && <div className="cq">"{it.source}"</div>}
-                {when && <div className="cwhen"><Ico d={isEvent ? I.cal : I.clock} size={13} /> {isEvent ? formatWhen(it.date, it.time, it.date_only) : "Due · " + formatWhen(it.date, it.time, it.date_only)}</div>}
-                <div className="resolve-row-fields rev-schedule">
-                    <div className="resolve-field">
-                      <label htmlFor={`rev-date-${it.id}`}>Date</label>
-                      <input
-                        id={`rev-date-${it.id}`}
-                        type="date"
-                        value={it.date || ""}
-                        onChange={(e) => patchSchedule(it.id, { date: e.target.value || null })}
-                      />
-                    </div>
-                    <div className="resolve-field">
-                      <label htmlFor={`rev-time-${it.id}`}>Choose a start time</label>
-                      <input
-                        id={`rev-time-${it.id}`}
-                        type="time"
-                        value={it.time || ""}
-                        disabled={!!it.date_only}
-                        onChange={(e) => {
-                          const time = e.target.value || null;
-                          patchSchedule(it.id, time ? { time, date_only: false } : { time: null });
-                        }}
-                      />
-                    </div>
-                    <CardReminderField
-                      id={`rev-reminder-${it.id}`}
-                      value={it.calendar_reminder}
-                      onChange={(patch) => patchSchedule(it.id, patch)}
-                    />
-                  </div>
-                  <button
-                    type="button"
-                    className={"btn btn-ghost resolve-date-only" + (it.date_only ? " on" : "")}
-                    aria-pressed={!!it.date_only}
-                    onClick={() => patchSchedule(it.id, it.date_only
-                      ? { date_only: false }
-                      : { date_only: true, time: null })}
-                  >
-                    Date only
-                  </button>
-                <div className="cact">
-                  <button className="keepbtn" onClick={() => decide(it.id, STATUS.KEPT)}><Ico d={I.check} size={14} /> Keep</button>
-                  <button className="discbtn" onClick={() => decide(it.id, STATUS.DISCARDED)}><Ico d={I.x} size={14} /> Discard</button>
-                </div>
-                <div className="decided keep"><Ico d={I.check} size={13} /> Kept</div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      <div className="revdone">
-        <button className="linkish" onClick={onBack}>← Rebuild</button>
-        <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
-          <span className="summ">{allDecided ? <span><b>{kept} kept</b> · {total - kept} discarded</span> : `${total - decided} left to review`}</span>
-          <button
-            type="button"
-            className={"btn btn-primary btn-lg" + (calendarSyncing ? " btn-breathing" : "")}
-            disabled={!allDecided || calendarSyncing}
-            onClick={onBuild}
-          >
-            {calendarSyncing ? (
-              <em>Scheduling reminders…</em>
-            ) : (
-              <><Ico d={I.arrow} size={16} /> Schedule Reminders</>
-            )}
-          </button>
-        </div>
-      </div>
-      {showEditingUpgrade && (
-        <UpgradePrompt
-          title="Editing is a Family Plan feature"
-          body="Fix titles and item types in one tap instead of starting over."
-          onUpgrade={onUpgrade}
-          onClose={() => setShowEditingUpgrade(false)}
-        />
-      )}
     </div>
   );
 }
@@ -2145,6 +1778,9 @@ ${text}`;
           cards={cards}
           setCards={setCards}
           roleOf={roleOf}
+          adults={adults}
+          kids={kids}
+          meetingDate={meetingDate}
           onBack={() => go("capture")}
           onBuild={buildWeek}
           distillError={distillError}
